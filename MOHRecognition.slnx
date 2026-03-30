@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="../ArchiveService.cs/Services.csproj" Id="715c2d2b-e118-4d15-bdc0-b61e30ce433d" />
+  <Project Path="../DTOs/DTOs.csproj" Id="9e06befc-4770-4fb0-9e7d-05dec5f4243a" />
+  <Project Path="MOHRecognition.csproj" />
+</Solution>

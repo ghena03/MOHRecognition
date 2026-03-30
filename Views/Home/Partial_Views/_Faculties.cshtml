@@ -1,0 +1,84 @@
+﻿@model DTOs.FacultiesDto
+@using System.Linq
+
+<div class="fac-wrap">
+    <div class="fac-titlebar">Faculties List</div>
+
+    <div class="fac-body">
+
+        <!-- UI Banner -->
+        <div id="facBanner" class="banner warn" style="display:none; margin-top:12px;">
+            <span class="dot"></span>
+            <span class="txt"></span>
+            <button type="button" class="x" onclick="document.getElementById('facBanner').style.display='none'">×</button>
+        </div>
+
+        <!-- hidden edit id -->
+        <input type="hidden" id="fac_editId" value="" />
+
+        <div class="fac-add">
+            <input id="fac_name" class="fac-input" type="text" placeholder="Enter faculty name..." />
+            <button type="button" class="btn-primary" data-fac-add id="fac_btnAdd">Add</button>
+        </div>
+
+        <div class="fac-table-scroll">
+            <table class="fac-table">
+                <thead>
+                    <tr>
+                        <th style="width:80px;">#</th>
+                        <th>Faculty Name</th>
+                        <th style="width:160px; text-align:center;">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model?.Rows != null && Model.Rows.Any())
+                    {
+                        var i = 1;
+                        foreach (var r in Model.Rows)
+                        {
+                            <tr>
+                                <td class="fac-num">@i</td>
+                                <td class="fac-name">@r.FacultyName</td>
+                                <td class="fac-action">
+                                    <div class="icon-actions">
+                                        <!-- EDIT (professional icon button) -->
+                                        <button type="button"
+                                                class="iconbtn iconbtn-edit"
+                                                title="Edit"
+                                                aria-label="Edit"
+                                                data-fac-edit
+                                                data-id="@r.Id"
+                                                data-name="@r.FacultyName">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.83H5v-.92l9.06-9.06.92.92L5.92 20.08zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                            </svg>
+                                        </button>
+
+                                        <!-- DELETE (professional icon button) -->
+                                        <button type="button"
+                                                class="iconbtn iconbtn-del"
+                                                title="Delete"
+                                                aria-label="Delete"
+                                                data-fac-del
+                                                data-id="@r.Id">
+                                            ×
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="fac-empty">No faculties added yet.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,291 @@
+﻿@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
+
+@functions {
+    string MemberLabel(string? value)
+    {
+        var v = (value ?? "").Trim().ToLowerInvariant();
+        return v switch
+        {
+            "member1@mohe.local" => "Recognition Member 1",
+            "member2@mohe.local" => "Recognition Member 2",
+            "member3@mohe.local" => "Recognition Member 3",
+            _ => "Unassigned"
+        };
+    }
+}
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" asp-append-version="true" />
+</head>
+<body class="admin-page">
+
+    <header class="top-header">
+        <div class="brand-bar"></div>
+
+        <div class="header-wrap">
+            <div class="header-left">
+                <h1 class="page-title">Admin Dashboard</h1>
+                <p class="page-subtitle">Manage requests, assignments, and workflow in one place</p>
+            </div>
+
+            <div class="header-right">
+                <div class="admin-box">
+                    <div class="admin-avatar">A</div>
+                    <div>
+                        <div class="admin-name">Admin User</div>
+                        <div class="admin-role">System Administrator</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-title">Admin Panel</div>
+
+            <a href="#overview" class="side-link active">Overview</a>
+            <a href="#requests" class="side-link">Requests</a>
+            <a href="#assignments" class="side-link">Assignments</a>
+            <a href="#employees" class="side-link">Employees</a>
+            <a href="#reports" class="side-link">Reports</a>
+            <a href="#audit" class="side-link">Audit Log</a>
+            <a href="@Url.Action("Logout", "Home")" class="side-link logout-link">Logout</a>
+        </aside>
+
+        <main class="main-content">
+
+            <section id="overview" class="section-block">
+                <div class="section-head">
+                    <h2>Overview</h2>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Requests</div>
+                        <div class="stat-value">@Model.Count</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-label">Pending</div>
+                        <div class="stat-value">@Model.Count(x => x.Status == "Pending")</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-label">Assigned</div>
+                        <div class="stat-value">@Model.Count(x => x.AssignedMember != "Unassigned")</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-label">Requires Admin Review</div>
+                        <div class="stat-value">@Model.Count(x => x.Status == "Requires Admin Review")</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="requests" class="section-block">
+                <div class="section-head">
+                    <h2>Requests Management</h2>
+                    <p class="section-sub">View all submitted requests and current workflow status.</p>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <table class="requests-table">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Applicant</th>
+                                    <th>University</th>
+                                    <th>Country</th>
+                                    <th>Status</th>
+                                    <th>Assigned To</th>
+                                    <th class="th-action">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Any())
+                                {
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>@item.ReferenceNumber</td>
+                                            <td>@item.ApplicantName</td>
+                                            <td>@item.UniversityName</td>
+                                            <td>@item.Country</td>
+                                            <td>
+                                                <span class="status-badge">@item.Status</span>
+                                            </td>
+                                            <td>
+                                                <span class="member-pill">@MemberLabel(item.AssignedMember)</span>
+                                            </td>
+                                            <td class="td-action">
+                                                <a class="table-btn" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">Open</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="empty-cell">
+                                            No submitted requests yet.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="assignments" class="section-block">
+                <div class="section-head">
+                    <h2>Assignment Center</h2>
+                    <p class="section-sub">Assign requests to recognition members or return them to unassigned state.</p>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <table class="requests-table">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>University</th>
+                                    <th>Status</th>
+                                    <th>Assigned Member</th>
+                                    <th class="th-action">Change Assignment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Any())
+                                {
+                                    @foreach (var item in Model)
+                                    {
+                                        var editorId = $"assign-editor-{item.Id}";
+                                        <tr>
+                                            <td>@item.ReferenceNumber</td>
+                                            <td>@item.UniversityName</td>
+                                            <td>
+                                                <span class="status-badge">@item.Status</span>
+                                            </td>
+                                            <td>
+                                                <div class="assign-stack">
+                                                    <div class="assign-topline">
+                                                        <span class="member-pill">@MemberLabel(item.AssignedMember)</span>
+                                                        <button type="button"
+                                                                class="mini-edit-btn"
+                                                                onclick="toggleAssignEditor('@editorId')">
+                                                            Edit
+                                                        </button>
+                                                    </div>
+
+                                                    <form asp-controller="Home"
+                                                          asp-action="AssignToMember"
+                                                          method="post"
+                                                          id="@editorId"
+                                                          class="assign-editor">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@item.Id" />
+
+                                                        <select name="assignedMember" class="mini-select">
+                                                            <option value="Unassigned" selected="@(item.AssignedMember == "Unassigned")">Unassigned</option>
+                                                            <option value="member1@mohe.local" selected="@(item.AssignedMember == "member1@mohe.local")">Recognition Member 1</option>
+                                                            <option value="member2@mohe.local" selected="@(item.AssignedMember == "member2@mohe.local")">Recognition Member 2</option>
+                                                            <option value="member3@mohe.local" selected="@(item.AssignedMember == "member3@mohe.local")">Recognition Member 3</option>
+                                                        </select>
+
+                                                        <button class="mini-save-btn" type="submit">Save</button>
+                                                        <button class="mini-cancel-btn" type="button" onclick="toggleAssignEditor('@editorId')">Cancel</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                            <td class="td-action">
+                                                <a class="table-btn" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">Open</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="empty-cell">
+                                            No requests available for assignment.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="employees" class="section-block">
+                <div class="section-head">
+                    <h2>Recognition Members</h2>
+                    <p class="section-sub">Use these accounts when testing recognition member access.</p>
+                </div>
+
+                <div class="employee-grid">
+                    <div class="employee-card">
+                        <h3>Recognition Member 1</h3>
+                        <p>Login email: <b>member1@mohe.local</b></p>
+                    </div>
+
+                    <div class="employee-card">
+                        <h3>Recognition Member 2</h3>
+                        <p>Login email: <b>member2@mohe.local</b></p>
+                    </div>
+
+                    <div class="employee-card">
+                        <h3>Recognition Member 3</h3>
+                        <p>Login email: <b>member3@mohe.local</b></p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="reports" class="section-block">
+                <div class="section-head">
+                    <h2>Reports</h2>
+                </div>
+
+                <div class="placeholder-box">
+                    Reports and analytics can be added here later.
+                </div>
+            </section>
+
+            <section id="audit" class="section-block">
+                <div class="section-head">
+                    <h2>Audit Log</h2>
+                </div>
+
+                <div class="log-box">
+                    <div class="log-item">Assignment is stored using fixed member IDs.</div>
+                    <div class="log-item">Setting a request to Unassigned returns it to Pending.</div>
+                    <div class="log-item">Recognition members must log in using the listed test emails.</div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+            function toggleAssignEditor(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.toggle("show");
+            }
+    </script>
+</body>
+</html>

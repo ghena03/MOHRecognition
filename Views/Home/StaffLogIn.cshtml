@@ -1,0 +1,112 @@
+﻿@model DTOs.StaffLogInDto
+@{
+    Layout = null;
+
+    var role = (ViewBag.Role as string ?? "admin").ToLower();
+    var title = role == "recognition" ? "Recognition Member Portal Login" : "Admin Portal Login";
+    var desc = role == "recognition"
+        ? "Recognition committee members can log in to review and process recognition files"
+        : "Authorized administrators can log in to manage recognition requests";
+
+    var emailPlaceholder = role == "recognition" ? "Member Email" : "Admin Email";
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <title>@title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="~/css/StaffLogIn.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+</head>
+
+<body>
+    <div class="page">
+
+        <div class="admin-header">
+            <h2>@title</h2>
+            <p>@desc</p>
+        </div>
+
+        <div class="card">
+            <div class="sign">
+                <img src="https://rnji.mohe.gov.jo/AppLogin/images/SIGN.jpg" alt="MOHE">
+            </div>
+
+            <div class="panel">
+                <h1>Sign In</h1>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div asp-validation-summary="All" class="error"></div>
+                }
+
+                <form asp-controller="Home" asp-action="StaffLogIn" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <!-- keep the role -->
+                    <input type="hidden" name="role" value="@role" />
+
+                    <div class="row">
+                        <span class="icon"><i class="fa-solid fa-envelope"></i></span>
+                        <input asp-for="Email" type="email" placeholder="@emailPlaceholder" />
+                    </div>
+                    <span class="field-error" asp-validation-for="Email"></span>
+
+                    <div class="row active">
+                        <span class="icon"><i class="fa-solid fa-lock"></i></span>
+                        <input asp-for="Password" type="password" placeholder="Password" />
+                    </div>
+                    <span class="field-error" asp-validation-for="Password"></span>
+
+                    <div class="row">
+                        <span class="icon">☷</span>
+                        <select asp-for="Language">
+                            <option value="en">English</option>
+                            <option value="ar">العربية</option>
+                        </select>
+                    </div>
+
+                    <div class="captcha">
+                        <div class="captcha-img">817694</div>
+                        <button type="button" class="refresh">⟳</button>
+                    </div>
+
+                    <div class="hint">✓ Enter the code above</div>
+
+                    <div class="row">
+                        <input asp-for="Captcha" type="text" placeholder="Enter the code above" />
+                    </div>
+                    <span class="field-error" asp-validation-for="Captcha"></span>
+
+                    <div class="remember-row">
+                        <label class="remember">
+                            <input asp-for="RememberMe" type="checkbox" />
+                            <span>Remember me</span>
+                        </label>
+                    </div>
+
+                    <button class="login" type="submit">Login</button>
+
+                    <!-- (We'll fix it in Step 2 to keep role when going to forgot/reset) -->
+                    <div class="links">
+                        <a asp-controller="Home" asp-action="ForgetPassword" asp-route-role="@role"><b>Forgot Password</b></a>
+                    </div>
+
+                    <!-- (We’ll replace this with the shared SignUp in Step 3) -->
+                    <div class="links">
+                        <a href="#">Create New Account</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

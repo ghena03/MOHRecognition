@@ -1,0 +1,45 @@
+﻿@model DTOs.SubmitApplicationDto
+
+<div class="submitapp-wrap" style="margin-top:0;">
+    <div class="duration-titlebar">
+        Submit Application
+    </div>
+
+    <div id="subAppBanner" class="banner warn" style="display:none; margin-top:12px;">
+        <span class="dot"></span>
+        <span class="txt"></span>
+        <button type="button" class="x" onclick="document.getElementById('subAppBanner').style.display='none'">×</button>
+    </div>
+
+    <div class="submitapp-notes">
+        <div class="submitapp-note"><span class="req">*</span> Make sure all fields followed by (*) are filled.</div>
+        <div class="submitapp-note"><span class="req">*</span> Make sure all data are correct and complete, otherwise it will not be considered.</div>
+        <div class="submitapp-note"><span class="req">*</span> After submitting the application, you cannot add or modify data.</div>
+    </div>
+
+    <div class="submitapp-grid">
+        <div class="field">
+            <label>Applicant Name <span class="req">*</span></label>
+            <input id="subapp_name" type="text" maxlength="200" value="@(Model?.ApplicantName ?? "")" />
+        </div>
+
+        <div class="field">
+            <label>Work Place <span class="req">*</span></label>
+            <input id="subapp_workplace" type="text" maxlength="200" value="@(Model?.WorkPlace ?? "")" />
+        </div>
+
+        <div class="field">
+            <label>Email <span class="req">*</span></label>
+            <input id="subapp_email" type="email" maxlength="200" value="@(Model?.Email ?? "")" />
+        </div>
+    </div>
+
+    <label class="submitapp-check">
+        <input id="subapp_ack" type="checkbox" @(Model != null && Model.IsAcknowledged ? "checked" : "") />
+        <span>I acknowledge that all data are correct.</span>
+    </label>
+
+    <div style="display:flex; justify-content:flex-start; margin-top:18px;">
+        <button type="button" id="btnSubmitApplication" class="btn-primary">Submit</button>
+    </div>
+</div>

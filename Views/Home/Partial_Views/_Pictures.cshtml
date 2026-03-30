@@ -1,0 +1,77 @@
+﻿@model DTOs.PicturesDto
+@using System.Linq
+
+<div class="attach-grid attach-grid-single">
+    <div class="attach-card">
+        <div class="duration-titlebar">
+            Upload Pictures
+        </div>
+
+        <div id="picBanner" class="banner warn" style="display:none; margin-top:12px;">
+            <span class="dot"></span>
+            <span class="txt"></span>
+            <button type="button" class="x" onclick="document.getElementById('picBanner').style.display='none'">×</button>
+        </div>
+
+        <div class="attach-form" style="margin-top:16px;">
+            <div class="field">
+                <label>Choose Picture <span class="req">*</span></label>
+                <input id="pic_file" type="file" accept="image/*" />
+            </div>
+
+            <div class="field" style="margin-top:14px;">
+                <label>Subject <span class="req">*</span></label>
+                <input id="pic_subject" type="text" maxlength="250" placeholder="Enter picture subject" />
+            </div>
+
+            <div style="display:flex; justify-content:center; margin-top:18px;">
+                <button type="button" class="btn-primary" onclick="PictureUpload()">Upload Picture</button>
+            </div>
+        </div>
+
+        <div class="attach-table-wrap" style="margin-top:22px;">
+            <table class="table attach-table">
+                <thead>
+                    <tr>
+                        <th style="width:70px;">#</th>
+                        <th>Subject</th>
+                        <th>Picture Name</th>
+                        <th style="width:110px;">View</th>
+                        <th style="width:120px;">Download</th>
+                        <th style="width:110px;">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model?.Rows == null || !Model.Rows.Any())
+                    {
+                        <tr>
+                            <td colspan="6" style="font-weight:700;">No Data Found !</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        var i = 1;
+                        foreach (var row in Model.Rows)
+                        {
+                            <tr>
+                                <td>@i</td>
+                                <td>@row.Subject</td>
+                                <td>@row.FileName</td>
+                                <td>
+                                    <a class="btn-table-action btn-view" href="@row.FileUrl" target="_blank">View</a>
+                                </td>
+                                <td>
+                                    <a class="btn-table-action btn-download" href="@row.FileUrl" download="@row.FileName">Download</a>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn-table-action btn-delete" onclick="PictureDelete('@row.Id')">Delete</button>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

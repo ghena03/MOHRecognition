@@ -1,0 +1,240 @@
+﻿@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Requests Archive";
+    var currentMember = ViewBag.CurrentRecognitionMember as string ?? "Recognition Member";
+    var successMessage = TempData["ArchiveSuccess"] as string;
+    var errorMessage = TempData["ArchiveError"] as string;
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/Archive.css" asp-append-version="true" />
+</head>
+
+<body class="rm-page">
+
+    <header class="rm-header">
+        <div class="rm-brandbar"></div>
+        <div class="rm-top">
+            <div class="rm-top-inner">
+                <div class="rm-brand">
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+                </div>
+
+                <div class="rm-user">
+                    <div class="rm-userpill">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Welcome, <b>@currentMember</b></span>
+                    </div>
+
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="rm-shell">
+
+        <aside class="rm-sidebar">
+            <div class="rm-side-title">Navigation</div>
+
+            <nav class="rm-nav">
+                <a class="rm-navitem" href="@Url.Action("RecognitionMemberDashboard", "Home")">
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a class="rm-navitem" href="@Url.Action("ElectronicRequests", "Home")">
+                    <i class="bi bi-send-check"></i>
+                    <span>My Assigned Requests</span>
+                </a>
+
+                <a class="rm-navitem active" href="@Url.Action("Archive", "Home")">
+                    <i class="bi bi-inboxes"></i>
+                    <span>Requests Archive</span>
+                </a>
+
+                <a class="rm-navitem danger" href="@Url.Action("Logout", "Home")">
+                    <i class="bi bi-power"></i>
+                    <span>Sign Out</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="rm-main">
+
+            <section class="rm-card arc-head">
+                <div class="arc-top">
+                    <div>
+                        <h1>Requests Archive</h1>
+                        <p>Browse all submitted requests currently stored in the system.</p>
+                    </div>
+
+                    <div class="arc-chips">
+                        <div class="arc-chip">
+                            <span>Total</span>
+                            <b>@Model.Count</b>
+                        </div>
+                        <div class="arc-chip">
+                            <span>Approved</span>
+                            <b>@Model.Count(x => x.Status == "Approved")</b>
+                        </div>
+                        <div class="arc-chip">
+                            <span>Pending</span>
+                            <b>@Model.Count(x => x.Status == "Pending")</b>
+                        </div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(successMessage))
+                {
+                    <div style="margin-top:16px; padding:12px 14px; border-radius:12px; background:#ecfdf3; color:#027a48; border:1px solid #abefc6;">
+                        @successMessage
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div style="margin-top:16px; padding:12px 14px; border-radius:12px; background:#fff1f2; color:#b42318; border:1px solid #fecdca;">
+                        @errorMessage
+                    </div>
+                }
+
+                <div class="arc-filters">
+                    <div class="arc-field grow">
+                        <label>Search</label>
+                        <input type="text" placeholder="Reference, university, email..." />
+                    </div>
+
+                    <div class="arc-field">
+                        <label>Country</label>
+                        <select>
+                            <option>All</option>
+                        </select>
+                    </div>
+
+                    <div class="arc-field">
+                        <label>Status</label>
+                        <select>
+                            <option>All</option>
+                            <option>Pending</option>
+                            <option>Assigned</option>
+                            <option>Requires Admin Review</option>
+                            <option>Under Review</option>
+                            <option>Missing Docs</option>
+                            <option>Approved</option>
+                            <option>Rejected</option>
+                        </select>
+                    </div>
+
+                    <div class="arc-field">
+                        <label>Year</label>
+                        <select>
+                            <option>All</option>
+                        </select>
+                    </div>
+
+                    <button class="rm-btn rm-btn-light" type="button">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+
+                    <button class="rm-btn rm-btn-light" type="button">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </button>
+                </div>
+            </section>
+
+            <section class="rm-card">
+                <div class="rm-card-hd row">
+                    <div>
+                        <h2>All Requests</h2>
+                        <p>Only the assigned member can send a request to admin review.</p>
+                    </div>
+                </div>
+
+                <div class="rm-tablewrap">
+                    <table class="rm-table arc-table">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>University</th>
+                                <th>Country</th>
+                                <th>Email</th>
+                                <th>Assigned Member</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th class="right">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.Any())
+                            {
+                                @foreach (var item in Model)
+                                {
+                                    var isMine = string.Equals(item.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase);
+
+                                    <tr>
+                                        <td><b>@item.ReferenceNumber</b></td>
+                                        <td>@item.UniversityName</td>
+                                        <td>@item.Country</td>
+                                        <td>@item.UniversityEmail</td>
+                                        <td>@item.AssignedMember</td>
+                                        <td><span class="badge badge-pending">@item.Status</span></td>
+                                        <td>@item.SubmittedAt.ToString("yyyy-MM-dd")</td>
+                                        <td class="right">
+                                            @if (item.Status == "Requires Admin Review")
+                                            {
+                                                <button class="rm-mini" type="button" disabled>Sent to Admin</button>
+                                            }
+                                            else if (isMine)
+                                            {
+                                                <form asp-controller="Home"
+                                                      asp-action="RequireAdminReview"
+                                                      method="post"
+                                                      style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <button class="rm-mini" type="submit">Require Admin Review</button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <button class="rm-mini" type="button" disabled>Not Your Request</button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="8" style="text-align:center; padding:24px;">
+                                        No submitted requests yet.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</body>
+</html>

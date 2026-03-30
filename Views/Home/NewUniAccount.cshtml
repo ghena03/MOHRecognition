@@ -1,0 +1,120 @@
+﻿@using System.Collections.Generic
+@{
+    Layout = null;
+
+    // Countries loaded in controller via ViewBag
+    var countries = ViewBag.Countries as List<string> ?? new List<string>();
+
+    // optional error message (if you want later)
+    var error = ViewBag.ErrorMessage as string ?? "";
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <title>Create University Account</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="~/css/NewUniAccount.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+
+<body>
+    <div class="page">
+
+        <!-- HEADER -->
+        <div class="admin-header">
+            <h2>Create University Account</h2>
+            <p>Universities can register to access the recognition system</p>
+        </div>
+
+        <!-- REGISTER CARD -->
+        <div class="card">
+
+            <!-- LEFT IMAGE -->
+            <div class="sign">
+                <img src="https://rnji.mohe.gov.jo/AppLogin/images/SIGN.jpg" alt="MOHE">
+            </div>
+
+            <!-- RIGHT FORM -->
+            <div class="panel">
+                <h1>Sign up</h1>
+                <p class="subtext">Create a university account to access the recognition system.</p>
+
+                @if (!string.IsNullOrEmpty(error))
+                {
+                    <div class="error">@error</div>
+                }
+
+                <form asp-controller="Home" asp-action="NewUniAccount" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Institution -->
+                    <div class="row">
+                        <span class="icon"><i class="fa-solid fa-building-columns"></i></span>
+                        <input type="text" name="Institution" placeholder="Institution" required />
+                    </div>
+
+                    <!-- Country -->
+                    <div class="row">
+                        <span class="icon"><i class="fa-solid fa-earth-americas"></i></span>
+                        <select name="Country" required>
+                            <option value="" disabled selected>Country</option>
+                            @foreach (var c in countries)
+                            {
+                                <option value="@c">@c</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="row active">
+                        <span class="icon"><i class="fa-solid fa-envelope"></i></span>
+                        <input type="email" name="Email" placeholder="University Email" required />
+                    </div>
+
+                    <!-- Password (RULES) -->
+                    <div class="row active">
+                        <span class="icon"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password"
+                               name="Password"
+                               placeholder="Password"
+                               required
+                               minlength="8"
+                               pattern="^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$"
+                               title="Password must be at least 8 characters and include 1 uppercase letter and 1 special character." />
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="row">
+                        <span class="icon"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password"
+                               name="ConfirmPassword"
+                               placeholder="Confirm Password"
+                               required
+                               minlength="8" />
+                    </div>
+
+                    <!-- Small hint text -->
+                    <div style="margin-top:6px; font-size:12px; color:#64748b; line-height:1.5;">
+                        Password must be <b>8+ characters</b>, include <b>1 uppercase</b> and <b>1 special</b> character.
+                    </div>
+
+                    <!-- Agree -->
+                    <div class="remember-row">
+                        <label class="remember">
+                            <input type="checkbox" name="Agree" value="true" required />
+                            <span>I agree that all information are valid.</span>
+                        </label>
+                    </div>
+
+                    <button class="login register" type="submit">Register</button>              
+                </form>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

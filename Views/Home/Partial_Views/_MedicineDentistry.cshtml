@@ -1,0 +1,90 @@
+﻿@model DTOs.MedicineDentistryDto
+
+<div class="duration-wrap" style="margin-top:0;">
+    <div class="duration-titlebar">
+        Faculties of Medicine and Dentistry Information
+    </div>
+
+    <!-- UI Banner -->
+    <div id="medDenBanner" class="banner warn" style="display:none; margin-top:12px;">
+        <span class="dot"></span>
+        <span class="txt"></span>
+        <button type="button" class="x" onclick="document.getElementById('medDenBanner').style.display='none'">×</button>
+    </div>
+
+    <div class="table-wrap" style="margin-top:12px;">
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th style="width:280px;">&nbsp;</th>
+                    <th>Faculty of Medicine</th>
+                    <th>Faculty of Dentistry</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @* Helper: input number *@
+                @functions {
+                    string N(int? v) => v.HasValue ? v.Value.ToString() : "";
+                }
+
+                <tr>
+                    <td style="background:#f4eadc; font-weight:600;">Number of Students In Faculty</td>
+                    <td><input class="num" id="med_students" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_Students)" /></td>
+                    <td><input class="num" id="den_students" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_Students)" /></td>
+                </tr>
+
+                <tr>
+                    <td style="background:#f4eadc; font-weight:600;">Teaching Staff</td>
+                    <td><input class="num" id="med_teachingStaff" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_TeachingStaff)" /></td>
+                    <td><input class="num" id="den_teachingStaff" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_TeachingStaff)" /></td>
+                </tr>
+
+                <tr>
+                    <td style="background:#f4eadc; font-weight:600;">Professor</td>
+                    <td><input class="num" id="med_professor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_Professor)" /></td>
+                    <td><input class="num" id="den_professor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_Professor)" /></td>
+                </tr>
+
+                <tr>
+                    <td style="background:#f4eadc; font-weight:600;">Associate Professor</td>
+                    <td><input class="num" id="med_associateProfessor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_AssociateProfessor)" /></td>
+                    <td><input class="num" id="den_associateProfessor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_AssociateProfessor)" /></td>
+                </tr>
+
+                <tr>
+                    <td style="background:#f4eadc; font-weight:600;">Assistant Professor</td>
+                    <td><input class="num" id="med_assistantProfessor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_AssistantProfessor)" /></td>
+                    <td><input class="num" id="den_assistantProfessor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_AssistantProfessor)" /></td>
+                </tr>
+
+                <tr>
+                    <td style="background:#f4eadc; font-weight:600;">Lecturer</td>
+                    <td><input class="num" id="med_lecturer" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_Lecturer)" /></td>
+                    <td><input class="num" id="den_lecturer" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_Lecturer)" /></td>
+                </tr>
+
+                <tr>
+                    <td style="background:#f4eadc; font-weight:600;">Teacher</td>
+                    <td><input class="num" id="med_teacher" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_Teacher)" /></td>
+                    <td><input class="num" id="den_teacher" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_Teacher)" /></td>
+                </tr>
+
+                <tr>
+                    <td style="background:#f4eadc; font-weight:600;">Assistant Teacher</td>
+                    <td><input class="num" id="med_assistantTeacher" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_AssistantTeacher)" /></td>
+                    <td><input class="num" id="den_assistantTeacher" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_AssistantTeacher)" /></td>
+                </tr>
+
+                <tr>
+                    <td style="background:#f4eadc; font-weight:600;">Full-Time Lecturer</td>
+                    <td><input class="num" id="med_fullTimeLecturer" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_FullTimeLecturer)" /></td>
+                    <td><input class="num" id="den_fullTimeLecturer" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_FullTimeLecturer)" /></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="display:flex; justify-content:center; margin:14px 0 8px;">
+        <button type="button" class="btn-primary" onclick="MedDenSave()">Save</button>
+</div>

@@ -1,0 +1,200 @@
+﻿@model DTOs.AdmissionRequirementsDto
+
+<div class="card-bd">
+
+    <!-- Diploma -->
+    <div class="row" style="margin-bottom:14px;">
+        <div class="field" style="flex:1;">
+            <label>Diploma Requirement <span class="req">*</span></label>
+            <input id="req_Diploma" type="text" placeholder="Write requirement..." />
+        </div>
+        <div class="field" style="width:180px; align-self:end;">
+            <button type="button" class="btn-primary" data-adm-add="Diploma">Add</button>
+        </div>
+    </div>
+
+    @if (Model?.Diploma != null && Model.Diploma.Any())
+    {
+        <table class="tbl" style="margin-bottom:18px;">
+            <thead>
+                <tr>
+                    <th style="width:80px;">#</th>
+                    <th>Requirement</th>
+                    <th style="width:120px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.Diploma)
+                {
+                    <tr>
+                        <td>@r.Id</td>
+                        <td>@r.Requirement</td>
+                        <td>
+                            <button type="button" class="btn-danger"
+                                    data-adm-del="Diploma" data-id="@r.Id">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <!-- BSc -->
+    <div class="row" style="margin-bottom:14px;">
+        <div class="field" style="flex:1;">
+            <label>BSc Requirement <span class="req">*</span></label>
+            <input id="req_BSc" type="text" placeholder="Write requirement..." />
+        </div>
+        <div class="field" style="width:180px; align-self:end;">
+            <button type="button" class="btn-primary" data-adm-add="BSc">Add</button>
+        </div>
+    </div>
+
+    @if (Model?.BSC != null && Model.BSC.Any())
+    {
+        <table class="tbl" style="margin-bottom:18px;">
+            <thead>
+                <tr>
+                    <th style="width:80px;">#</th>
+                    <th>Requirement</th>
+                    <th style="width:120px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.BSC)
+                {
+                    <tr>
+                        <td>@r.Id</td>
+                        <td>@r.Requirement</td>
+                        <td>
+                            <button type="button" class="btn-danger"
+                                    data-adm-del="BSc" data-id="@r.Id">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <!-- Higher Diploma -->
+    <div class="row" style="margin-bottom:14px;">
+        <div class="field" style="flex:1;">
+            <label>Higher Diploma Requirement <span class="req">*</span></label>
+            <input id="req_HigherDiploma" type="text" placeholder="Write requirement..." />
+        </div>
+        <div class="field" style="width:180px; align-self:end;">
+            <button type="button" class="btn-primary" data-adm-add="HigherDiploma">Add</button>
+        </div>
+    </div>
+
+    @if (Model?.HigherDiploma != null && Model.HigherDiploma.Any())
+    {
+        <table class="tbl" style="margin-bottom:18px;">
+            <thead>
+                <tr>
+                    <th style="width:80px;">#</th>
+                    <th>Requirement</th>
+                    <th style="width:120px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.HigherDiploma)
+                {
+                    <tr>
+                        <td>@r.Id</td>
+                        <td>@r.Requirement</td>
+                        <td>
+                            <button type="button" class="btn-danger"
+                                    data-adm-del="HigherDiploma" data-id="@r.Id">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <!-- Master -->
+    <div class="row" style="margin-bottom:14px;">
+        <div class="field" style="flex:1;">
+            <label>Master Requirement <span class="req">*</span></label>
+            <input id="req_Master" type="text" placeholder="Write requirement..." />
+        </div>
+        <div class="field" style="width:180px; align-self:end;">
+            <button type="button" class="btn-primary" data-adm-add="Master">Add</button>
+        </div>
+    </div>
+
+    @if (Model?.Master != null && Model.Master.Any())
+    {
+        <table class="tbl" style="margin-bottom:18px;">
+            <thead>
+                <tr>
+                    <th style="width:80px;">#</th>
+                    <th>Requirement</th>
+                    <th style="width:120px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.Master)
+                {
+                    <tr>
+                        <td>@r.Id</td>
+                        <td>@r.Requirement</td>
+                        <td>
+                            <button type="button" class="btn-danger"
+                                    data-adm-del="Master" data-id="@r.Id">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <!-- PhD -->
+    <div class="row" style="margin-bottom:14px;">
+        <div class="field" style="flex:1;">
+            <label>PhD Requirement <span class="req">*</span></label>
+            <input id="req_PhD" type="text" placeholder="Write requirement..." />
+        </div>
+        <div class="field" style="width:180px; align-self:end;">
+            <button type="button" class="btn-primary" data-adm-add="PhD">Add</button>
+        </div>
+    </div>
+
+    @if (Model?.PhD != null && Model.PhD.Any())
+    {
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th style="width:80px;">#</th>
+                    <th>Requirement</th>
+                    <th style="width:120px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.PhD)
+                {
+                    <tr>
+                        <td>@r.Id</td>
+                        <td>@r.Requirement</td>
+                        <td>
+                            <button type="button" class="btn-danger"
+                                    data-adm-del="PhD" data-id="@r.Id">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+</div>

@@ -1,0 +1,106 @@
+﻿@model DTOs.ProgramHoursDto
+@using System.Linq
+
+<div class="hours-wrap">
+    <div class="duration-wrap" style="margin-top:0;">
+        <div class="duration-titlebar">
+            Number of Theoretical and Practical Hours in Each Program
+        </div>
+
+        <input type="hidden" id="hrs_editId" value="" />
+
+        <div class="grid-3" style="margin-top:14px;">
+            <div class="field">
+                <label>Program <span class="req">*</span></label>
+                <select id="hrs_programId">
+                    <option value="">-- Choose --</option>
+                    @if (Model?.Programs != null)
+                    {
+                        foreach (var p in Model.Programs)
+                        {
+                            <option value="@p.Id">@p.Program</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Number of Theoretical Hours <span class="req">*</span></label>
+                <input id="hrs_theory" type="number" min="0" placeholder="e.g. 90" />
+            </div>
+
+            <div class="field">
+                <label>Number of Practical Hours <span class="req">*</span></label>
+                <input id="hrs_practical" type="number" min="0" placeholder="e.g. 45" />
+            </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+            <button type="button" class="btn-primary" id="hrs_addBtn">Add</button>
+            <button type="button" class="btn-primary" id="hrs_updateBtn" style="display:none;">Update</button>
+            <button type="button" class="btn-ghost" id="hrs_cancelBtn" style="display:none;">Cancel</button>
+        </div>
+
+        <div style="margin-top:16px;"></div>
+
+        @if (Model?.Rows != null && Model.Rows.Any())
+        {
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th style="width:46px;">#</th>
+                        <th>Program</th>
+                        <th style="width:170px;">Theoretical</th>
+                        <th style="width:170px;">Practical</th>
+                        <th style="width:160px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var i = 1;
+                        foreach (var r in Model.Rows)
+                        {
+                            <tr>
+                                <td>@i</td>
+                                <td>@r.ProgramName</td>
+                                <td>@r.TheoreticalHours</td>
+                                <td>@r.PracticalHours</td>
+                                <td style="text-align:center;">
+                                    <div class="icon-actions">
+                                        <button type="button"
+                                                class="iconbtn iconbtn-edit hrs-edit"
+                                                data-id="@r.Id"
+                                                data-programid="@r.ProgramId"
+                                                data-theory="@r.TheoreticalHours"
+                                                data-practical="@r.PracticalHours"
+                                                title="Edit"
+                                                aria-label="Edit">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.83H5v-.92l9.06-9.06.92.92L5.92 20.08zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" />
+                                            </svg>
+                                        </button>
+
+                                        <button type="button"
+                                                class="iconbtn iconbtn-del hrs-del"
+                                                data-id="@r.Id"
+                                                title="Delete"
+                                                aria-label="Delete">
+                                            ×
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-hint" style="margin-top:10px;">
+                No hours added yet. Use the form above to add the first row.
+            </div>
+        }
+    </div>
+</div>

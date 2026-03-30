@@ -1,0 +1,1083 @@
+﻿@using DTOs
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Submit Application</title>
+
+    <link rel="stylesheet" href="~/css/uni/UniDashboard.css" asp-append-version="true" />
+
+  
+</head>
+
+<body class="submitapp-page ltr">
+
+    <!-- HEADER -->
+    <header class="top-header en">
+        <div class="hdr-grid">
+            <div class="hdr-lang"></div>
+
+            <nav class="hdr-nav">
+                <a class="hdr-link" href="@Url.Action("UniStatus", "Home")">← Back</a>
+                <a class="hdr-link" href="https://www.mohe.gov.jo/" target="_blank" rel="noopener">Ministry Website</a>
+                <a class="hdr-link" href="/Instructions">Instructions</a>
+                <a class="hdr-link" href="@Url.Action("UniStatus", "Home")#faqs">FAQs</a>
+            </nav>
+
+            <div class="hdr-logo">
+                <a href="https://www.mohe.gov.jo/" target="_blank" rel="noopener">
+                                     <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+
+                </a>
+            </div>
+        </div>
+
+        <div class="brand-bar"></div>
+    </header>
+
+    <div class="layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <a href="@Url.Action("UniStatus", "Home")" class="side-user">
+                <div class="user-avatar">UN</div>
+                <div class="user-info">
+                    <span class="user-name">University Account</span>
+                    <span class="user-link">Show account</span>
+                </div>
+            </a>
+
+            <a class="side-item" href="#sec-instructions">Instructions</a>
+
+            <a class="side-item" href="#sec-general">Public Info</a>
+            <a class="side-item" href="#sec-academic">Academic Info</a>
+            <a class="side-item" href="#sec-admission">Admission Requirements</a>
+            <a class="side-item" href="#sec-duration">Studying Duration</a>
+            <a class="side-item" href="#sec-faculties">Faculties</a>
+            <a class="side-item" href="#sec-programs">Programs</a>
+            <a class="side-item" href="#sec-students">Number of Students</a>
+            <a class="side-item" href="#sec-hours">Number of Hours</a>
+            <a class="side-item" href="#sec-ratios">Percentages</a>
+            <a class="side-item" href="#sec-staff">Teaching Staff</a>
+            <a class="side-item" href="#sec-phd">PhD Holders</a>
+            <a class="side-item" href="#sec-med">Medicine Faculties</a>
+            <a class="side-item" href="#sec-hosp">Hospitals</a>
+            <a class="side-item" href="#sec-infra">Infrastructure</a>
+            <a class="side-item" href="#sec-labs">Laboratories</a>
+            <a class="side-item" href="#sec-library">Library</a>
+            <a class="side-item" href="#sec-attachments">Attachments</a>
+            <a class="side-item" href="#sec-pictures">Pictures</a>
+            <a class="side-item" href="#sec-submit-application">Finish &amp; Submit</a>
+           
+
+            <div class="side-footer">
+                <a class="logout" href="@Url.Action("Logout", "Home")">Logout</a>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="content">
+
+            <!-- WELCOME -->
+            <section class="welcome" id="sec-instructions">
+                <div class="welcome-card">
+                    <div class="welcome-icon" aria-hidden="true">📝</div>
+
+                    <h1 class="welcome-title">Welcome to the Submission System</h1>
+                    <p class="welcome-text">
+                        Fill each section then click Save. You can submit only after everything is complete.
+                    </p>
+
+                    <div class="mini-check">
+                        <div class="mini-row"><span class="dot"></span>Public Info</div>
+                        <div class="mini-row"><span class="dot"></span>Academic Info</div>
+                        <div class="mini-row"><span class="dot"></span>Attachments</div>
+                        <div class="mini-row"><span class="dot"></span>Finish & Submit</div>
+                    </div>
+
+                    <a class="btn-primary" href="#sec-general">Start with Public Info</a>
+                </div>
+            </section>
+
+            <!-- ✅ ONE MAIN FORM ONLY (no nested forms) -->
+            <form method="post" class="form-root" novalidate>
+
+                <!-- ===================== Public / General Info ===================== -->
+                @{
+                    var P = ViewBag.Public as DTOs.PublicInfoDto ?? new DTOs.PublicInfoDto();
+                }
+
+                <section class="card" id="sec-general">
+                    <div class="card-hd">
+                        <h2>Public Info</h2>
+                        <p>Fields marked with (*) are required.</p>
+                    </div>
+
+                    <div class="card-bd">
+
+                        <!-- Top basic -->
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Name of Institution <span class="req">*</span></label>
+                                <input name="InstitutionName" value="@P.InstitutionName" />
+                            </div>
+
+                            <div class="field">
+                                <label>Party Forwarding Form <span class="req">*</span></label>
+                                <input name="PartyForwardingForm" value="@P.PartyForwardingForm" />
+                            </div>
+                        </div>
+
+                        <!-- Dates + Oversight -->
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Founding Date <span class="req">*</span></label>
+                                <input name="FoundationDate" type="date" value="@P.FoundationDate" />
+                            </div>
+
+                            <div class="field">
+                                <label>Date of Conventional Academic Offerings</label>
+                                <input name="ConventionalAcademicOfferingsDate" type="date" value="@P.ConventionalAcademicOfferingsDate" />
+                            </div>
+
+                            <div class="field">
+                                <label>Date of non-conventional Program Offerings</label>
+                                <input name="NonConventionalProgramOfferingsDate" type="date" value="@P.NonConventionalProgramOfferingsDate" />
+                            </div>
+
+                            <div class="field">
+                                <label>Official Entity Possessing Oversight Rights</label>
+                                <select name="OversightRightsEntity">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(P.OversightRightsEntity == "Ministry")">Ministry</option>
+                                    <option selected="@(P.OversightRightsEntity == "Accreditation Body")">Accreditation Body</option>
+                                    <option selected="@(P.OversightRightsEntity == "Other")">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- President info -->
+                        <div class="subhead">Information of President of Institution</div>
+                        <div class="grid-3">
+                            <div class="field">
+                                <label>Name</label>
+                                <input name="PresidentName" value="@P.PresidentName" />
+                            </div>
+                            <div class="field">
+                                <label>Highest Academic Degree</label>
+                                <input name="PresidentHighestAcademicDegree" value="@P.PresidentHighestAcademicDegree" />
+                            </div>
+                            <div class="field">
+                                <label>Major Area of Study</label>
+                                <input name="PresidentMajorAreaOfStudy" value="@P.PresidentMajorAreaOfStudy" />
+                            </div>
+                        </div>
+
+                        <!-- Contact info -->
+                        <div class="subhead">Contact Information</div>
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Mailing Full Address <span class="req">*</span></label>
+                                <input name="MailingFullAddress" value="@P.MailingFullAddress" />
+                            </div>
+
+                            <div class="field">
+                                <label>Direct Phone Number <span class="req">*</span></label>
+                                <input name="DirectPhoneNumber" value="@P.DirectPhoneNumber" inputmode="tel" />
+                            </div>
+
+                            <div class="field">
+                                <label>Fax Number <span class="req">*</span></label>
+                                <input name="FaxNumber" value="@P.FaxNumber" inputmode="tel" />
+                            </div>
+
+                            <div class="field">
+                                <label>Email Address <span class="req">*</span></label>
+                                <input name="EmailAddress" value="@P.EmailAddress" type="email" />
+                            </div>
+
+                            <div class="field">
+                                <label>Institutional Web Address <span class="req">*</span></label>
+                                <input name="InstitutionalWebAddress" value="@P.InstitutionalWebAddress" type="url" placeholder="https://..." />
+                            </div>
+
+                            <div class="field">
+                                <label>Last Date Website Updated</label>
+                                <input name="LastDateWebsiteUpdated" type="date" value="@P.LastDateWebsiteUpdated" />
+                            </div>
+                        </div>
+
+                        <!-- Identity -->
+                        <div class="subhead">Institution Identity</div>
+
+                        <div class="field">
+                            <label>Institutional Vision Statement</label>
+                            <textarea name="InstitutionalVisionStatement" rows="3">@P.InstitutionalVisionStatement</textarea>
+                        </div>
+
+                        <div class="field">
+                            <label>Institutional Mission Statement</label>
+                            <textarea name="InstitutionalMissionStatement" rows="3">@P.InstitutionalMissionStatement</textarea>
+                        </div>
+
+                        <div class="field">
+                            <label>Institutional Targetted Objectives</label>
+                            <textarea name="InstitutionalTargettedObjectives" rows="3">@P.InstitutionalTargettedObjectives</textarea>
+                        </div>
+
+                        <div class="field">
+                            <label>Institutional Values</label>
+                            <textarea name="InstitutionalValues" rows="3">@P.InstitutionalValues</textarea>
+                        </div>
+
+                        <!-- Save (AJAX - NO RELOAD, NO SCROLL) -->
+                        <div class="actions" style="justify-content:center; margin-top:14px;">
+                            <button type="button"
+                                    class="btn-primary"
+                                    id="btnSavePublic"
+                                    data-save-url="@Url.Action("SavePublicInfo","Home")">
+                                Save Public Info
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===================== AcademicInfo ===================== -->
+                @{
+                    var A = ViewBag.Academic as DTOs.AcademicInfoDto ?? new DTOs.AcademicInfoDto();
+                }
+
+                <section id="sec-academic" class="card">
+                    <div class="card-hd">
+                        <h2>Academic Info</h2>
+                        <p>Fill academic information and save this section.</p>
+                    </div>
+
+                    <div class="card-bd">
+
+                        <!-- Type of Academic Institution -->
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Type of Academic Institution <span class="req">*</span></label>
+                                <select name="TypeOfAcademicInstitution">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(A.TypeOfAcademicInstitution == "Governmental")">Governmental</option>
+                                    <option selected="@(A.TypeOfAcademicInstitution == "Regional")">Regional</option>
+                                    <option selected="@(A.TypeOfAcademicInstitution == "International")">International</option>
+                                    <option selected="@(A.TypeOfAcademicInstitution == "Others")">Others</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label></label>
+                                <div class="muted" style="margin-top:10px;">Degrees in institution <span class="req">*</span></div>
+
+                                <div class="degree-options" style="margin-top:10px;">
+                                    <label class="degree-pill">
+                                        <input type="checkbox" name="DegreeDiploma" value="true" @(A.DegreeDiploma ? "checked" : "") />
+                                        <span>Diploma</span>
+                                    </label>
+                                    <label class="degree-pill">
+                                        <input type="checkbox" name="DegreeBSC" value="true" @(A.DegreeBSC ? "checked" : "") />
+                                        <span>BSC</span>
+                                    </label>
+                                    <label class="degree-pill">
+                                        <input type="checkbox" name="DegreeHigherDiploma" value="true" @(A.DegreeHigherDiploma ? "checked" : "") />
+                                        <span>Higher Diploma</span>
+                                    </label>
+                                    <label class="degree-pill">
+                                        <input type="checkbox" name="DegreeMaster" value="true" @(A.DegreeMaster ? "checked" : "") />
+                                        <span>Master</span>
+                                    </label>
+                                    <label class="degree-pill">
+                                        <input type="checkbox" name="DegreePhD" value="true" @(A.DegreePhD ? "checked" : "") />
+                                        <span>PhD</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Official recognition / accreditation -->
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Has there been Official Recognition in Home Country? <span class="req">*</span></label>
+                                <select name="OfficialRecognitionInHomeCountry">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(A.OfficialRecognitionInHomeCountry == "Yes")">Yes</option>
+                                    <option selected="@(A.OfficialRecognitionInHomeCountry == "No")">No</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label>Has there been Official Accreditation & Quality Assurance in Home Country? <span class="req">*</span></label>
+                                <select name="OfficialAccreditationQualityInHomeCountry">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(A.OfficialAccreditationQualityInHomeCountry == "Yes")">Yes</option>
+                                    <option selected="@(A.OfficialAccreditationQualityInHomeCountry == "No")">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Language -->
+                        <div class="subhead">Language of Instruction <span class="req">*</span></div>
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>For Domestic Students <span class="req">*</span></label>
+                                <input name="LanguageForDomesticStudents" value="@A.LanguageForDomesticStudents" />
+                            </div>
+                            <div class="field">
+                                <label>For Foreign Students <span class="req">*</span></label>
+                                <input name="LanguageForForeignStudents" value="@A.LanguageForForeignStudents" />
+                            </div>
+                        </div>
+
+                        <!-- Joint classrooms -->
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Are Foreign Students offered programs in joint classrooms with local students? <span class="req">*</span></label>
+                                <select name="ForeignStudentsJointClassroomsWithLocal">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(A.ForeignStudentsJointClassroomsWithLocal == "Yes")">Yes</option>
+                                    <option selected="@(A.ForeignStudentsJointClassroomsWithLocal == "No")">No</option>
+                                </select>
+                            </div>
+                            <div class="field"></div>
+                        </div>
+
+                        <!-- Student population -->
+                        <div class="subhead">Overall Student Population of Applying Institution <span class="req">*</span></div>
+                        <div class="grid-4">
+                            <div class="field">
+                                <label>Local Student Population</label>
+                                <input type="number" min="0" name="LocalStudentPopulation" value="@(A.LocalStudentPopulation?.ToString() ?? "")" />
+                            </div>
+                            <div class="field">
+                                <label>Foreign Student Population</label>
+                                <input type="number" min="0" name="ForeignStudentPopulation" value="@(A.ForeignStudentPopulation?.ToString() ?? "")" />
+                            </div>
+                            <div class="field">
+                                <label>Jordanian Student Population <span class="req">*</span></label>
+                                <input type="number" min="0" name="JordanianStudentPopulation" value="@(A.JordanianStudentPopulation?.ToString() ?? "")" />
+                            </div>
+                            <div class="field">
+                                <label>Total <span class="req">*</span></label>
+                                <input type="number" min="0" name="TotalStudentPopulation" value="@(A.TotalStudentPopulation?.ToString() ?? "")" />
+                            </div>
+                        </div>
+
+                        <!-- Staff headcount -->
+                        <div class="subhead">Academic Staff Head Count Per Academic Rank <span class="req">*</span></div>
+                        <div class="grid-4">
+                            <div class="field"><label>Professor <span class="req">*</span></label><input type="number" min="0" name="StaffProfessor" value="@(A.StaffProfessor?.ToString() ?? "")" /></div>
+                            <div class="field"><label>Associate Professor <span class="req">*</span></label><input type="number" min="0" name="StaffAssociateProfessor" value="@(A.StaffAssociateProfessor?.ToString() ?? "")" /></div>
+                            <div class="field"><label>Assistant Professor <span class="req">*</span></label><input type="number" min="0" name="StaffAssistantProfessor" value="@(A.StaffAssistantProfessor?.ToString() ?? "")" /></div>
+                            <div class="field"><label>Lab Assistant <span class="req">*</span></label><input type="number" min="0" name="StaffLabAssistant" value="@(A.StaffLabAssistant?.ToString() ?? "")" /></div>
+
+                            <div class="field"><label>Researcher <span class="req">*</span></label><input type="number" min="0" name="StaffResearcher" value="@(A.StaffResearcher?.ToString() ?? "")" /></div>
+                            <div class="field"><label>Teacher <span class="req">*</span></label><input type="number" min="0" name="StaffTeacher" value="@(A.StaffTeacher?.ToString() ?? "")" /></div>
+                            <div class="field"><label>Assistant Teacher <span class="req">*</span></label><input type="number" min="0" name="StaffAssistantTeacher" value="@(A.StaffAssistantTeacher?.ToString() ?? "")" /></div>
+                            <div class="field"><label>Others</label><input type="number" min="0" name="StaffOthers" value="@(A.StaffOthers?.ToString() ?? "")" /></div>
+                        </div>
+
+                        <!-- Education system -->
+                        <div class="subhead">Educational System in Effect</div>
+                        <div class="grid-4">
+                            <label class="check-label"><input type="checkbox" name="SystemYearlyProgram" value="true" @(A.SystemYearlyProgram ? "checked" : "") /> Yearly Program</label>
+                            <label class="check-label"><input type="checkbox" name="SystemSemesterProgram" value="true" @(A.SystemSemesterProgram ? "checked" : "") /> Semester Program</label>
+                            <label class="check-label"><input type="checkbox" name="SystemCreditHours" value="true" @(A.SystemCreditHours ? "checked" : "") /> Credit Hours</label>
+                            <label class="check-label"><input type="checkbox" name="SystemECTS" value="true" @(A.SystemECTS ? "checked" : "") /> ECTS</label>
+                        </div>
+
+                        <!-- Semester hours -->
+                        <div class="subhead">Allowable Semester Hours Allowed to Students</div>
+                        <div class="grid-2">
+                            <div class="field"><label>Min Hours</label><input type="number" min="0" name="MinHours" value="@(A.MinHours?.ToString() ?? "")" /></div>
+                            <div class="field"><label>Max Hours</label><input type="number" min="0" name="MaxHours" value="@(A.MaxHours?.ToString() ?? "")" /></div>
+                        </div>
+
+                        <!-- Research -->
+                        <div class="subhead">Research Activities By Faculty <span class="req">*</span></div>
+                        <div class="grid-2">
+                            <div class="field"><label>Items accounted by Scopus <span class="req">*</span></label><input type="number" min="0" name="ResearchItemsScopus" value="@(A.ResearchItemsScopus?.ToString() ?? "")" /></div>
+                            <div class="field"><label>Items accounted by other search engines <span class="req">*</span></label><input type="number" min="0" name="ResearchItemsOtherSearchEngines" value="@(A.ResearchItemsOtherSearchEngines?.ToString() ?? "")" /></div>
+                        </div>
+
+                        <!-- Practice -->
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Are foreign graduates (Medicine/Dentistry/Pharmacy) allowed to practice in home country?</label>
+                                <select name="ForeignGraduatesAllowedToPractice">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(A.ForeignGraduatesAllowedToPractice == "Yes")">Yes</option>
+                                    <option selected="@(A.ForeignGraduatesAllowedToPractice == "No")">No</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label>Does institution enforce class attendance for all specialties?</label>
+                                <select name="EnforceClassAttendance">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(A.EnforceClassAttendance == "Yes")">Yes</option>
+                                    <option selected="@(A.EnforceClassAttendance == "No")">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Mention Exceptions</label>
+                            <input name="MentionExceptions" value="@A.MentionExceptions" />
+                        </div>
+
+                        <!-- Transfers -->
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Are part-time/correspondence students allowed to transfer?</label>
+                                <select name="PartTimeStudentsAllowedToTransfer">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(A.PartTimeStudentsAllowedToTransfer == "Yes")">Yes</option>
+                                    <option selected="@(A.PartTimeStudentsAllowedToTransfer == "No")">No</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Elaborate Requirements and Procedures</label>
+                                <input name="TransferElaborateRequirements" value="@A.TransferElaborateRequirements" />
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Are distance learning students admissible and allowed to join graduate programs?</label>
+                                <select name="DistanceLearningStudentsAdmissible">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(A.DistanceLearningStudentsAdmissible == "Yes")">Yes</option>
+                                    <option selected="@(A.DistanceLearningStudentsAdmissible == "No")">No</option>
+                                </select>
+                            </div>
+                            <div class="field"></div>
+                        </div>
+
+                        <!-- Max transfer -->
+                        <div class="subhead">Maximum Transfer Credits Counted Toward Graduation</div>
+                        <div class="grid-3">
+                            <div class="field"><label>Hours</label><input name="MaxTransferHours" value="@A.MaxTransferHours" /></div>
+                            <div class="field"><label>Years</label><input name="MaxTransferYears" value="@A.MaxTransferYears" /></div>
+                            <div class="field"><label>Semesters</label><input name="MaxTransferSemesters" value="@A.MaxTransferSemesters" /></div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Accept intermediate degree students (2-year diplomas) toward higher degree programs?</label>
+                                <select name="AcceptIntermediateDegreeStudents">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(A.AcceptIntermediateDegreeStudents == "Yes")">Yes</option>
+                                    <option selected="@(A.AcceptIntermediateDegreeStudents == "No")">No</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Do you require matriculation/qualifying exam for diploma/community college transfers?</label>
+                                <select name="MatriculationExamRequiredForTransfers">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(A.MatriculationExamRequiredForTransfers == "Yes")">Yes</option>
+                                    <option selected="@(A.MatriculationExamRequiredForTransfers == "No")">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Percentage of transfer credits allowed</label>
+                            <input name="PercentageTransferCreditsAllowed" value="@A.PercentageTransferCreditsAllowed" />
+                        </div>
+
+                        <!-- Save (AJAX - NO RELOAD, NO SCROLL) -->
+                        <div class="actions" style="justify-content:center; margin-top:14px;">
+                            <button type="button"
+                                    class="btn-primary"
+                                    id="btnSaveAcademic"
+                                    data-save-url="@Url.Action("SaveAcademicInfo","Home")">
+                                Save Academic Info
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                @* ===================== Admission Requirements ===================== *@
+                <section id="sec-admission">
+                    <div class="card">
+                        <div class="card-hd">
+                            <div class="card-title">Admission Requirements</div>
+                        </div>
+
+                        <div id="admission-container"
+                             data-add-url="@Url.Action("AdmissionAdd","Home")"
+                             data-del-url="@Url.Action("AdmissionDelete","Home")">
+                            @await Html.PartialAsync("Partial_Views/_AdmissionRequirements", (DTOs.AdmissionRequirementsDto)ViewBag.Admission)
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===================== Study Duration ===================== -->
+                <section id="sec-duration" class="card">
+                    <div class="card-hd">
+                        <h2>Study Duration</h2>
+                        <p>Minimum required duration for attendance and completion of the degree.</p>
+                    </div>
+
+                    <div class="card-bd">
+                      
+
+                       @{
+    var D = (DTOs.StudyDurationDto)(ViewBag.Duration ?? new DTOs.StudyDurationDto());
+}
+
+                        <div class="duration-wrap">
+                            <div class="duration-titlebar">
+                                Minimum Required Duration for Attendance and Completion of the Degree
+                            </div>
+
+                            <div class="duration-table-scroll">
+                                <table class="duration-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-degree"></th>
+                                            <th class="col-metric">
+                                                Minimum Period for Completion <span class="req">*</span>
+                                            </th>
+                                            <th class="col-metric">
+                                                Minimum Period for Attendance <span class="req">*</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <tr>
+                                            <td class="degree-cell">Diploma <span class="req">*</span></td>
+                                            <td>
+                                                <input class="duration-input"
+                                                       name="Duration.DiplomaObtain"
+                                                       value="@D.DiplomaObtain"
+                                                       placeholder="e.g., 2 years" />
+                                            </td>
+                                            <td>
+                                                <input class="duration-input"
+                                                       name="Duration.DiplomaEnrollment"
+                                                       value="@D.DiplomaEnrollment"
+                                                       placeholder="e.g., 1 year" />
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="degree-cell">BSC <span class="req">*</span></td>
+                                            <td>
+                                                <input class="duration-input"
+                                                       name="Duration.BachelorObtain"
+                                                       value="@D.BachelorObtain"
+                                                       placeholder="e.g., 4 years" />
+                                            </td>
+                                            <td>
+                                                <input class="duration-input"
+                                                       name="Duration.BachelorEnrollment"
+                                                       value="@D.BachelorEnrollment"
+                                                       placeholder="e.g., 3 years" />
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="degree-cell">Higher Diploma <span class="req">*</span></td>
+                                            <td>
+                                                <input class="duration-input"
+                                                       name="Duration.HigherDiplomaObtain"
+                                                       value="@D.HigherDiplomaObtain"
+                                                       placeholder="e.g., 1 year" />
+                                            </td>
+                                            <td>
+                                                <input class="duration-input"
+                                                       name="Duration.HigherDiplomaEnrollment"
+                                                       value="@D.HigherDiplomaEnrollment"
+                                                       placeholder="e.g., 6 months" />
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="degree-cell">Master <span class="req">*</span></td>
+                                            <td>
+                                                <input class="duration-input"
+                                                       name="Duration.MasterObtain"
+                                                       value="@D.MasterObtain"
+                                                       placeholder="e.g., 2 years" />
+                                            </td>
+                                            <td>
+                                                <input class="duration-input"
+                                                       name="Duration.MasterEnrollment"
+                                                       value="@D.MasterEnrollment"
+                                                       placeholder="e.g., 1 year" />
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="degree-cell">PhD <span class="req">*</span></td>
+                                            <td>
+                                                <input class="duration-input"
+                                                       name="Duration.PhDObtain"
+                                                       value="@D.PhDObtain"
+                                                       placeholder="e.g., 3 years" />
+                                            </td>
+                                            <td>
+                                                <input class="duration-input"
+                                                       name="Duration.PhDEnrollment"
+                                                       value="@D.PhDEnrollment"
+                                                       placeholder="e.g., 2 years" />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Save (AJAX - NO RELOAD, NO SCROLL) -->
+                        <div class="actions" style="justify-content:center; margin-top:16px;">
+                            <button type="button" class="btn-primary" id="btnSaveDuration">
+                                Save Duration
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===================== Faculties ===================== -->
+                <section id="sec-faculties" class="card">
+                    <div class="card-hd">
+                        <h2>Faculties</h2>
+                        <p>Add all faculties in your institution.</p>
+                    </div>
+
+                    <div class="card-bd">
+                        <div id="faculties-container"
+                             data-add-url="@Url.Action("FacultiesAdd","Home")"
+                             data-del-url="@Url.Action("FacultiesDelete","Home")"
+                             data-update-url="@Url.Action("FacultiesUpdate","Home")">
+                            @await Html.PartialAsync("Partial_Views/_Faculties", (DTOs.FacultiesDto)ViewBag.Faculties)
+                        </div>
+                    </div>
+                </section>
+                <!-- ===================== Programs ===================== -->
+                <section id="sec-programs" class="card">
+                    <div class="card-hd">
+                        <h2>Programs</h2>
+                        <p>Add all programs. Faculty is selected from Faculties section.</p>
+                    </div>
+
+                    <div class="card-bd">
+                        <div id="programs-container"
+                             data-add-url="@Url.Action("ProgramsAdd","Home")"
+                             data-update-url="@Url.Action("ProgramsUpdate","Home")"
+                             data-del-url="@Url.Action("ProgramsDelete","Home")">
+                            @await Html.PartialAsync("Partial_Views/_Programs", (DTOs.ProgramsDto)ViewBag.Programs)
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===================== StudentsNumbers ===================== -->
+                <section id="sec-students" class="card">
+                    <div class="card-hd">
+                        <h2>Number of Students</h2>
+                        <p>Add students numbers per program.</p>
+                    </div>
+
+                    <div class="card-bd">
+                            <div id="studentsNumbersContainer"
+                                 data-partial-url="@Url.Action("StudentsNumbersPartial", "Home")"
+                                 data-add-url="@Url.Action("StudentsNumbersAdd", "Home")"
+                                 data-update-url="@Url.Action("StudentsNumbersUpdate", "Home")"
+                                 data-del-url="@Url.Action("StudentsNumbersDelete", "Home")">
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ===================== Number of Hours ===================== -->             
+                <section id="sec-hours" class="card">
+                    <div class="card-hd">
+                        <h2>Number of Hours</h2>
+                        <p>Number of theoretical and practical hours in each program.</p>
+                    </div>
+
+                    <div class="card-bd">
+                            <div id="hoursContainer"
+                                 data-partial-url="@Url.Action("ProgramHoursPartial", "Home")"
+                                 data-add-url="@Url.Action("ProgramHoursAdd", "Home")"
+                                 data-update-url="@Url.Action("ProgramHoursUpdate", "Home")"
+                                 data-del-url="@Url.Action("ProgramHoursDelete", "Home")">
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ===================== Ratio & Percenteges ===================== -->
+                @using DTOs
+                @{
+                    var R = (RatiosDto)(ViewBag.Ratios ?? new RatiosDto());
+                }
+
+                <section id="sec-ratios" class="card">
+                    <div class="card-hd">
+                        <h2>Percentages</h2>
+                    </div>
+
+                    <div class="card-bd">
+
+                        <div class="ratios-grid">
+                            <!-- LEFT TABLE -->
+                            <div class="ratios-box">
+                                <div class="ratios-title">Overall Students and Teaching Staff Ratio</div>
+
+                                <div class="ratios-table theme-mint">
+                                    <div class="rrow">
+                                        <div class="rlabel">Student: Full Time Teachers <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.StudentToFullTimeTeachers" value="@R.StudentToFullTimeTeachers" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Student: Full And Part Time Teachers <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.StudentToFullAndPartTimeTeachers" value="@R.StudentToFullAndPartTimeTeachers" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Associate Professor: Full Time Teachers <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.AssociateProfessorToFullTimeTeachers" value="@R.AssociateProfessorToFullTimeTeachers" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Assistant Professor: Full Time Teachers <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.AssistantProfessorToFullTimeTeachers" value="@R.AssistantProfessorToFullTimeTeachers" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Professor: Full Time Teachers <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.ProfessorToFullTimeTeachers" value="@R.ProfessorToFullTimeTeachers" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Ph.D: Full Time Teachers <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.PhDToFullTimeTeachers" value="@R.PhDToFullTimeTeachers" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Professor: Part Time Teachers <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.ProfessorToPartTimeTeachers" value="@R.ProfessorToPartTimeTeachers" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Ph.D: Part Time Teachers <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.PhDToPartTimeTeachers" value="@R.PhDToPartTimeTeachers" placeholder="1:25" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT TABLE -->
+                            <div class="ratios-box">
+                                <div class="ratios-title">Teacher Rank - Student Ratio (for M.Sc. and Ph.D Degree)</div>
+
+                                <div class="ratios-table theme-mint">
+                                    <div class="rrow">
+                                        <div class="rlabel">Full Time Professor: Student <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.FullTimeProfessorToStudent" value="@R.FullTimeProfessorToStudent" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Part Time Professor: Student <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.PartTimeProfessorToStudent" value="@R.PartTimeProfessorToStudent" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Full Time Associate Professor: Student <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.FullTimeAssociateProfessorToStudent" value="@R.FullTimeAssociateProfessorToStudent" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Part Time Associate Professor: Student <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.PartTimeAssociateProfessorToStudent" value="@R.PartTimeAssociateProfessorToStudent" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Full Time Assistant Professor: Student <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.FullTimeAssistantProfessorToStudent" value="@R.FullTimeAssistantProfessorToStudent" placeholder="1:25" />
+                                        </div>
+                                    </div>
+
+                                    <div class="rrow">
+                                        <div class="rlabel">Part Time Assistant Professor: Student <span class="req">*</span></div>
+                                        <div class="rinput">
+                                                <input name="Ratios.PartTimeAssistantProfessorToStudent" value="@R.PartTimeAssistantProfessorToStudent" placeholder="1:25" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="actions" style="justify-content:flex-end;">
+    <button type="button" id="btnSaveRatios" class="btn-primary">Save</button>
+</div>
+                     
+
+                    </div>
+                </section> 
+
+
+
+
+                    <!-- ---------------------- Teaching staff ------------------ -->
+                <section id="sec-staff" class="card">
+                    <div class="card-hd">
+                        <h2>Teaching Staff</h2>
+                    </div>
+                    <div class="card-bd">
+                        <div id="teachingStaffContainer"
+                             data-load-url="@Url.Action("TeachingStaffPartial", "Home")"
+                             data-upload-url="@Url.Action("UploadTeachingStaffExcel", "Home")"
+                             data-delete-url="@Url.Action("DeleteTeachingStaffExcel", "Home")">
+                        </div>
+                    </div>
+                </section>
+
+
+                    <!-- ---------------------- PhD Holders ------------------ -->
+                    <section id="sec-phd" class="card">
+                        <div class="card-hd"><h2>PhD Holders</h2></div>
+                        <div class="card-bd">
+                            <div id="phdHoldersContainer"
+                                 data-partial-url="@Url.Action("PhdHoldersPartial", "Home")"
+                                 data-add-url="@Url.Action("PhdHoldersAdd", "Home")"
+                                 data-update-url="@Url.Action("PhdHoldersUpdate", "Home")"
+                                 data-del-url="@Url.Action("PhdHoldersDelete", "Home")">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ---------------------- Medicine and Dentistry------------------ -->
+                    <section id="sec-med" class="card">
+                        <div class="card-hd"><h2>Medicine Faculties</h2></div>
+
+                        <div class="card-bd">
+                            <div id="medDenContainer"
+                                 data-partial-url="@Url.Action("MedicineDentistryPartial", "Home")"
+                                 data-save-url="@Url.Action("MedicineDentistrySave", "Home")">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ---------------------- Hospitals ------------------ -->
+                    <section id="sec-hosp" class="card">
+                        <div id="hospitalsContainer"
+                             data-load-url="@Url.Action("HospitalsPartial", "Home")"
+                             data-add-url="@Url.Action("AddHospital", "Home")"
+                             data-update-url="@Url.Action("UpdateHospital", "Home")"
+                             data-delete-url="@Url.Action("DeleteHospital", "Home")">
+                        </div>
+                    </section>
+                    <!-- ---------------------- INFASTRUCTURE------------------ -->
+                    <section id="sec-infra" class="card">
+                        <div id="infrastructureContainer"
+                             data-load-url="@Url.Action("InfrastructurePartial", "Home")"
+                             data-save-url="@Url.Action("SaveInfrastructure", "Home")">
+                        </div>
+                    </section>
+                    <!-- ---------------------- Laboratories ------------------ -->
+                <section id="sec-labs" class="card">
+                    <div class="card-hd">
+                        <h2>Laboratories</h2>
+                    </div>
+
+                    <div class="card-bd">
+                        <div id="laboratoriesContainer"
+                             data-load-url="@Url.Action("LaboratoriesPartial", "Home")"
+                             data-add-url="@Url.Action("AddOrUpdateLaboratory", "Home")"
+                             data-delete-url="@Url.Action("DeleteLaboratory", "Home")">
+                        </div>
+                    </div>
+                </section>
+                <!-- ---------------------- Libraries ------------------ -->
+                <section id="sec-library" class="card">
+                    <div class="card-hd">
+                        <h2>Library</h2>
+                    </div>
+
+                    <div class="card-bd">
+                        <div id="libraryContainer"
+                             data-load-url="@Url.Action("LibraryPartial", "Home")"
+                             data-save-url="@Url.Action("SaveLibrary", "Home")">
+                            @await Html.PartialAsync("Partial_Views/_Library", (DTOs.LibraryDto)ViewBag.Library)
+                        </div>
+                    </div>
+                </section>
+                <!-- ---------------------- Attachments ------------------ -->
+                <section id="sec-attachments" class="card">
+                    <div class="card-hd">
+                        <h2>Attachments</h2>
+                    </div>
+
+                    <div class="card-bd">
+                        <div id="attachmentsContainer"
+                             data-load-url="@Url.Action("AttachmentsPartial", "Home")"
+                             data-upload-url="@Url.Action("UploadAttachment", "Home")"
+                             data-delete-url="@Url.Action("DeleteAttachment", "Home")">
+                            @await Html.PartialAsync("Partial_Views/_Attachments", (DTOs.AttachmentDto)ViewBag.Attachments)
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ---------------------- pictures------------------ -->
+                <section id="sec-pictures" class="card">
+                    <div class="card-hd">
+                        <h2>Pictures</h2>
+                    </div>
+
+                    <div class="card-bd">
+                        <div id="picturesContainer"
+                             data-load-url="@Url.Action("PicturesPartial", "Home")"
+                             data-upload-url="@Url.Action("UploadPicture", "Home")"
+                             data-delete-url="@Url.Action("DeletePicture", "Home")">
+                            @await Html.PartialAsync("Partial_Views/_Pictures", (DTOs.PicturesDto)ViewBag.Pictures)
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===================== SUBMIT ===================== -->
+                <section id="sec-submit-application" class="card">
+                    <div class="card-hd">
+                        <h2>Finish &amp; Submit</h2>
+                    </div>
+
+                    <div class="card-bd">
+                        <div id="submitApplicationContainer"
+                             data-load-url="@Url.Action("SubmitApplicationPartial", "Home")"
+                             data-save-url="@Url.Action("SaveSubmitApplication", "Home")">
+                            @await Html.PartialAsync("Partial_Views/_SubmitApplication", (DTOs.SubmitApplicationDto)ViewBag.SubmitApplication)
+                        </div>
+                    </div>
+                </section>
+
+            </form>
+
+            <footer class="foot">© Ministry of Higher Education</footer>
+        </main>
+    </div>
+    <!-- JSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS===================== -->
+    <!-- ===================== Programs refresh helper (used by Faculties) ===================== -->
+    <script>
+        async function refreshProgramsNoJump() {
+          const container = document.getElementById("programs-container");
+          if (!container) return;
+
+          const y = window.scrollY || 0;
+          const h = container.offsetHeight;
+          container.style.minHeight = h + "px";
+
+          try {
+            const res = await fetch("@Url.Action("ProgramsPartial", "Home")");
+            const html = await res.text();
+            container.innerHTML = html;
+          } finally {
+            window.scrollTo(0, y);
+            container.style.minHeight = "";
+          }
+        }
+    </script>
+
+    <!-- ✅ NEW: Students refresh helper (so dropdown always gets latest programs) -->
+    <script>
+        async function refreshStudentsNumbersNoJump() {
+          const container = document.getElementById("studentsNumbersContainer");
+          if (!container) return;
+
+          const y = window.scrollY || 0;
+          const h = container.offsetHeight;
+          container.style.minHeight = h + "px";
+
+          try {
+            const res = await fetch("@Url.Action("StudentsNumbersPartial", "Home")");
+            const html = await res.text();
+            container.innerHTML = html;
+
+            // ✅ VERY IMPORTANT: re-init students JS after replacing HTML
+            if (window.initStudentsNumbers) {
+              window.initStudentsNumbers();
+            }
+          } catch (err) {
+            console.error(err);
+          } finally {
+            window.scrollTo(0, y);
+            container.style.minHeight = "";
+          }
+        }
+    </script>
+
+   
+    <script src="~/js/uni/UniDashboard.js" asp-append-version="true"></script> 
+    <script src="~/js/uni/PublicInfo.js" asp-append-version="true"></script> 
+    <script src="~/js/uni/AcademicInfo.js" asp-append-version="true"></script>
+    <script src="~/js/uni/AdmissionRequirements.js" asp-append-version="true"></script>
+    <script src="~/js/uni/StudyDuration.js" asp-append-version="true"></script>
+    <script src="~/js/uni/Faculties.js" asp-append-version="true"></script>
+    <script src="~/js/uni/Programs.js" asp-append-version="true"></script>
+    <script src="~/js/uni/StudentsNumbers.js" asp-append-version="true"></script>
+    <script src="~/js/uni/ProgramHours.js" asp-append-version="true"></script>
+    <script src="~/js/uni/Ratios.js" asp-append-version="true"></script>
+    <script src="~/js/uni/TeachingStaff.js" asp-append-version="true"></script>
+    <script src="~/js/uni/PhdHolders.js" asp-append-version="true"></script> 
+    <script src="~/js/uni/MedicineDentistry.js" asp-append-version="true"></script>
+    <script src="~/js/uni/Hospitals.js" asp-append-version="true"></script>
+    <script src="~/js/uni/Infrastructure.js" asp-append-version="true"></script>
+    <script src="~/js/uni/Laboratories.js" asp-append-version="true"></script>
+    <script src="~/js/uni/Library.js" asp-append-version="true"></script>
+    <script src="~/js/uni/Attachments.js" asp-append-version="true"></script> 
+    <script src="~/js/uni/Pictures.js" asp-append-version="true"></script>
+    <script src="~/js/uni/SubmitApplication.js" asp-append-version="true"></script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+    
+ 
+
+   
+ 
+
+
+   
+

@@ -1,0 +1,104 @@
+﻿.arc-head {
+    padding: 14px 16px;
+}
+
+.arc-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+    .arc-top h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 1000;
+    }
+
+    .arc-top p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-weight: 600;
+    }
+
+.arc-chips {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.arc-chip {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 14px;
+    padding: 10px 12px;
+    min-width: 120px;
+}
+
+    .arc-chip span {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 800;
+    }
+
+    .arc-chip b {
+        display: block;
+        margin-top: 6px;
+        font-size: 18px;
+        font-weight: 1000;
+    }
+
+.arc-filters {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.arc-field {
+    display: grid;
+    gap: 6px;
+}
+
+    .arc-field label {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 900;
+    }
+
+    .arc-field input,
+    .arc-field select {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font-weight: 800;
+        outline: none;
+        min-width: 160px;
+    }
+
+    .arc-field.grow {
+        flex: 1;
+        min-width: 260px;
+    }
+
+.arc-table td b {
+    font-weight: 1000;
+}
+
+.arc-footer {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.arc-pages {
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 13px;
+}

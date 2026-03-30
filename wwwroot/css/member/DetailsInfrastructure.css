@@ -1,0 +1,6 @@
+﻿/* DetailsInfrastructure.css - Step 4 */
+@import url("./DetailsBasicInfo.css");
+
+.rd-big {
+    min-height: 120px;
+}

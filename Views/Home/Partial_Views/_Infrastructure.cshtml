@@ -1,0 +1,71 @@
+﻿@model DTOs.InfrastructureDto
+
+<div class="duration-wrap" style="margin-top:0;">
+    <div class="duration-titlebar">
+        Infrastructure
+    </div>
+
+    <!-- UI Banner -->
+    <div id="infraBanner" class="banner warn" style="display:none; margin-top:12px;">
+        <span class="dot"></span>
+        <span class="txt"></span>
+        <button type="button" class="x" onclick="document.getElementById('infraBanner').style.display='none'">×</button>
+    </div>
+
+    <div class="grid-2" style="margin-top:14px;">
+        <div class="field">
+            <label>Area (Km²) <span class="req">*</span></label>
+            <input id="infra_areaKm2" type="text" value="@Model?.AreaKm2" />
+        </div>
+
+        <div class="field">
+            <label>Number of Campuses <span class="req">*</span></label>
+            <input id="infra_campusesCount" type="text" value="@Model?.CampusesCount" />
+        </div>
+
+        <div class="field">
+            <label>Number of Stadiums <span class="req">*</span></label>
+            <input id="infra_stadiumsCount" type="text" value="@Model?.StadiumsCount" />
+        </div>
+
+        <div class="field">
+            <label>Number of Classrooms and Lecture Halls <span class="req">*</span></label>
+            <input id="infra_classroomsCount" type="text" value="@Model?.ClassroomsAndLectureHallsCount" />
+        </div>
+
+        <div class="field">
+            <label>Number of Libraries <span class="req">*</span></label>
+            <input id="infra_librariesCount" type="text" value="@Model?.LibrariesCount" />
+        </div>
+    </div>
+
+    <div class="field" style="margin-top:18px;">
+        <label>Laboratories <span class="req">*</span></label>
+        <div class="infra-subtext">Add each laboratory as a separate item.</div>
+
+        <div id="infra_laboratoriesList" class="infra-list"
+             data-existing="@Model?.LaboratoriesDetails">
+        </div>
+
+        <button type="button" id="btnAddLaboratory" class="infra-add-btn">
+            + Add another laboratory
+        </button>
+    </div>
+
+    <div class="field" style="margin-top:18px;">
+        <label>Student Servicing Buildings <span class="req">*</span></label>
+        <div class="infra-subtext">Add each building as a separate item.</div>
+
+        <div id="infra_studentBuildingsList" class="infra-list"
+             data-existing="@Model?.StudentServicingBuildingsDetails">
+        </div>
+
+        <button type="button" id="btnAddStudentBuilding" class="infra-add-btn">
+            + Add another building
+        </button>
+    </div>
+
+    <div class="actions" style="justify-content:flex-end; margin-top:14px;">
+        <button type="button" id="btnSaveInfrastructure" class="btn-primary">Save</button>
+    </div>
+</div>

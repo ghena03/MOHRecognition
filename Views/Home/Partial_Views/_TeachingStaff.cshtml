@@ -1,0 +1,120 @@
+﻿@model DTOs.AttachmentDto
+@using System.Linq
+
+@{
+    var rows = Model?.Rows ?? new List<DTOs.AttachmentRowDto>();
+    var requiredColumns = Model?.RequiredFiles ?? new List<string>();
+}
+
+<div class="ts-modern">
+
+    <div id="tsExcelBanner" class="banner warn" style="display:none; margin-bottom:16px;">
+        <span class="dot"></span>
+        <span class="txt"></span>
+        <button type="button" class="x" onclick="document.getElementById('tsExcelBanner').style.display='none'">×</button>
+    </div>
+
+    <div class="ts-card ts-hero">
+        <div class="ts-hero-left">
+            <div class="ts-eyebrow">Document Submission</div>
+            <h3 class="ts-title">Teaching Staff Excel Upload</h3>
+            <p class="ts-subtitle">
+                Upload one final Excel file for the Teaching Staff section. The file must include all required fields for every staff member before submission.
+            </p>
+        </div>
+    </div>
+
+    <div class="ts-card ts-requirements">
+        <div class="ts-section-head">
+            <h4>Required Fields</h4>
+            <p>The uploaded Excel file must contain these columns.</p>
+        </div>
+
+        <div class="ts-fields-grid">
+            @for (int i = 0; i < requiredColumns.Count; i++)
+            {
+                <div class="ts-field-item">
+                    <span class="ts-field-no">@(i + 1)</span>
+                    <span class="ts-field-text">@requiredColumns[i]</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="ts-card ts-upload">
+        <div class="ts-section-head">
+            <h4>Upload File</h4>
+            <p>Only one final Excel file is kept for this section.</p>
+        </div>
+
+        <div class="ts-upload-row">
+            <div class="ts-file-box">
+                <label for="tsExcelFile" class="ts-file-label">Choose Excel File <span class="req">*</span></label>
+                <input type="file" id="tsExcelFile" accept=".xlsx" class="ts-file-input" />
+            </div>
+
+            <div class="ts-btn-box">
+                <button type="button" class="btn btn-primary ts-upload-btn" id="tsExcelUploadBtn">
+                    Upload File
+                </button>
+            </div>
+        </div>
+
+        <div class="ts-note">
+            <strong>Important Note:</strong>
+            The file must contain all required columns, and each row must be fully completed.
+            If the Programs section already contains data, the Program values in the Excel file must match exactly.
+        </div>
+    </div>
+
+    <div class="ts-card ts-files">
+        <div class="ts-section-head">
+            <h4>Uploaded File</h4>
+            <p>Review the currently uploaded file for this section.</p>
+        </div>
+
+        @if (rows.Any())
+        {
+            <div class="ts-file-table-wrap">
+                <table class="uni-table">
+                    <thead>
+                        <tr>
+                            <th style="width:38%;">File Name</th>
+                            <th style="width:27%;">Description</th>
+                            <th style="width:20%;">Uploaded At</th>
+                            <th style="width:15%; text-align:right; padding-right:24px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in rows)
+                        {
+                            <tr>
+                                <td>
+                                    <a href="@row.FileUrl" target="_blank" class="file-link ts-file-link">
+                                        @row.FileName
+                                    </a>
+                                </td>
+                                <td>@row.Subject</td>
+                                <td>@row.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd hh:mm tt")</td>
+                                <td style="text-align:right; padding-right:24px;">
+                                    <button type="button"
+                                            class="ts-action-btn ts-action-delete ts-delete-file"
+                                            data-id="@row.Id"
+                                            title="Delete">
+                                        ✕
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="ts-empty">
+                No Teaching Staff Excel file has been uploaded yet.
+            </div>
+        }
+    </div>
+</div>

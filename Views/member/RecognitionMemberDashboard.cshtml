@@ -1,0 +1,210 @@
+﻿@{
+    Layout = null;
+    ViewData["Title"] = "Recognition Member Dashboard";
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+</head>
+
+<body class="rm-page">
+    <header class="rm-header">
+        <div class="rm-brandbar"></div>
+
+        <div class="rm-top">
+            <div class="rm-top-inner">
+                <div class="rm-brand">
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+                </div>
+
+                <div class="rm-user">
+                    <div class="rm-userpill">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Welcome, <b>@(ViewBag.CurrentRecognitionMember ?? "Recognition Member")</b></span>
+                    </div>
+
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="rm-shell">
+        <aside class="rm-sidebar">
+            <div class="rm-side-title">Navigation</div>
+
+            <nav class="rm-nav">
+                <a class="rm-navitem active" href="@Url.Action("RecognitionMemberDashboard", "Home")">
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a class="rm-navitem" href="@Url.Action("ElectronicRequests", "Home")">
+                    <i class="bi bi-send-check"></i>
+                    <span>My Assigned Requests</span>
+                </a>
+
+                <a class="rm-navitem" href="@Url.Action("Archive", "Home")">
+                    <i class="bi bi-inboxes"></i>
+                    <span>Requests Archive</span>
+                </a>
+
+                <a class="rm-navitem" href="@Url.Action("ResetPassword", "Home", new { role = "recognition" })">
+                    <i class="bi bi-shield-lock"></i>
+                    <span>Security</span>
+                </a>
+
+                <a class="rm-navitem danger" href="@Url.Action("Logout", "Home")">
+                    <i class="bi bi-power"></i>
+                    <span>Sign Out</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="rm-main">
+            <section class="rm-pagehead">
+                <div class="rm-pagehead-left">
+                    <h1>Directorate of Recognition & Certificate Equivalency</h1>
+                    <p>Review queue, monitor progress, and take decisions.</p>
+                </div>
+
+                <div class="rm-pagehead-right">
+                    <div class="rm-filters">
+                        <div class="rm-field">
+                            <label for="sessionNo">Session No.</label>
+                            <select id="sessionNo">
+                                <option selected>3</option>
+                                <option>2</option>
+                                <option>1</option>
+                            </select>
+                        </div>
+
+                        <div class="rm-field">
+                            <label for="year">Year</label>
+                            <select id="year">
+                                <option selected>2026</option>
+                                <option>2025</option>
+                                <option>2024</option>
+                            </select>
+                        </div>
+
+                        <button class="rm-btn rm-btn-light" type="button" onclick="applySession()">
+                            <i class="bi bi-funnel"></i> Apply
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rm-kpis">
+                <div class="rm-kpi">
+                    <div class="rm-kpi-top">
+                        <span>Pending Review</span>
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="rm-kpi-val">12</div>
+                    <div class="rm-kpi-sub">Waiting for review</div>
+                </div>
+
+                <div class="rm-kpi">
+                    <div class="rm-kpi-top">
+                        <span>Approved (Month)</span>
+                        <i class="bi bi-check2-circle"></i>
+                    </div>
+                    <div class="rm-kpi-val">28</div>
+                    <div class="rm-kpi-sub">Approved decisions</div>
+                </div>
+
+                <div class="rm-kpi">
+                    <div class="rm-kpi-top">
+                        <span>Rejected (Month)</span>
+                        <i class="bi bi-x-circle"></i>
+                    </div>
+                    <div class="rm-kpi-val">5</div>
+                    <div class="rm-kpi-sub">Rejected decisions</div>
+                </div>
+
+                <div class="rm-kpi">
+                    <div class="rm-kpi-top">
+                        <span>Missing Docs</span>
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <div class="rm-kpi-val">7</div>
+                    <div class="rm-kpi-sub">Needs applicant updates</div>
+                </div>
+            </section>
+
+            <section class="rm-grid">
+                <div class="rm-card">
+                    <div class="rm-card-hd row">
+                        <div>
+                            <h2>Requests To Review</h2>
+                            <p>Latest assigned requests that need your action.</p>
+                        </div>
+                        <a class="rm-link" href="@Url.Action("ElectronicRequests", "Home")">
+                            View all <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <div class="rm-tablewrap">
+                        <table class="rm-table">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>University</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th class="right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#REQ-2026-0012</td>
+                                    <td>Lebanese University</td>
+                                    <td><span class="badge badge-pending">Pending</span></td>
+                                    <td>2026-03-01</td>
+                                    <td class="right">
+                                        <a class="rm-mini" href="@Url.Action("DetailsBasicInfo", "Home", new { id = 12 })">Open</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#REQ-2026-0011</td>
+                                    <td>University of Example</td>
+                                    <td><span class="badge badge-missing">Missing Docs</span></td>
+                                    <td>2026-02-28</td>
+                                    <td class="right">
+                                        <a class="rm-mini" href="@Url.Action("DetailsBasicInfo", "Home", new { id = 11 })">Open</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#REQ-2026-0010</td>
+                                    <td>International Institute</td>
+                                    <td><span class="badge badge-review">Under Review</span></td>
+                                    <td>2026-02-25</td>
+                                    <td class="right">
+                                        <a class="rm-mini" href="@Url.Action("DetailsBasicInfo", "Home", new { id = 10 })">Open</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="~/js/member/RecognitionMemberDashboard.js" asp-append-version="true"></script>
+</body>
+</html>

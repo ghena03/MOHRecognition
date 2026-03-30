@@ -1,0 +1,100 @@
+﻿@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <title>Recover Access</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="~/css/uni/UnivesityRecoverAccess.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+
+<body>
+    <div class="page">
+
+        <div class="topbar">
+            <div class="red"></div>
+            <div class="inner">
+                <h2>Recover Access</h2>
+                <p>
+                    Enter your university email and choose the information you need.
+                    We will send the requested details to your university email address.
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="inner">
+
+                @if (ViewBag.ErrorMessage != null)
+                {
+                    <div style="margin-bottom:14px; padding:12px 14px; border-radius:12px; background:#fff1f2; color:#b42318; border:1px solid #fecdca;">
+                        @ViewBag.ErrorMessage
+                    </div>
+                }
+
+                @if (ViewBag.SuccessMessage != null)
+                {
+                    <div style="margin-bottom:14px; padding:12px 14px; border-radius:12px; background:#ecfdf3; color:#027a48; border:1px solid #abefc6;">
+                        @ViewBag.SuccessMessage
+                    </div>
+                }
+
+                <h3 class="title">University Email</h3>
+                <p class="sub">Please use the same email address used when submitting the recognition request.</p>
+
+                <form asp-controller="Home" asp-action="UniversityRecoverAccess" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row">
+                        <span class="icon"><i class="fa-solid fa-envelope"></i></span>
+                        <input type="email" name="Email" placeholder="University Email Address" required />
+                    </div>
+
+                    <h3 class="title" style="margin-top:16px;">What do you need?</h3>
+                    <p class="sub">Select one option below.</p>
+
+                    <div class="grid">
+                        <label class="pick">
+                            <input type="radio" name="RecoverType" value="number" required />
+                            <div>
+                                <div class="pickTitle">Recognition Number</div>
+                                <div class="pickText">Send my recognition number to my email.</div>
+                            </div>
+                        </label>
+
+                        <label class="pick">
+                            <input type="radio" name="RecoverType" value="password" required />
+                            <div>
+                                <div class="pickTitle">Password Reset</div>
+                                <div class="pickText">Send password reset instructions to my email.</div>
+                            </div>
+                        </label>
+
+                        <label class="pick pick-wide">
+                            <input type="radio" name="RecoverType" value="both" required />
+                            <div>
+                                <div class="pickTitle">Both</div>
+                                <div class="pickText">Send my recognition number and password reset instructions.</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <button class="btn" type="submit">Send to Email</button>
+
+                    <div class="links">
+                        <a asp-controller="Home" asp-action="UniversityEntry">Back to University Portal</a>
+                        <a asp-controller="Home" asp-action="Role">Back to Roles</a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

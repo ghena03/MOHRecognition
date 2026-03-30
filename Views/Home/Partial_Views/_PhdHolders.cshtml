@@ -1,0 +1,128 @@
+﻿@model DTOs.PhdHoldersDto
+@using System.Linq
+
+<div class="duration-wrap" style="margin-top:0;">
+    <div class="duration-titlebar">
+        Staff \ Ph.D Holders
+    </div>
+
+    <!-- UI Banner (messages) -->
+    <div id="phdBanner" class="banner warn" style="display:none; margin-top:12px;">
+        <span class="dot"></span>
+        <span class="txt"></span>
+        <button type="button" class="x" onclick="document.getElementById('phdBanner').style.display='none'">×</button>
+    </div>
+
+    <!-- Edit -->
+    <input type="hidden" id="phd_editId" value="" />
+
+    <div class="grid-4" style="margin-top:14px;">
+        <div class="field">
+            <label>Name <span class="req">*</span></label>
+            <input id="phd_name" type="text" />
+        </div>
+
+        <div class="field">
+            <label>Program <span class="req">*</span></label>
+            <select id="phd_programId">
+                <option value="">--Choose--</option>
+
+                @if (Model?.Programs == null || Model.Programs.Count == 0)
+                {
+                    <option value="" disabled>(Add Programs first)</option>
+                }
+                else
+                {
+                    foreach (var p in Model.Programs)
+                    {
+                        <option value="@p.Id">@p.Program</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Major Area of Study <span class="req">*</span></label>
+            <input id="phd_major" type="text" />
+        </div>
+
+        <div class="field">
+            <label>Status <span class="req">*</span></label>
+            <select id="phd_status">
+                <option value="">--Choose--</option>
+                <option>Full Time</option>
+                <option>Part Time</option>
+            </select>
+        </div>
+    </div>
+
+    <div style="display:flex; justify-content:center; gap:10px; margin:14px 0 8px;">
+        <button type="button" class="btn-primary" id="phd_addBtn" onclick="PhdAdd()">Add</button>
+        <button type="button" class="btn-secondary" id="phd_cancelBtn" style="display:none;" onclick="PhdCancelEdit()">Cancel</button>
+    </div>
+
+    <div class="table-wrap" style="margin-top:10px;">
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th style="width:55px;">#</th>
+                    <th>Name</th>
+                    <th>Program</th>
+                    <th>Major Area of Study</th>
+                    <th>Status</th>
+                    <th style="width:120px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model?.Rows == null || !Model.Rows.Any())
+                {
+                    <tr>
+                        <td colspan="6" style="text-align:left; font-weight:600;">No Data Found !</td>
+                    </tr>
+                }
+                else
+                {
+                    var i = 1;
+                    foreach (var r in Model.Rows)
+                    {
+                        <tr>
+                            <td>@i</td>
+                            <td>@r.Name</td>
+                            <td>@r.ProgramName</td>
+                            <td>@r.MajorAreaOfStudy</td>
+                            <td>@r.Status</td>
+                            <td style="white-space:nowrap; text-align:center;">
+                                <div class="icon-actions">
+                                    <button type="button"
+                                            class="iconbtn iconbtn-edit"
+                                            onclick="PhdStartEdit('@r.Id')"
+                                            title="Edit"
+                                            aria-label="Edit">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                            <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.83H5v-.92l9.06-9.06.92.92L5.92 20.08zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                        </svg>
+                                    </button>
+
+                                    <button type="button"
+                                            class="iconbtn iconbtn-del"
+                                            onclick="PhdDelete('@r.Id')"
+                                            title="Delete"
+                                            aria-label="Delete">
+                                        ×
+                                    </button>
+                                </div>
+
+                                <!-- Hidden for edit -->
+                                <input type="hidden" id="phd_row_name_@r.Id" value="@r.Name" />
+                                <input type="hidden" id="phd_row_programId_@r.Id" value="@r.ProgramId" />
+                                <input type="hidden" id="phd_row_major_@r.Id" value="@r.MajorAreaOfStudy" />
+                                <input type="hidden" id="phd_row_status_@r.Id" value="@r.Status" />
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

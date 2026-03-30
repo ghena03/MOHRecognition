@@ -1,0 +1,86 @@
+﻿/* DetailsStatistics.css - Step 2 (Students/Faculty/Ranks/Ratios/Colleges/Accreditation) */
+@import url("./DetailsBasicInfo.css");
+
+/* inline row */
+.rd-inline {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+    .rd-inline .grow {
+        flex: 1;
+        min-width: 260px;
+    }
+
+/* 5 columns for ranks */
+.rd-grid5 {
+    display: grid;
+    grid-template-columns: repeat(5,minmax(0,1fr));
+    gap: 14px;
+}
+
+/* tables */
+.rd-tablewrap {
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.rd-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .rd-table thead th {
+        text-align: left;
+        font-size: 12px;
+        font-weight: 900;
+        color: #475467;
+        padding: 12px 14px;
+        background: #fafafa;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .rd-table tbody td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        font-weight: 700;
+    }
+
+    .rd-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+.right {
+    text-align: right;
+}
+
+.rd-del {
+    border: 1px solid #ffd6d6;
+    background: #fff5f5;
+    color: #b42318;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-weight: 900;
+}
+
+    .rd-del:hover {
+        filter: brightness(0.98);
+    }
+
+@media (max-width:1100px) {
+    .rd-grid5 {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+}
+
+@media (max-width:640px) {
+    .rd-grid5 {
+        grid-template-columns: 1fr;
+    }
+}

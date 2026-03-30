@@ -1,0 +1,123 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Choose Role</title>
+
+    <link rel="stylesheet" href="~/css/Role.css" />
+</head>
+
+<body>
+    <!-- Header with TWO thick red lines -->
+    <header class="header">
+        <div class="header__line header__line--top"></div>
+
+        <div class="header__inner">
+            <div class="header__spacer"></div>
+
+            <div class="header__brand">
+                <img class="header__logo" src="~/images/mohe_logo-en.png" alt="Portal Logo" />
+            </div>
+
+            <a class="header__link" href="#">Privacy</a>
+        </div>
+
+        <div class="header__line header__line--bottom"></div>
+    </header>
+
+    <main class="wrap">
+        <section class="card" aria-label="Choose role">
+            <h1 class="h1">Sign In</h1>
+            <p class="lead">Choose your role then continue.</p>
+
+            <div class="box">
+                <div class="box__title">I am signing in as</div>
+
+                <div class="choices" role="radiogroup" aria-label="Role selection">
+                    <!-- Admin -->
+                    <input type="radio" name="role" id="roleAdmin" class="r" checked>
+                    <label for="roleAdmin" class="choice">
+                        <div class="icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2L20 6V12c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z"
+                                      stroke="currentColor" stroke-width="1.7" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="name">Admin</div>
+                            <div class="desc">Manage users & applications</div>
+                        </div>
+                    </label>
+
+                    <!-- University -->
+                    <input type="radio" name="role" id="roleUni" class="r">
+                    <label for="roleUni" class="choice">
+                        <div class="icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3l10 5-10 5L2 8l10-5z"
+                                      stroke="currentColor" stroke-width="1.7" />
+                                <path d="M6 10v5c0 2 3 4 6 4s6-2 6-4v-5"
+                                      stroke="currentColor" stroke-width="1.7" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="name">University</div>
+                            <div class="desc">Submit & track requests</div>
+                        </div>
+                    </label>
+
+                    <!-- ✅ Recognition Member (NEW) -->
+                    <input type="radio" name="role" id="roleRec" class="r">
+                    <label for="roleRec" class="choice">
+                        <div class="icon" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                <path d="M7 7a5 5 0 0 1 10 0v2"
+                                      stroke="currentColor" stroke-width="1.7" />
+                                <path d="M6 21v-2.3c0-2.3 2.5-4.2 6-4.2s6 1.9 6 4.2V21"
+                                      stroke="currentColor" stroke-width="1.7" />
+                                <path d="M9 10h6"
+                                      stroke="currentColor" stroke-width="1.7" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="name">Recognition Member</div>
+                            <div class="desc">Review & process recognition files</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="actions">
+                    <button class="btn" id="continueBtn" type="button">Continue</button>
+                </div>
+            </div>
+
+            <footer class="footer">
+                © 2026 Ministry Portal • All rights reserved
+            </footer>
+        </section>
+    </main>
+
+    <script>
+        const UNI_PAGE = '@Url.Action("UniversityEntry", "Home")';
+        const STAFF_ADMIN = '@Url.Action("StaffLogIn", "Home", new { role = "admin" })';
+        const STAFF_REC   = '@Url.Action("StaffLogIn", "Home", new { role = "recognition" })';
+
+        document.getElementById("continueBtn").addEventListener("click", () => {
+            if (document.getElementById("roleUni").checked) {
+                window.location.href = UNI_PAGE;
+                return;
+            }
+            if (document.getElementById("roleRec").checked) {
+                window.location.href = STAFF_REC;
+                return;
+            }
+            window.location.href = STAFF_ADMIN; // default admin
+        });
+    </script>
+
+</body>
+</html>

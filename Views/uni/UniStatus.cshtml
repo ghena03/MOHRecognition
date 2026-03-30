@@ -1,0 +1,163 @@
+﻿@{
+    Layout = null;
+
+    bool hasRequest = ViewBag.HasRequest != null && (bool)ViewBag.HasRequest;
+    string requestNumber = ViewBag.RequestNumber ?? "";
+    string submittedOn = ViewBag.SubmittedOn ?? "";
+    string statusText = ViewBag.StatusText ?? "No Request";
+    string universityName = ViewBag.UniversityName ?? "University Account";
+    string universityEmail = ViewBag.UniversityEmail ?? "";
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Account Dashboard</title>
+
+    <link rel="stylesheet" href="~/css/uni/unistatus.css" asp-append-version="true" />
+</head>
+
+<body class="afterlogin-page ltr">
+
+    <header class="top-header">
+        <div class="hdr-grid">
+
+            <div class="hdr-left"></div>
+
+            <nav class="hdr-nav">
+                <a class="hdr-link" href="https://www.mohe.gov.jo/" target="_blank" rel="noopener">
+                    Ministry Website
+                </a>
+                <a class="hdr-link" href="#faqs">
+                    FAQs
+                </a>
+            </nav>
+
+            <div class="hdr-logo">
+                <a href="https://www.mohe.gov.jo/" target="_blank" rel="noopener">
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+                </a>
+            </div>
+
+        </div>
+
+        <div class="brand-bar"></div>
+    </header>
+
+    <main class="dash-wrap">
+
+        <aside class="dash-card steps-card">
+            <div class="card-hd">
+                <h2>Request Submission Steps</h2>
+                <p>Quick guide before you start.</p>
+            </div>
+            <div class="card-bd">
+                <ol class="steps-list">
+                    <li>Review instructions</li>
+                    <li>Prepare required documents</li>
+                    <li>Submit the request</li>
+                    <li>Track request status</li>
+                    <li>Receive the decision</li>
+                </ol>
+            </div>
+        </aside>
+
+        @if (hasRequest)
+        {
+            <section class="dash-card center-card">
+                <div class="welcome-card">
+                    <div class="welcome-icon" aria-hidden="true">📄</div>
+
+                    <h1 class="welcome-title">You Have an Active Request</h1>
+
+                    <p class="welcome-text">
+                        You can track your request status here.
+                    </p>
+
+                    <div class="status-box">
+                        <div class="status-row">
+                            <span>Request Number:</span>
+                            <strong>@requestNumber</strong>
+                        </div>
+
+                        <div class="status-row">
+                            <span>Submitted On:</span>
+                            <strong>@submittedOn</strong>
+                        </div>
+
+                        <div class="status-row">
+                            <span>Status:</span>
+                            <span class="badge badge-pending">@statusText</span>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <a class="btn-primary" href="@Url.Action("UniDashboard", "Home")">
+                            Open Application
+                        </a>
+                    </div>
+
+                    <div class="muted">
+                        Status will be updated automatically when it changes.
+                    </div>
+                </div>
+            </section>
+        }
+        else
+        {
+            <section class="dash-card center-card">
+                <div class="welcome-card">
+                    <div class="welcome-icon" aria-hidden="true">📝</div>
+
+                    <h1 class="welcome-title">You have no requests at the moment</h1>
+
+                    <p class="welcome-text">
+                        You haven’t submitted any recognition request yet.
+                        <br />
+                        To get started, review the instructions and make sure your documents are ready, then
+                        <b>submit a new request through the system.</b>
+                    </p>
+
+                    <div class="actions">
+                        <a class="btn-primary" href="@Url.Action("UniDashboard", "Home")">
+                            Start Application
+                        </a>
+                    </div>
+
+                    <div class="muted">
+                        After submitting the request, you can track its status and view decisions through your account.
+                    </div>
+                </div>
+            </section>
+        }
+
+        <aside class="dash-card account-card">
+            <div class="card-hd">
+                <h2>Account</h2>
+                <p>Institution information.</p>
+            </div>
+
+            <div class="card-bd">
+                <div class="acc-name">@universityName</div>
+                <div class="acc-email">@universityEmail</div>
+
+                <div class="acc-type">
+                    Account type: <span class="role">Applicant</span>
+                </div>
+
+                <div class="actions">
+                    <a class="btn-ghost" href="@Url.Action("UniDashboard", "Home")">
+                        Open Application
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <div id="faqs"></div>
+
+</body>
+</html>

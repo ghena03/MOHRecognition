@@ -1,0 +1,134 @@
+﻿@model DTOs.StudentsNumbersDto
+@using System.Linq
+
+<div class="sn-wrap">
+
+    <!-- ✅ UI Banner (instead of alert) -->
+    <div id="sn_banner" class="banner warn" style="display:none;">
+        <span class="dot"></span>
+        <div class="txt" id="sn_bannerText"></div>
+        <button type="button" class="x" id="sn_bannerClose">X</button>
+    </div>
+
+    <input type="hidden" id="sn_editId" value="" />
+
+    <div class="grid-2">
+        <div class="field">
+            <label>Program <span class="req">*</span></label>
+            <select id="sn_programId">
+                <option value="">-- Choose --</option>
+                @if (Model?.Programs != null)
+                {
+                    foreach (var p in Model.Programs)
+                    {
+                        <option value="@p.Id">@p.Program</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Total</label>
+            <input id="sn_total" type="number" readonly />
+        </div>
+    </div>
+
+    <div class="grid-3">
+        <div class="field"><label>1st Year <span class="req">*</span></label><input id="sn_y1" type="number" min="0" /></div>
+        <div class="field"><label>2nd Year <span class="req">*</span></label><input id="sn_y2" type="number" min="0" /></div>
+        <div class="field"><label>3rd Year <span class="req">*</span></label><input id="sn_y3" type="number" min="0" /></div>
+    </div>
+
+    <div class="grid-3">
+        <div class="field"><label>4th Year <span class="req">*</span></label><input id="sn_y4" type="number" min="0" /></div>
+        <div class="field"><label>5th Year <span class="req">*</span></label><input id="sn_y5" type="number" min="0" /></div>
+        <div class="field"><label>6th Year <span class="req">*</span></label><input id="sn_y6" type="number" min="0" /></div>
+    </div>
+
+    <div class="actions" style="justify-content:center; gap:10px; margin-top:12px;">
+        <button type="button" class="btn-primary" id="sn_addBtn">Add</button>
+        <button type="button" class="btn-primary" id="sn_updateBtn" style="display:none;">Update</button>
+        <button type="button" class="btn-ghost" id="sn_cancelBtn" style="display:none;">Cancel</button>
+    </div>
+
+    <div class="duration-table-scroll" style="margin-top:14px;">
+        <table class="duration-table">
+            <thead>
+                <tr>
+                    <th style="width:60px;">#</th>
+                    <th>Program</th>
+                    <th>1st</th>
+                    <th>2nd</th>
+                    <th>3rd</th>
+                    <th>4th</th>
+                    <th>5th</th>
+                    <th>6th</th>
+                    <th>Total</th>
+                    <th style="width:170px;">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model?.Rows == null || !Model.Rows.Any())
+                {
+                    <tr>
+                        <td colspan="10" style="font-weight:700; color:#000; text-align:left; white-space:nowrap; padding-right:18px;">
+                            No Data Found!
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    var i = 1;
+                    foreach (var row in Model.Rows)
+                    {
+                        <tr>
+                            <td>@i</td>
+                            <td>@row.ProgramName</td>
+                            <td>@row.Year1</td>
+                            <td>@row.Year2</td>
+                            <td>@row.Year3</td>
+                            <td>@row.Year4</td>
+                            <td>@row.Year5</td>
+                            <td>@row.Year6</td>
+                            <td>@row.Total</td>
+
+                            <td style="text-align:center;">
+                                <div class="icon-actions">
+                                    <!-- EDIT (keep sn-edit for JS) -->
+                                    <button type="button"
+                                            class="iconbtn iconbtn-edit sn-edit"
+                                            title="Edit"
+                                            aria-label="Edit"
+                                            data-id="@row.Id"
+                                            data-programid="@row.ProgramId"
+                                            data-y1="@row.Year1"
+                                            data-y2="@row.Year2"
+                                            data-y3="@row.Year3"
+                                            data-y4="@row.Year4"
+                                            data-y5="@row.Year5"
+                                            data-y6="@row.Year6">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.83H5v-.92l9.06-9.06.92.92L5.92 20.08zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                        </svg>
+                                    </button>
+
+                                    <!-- DELETE (keep sn-del for JS) -->
+                                    <button type="button"
+                                            class="iconbtn iconbtn-del sn-del"
+                                            title="Delete"
+                                            aria-label="Delete"
+                                            data-id="@row.Id">
+                                        ×
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>

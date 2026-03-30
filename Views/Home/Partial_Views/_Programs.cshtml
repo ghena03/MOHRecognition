@@ -1,0 +1,206 @@
+﻿@model DTOs.ProgramsDto
+
+<div class="prg-wrap">
+    <div class="prg-titlebar">Programs and Majors</div>
+
+    <div class="prg-body">
+
+        <!-- hidden id when editing -->
+        <input type="hidden" id="prg_editId" value="" />
+
+        <!-- FORM GRID -->
+        <div class="prg-form">
+
+            <!-- Row 1 -->
+            <div class="prg-grid-4">
+                <div class="prg-cell">
+                    <label>Program <span class="req">*</span></label>
+                    <input id="prg_program" class="prg-control" type="text" />
+                </div>
+
+                <div class="prg-cell">
+                    <label>Faculty <span class="req">*</span></label>
+                    <select id="prg_faculty" class="prg-control">
+                        <option value="">--Choose--</option>
+                        @if (Model?.Faculties == null || Model.Faculties.Count == 0)
+                        {
+                            <option value="" disabled>(Add faculties first)</option>
+                        }
+                        else
+                        {
+                            foreach (var f in Model.Faculties)
+                            {
+                                <option value="@f.Id">@f.FacultyName</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="prg-cell">
+                    <label>Degree Awarded <span class="req">*</span></label>
+                    <select id="prg_degree" class="prg-control">
+                        <option value="">--Choose--</option>
+                        <option>Bachelor</option>
+                        <option>Master</option>
+                        <option>PhD</option>
+                        <option>Diploma</option>
+                        <option>Higher Diploma</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="prg-cell">
+                    <label>Number of Years <span class="req">*</span></label>
+                    <input id="prg_years" class="prg-control" type="number" min="0" />
+                </div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="prg-grid-4">
+                <div class="prg-cell">
+                    <label>Credit Hours <span class="req">*</span></label>
+                    <input id="prg_credits" class="prg-control" type="number" min="0" />
+                </div>
+
+                <div class="prg-cell">
+                    <label>Educational System <span class="req">*</span></label>
+                    <select id="prg_system" class="prg-control">
+                        <option value="">--Choose--</option>
+                        <option>Credit Hours</option>
+                        <option>Yearly</option>
+                        <option>Semester</option>
+                        <option>Quarter</option>
+                        <option>Traditional</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="prg-cell">
+                    <label>Language <span class="req">*</span></label>
+                    <input id="prg_lang" class="prg-control" type="text" />
+                </div>
+
+                <div class="prg-cell">
+                    <label>Accreditation Date <span class="req">*</span></label>
+                    <input id="prg_acc" class="prg-control" type="date" />
+                </div>
+            </div>
+
+            <!-- Row 3 -->
+            <div class="prg-grid-3">
+                <div class="prg-cell">
+                    <label>Creation Date <span class="req">*</span></label>
+                    <input id="prg_create" class="prg-control" type="date" />
+                </div>
+
+                <div class="prg-cell">
+                    <label>Graduation date of last regiment <span class="req">*</span></label>
+                    <input id="prg_gradlast" class="prg-control" type="date" />
+                </div>
+
+                <div class="prg-cell">
+                    <label>Graduates total for the last 3 years <span class="req">*</span></label>
+                    <input id="prg_grad3" class="prg-control" type="number" min="0" />
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="icon-actions">
+            <button type="button" class="prg-btn" data-prg-add id="prg_addBtn">Add</button>
+            <button type="button" class="prg-btn" data-prg-update id="prg_updateBtn" style="display:none;background:#1976d2;">Update</button>
+        </div>
+
+        <!-- TABLE -->
+        <div class="prg-table-scroll">
+            <table class="prg-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px;">#</th>
+                        <th>Program</th>
+                        <th>Faculty</th>
+                        <th>Degree Awarded</th>
+                        <th>Number of Years</th>
+                        <th>Credit Hours</th>
+                        <th>Educational System</th>
+                        <th>Language</th>
+                        <th>Accreditation Date</th>
+                        <th>Creation Date</th>
+                        <th>Graduation date of last regiment</th>
+                        <th>Graduates total for the last 3 years</th>
+                        <th style="width:170px;">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model?.Rows == null || Model.Rows.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="13" class="prg-empty">No Data Found !</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        var i = 1;
+                        foreach (var r in Model.Rows)
+                        {
+                            <tr>
+                                <td class="prg-num">@i</td>
+                                <td>@r.Program</td>
+                                <td>@r.FacultyName</td>
+                                <td>@r.DegreeAwarded</td>
+                                <td>@r.NumberOfYears</td>
+                                <td>@r.CreditHours</td>
+                                <td>@r.EducationalSystem</td>
+                                <td>@r.Language</td>
+                                <td>@(r.AccreditationDate?.ToString("dd/MM/yyyy") ?? "")</td>
+                                <td>@(r.CreationDate?.ToString("dd/MM/yyyy") ?? "")</td>
+                                <td>@(r.GraduationDateOfLastRegiment?.ToString("dd/MM/yyyy") ?? "")</td>
+                                <td>@r.GraduatesTotalLast3Years</td>
+
+                                <td style="text-align:center;">
+                                    <div class="prg-actions">
+                                        <!-- EDIT (professional icon button) -->
+                                        <button type="button"
+                                                class="iconbtn iconbtn-edit"
+                                                data-prg-edit
+                                                data-id="@r.Id"
+                                                data-program="@r.Program"
+                                                data-facultyid="@r.FacultyId"
+                                                data-degree="@r.DegreeAwarded"
+                                                data-years="@r.NumberOfYears"
+                                                data-credits="@r.CreditHours"
+                                                data-system="@r.EducationalSystem"
+                                                data-lang="@r.Language"
+                                                data-acc="@(r.AccreditationDate?.ToString("yyyy-MM-dd") ?? "")"
+                                                data-create="@(r.CreationDate?.ToString("yyyy-MM-dd") ?? "")"
+                                                data-gradlast="@(r.GraduationDateOfLastRegiment?.ToString("yyyy-MM-dd") ?? "")"
+                                                data-grad3="@r.GraduatesTotalLast3Years"
+                                                title="Edit"
+                                                aria-label="Edit">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.83H5v-.92l9.06-9.06.92.92L5.92 20.08zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" />
+                                            </svg>
+                                        </button>
+
+                                        <!-- DELETE (professional icon button) -->
+                                        <button type="button"
+                                                class="iconbtn iconbtn-del"
+                                                data-prg-del
+                                                data-id="@r.Id"
+                                                title="Delete"
+                                                aria-label="Delete">
+                                            ×
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>

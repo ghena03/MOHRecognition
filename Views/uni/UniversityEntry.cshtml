@@ -1,0 +1,116 @@
+﻿@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <title>University Recognition Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="~/css/uni/UniversityEntry.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+
+<body>
+    <div class="page">
+
+        <!-- TOP HEADER with thick red bar -->
+        <div class="topbar">
+            <div class="red"></div>
+            <div class="inner">
+                <h2>University Recognition Portal</h2>
+                <p>
+                    If you have previously submitted a recognition request, you may access it using your university email, password,
+                    and recognition number. If you are submitting for the first time, please create a new request.
+                </p>
+            </div>
+        </div>
+
+        <div class="wrap">
+
+            <!-- LEFT POSTER -->
+            <div class="poster">
+                                     <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+            </div>
+
+            <!-- RIGHT PANEL -->
+            <div class="panel">
+                <div class="panelInner">
+                    <div class="h1">Select an Option</div>
+                    <p class="sub">
+                        Please select one of the options below. The access form will appear only for previously submitted requests.
+                    </p>
+
+                    <div class="options">
+                        <button type="button" class="opt" id="btnExisting">
+                            <div class="optTop">
+                                <div class="ico"><i class="fa-solid fa-circle-check"></i></div>
+                                <h3 class="optTitle">Previously Submitted Request</h3>
+                            </div>
+                            <p class="optDesc">Access an existing recognition request and review its current status.</p>
+                        </button>
+
+                        <a class="optLink" asp-controller="Home" asp-action="NewUniAccount" asp-route-mode="new">
+
+                            <div class="optTop">
+                                <div class="ico"><i class="fa-solid fa-file-circle-plus"></i></div>
+                                <h3 class="optTitle">New Submission</h3>
+                            </div>
+                            <p class="optDesc">Create and submit a new recognition request for your institution.</p>
+                        </a>
+                    </div>
+
+                    <div class="sep"></div>
+
+                    <!-- Hidden until click "previously submitted" -->
+                    <div class="formBox" id="existingForm">
+                        <h4 class="formTitle">Access a Submitted Request</h4>
+                        <p class="formHint">Please enter your university email, password, and recognition number.</p>
+
+                        <form method="post" asp-action="UniversityEntry" asp-controller="Home">
+                            @Html.AntiForgeryToken()
+
+                            <div class="row">
+                                <span class="icon"><i class="fa-solid fa-envelope"></i></span>
+                                <input type="email" name="Email" placeholder="University Email Address" required />
+                            </div>
+
+                            <div class="row">
+                                <span class="icon"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" name="Password" placeholder="Password" required />
+                            </div>
+
+                            <div class="row">
+                                <span class="icon"><i class="fa-solid fa-hashtag"></i></span>
+                                <input type="text" name="RecognitionNumber" placeholder="Recognition Request Number" required />
+                            </div>
+
+                            <button class="btn" type="submit">Proceed</button>
+
+                            <div class="links">
+                                <a asp-controller="Home" asp-action="UniversityRecoverAccess">Forgot your password or recognition number?</a>
+                                <a asp-controller="Home" asp-action="Role">Back to Previous Page</a>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const btnExisting = document.getElementById("btnExisting");
+        const existingForm = document.getElementById("existingForm");
+
+        btnExisting.addEventListener("click", () => {
+            existingForm.classList.add("show");
+            existingForm.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,148 @@
+﻿/* ElectronicRequests.css */
+
+.er-hero {
+    background: var(--beige);
+    border: 1px solid #eadfd6;
+    padding: 16px;
+}
+
+.er-hero-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 12px;
+}
+
+.er-hero-left h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 1000;
+}
+
+.er-hero-left p {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.er-stats {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.er-stat {
+    background: #fff;
+    border: 1px solid #eadfd6;
+    border-radius: 14px;
+    padding: 10px 12px;
+    min-width: 120px;
+    box-shadow: 0 6px 16px rgba(17,24,39,.06);
+}
+
+    .er-stat span {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 900;
+    }
+
+    .er-stat b {
+        display: block;
+        margin-top: 6px;
+        font-size: 18px;
+        font-weight: 1000;
+        color: var(--text);
+    }
+
+.er-filters {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.er-field {
+    display: grid;
+    gap: 6px;
+}
+
+    .er-field label {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 900;
+    }
+
+    .er-field select {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font-weight: 800;
+        min-width: 180px;
+        outline: none;
+    }
+
+    .er-field.grow {
+        flex: 1;
+        min-width: 280px;
+    }
+
+/* search input with icon */
+.er-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #fff;
+}
+
+    .er-input i {
+        color: var(--muted);
+        font-size: 16px;
+    }
+
+    .er-input input {
+        border: none;
+        outline: none;
+        width: 100%;
+        font-weight: 800;
+        font-family: inherit;
+        font-size: 13px;
+    }
+
+.er-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.er-footer {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.er-pages {
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .er-hero-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .er-stats {
+        justify-content: flex-start;
+    }
+}

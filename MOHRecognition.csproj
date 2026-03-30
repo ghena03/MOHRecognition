@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ClosedXML" Version="0.105.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\ArchiveService.cs\Services.csproj" />
+	  <ProjectReference Include="..\DTOs\DTOs.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="PdfReaderTool\" />
+	</ItemGroup>
+
+</Project>
