@@ -1,8 +1,44 @@
-﻿@{
+﻿@model MOHRecognition.Services.RecognitionRequestRecord
+@{
     Layout = null;
     ViewData["Title"] = "Request Details - Infrastructure";
-    var requestId = ViewBag.RequestId ?? 0;
-    var inst = ViewBag.InstitutionName ?? "—";
+    var requestId = Model?.Id ?? 0;
+    var inst = Model?.UniversityName ?? "—";
+    var pictures = Model?.Pictures?.Rows ?? new List<DTOs.PictureRowDto>();
+    var laboratories = Model?.Laboratories ?? new DTOs.LaboratoriesDto();
+    var laboratoryRows = laboratories.Rows ?? new List<DTOs.LaboratoryRowDto>();
+    var laboratoryFiles = laboratories.UploadedFiles ?? new List<DTOs.LaboratoryFileDto>();
+    var infrastructure = Model?.Infrastructure ?? new DTOs.InfrastructureDto();
+    var facultiesAssessment = Model?.FacultiesAssessment ?? string.Empty;
+    var hospitalsAssessment = Model?.HospitalsAssessment ?? string.Empty;
+    var hospitalEnvironmentAssessment = Model?.HospitalEnvironmentAssessment ?? string.Empty;
+    var laboratoriesFacilitiesAssessment = Model?.LaboratoriesFacilitiesAssessment ?? string.Empty;
+    var libraryAssessment = Model?.LibraryAssessment ?? string.Empty;
+    var facultiesAssessmentNote = Model?.FacultiesAssessmentNote ?? string.Empty;
+    var hospitalsAssessmentNote = Model?.HospitalsAssessmentNote ?? string.Empty;
+    var hospitalEnvironmentAssessmentNote = Model?.HospitalEnvironmentAssessmentNote ?? string.Empty;
+    var laboratoriesFacilitiesAssessmentNote = Model?.LaboratoriesFacilitiesAssessmentNote ?? string.Empty;
+    var libraryAssessmentNote = Model?.LibraryAssessmentNote ?? string.Empty;
+
+    string StatusClass(string? value)
+    {
+        return (value ?? string.Empty).Trim() switch
+        {
+            "Meets Standards" => "ok",
+            "Needs Improvement" => "warn",
+            _ => "neutral"
+        };
+    }
+
+    string StatusText(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? "Not Assessed" : value;
+    }
+
+    string NumText(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? "—" : value;
+    }
 }
 <!doctype html>
 <html lang="en" dir="ltr">
@@ -23,7 +59,7 @@
             <div class="rm-top-inner">
                 <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
                 <div class="rm-user">
-                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>Dr. Khaled Ahmed</b></span></div>
+                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>Recognition Member</b></span></div>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </div>
             </div>
@@ -34,8 +70,8 @@
         <aside class="rm-sidebar">
             <div class="rm-side-title">Navigation</div><nav class="rm-nav">
                 <a class="rm-navitem" href="@Url.Action("RecognitionMemberDashboard", "Home")"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
-                <a class="rm-navitem active" href="@Url.Action("ElectronicHome", "Home")"><i class="bi bi-send-check"></i><span>My Assigned Home</span></a>
-                <a class="rm-navitem" href="@Url.Action("Archive", "Home")"><i class="bi bi-inboxes"></i><span>Home Archive</span></a>
+                <a class="rm-navitem active" href="@Url.Action("ElectronicRequests", "Home")"><i class="bi bi-send-check"></i><span>My Assigned Requests</span></a>
+                <a class="rm-navitem" href="@Url.Action("Archive", "Home")"><i class="bi bi-inboxes"></i><span>Requests Archive</span></a>
                 <a class="rm-navitem danger" href="@Url.Action("Logout", "Home")"><i class="bi bi-power"></i><span>Sign Out</span></a>
             </nav>
         </aside>
@@ -45,46 +81,317 @@
                 <div>
                     <h1>Request Details</h1>
                     <p class="rd-inst">Institution: <b>@inst</b></p>
-                    <p>Step 4 of 5 — Infrastructure & Extra Info.</p>
+                    <p>Step 7 of 7 — Infrastructure & Extra Info.</p>
                 </div>
                 <div class="rd-meta">
                     <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
-                    <div class="meta-pill"><span>Step</span><b>4 / 5</b></div>
+                    <div class="meta-pill"><span>Step</span><b>7 / 7</b></div>
                 </div>
             </section>
 
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2>Infrastructure Description</h2>
-                    <p>Facilities, labs, libraries, classrooms, etc.</p>
+                    <h2><i class="bi bi-123"></i> Numbers Info</h2>
+                    <p>Quick overview of submitted infrastructure counts.</p>
                 </div>
-                <div class="rd-field">
-                    <label>Description</label>
-                    <input type="text" placeholder="Write infrastructure description..." />
+
+                <div class="infra-summary-grid">
+                    <div class="infra-summary-item"><span>Area (Km²)</span><b>@NumText(infrastructure.AreaKm2)</b></div>
+                    <div class="infra-summary-item"><span>Number of Colleges</span><b>@NumText(infrastructure.CampusesCount)</b></div>
+                    <div class="infra-summary-item"><span>Classrooms and Lecture Halls</span><b>@NumText(infrastructure.ClassroomsAndLectureHallsCount)</b></div>
+                    <div class="infra-summary-item"><span>Number of Laboratories</span><b>@NumText(infrastructure.LibrariesCount)</b></div>
+                    <div class="infra-summary-item"><span>Number of Stadiums</span><b>@NumText(infrastructure.StadiumsCount)</b></div>
                 </div>
             </section>
 
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2>Additional Information</h2>
-                    <p>Any other details that support recognition.</p>
+                    <h2>Laboratories by College</h2>
+                    <p>Submitted rows from the university laboratories section.</p>
                 </div>
-                <div class="rd-field">
-                    <label>Notes</label>
-                    <input type="text" placeholder="Write additional notes..." />
+
+                <div class="infra-box">
+                    <div class="infra-box-hd"><i class="bi bi-building"></i> Laboratories by College</div>
+
+                    @if (laboratoryRows.Any())
+                    {
+                        <div class="infra-table-wrap">
+                            <table class="infra-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:60px;">#</th>
+                                        <th>College</th>
+                                        <th>Computers</th>
+                                        <th>Workshops</th>
+                                        <th>Laboratories</th>
+                                        <th>Personal Computers</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        var idx = 1;
+                                    }
+                                    @foreach (var row in laboratoryRows)
+                                    {
+                                        <tr>
+                                            <td>@idx</td>
+                                            <td>@(string.IsNullOrWhiteSpace(row.FacultyName) ? "—" : row.FacultyName)</td>
+                                            <td>@(row.Computers?.ToString() ?? "—")</td>
+                                            <td>@(row.Workshops?.ToString() ?? "—")</td>
+                                            <td>@(row.Laboratories?.ToString() ?? "—")</td>
+                                            <td>@(row.PersonalComputers?.ToString() ?? "—")</td>
+                                        </tr>
+                                        idx++;
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="infra-empty">No laboratories rows were submitted.</div>
+                    }
                 </div>
+            </section>
+
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>University Uploaded Files</h2>
+                    <p>Review uploaded contracts and photos/media before writing your notes.</p>
+                </div>
+
+                <div class="infra-box">
+                    <div class="infra-box-hd"><i class="bi bi-images"></i> Pictures / Media Files</div>
+                    @{
+                        var hasLaboratoryMedia = laboratoryFiles.Any();
+                        var hasAnyMedia = pictures.Any() || hasLaboratoryMedia;
+                    }
+                    @if (hasAnyMedia)
+                    {
+                        <ul class="infra-list">
+                            @foreach (var f in pictures.OrderByDescending(x => x.UploadedAt))
+                            {
+                                <li>
+                                    <div>
+                                        <b>@f.Subject</b>
+                                        <div class="infra-sub">@f.FileName</div>
+                                    </div>
+                                    <div class="infra-actions">
+                                        <a class="rm-mini" href="@f.FileUrl" target="_blank">Open</a>
+                                        <a class="rm-mini" href="@f.FileUrl" download="@f.FileName">Download</a>
+                                    </div>
+                                </li>
+                            }
+
+                            @if (hasLaboratoryMedia)
+                            {
+                                foreach (var f in laboratoryFiles.OrderByDescending(x => x.UploadedAt))
+                                {
+                                    <li>
+                                        <div>
+                                            <b>@(string.IsNullOrWhiteSpace(f.Subject) ? "Laboratories photos" : f.Subject)</b>
+                                            <div class="infra-sub">@f.OriginalFileName</div>
+                                        </div>
+                                        <div class="infra-actions">
+                                            <a class="rm-mini" href="@f.FileUrl" target="_blank">Open</a>
+                                            <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
+                                        </div>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="infra-empty">No pictures/files were uploaded.</div>
+                    }
+                </div>
+
+            </section>
+
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>Environment Assessment Summary</h2>
+                    <p>Select professional status values for each environment area.</p>
+                </div>
+
+                @if (TempData["InfraSaved"] != null)
+                {
+                    <div class="infra-saved">@TempData["InfraSaved"]</div>
+                }
+
+                @if (TempData["InfraSaveError"] != null)
+                {
+                    <div class="infra-error">@TempData["InfraSaveError"]</div>
+                }
+
+                <form asp-controller="Home" asp-action="SaveInfrastructureNotes" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@requestId" />
+                    <input type="hidden" name="laboratoriesFacilitiesAssessment" value="" />
+                    <input type="hidden" name="laboratoriesFacilitiesAssessmentNote" value="" />
+
+                    <div class="infra-assessment-grid">
+                        <div class="assess-box">
+                            <div class="assess-head">
+                                <div>
+                                    <div class="assess-title">Colleges Environment Assessment</div>
+                                    <div class="assess-sub">Evaluate whether college-related resources meet required standards.</div>
+                                </div>
+                                <span id="facultiesAssessmentBadge" class="assess-status @StatusClass(facultiesAssessment)">@StatusText(facultiesAssessment)</span>
+                            </div>
+
+                            <div class="rd-field">
+                                <label for="facultiesAssessment">Status</label>
+                                <select id="facultiesAssessment" name="facultiesAssessment" data-assessment-select="facultiesAssessmentBadge" data-note-wrap="facultiesAssessmentNoteWrap" data-note-input="facultiesAssessmentNote">
+                                    <option value="">Select status</option>
+                                    <option value="Meets Standards" selected="@(facultiesAssessment == "Meets Standards" ? "selected" : null)">Meets Standards</option>
+                                    <option value="Needs Improvement" selected="@(facultiesAssessment == "Needs Improvement" ? "selected" : null)">Needs Improvement</option>
+                                </select>
+                            </div>
+
+                            <div id="facultiesAssessmentNoteWrap" class="rd-field infra-note-wrap">
+                                <label for="facultiesAssessmentNote">Improvement Note</label>
+                                <textarea id="facultiesAssessmentNote" name="facultiesAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement...">@facultiesAssessmentNote</textarea>
+                            </div>
+                        </div>
+
+                        <div class="assess-box">
+                            <div class="assess-head">
+                                <div>
+                                    <div class="assess-title">Hospitals Environment Assessment</div>
+                                    <div class="assess-sub">Assess hospital resources linked to training and academic delivery.</div>
+                                </div>
+                                <span id="hospitalsAssessmentBadge" class="assess-status @StatusClass(hospitalsAssessment)">@StatusText(hospitalsAssessment)</span>
+                            </div>
+
+                            <div class="rd-field">
+                                <label for="hospitalsAssessment">Status</label>
+                                <select id="hospitalsAssessment" name="hospitalsAssessment" data-assessment-select="hospitalsAssessmentBadge" data-note-wrap="hospitalsAssessmentNoteWrap" data-note-input="hospitalsAssessmentNote">
+                                    <option value="">Select status</option>
+                                    <option value="Meets Standards" selected="@(hospitalsAssessment == "Meets Standards" ? "selected" : null)">Meets Standards</option>
+                                    <option value="Needs Improvement" selected="@(hospitalsAssessment == "Needs Improvement" ? "selected" : null)">Needs Improvement</option>
+                                </select>
+                            </div>
+
+                            <div id="hospitalsAssessmentNoteWrap" class="rd-field infra-note-wrap">
+                                <label for="hospitalsAssessmentNote">Improvement Note</label>
+                                <textarea id="hospitalsAssessmentNote" name="hospitalsAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement...">@hospitalsAssessmentNote</textarea>
+                            </div>
+                        </div>
+
+                        <div class="assess-box">
+                            <div class="assess-head">
+                                <div>
+                                    <div class="assess-title">Hospital Environment Assessment</div>
+                                    <div class="assess-sub">Evaluate whether the hospital environment is suitable for training and academic purposes.</div>
+                                </div>
+                                <span id="hospitalEnvironmentAssessmentBadge" class="assess-status @StatusClass(hospitalEnvironmentAssessment)">@StatusText(hospitalEnvironmentAssessment)</span>
+                            </div>
+
+                            <div class="rd-field">
+                                <label for="hospitalEnvironmentAssessment">Status</label>
+                                <select id="hospitalEnvironmentAssessment" name="hospitalEnvironmentAssessment" data-assessment-select="hospitalEnvironmentAssessmentBadge" data-note-wrap="hospitalEnvironmentAssessmentNoteWrap" data-note-input="hospitalEnvironmentAssessmentNote">
+                                    <option value="">Select status</option>
+                                    <option value="Meets Standards" selected="@(hospitalEnvironmentAssessment == "Meets Standards" ? "selected" : null)">Meets Standards</option>
+                                    <option value="Needs Improvement" selected="@(hospitalEnvironmentAssessment == "Needs Improvement" ? "selected" : null)">Needs Improvement</option>
+                                </select>
+                            </div>
+
+                            <div id="hospitalEnvironmentAssessmentNoteWrap" class="rd-field infra-note-wrap">
+                                <label for="hospitalEnvironmentAssessmentNote">Improvement Note</label>
+                                <textarea id="hospitalEnvironmentAssessmentNote" name="hospitalEnvironmentAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement...">@hospitalEnvironmentAssessmentNote</textarea>
+                            </div>
+                        </div>
+
+                        <div class="assess-box">
+                            <div class="assess-head">
+                                <div>
+                                    <div class="assess-title">Library Environment Assessment</div>
+                                    <div class="assess-sub">Assess whether the university library environment supports program standards.</div>
+                                </div>
+                                <span id="libraryAssessmentBadge" class="assess-status @StatusClass(libraryAssessment)">@StatusText(libraryAssessment)</span>
+                            </div>
+
+                            <div class="rd-field">
+                                <label for="libraryAssessment">Status</label>
+                                <select id="libraryAssessment" name="libraryAssessment" data-assessment-select="libraryAssessmentBadge" data-note-wrap="libraryAssessmentNoteWrap" data-note-input="libraryAssessmentNote">
+                                    <option value="">Select status</option>
+                                    <option value="Meets Standards" selected="@(libraryAssessment == "Meets Standards" ? "selected" : null)">Meets Standards</option>
+                                    <option value="Needs Improvement" selected="@(libraryAssessment == "Needs Improvement" ? "selected" : null)">Needs Improvement</option>
+                                </select>
+                            </div>
+
+                            <div id="libraryAssessmentNoteWrap" class="rd-field infra-note-wrap">
+                                <label for="libraryAssessmentNote">Improvement Note</label>
+                                <textarea id="libraryAssessmentNote" name="libraryAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement...">@libraryAssessmentNote</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+                        <button class="rm-btn rm-btn-primary" type="submit"><i class="bi bi-save"></i> Save Assessments</button>
+                    </div>
+                </form>
             </section>
 
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsRankings", "Home", new { id = requestId })">Previous</a>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAccreditationBodies", "Home", new { id = requestId })">Previous</a>
                 </div>
                 <div class="rd-actions-right">
                     <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsRecommendation", "Home", new { id = requestId })">Next</a>
-                    <button class="rm-btn rm-btn-primary" type="button"><i class="bi bi-save"></i> Save</button>
                 </div>
             </section>
         </main>
     </div>
+
+    <script>
+        (function () {
+            const selects = document.querySelectorAll("[data-assessment-select]");
+
+            function getBadgeStyle(value) {
+                if (value === "Meets Standards") return { text: "Meets Standards", cls: "ok" };
+                if (value === "Needs Improvement") return { text: "Needs Improvement", cls: "warn" };
+                return { text: "Not Assessed", cls: "neutral" };
+            }
+
+            function updateAssessment(selectEl) {
+                const selectedValue = selectEl.value || "";
+                const badgeId = selectEl.getAttribute("data-assessment-select");
+                const noteWrapId = selectEl.getAttribute("data-note-wrap");
+                const noteInputId = selectEl.getAttribute("data-note-input");
+
+                const badge = badgeId ? document.getElementById(badgeId) : null;
+                const noteWrap = noteWrapId ? document.getElementById(noteWrapId) : null;
+                const noteInput = noteInputId ? document.getElementById(noteInputId) : null;
+
+                if (badge) {
+                    const status = getBadgeStyle(selectedValue);
+                    badge.textContent = status.text;
+                    badge.classList.remove("ok", "warn", "neutral", "mod", "bad");
+                    badge.classList.add(status.cls);
+                }
+
+                const requiresNote = selectedValue === "Needs Improvement";
+
+                if (noteWrap) {
+                    noteWrap.style.display = requiresNote ? "grid" : "none";
+                }
+
+                if (noteInput) {
+                    noteInput.required = requiresNote;
+                    if (!requiresNote) {
+                        noteInput.value = "";
+                    }
+                }
+            }
+
+            selects.forEach((s) => {
+                s.addEventListener("change", () => updateAssessment(s));
+                updateAssessment(s);
+            });
+        })();
+    </script>
 </body>
 </html>

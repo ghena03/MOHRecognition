@@ -1,0 +1,50 @@
+@using DTOs
+@using System.Linq
+@{
+    var cardId = (ViewData["CardId"] as string) ?? "card";
+    var title = (ViewData["Title"] as string) ?? "Files Upload";
+    var subject = (ViewData["Subject"] as string) ?? "";
+    var rows = (ViewData["Rows"] as List<PictureRowDto>) ?? new List<PictureRowDto>();
+    var hasFiles = rows.Any();
+}
+
+<div class="pic-upload-card @(hasFiles ? "is-success" : "")" data-card-id="@cardId" data-has-files="@(hasFiles ? "1" : "0")">
+    <div class="pic-card-top">
+        <div class="pic-icon">@(hasFiles ? "✅" : "📄")</div>
+        <div>
+            <div class="pic-subject">@title</div>
+            <div class="pic-subtext">Accepted format: PDF or image</div>
+        </div>
+    </div>
+
+    <div class="pic-drop-zone" id="drop_@cardId">
+        <div class="pic-drop-title">Drag & drop file here</div>
+        <div class="pic-or">or</div>
+        <input id="input_@cardId" type="file" multiple accept=".pdf,image/*" />
+        <button type="button" class="btn-ghost" onclick="PictureChooseFiles('input_@cardId')">Choose File</button>
+        <div class="pic-selected" id="selected_@cardId"></div>
+    </div>
+
+    <div class="pic-actions-row">
+        <button type="button" class="btn-primary" onclick="PictureUploadCategory('@subject','input_@cardId')">Upload</button>
+        <button type="button" class="btn-ghost" onclick="PictureChooseFiles('input_@cardId')">Change File</button>
+        <button type="button" class="btn-ghost" onclick="PictureClearSelected('input_@cardId')">Remove Selection</button>
+    </div>
+
+    @if (rows.Any())
+    {
+        <div class="pic-files-list">
+            @foreach (var row in rows)
+            {
+                <div class="pic-file-item">
+                    <span class="pic-file-name">@row.FileName</span>
+                    <div class="pic-file-actions">
+                        <a class="btn-table-action btn-view" href="@row.FileUrl" target="_blank">View</a>
+                        <a class="btn-table-action btn-download" href="@row.FileUrl" download="@row.FileName">Download</a>
+                        <button type="button" class="btn-table-action btn-delete" onclick="PictureDelete('@row.Id')">Remove</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

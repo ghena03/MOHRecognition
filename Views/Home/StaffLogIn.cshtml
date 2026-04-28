@@ -36,7 +36,7 @@
 
         <div class="card">
             <div class="sign">
-                <img src="https://rnji.mohe.gov.jo/AppLogin/images/SIGN.jpg" alt="MOHE">
+                <img src="@Url.Content("~/images/SIGN.jpg")" alt="MOHE">
             </div>
 
             <div class="panel">
@@ -59,9 +59,12 @@
                     </div>
                     <span class="field-error" asp-validation-for="Email"></span>
 
-                    <div class="row active">
+                    <div class="row pass-row">
                         <span class="icon"><i class="fa-solid fa-lock"></i></span>
-                        <input asp-for="Password" type="password" placeholder="Password" />
+                        <input asp-for="Password" type="password" id="loginPassword" placeholder="Password" />
+                        <button type="button" class="pass-toggle" id="toggleLoginPassword" aria-label="Show password">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
                     </div>
                     <span class="field-error" asp-validation-for="Password"></span>
 
@@ -108,5 +111,24 @@
         </div>
 
     </div>
+
+    <script>
+        (function () {
+            const passwordInput = document.getElementById("loginPassword");
+            const toggleButton = document.getElementById("toggleLoginPassword");
+
+            if (!passwordInput || !toggleButton) return;
+
+            toggleButton.addEventListener("click", function () {
+                const isHidden = passwordInput.type === "password";
+                passwordInput.type = isHidden ? "text" : "password";
+
+                const icon = toggleButton.querySelector("i");
+                if (icon) {
+                    icon.className = isHidden ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

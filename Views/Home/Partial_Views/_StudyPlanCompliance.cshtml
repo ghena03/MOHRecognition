@@ -1,0 +1,178 @@
+@model DTOs.StudyPlanComplianceDto
+@using System.Linq
+
+<div class="hours-wrap">
+    <div class="duration-wrap" style="margin-top:0;">
+        <div class="duration-titlebar">
+            Study Plan Compliance (AQACHEI)
+        </div>
+
+        <input type="hidden" id="spc_editId" value="" />
+
+        <div class="grid-3" style="margin-top:14px;">
+            <div class="field">
+                <label>Program <span class="req">*</span></label>
+                <select id="spc_programId">
+                    <option value="">-- Choose --</option>
+                    @if (Model?.Programs != null)
+                    {
+                        foreach (var p in Model.Programs)
+                        {
+                            <option value="@p.Id">@p.Program</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="field">
+                <label>University Requirements Hours <span class="req">*</span></label>
+                <input id="spc_uniReq" type="number" min="0" placeholder="e.g. 27" />
+            </div>
+
+            <div class="field">
+                <label>College Requirements Hours <span class="req">*</span></label>
+                <input id="spc_facReq" type="number" min="0" placeholder="e.g. 15" />
+            </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:10px;">
+            <div class="field">
+                <label>Number of Theoretical Hours <span class="req">*</span></label>
+                <input id="spc_theoreticalHours" type="number" min="0" placeholder="e.g. 90" />
+            </div>
+            <div class="field">
+                <label>Number of Practical Hours <span class="req">*</span></label>
+                <input id="spc_practicalHours" type="number" min="0" placeholder="e.g. 45" />
+            </div>
+        </div>
+
+        <div class="grid-3" style="margin-top:10px;">
+            <div class="field">
+                <label>Specialization Requirements Hours <span class="req">*</span></label>
+                <input id="spc_specReq" type="number" min="0" placeholder="e.g. 60" />
+            </div>
+            <div class="field">
+                <label>Specialization Theoretical % <span class="req">*</span></label>
+                <input id="spc_theoryPct" type="number" min="0" max="100" placeholder="e.g. 60" />
+            </div>
+            <div class="field">
+                <label>Specialization Practical % <span class="req">*</span></label>
+                <input id="spc_practicalPct" type="number" min="0" max="100" placeholder="e.g. 40" />
+            </div>
+        </div>
+
+        <div class="grid-4" style="margin-top:10px;">
+            <div class="field">
+                <label>Basic Domains Count <span class="req">*</span></label>
+                <input id="spc_domains" type="number" min="0" placeholder="e.g. 3" />
+            </div>
+            <div class="field">
+                <label>Practical Training (Months) <span class="req">*</span></label>
+                <input id="spc_trainingMonths" type="number" min="0" placeholder="e.g. 3" />
+            </div>
+            <div class="field">
+                <label>Graduation Project Hours <span class="req">*</span></label>
+                <input id="spc_gradProjectHours" type="number" min="0" placeholder="e.g. 6" />
+            </div>
+            <div class="field">
+                <label>Rule Reference</label>
+                <input id="spc_ruleRef" type="text" value="AQACHEI-4" />
+            </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+            <button type="button" class="btn-primary" id="spc_addBtn">Add</button>
+            <button type="button" class="btn-primary" id="spc_updateBtn" style="display:none;">Save</button>
+            <button type="button" class="btn-ghost" id="spc_cancelBtn" style="display:none;">Cancel</button>
+        </div>
+
+        <div style="margin-top:16px;"></div>
+
+        @if (Model?.Rows != null && Model.Rows.Any())
+        {
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th style="width:46px;">#</th>
+                        <th>Program</th>
+                        <th style="width:110px;">Uni Req</th>
+                        <th style="width:110px;">College Req</th>
+                        <th style="width:110px;">Spec Req</th>
+                        <th style="width:120px;">Theory H</th>
+                        <th style="width:120px;">Practical H</th>
+                        <th style="width:95px;">Theory %</th>
+                        <th style="width:95px;">Practical %</th>
+                        <th style="width:95px;">Domains</th>
+                        <th style="width:100px;">Training M</th>
+                        <th style="width:100px;">Grad Prj H</th>
+                        <th style="width:120px;">Rule Ref</th>
+                        <th style="width:160px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var i = 1;
+                        foreach (var r in Model.Rows)
+                        {
+                            <tr>
+                                <td>@i</td>
+                                <td>@r.ProgramName</td>
+                                <td>@r.UniversityRequirementsHours</td>
+                                <td>@r.FacultyRequirementsHours</td>
+                                <td>@r.SpecializationRequirementsHours</td>
+                                <td>@r.TheoreticalHours</td>
+                                <td>@r.PracticalHours</td>
+                                <td>@r.SpecializationTheoreticalPercent</td>
+                                <td>@r.SpecializationPracticalPercent</td>
+                                <td>@r.BasicDomainsCount</td>
+                                <td>@r.PracticalTrainingMonths</td>
+                                <td>@r.GraduationProjectHours</td>
+                                <td>@r.RuleReference</td>
+                                <td style="text-align:center;">
+                                    <div class="icon-actions">
+                                        <button type="button"
+                                                class="iconbtn iconbtn-edit spc-edit"
+                                                data-id="@r.Id"
+                                                data-programid="@r.ProgramId"
+                                                data-unireq="@r.UniversityRequirementsHours"
+                                                data-facreq="@r.FacultyRequirementsHours"
+                                                data-specreq="@r.SpecializationRequirementsHours"
+                                                data-theoreticalhours="@r.TheoreticalHours"
+                                                data-practicalhours="@r.PracticalHours"
+                                                data-theorypct="@r.SpecializationTheoreticalPercent"
+                                                data-practicalpct="@r.SpecializationPracticalPercent"
+                                                data-domains="@r.BasicDomainsCount"
+                                                data-trainingmonths="@r.PracticalTrainingMonths"
+                                                data-gradprojecthours="@r.GraduationProjectHours"
+                                                data-ruleref="@r.RuleReference"
+                                                title="Edit"
+                                                aria-label="Edit">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.83H5v-.92l9.06-9.06.92.92L5.92 20.08zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" />
+                                            </svg>
+                                        </button>
+
+                                        <button type="button"
+                                                class="iconbtn iconbtn-del spc-del"
+                                                data-id="@r.Id"
+                                                title="Delete"
+                                                aria-label="Delete">
+                                            ×
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-hint" style="margin-top:10px;">
+                No study-plan compliance rows added yet.
+            </div>
+        }
+    </div>
+</div>

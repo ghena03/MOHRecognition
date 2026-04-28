@@ -1,5 +1,8 @@
 ﻿(function () {
     const containerId = "laboratoriesContainer";
+    const defaultAddLabel = "Add";
+    const defaultUpdateLabel = "Update";
+    let isSaving = false;
 
     function getContainer() {
         return document.getElementById(containerId);
@@ -27,21 +30,43 @@
         banner.style.display = "flex";
     }
 
+    function hideBanner() {
+        const banner = document.getElementById("labBanner");
+        if (banner) {
+            banner.style.display = "none";
+        }
+    }
+
     function lockHeight(el) {
         const h = el.offsetHeight;
         el.style.minHeight = h + "px";
         return () => { el.style.minHeight = ""; };
     }
 
+    function getFormElements() {
+        return {
+            editId: document.getElementById("lab_editId"),
+            facultyId: document.getElementById("lab_facultyId"),
+            computers: document.getElementById("lab_computers"),
+            workshops: document.getElementById("lab_workshops"),
+            laboratories: document.getElementById("lab_laboratories"),
+            personalComputers: document.getElementById("lab_personalComputers"),
+            addBtn: document.getElementById("lab_addBtn"),
+            cancelBtn: document.getElementById("lab_cancelBtn")
+        };
+    }
+
     function clearForm() {
-        const editId = document.getElementById("lab_editId");
-        const facultyId = document.getElementById("lab_facultyId");
-        const computers = document.getElementById("lab_computers");
-        const workshops = document.getElementById("lab_workshops");
-        const laboratories = document.getElementById("lab_laboratories");
-        const personalComputers = document.getElementById("lab_personalComputers");
-        const addBtn = document.getElementById("lab_addBtn");
-        const cancelBtn = document.getElementById("lab_cancelBtn");
+        const {
+            editId,
+            facultyId,
+            computers,
+            workshops,
+            laboratories,
+            personalComputers,
+            addBtn,
+            cancelBtn
+        } = getFormElements();
 
         if (editId) editId.value = "";
         if (facultyId) facultyId.value = "";
@@ -50,27 +75,65 @@
         if (laboratories) laboratories.value = "";
         if (personalComputers) personalComputers.value = "";
 
-        if (addBtn) addBtn.textContent = "Add";
+        if (addBtn) {
+            addBtn.textContent = defaultAddLabel;
+            addBtn.disabled = false;
+        }
         if (cancelBtn) cancelBtn.style.display = "none";
+
+        [facultyId, computers, workshops, laboratories, personalComputers]
+            .filter(Boolean)
+            .forEach(el => el.classList.remove("is-invalid"));
     }
 
     function collectData() {
         return {
-            Id: document.getElementById("lab_editId")?.value || "",
-            FacultyId: document.getElementById("lab_facultyId")?.value || "",
-            Computers: document.getElementById("lab_computers")?.value || "",
-            Workshops: document.getElementById("lab_workshops")?.value || "",
-            Laboratories: document.getElementById("lab_laboratories")?.value || "",
-            PersonalComputers: document.getElementById("lab_personalComputers")?.value || ""
+            Id: document.getElementById("lab_editId")?.value?.trim() || "",
+            FacultyId: document.getElementById("lab_facultyId")?.value?.trim() || "",
+            Computers: document.getElementById("lab_computers")?.value?.trim() || "",
+            Workshops: document.getElementById("lab_workshops")?.value?.trim() || "",
+            Laboratories: document.getElementById("lab_laboratories")?.value?.trim() || "",
+            PersonalComputers: document.getElementById("lab_personalComputers")?.value?.trim() || ""
         };
     }
 
+    function isNonNegativeInteger(v) {
+        return /^\d+$/.test(v);
+    }
+
     function validate(data) {
-        return data.FacultyId.trim() !== "" &&
-            data.Computers !== "" &&
-            data.Workshops !== "" &&
-            data.Laboratories !== "" &&
-            data.PersonalComputers !== "";
+        const {
+            facultyId,
+            computers,
+            workshops,
+            laboratories,
+            personalComputers
+        } = getFormElements();
+
+        [facultyId, computers, workshops, laboratories, personalComputers]
+            .filter(Boolean)
+            .forEach(el => el.classList.remove("is-invalid"));
+
+        if (!data.FacultyId) {
+            if (facultyId) facultyId.classList.add("is-invalid");
+            return "Please select a college.";
+        }
+
+        const numericFields = [
+            ["Computers", data.Computers, computers],
+            ["Workshops", data.Workshops, workshops],
+            ["Laboratories", data.Laboratories, laboratories],
+            ["Personal Computers", data.PersonalComputers, personalComputers]
+        ];
+
+        for (const [label, value, element] of numericFields) {
+            if (!isNonNegativeInteger(value)) {
+                if (element) element.classList.add("is-invalid");
+                return `${label} must be a whole number (0 or more).`;
+            }
+        }
+
+        return "";
     }
 
     async function loadPartial(showMessage, message, isError, keepScroll = true) {
@@ -87,6 +150,7 @@
             const res = await fetch(url, { cache: "no-store" });
             const html = await res.text();
             render(html);
+            bindSectionEvents();
 
             if (showMessage && message) {
                 showBanner(message, isError);
@@ -103,19 +167,33 @@
         }
     }
 
-    window.LabAdd = async function () {
-        const data = collectData();
+    async function addOrUpdateLaboratory() {
+        if (isSaving) return;
 
-        if (!validate(data)) {
-            showBanner("Please fill all required fields.", true);
+        const data = collectData();
+        const validationMessage = validate(data);
+
+        if (validationMessage) {
+            showBanner(validationMessage, true);
             return;
         }
+
+        const addBtn = document.getElementById("lab_addBtn");
+        const cancelBtn = document.getElementById("lab_cancelBtn");
+        const isEditing = !!data.Id;
 
         const url = getUrl("data-add-url");
         if (!url) {
             showBanner("Save URL is missing.", true);
             return;
         }
+
+        isSaving = true;
+        if (addBtn) {
+            addBtn.disabled = true;
+            addBtn.textContent = isEditing ? "Updating..." : "Adding...";
+        }
+        if (cancelBtn) cancelBtn.disabled = true;
 
         const c = getContainer();
         const y = window.scrollY || 0;
@@ -134,6 +212,7 @@
 
             if (res.ok) {
                 render(html);
+                bindSectionEvents();
                 showBanner(
                     data.Id ? "Laboratory row updated successfully." : "Laboratory row added successfully.",
                     false
@@ -142,53 +221,69 @@
                 window.scrollTo(0, y);
             } else {
                 render(html);
+                bindSectionEvents();
                 showBanner(html || "Save failed.", true);
             }
         } catch (err) {
             showBanner("An unexpected error happened while saving.", true);
             console.error(err);
         } finally {
+            isSaving = false;
             unlock();
+
+            const refreshedAddBtn = document.getElementById("lab_addBtn");
+            const refreshedCancelBtn = document.getElementById("lab_cancelBtn");
+            if (refreshedAddBtn) {
+                refreshedAddBtn.disabled = false;
+                refreshedAddBtn.textContent = isEditing ? defaultUpdateLabel : defaultAddLabel;
+            }
+            if (refreshedCancelBtn) refreshedCancelBtn.disabled = false;
         }
-    };
+    }
 
-    window.LabStartEdit = function (id) {
-        const editId = document.getElementById("lab_editId");
-        const facultyId = document.getElementById(`lab_row_facultyId_${id}`);
-        const computers = document.getElementById(`lab_row_computers_${id}`);
-        const workshops = document.getElementById(`lab_row_workshops_${id}`);
-        const laboratories = document.getElementById(`lab_row_laboratories_${id}`);
-        const personalComputers = document.getElementById(`lab_row_personalComputers_${id}`);
+    function startEditFromButton(btn) {
+        const {
+            editId,
+            facultyId,
+            computers,
+            workshops,
+            laboratories,
+            personalComputers,
+            addBtn,
+            cancelBtn
+        } = getFormElements();
 
-        const facultySelect = document.getElementById("lab_facultyId");
-        const computersInput = document.getElementById("lab_computers");
-        const workshopsInput = document.getElementById("lab_workshops");
-        const laboratoriesInput = document.getElementById("lab_laboratories");
-        const personalComputersInput = document.getElementById("lab_personalComputers");
-        const addBtn = document.getElementById("lab_addBtn");
-        const cancelBtn = document.getElementById("lab_cancelBtn");
+        if (editId) editId.value = btn.dataset.id || "";
+        if (facultyId) facultyId.value = btn.dataset.facultyId || "";
+        if (computers) computers.value = btn.dataset.computers || "";
+        if (workshops) workshops.value = btn.dataset.workshops || "";
+        if (laboratories) laboratories.value = btn.dataset.laboratories || "";
+        if (personalComputers) personalComputers.value = btn.dataset.personalComputers || "";
 
-        if (editId) editId.value = id;
-        if (facultySelect && facultyId) facultySelect.value = facultyId.value;
-        if (computersInput && computers) computersInput.value = computers.value;
-        if (workshopsInput && workshops) workshopsInput.value = workshops.value;
-        if (laboratoriesInput && laboratories) laboratoriesInput.value = laboratories.value;
-        if (personalComputersInput && personalComputers) personalComputersInput.value = personalComputers.value;
-
-        if (addBtn) addBtn.textContent = "Update";
+        if (addBtn) addBtn.textContent = defaultUpdateLabel;
         if (cancelBtn) cancelBtn.style.display = "inline-flex";
 
         location.hash = "#sec-labs";
-    };
+    }
 
-    window.LabCancelEdit = function () {
+    function cancelEdit() {
+        hideBanner();
         clearForm();
-    };
+    }
 
-    window.LabDelete = async function (id) {
+    async function deleteLaboratory(id) {
         const url = getUrl("data-delete-url");
         if (!url) {
             showBanner("Delete URL is missing.", true);
+            return;
+        }
+
+        if (!id) {
+            showBanner("Invalid row id.", true);
+            return;
+        }
+
+        if (!window.confirm("Delete this row?")) {
             return;
         }
 
@@ -209,6 +304,7 @@
 
             if (res.ok) {
                 render(html);
+                bindSectionEvents();
                 showBanner("Laboratory row deleted successfully.", false);
                 location.hash = "#sec-labs";
                 window.scrollTo(0, y);
@@ -221,6 +317,66 @@
         } finally {
             unlock();
         }
+    }
+
+    function bindSectionEvents() {
+        const addBtn = document.getElementById("lab_addBtn");
+        const cancelBtn = document.getElementById("lab_cancelBtn");
+        const form = document.getElementById("labEditorForm");
+        const table = document.getElementById("labRowsTable");
+
+        if (addBtn) {
+            addBtn.onclick = async function () {
+                await addOrUpdateLaboratory();
+            };
+        }
+
+        if (cancelBtn) {
+            cancelBtn.onclick = function () {
+                cancelEdit();
+            };
+        }
+
+        if (form) {
+            form.onkeydown = async function (e) {
+                if (e.key !== "Enter") return;
+                if (e.target && e.target.tagName === "SELECT") return;
+                e.preventDefault();
+                await addOrUpdateLaboratory();
+            };
+        }
+
+        if (table) {
+            table.onclick = async function (e) {
+                const actionBtn = e.target.closest("[data-lab-action]");
+                if (!actionBtn) return;
+
+                const action = actionBtn.dataset.labAction;
+
+                if (action === "edit") {
+                    startEditFromButton(actionBtn);
+                } else if (action === "delete") {
+                    await deleteLaboratory(actionBtn.dataset.id || "");
+                }
+            };
+        }
+    }
+
+    window.LabAdd = async function () {
+        await addOrUpdateLaboratory();
+    };
+
+    window.LabStartEdit = function (id) {
+        const btn = document.querySelector(`[data-lab-action="edit"][data-id="${CSS.escape(id)}"]`);
+        if (btn) startEditFromButton(btn);
+    };
+
+    window.LabCancelEdit = function () {
+        cancelEdit();
+    };
+
+    window.LabDelete = async function (id) {
+        await deleteLaboratory(id);
     };
 
     window.LoadLaboratoriesSection = async function () {
@@ -233,7 +389,7 @@
         setTimeout(async () => {
             await loadPartial(false, "", false, false);
 
-            if (window.location.hash === "#sec-labs") {
+            if (window.location.hash === "#sec-labs" || window.location.hash === "#sec-infra") {
                 const sec = document.getElementById("sec-labs");
                 if (sec) {
                     setTimeout(() => {

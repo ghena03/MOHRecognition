@@ -103,6 +103,34 @@ html, body {
     text-align: center;
 }
 
+.pass-row {
+    gap: 10px;
+}
+
+.pass-row input[type="password"],
+.pass-row input[type="text"] {
+    flex: 1;
+}
+
+.pass-toggle {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    background: #fff;
+    color: #475467;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: 0.2s ease;
+    margin-left: auto;
+}
+
+.pass-toggle:hover {
+    border-color: #6aa7de;
+    color: #3b82f6;
+}
+
 input, select {
     width: 100%;
     border: 0;

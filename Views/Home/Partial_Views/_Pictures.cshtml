@@ -1,77 +1,91 @@
 ﻿@model DTOs.PicturesDto
 @using System.Linq
 
-<div class="attach-grid attach-grid-single">
-    <div class="attach-card">
-        <div class="duration-titlebar">
-            Upload Pictures
-        </div>
+@{
+    var rows = Model?.Rows ?? new List<DTOs.PictureRowDto>();
 
-        <div id="picBanner" class="banner warn" style="display:none; margin-top:12px;">
-            <span class="dot"></span>
-            <span class="txt"></span>
-            <button type="button" class="x" onclick="document.getElementById('picBanner').style.display='none'">×</button>
-        </div>
+    var librarySubject = "Library photos";
+    var hospitalSubject = "Hospital photos";
+    var facultiesSubject = "Colleges photos";
+    var laboratoriesSubject = "Laboratories photos";
 
-        <div class="attach-form" style="margin-top:16px;">
-            <div class="field">
-                <label>Choose Picture <span class="req">*</span></label>
-                <input id="pic_file" type="file" accept="image/*" />
-            </div>
+    var libraryRows = rows.Where(x =>
+        string.Equals(x.Subject, librarySubject, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(x.Subject, "Library photos (PDF)", StringComparison.OrdinalIgnoreCase)).ToList();
+    var hospitalRows = rows.Where(x =>
+        string.Equals(x.Subject, hospitalSubject, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(x.Subject, "Hospital photos (PDF)", StringComparison.OrdinalIgnoreCase)).ToList();
+    var facultiesRows = rows.Where(x =>
+        string.Equals(x.Subject, facultiesSubject, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(x.Subject, "Colleges photos (PDF)", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(x.Subject, "Faculties photos", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(x.Subject, "Faculties photos (PDF)", StringComparison.OrdinalIgnoreCase)).ToList();
+    var laboratoriesRows = rows.Where(x =>
+        string.Equals(x.Subject, laboratoriesSubject, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(x.Subject, "Laboratories photos (PDF)", StringComparison.OrdinalIgnoreCase)).ToList();
 
-            <div class="field" style="margin-top:14px;">
-                <label>Subject <span class="req">*</span></label>
-                <input id="pic_subject" type="text" maxlength="250" placeholder="Enter picture subject" />
-            </div>
+    var uploadedCount = 0;
+    if (libraryRows.Any()) uploadedCount++;
+    if (hospitalRows.Any()) uploadedCount++;
+    if (facultiesRows.Any()) uploadedCount++;
+    if (laboratoriesRows.Any()) uploadedCount++;
+}
 
-            <div style="display:flex; justify-content:center; margin-top:18px;">
-                <button type="button" class="btn-primary" onclick="PictureUpload()">Upload Picture</button>
-            </div>
-        </div>
-
-        <div class="attach-table-wrap" style="margin-top:22px;">
-            <table class="table attach-table">
-                <thead>
-                    <tr>
-                        <th style="width:70px;">#</th>
-                        <th>Subject</th>
-                        <th>Picture Name</th>
-                        <th style="width:110px;">View</th>
-                        <th style="width:120px;">Download</th>
-                        <th style="width:110px;">Delete</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model?.Rows == null || !Model.Rows.Any())
-                    {
-                        <tr>
-                            <td colspan="6" style="font-weight:700;">No Data Found !</td>
-                        </tr>
-                    }
-                    else
-                    {
-                        var i = 1;
-                        foreach (var row in Model.Rows)
-                        {
-                            <tr>
-                                <td>@i</td>
-                                <td>@row.Subject</td>
-                                <td>@row.FileName</td>
-                                <td>
-                                    <a class="btn-table-action btn-view" href="@row.FileUrl" target="_blank">View</a>
-                                </td>
-                                <td>
-                                    <a class="btn-table-action btn-download" href="@row.FileUrl" download="@row.FileName">Download</a>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn-table-action btn-delete" onclick="PictureDelete('@row.Id')">Delete</button>
-                                </td>
-                            </tr>
-                            i++;
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
+<div class="pic-modern-wrap">
+    <div id="picBanner" class="banner warn" style="display:none; margin-bottom:12px;">
+        <span class="dot"></span>
+        <span class="txt"></span>
+        <button type="button" class="x" onclick="document.getElementById('picBanner').style.display='none'">×</button>
     </div>
+
+    <div class="pic-head-card">
+        <div>
+            <h3>Photos / Media Upload</h3>
+            <p>Upload PDF or image files in each section. Multiple files are allowed.</p>
+        </div>
+        <div class="pic-progress" id="picProgressText" data-uploaded="@uploadedCount" data-total="4">Uploaded @uploadedCount of 4 files</div>
+    </div>
+
+    <div class="pic-sections">
+        <section class="pic-section-block">
+            @await Html.PartialAsync("Partial_Views/_PicturesCard", new ViewDataDictionary(ViewData)
+            {
+                { "CardId", "library" },
+                { "Title", "1) Library Photos" },
+                { "Subject", librarySubject },
+                { "Rows", libraryRows }
+            })
+        </section>
+
+        <section class="pic-section-block">
+            @await Html.PartialAsync("Partial_Views/_PicturesCard", new ViewDataDictionary(ViewData)
+            {
+                { "CardId", "hospital" },
+                { "Title", "2) Hospital Photos" },
+                { "Subject", hospitalSubject },
+                { "Rows", hospitalRows }
+            })
+        </section>
+
+        <section class="pic-section-block">
+            @await Html.PartialAsync("Partial_Views/_PicturesCard", new ViewDataDictionary(ViewData)
+            {
+                { "CardId", "faculties" },
+                { "Title", "3) Colleges Photos" },
+                { "Subject", facultiesSubject },
+                { "Rows", facultiesRows }
+            })
+        </section>
+
+        <section class="pic-section-block">
+            @await Html.PartialAsync("Partial_Views/_PicturesCard", new ViewDataDictionary(ViewData)
+            {
+                { "CardId", "laboratories" },
+                { "Title", "4) Laboratories Photos" },
+                { "Subject", laboratoriesSubject },
+                { "Rows", laboratoriesRows }
+            })
+        </section>
+    </div>
+
 </div>

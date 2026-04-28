@@ -1,0 +1,64 @@
+.rd-tablewrap {
+    overflow: auto;
+}
+
+.rd-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+}
+
+.rd-table th,
+.rd-table td {
+    border: 1px solid #e7eaf1;
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+.rd-table th {
+    background: #f6f8fc;
+    text-align: left;
+}
+
+.rd-table tbody td:first-child {
+    font-weight: 600;
+    background: #faf7f0;
+}
+
+.doctors-summary-grid {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.doctors-summary-item {
+    border: 1px solid #e7eaf1;
+    background: #f9fbff;
+    border-radius: 12px;
+    padding: 12px;
+    display: grid;
+    gap: 6px;
+}
+
+.doctors-summary-item span {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.doctors-summary-item b {
+    font-size: 20px;
+    color: #1f2937;
+}
+
+@media (max-width: 900px) {
+    .doctors-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .doctors-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}

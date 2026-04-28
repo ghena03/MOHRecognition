@@ -1,0 +1,104 @@
+@model MOHRecognition.Services.RecognitionRequestRecord
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Admin Request Details";
+}
+
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" asp-append-version="true" />
+</head>
+
+<body class="admin-page">
+
+    <!-- HEADER -->
+    <div class="admin-header">
+        <div class="header-left">
+            <img src="~/images/mohelogo.png" class="logo" />
+            <div class="header-text">
+                <h1>Request Details</h1>
+                <p>Review full request information</p>
+            </div>
+        </div>
+
+        <a class="back-btn" href="@Url.Action("Requests", "Home")">← Back</a>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="details-container">
+
+        <!-- BASIC INFO -->
+        <div class="details-card">
+            <h2>Basic Information</h2>
+
+            <div class="details-grid">
+                <div><strong>Reference:</strong> @Model.ReferenceNumber</div>
+                <div><strong>University:</strong> @Model.UniversityName</div>
+                <div><strong>Country:</strong> @Model.Country</div>
+                <div><strong>Applicant:</strong> @Model.ApplicantName</div>
+                <div><strong>Email:</strong> @Model.ApplicantEmail</div>
+                <div><strong>Status:</strong> @Model.Status</div>
+                <form asp-controller="Home"
+                      asp-action="AssignToMember"
+                      method="post"
+                      style="margin-bottom:20px;">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <label style="font-weight:600;">Assign to:</label>
+
+                    <select name="assignedMember" class="mini-select">
+                        <option value="Unassigned" selected="@(Model.AssignedMember == "Unassigned")">Unassigned</option>
+                        <option value="member1@mohe.local" selected="@(Model.AssignedMember == "member1@mohe.local")">Recognition Member 1</option>
+                        <option value="member2@mohe.local" selected="@(Model.AssignedMember == "member2@mohe.local")">Recognition Member 2</option>
+                        <option value="member3@mohe.local" selected="@(Model.AssignedMember == "member3@mohe.local")">Recognition Member 3</option>
+                    </select>
+
+                    <button type="submit" class="mini-save-btn">Assign</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ACADEMIC INFO -->
+        <div class="details-card">
+            <h2>Academic Info (Student Population)</h2>
+
+            <div class="details-grid">
+                <div><strong>Total Students:</strong> @Model.AcademicInfo.TotalStudentPopulation</div>
+                <div><strong>Local Students:</strong> @Model.AcademicInfo.LocalStudentPopulation</div>
+                <div><strong>Jordanian Students:</strong> @Model.AcademicInfo.JordanianStudentPopulation</div>
+                <div><strong>Foreign Students:</strong> @Model.AcademicInfo.ForeignStudentPopulation</div>
+            </div>
+        </div>
+
+        <!-- COLLEGES -->
+        <div class="details-card">
+            <h2>Submitted Colleges</h2>
+
+            @if (Model.Faculties != null && Model.Faculties.Any())
+            {
+                <ul class="college-list">
+                    @foreach (var f in Model.Faculties)
+                    {
+                        <li>@f.FacultyName</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="empty-text">No colleges were submitted.</p>
+            }
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,508 @@
+@import url("./DetailsBasicInfo.css");
+
+.chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid #d7dde3;
+    background: #fff;
+    color: #64748b;
+    font-weight: 800;
+    font-size: 12px;
+}
+
+.chip.on {
+    border-color: #86efac;
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.rec-box {
+    border: 1px solid #ece6de;
+    border-radius: 12px;
+    background: #fff;
+    padding: 12px;
+}
+
+.rec-box h4 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: #7a2d2a;
+    font-weight: 900;
+}
+
+.rec-box ul {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 4px;
+}
+
+.rec-box li {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.empty {
+    color: #6b7280;
+    font-weight: 700;
+}
+
+.kv {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.kv span {
+    color: #64748b;
+    font-weight: 700;
+}
+
+.kv b {
+    color: #111827;
+}
+
+.sub {
+    margin-top: 8px;
+    color: #334155;
+    font-size: 13px;
+}
+
+.result-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.result-line .label {
+    color: #475467;
+    font-weight: 800;
+    font-size: 13px;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    border: 1px solid transparent;
+}
+
+.status-badge.ok {
+    background: #ecfdf3;
+    color: #166534;
+    border-color: #86efac;
+}
+
+.status-badge.warn {
+    background: #fffbeb;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.status-badge.fail {
+    background: #fef2f2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+.review-panel {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.review-col {
+    border: 1px solid #ece6de;
+    border-radius: 12px;
+    padding: 10px;
+    background: #fcfcfd;
+    display: grid;
+    gap: 8px;
+}
+
+.review-col h4 {
+    margin: 0;
+    color: #7a2d2a;
+    font-size: 14px;
+}
+
+.review-col label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 13px;
+}
+
+.auto-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px dashed #e5e7eb;
+    padding-bottom: 6px;
+    font-size: 13px;
+    color: #334155;
+}
+
+.auto-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.summary-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #ece6de;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: #fff;
+    font-weight: 700;
+}
+
+.overall-box {
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid #d7dde3;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 900;
+    background: #f8fafc;
+}
+
+.doctor-notes {
+    width: 100%;
+    min-height: 110px;
+    border: 1px solid #d7dde3;
+    border-radius: 10px;
+    padding: 10px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.rank-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rank-input input[type="text"] {
+    flex: 1;
+}
+
+.rank-stack {
+    margin-top: 12px;
+    display: grid;
+    gap: 12px;
+}
+
+.rank-stack .rd-field {
+    margin-bottom: 0;
+}
+
+.na-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: #475467;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.rd-grid2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.rd-span2 {
+    grid-column: 1 / -1;
+}
+
+/* Study Plan section polish */
+.study-plan-assessment .rd-card-hd {
+    background: linear-gradient(90deg, #7f1d1d 0%, #8f2d2d 100%);
+    color: #fff;
+    border-radius: 12px;
+}
+
+.study-plan-assessment .rd-card-hd h2,
+.study-plan-assessment .rd-card-hd p {
+    color: #fff;
+}
+
+.studyplan-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.metric-item {
+    border: 1px solid #eadfd6;
+    border-radius: 10px;
+    padding: 10px;
+    background: #fff;
+    display: grid;
+    gap: 4px;
+}
+
+.metric-item span {
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.metric-item b {
+    color: #111827;
+    font-size: 18px;
+}
+
+.studyplan-table-wrap {
+    border: 1px solid #eadfd6;
+    border-radius: 12px;
+    overflow: auto;
+    background: #fff;
+}
+
+.studyplan-table {
+    min-width: 980px;
+}
+
+.studyplan-table thead th {
+    background: #faf5f1;
+    color: #7a2d2a;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 10px;
+    border-bottom: 1px solid #eadfd6;
+}
+
+.studyplan-table tbody td {
+    border-bottom: 1px solid #f1ece6;
+    padding: 9px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.studyplan-table tbody tr:hover {
+    background: #fffaf5;
+}
+
+.studyplan-split {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 12px;
+}
+
+.studyplan-program-list {
+    border: 1px solid #eadfd6;
+    border-radius: 12px;
+    background: #fff;
+    padding: 8px;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    max-height: 620px;
+    overflow: auto;
+}
+
+.studyplan-program-item {
+    border: 1px solid #efe6dd;
+    background: #fff;
+    border-radius: 10px;
+    padding: 9px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.studyplan-program-item .name {
+    font-weight: 800;
+    color: #1f2937;
+}
+
+.studyplan-program-item.active {
+    border-color: #8f2d2d;
+    box-shadow: 0 0 0 2px rgba(143,45,45,.10);
+    background: #fffaf5;
+}
+
+.studyplan-detail-host {
+    border: 1px solid #eadfd6;
+    border-radius: 12px;
+    background: #fff;
+    padding: 10px;
+}
+
+.studyplan-detail-panel {
+    display: none;
+}
+
+.studyplan-detail-panel.active {
+    display: block;
+}
+
+.studyplan-program-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #faf5f1;
+}
+
+.studyplan-program-title {
+    font-weight: 900;
+    color: #7a2d2a;
+}
+
+.studyplan-program-sub {
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.studyplan-program-body {
+    padding: 10px 12px 12px;
+    display: grid;
+    gap: 10px;
+}
+
+.studyplan-values-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.studyplan-values-grid > div {
+    border: 1px solid #f1ece6;
+    border-radius: 8px;
+    padding: 8px;
+    display: grid;
+    gap: 4px;
+}
+
+.studyplan-values-grid span {
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.studyplan-values-grid b {
+    color: #111827;
+    font-size: 15px;
+}
+
+.studyplan-rule-list {
+    display: grid;
+    gap: 6px;
+}
+
+.studyplan-rule-list .auto-item {
+    grid-template-columns: 1fr auto auto;
+    display: grid;
+    align-items: center;
+    gap: 10px;
+}
+
+.studyplan-rule-list label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+    .rd-grid2,
+    .rd-grid3,
+    .rd-grid4 {
+        grid-template-columns: 1fr;
+    }
+
+    .studyplan-values-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .studyplan-split {
+        grid-template-columns: 1fr;
+    }
+
+    .studyplan-program-list {
+        max-height: none;
+    }
+
+    .review-panel {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Doctors / Medicine Colleges review */
+.doctors-review-section .rd-card-hd {
+    background: linear-gradient(90deg, #7f1d1d 0%, #8f2d2d 100%);
+    color: #fff;
+    border-radius: 12px;
+}
+
+.doctors-review-section .rd-card-hd h2,
+.doctors-review-section .rd-card-hd p {
+    color: #fff;
+}
+
+.doctors-review-table {
+    min-width: 760px;
+}
+
+.doctors-review-table thead th {
+    background: #faf5f1;
+    color: #7a2d2a;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.doctors-review-table tbody td {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.doctors-review-table tbody td:first-child {
+    font-weight: 800;
+    color: #374151;
+}
+
+.doctors-review-table tbody tr:hover {
+    background: #fffaf5;
+}
+
+.doctors-metrics {
+    margin-top: 12px;
+    margin-bottom: 2px;
+}

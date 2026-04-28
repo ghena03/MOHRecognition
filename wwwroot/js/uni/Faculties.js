@@ -68,14 +68,18 @@
         // Laboratories uses faculties
         await refreshPartial("laboratoriesContainer", "/Home/LaboratoriesPartial");
     }
-    function setEditMode(id, name) {
+    function setEditMode(id, name, collegeType, studentsCount) {
         const editId = document.getElementById("fac_editId");
         const input = document.getElementById("fac_name");
+        const typeInput = document.getElementById("fac_type");
+        const studentsInput = document.getElementById("fac_studentsCount");
         const btn = document.getElementById("fac_btnAdd");
         if (!editId || !input || !btn) return;
 
         editId.value = id;
         input.value = name || "";
+        if (typeInput) typeInput.value = collegeType || "";
+        if (studentsInput) studentsInput.value = studentsCount || "";
         btn.textContent = "Save";
         input.focus();
     }
@@ -83,10 +87,14 @@
     function clearEditMode() {
         const editId = document.getElementById("fac_editId");
         const input = document.getElementById("fac_name");
+        const typeInput = document.getElementById("fac_type");
+        const studentsInput = document.getElementById("fac_studentsCount");
         const btn = document.getElementById("fac_btnAdd");
 
         if (editId) editId.value = "";
         if (input) input.value = "";
+        if (typeInput) typeInput.value = "";
+        if (studentsInput) studentsInput.value = "";
         if (btn) btn.textContent = "Add";
     }
 
@@ -105,7 +113,12 @@
             // EDIT (pen)
             if (editBtn) {
                 hideBanner();
-                setEditMode(editBtn.getAttribute("data-id"), editBtn.getAttribute("data-name"));
+                setEditMode(
+                    editBtn.getAttribute("data-id"),
+                    editBtn.getAttribute("data-name"),
+                    editBtn.getAttribute("data-type"),
+                    editBtn.getAttribute("data-students")
+                );
                 return;
             }
 
@@ -127,21 +140,35 @@
             // ADD / SAVE
             if (addBtn) {
                 const input = document.getElementById("fac_name");
+                const typeInput = document.getElementById("fac_type");
+                const studentsInput = document.getElementById("fac_studentsCount");
                 const editId = document.getElementById("fac_editId");
 
                 const facultyName = (input?.value || "").trim();
+                const collegeType = (typeInput?.value || "").trim();
+                const studentsCount = (studentsInput?.value || "").trim();
                 const id = (editId?.value || "").trim();
 
                 if (!facultyName) {
-                    showBanner("warn", "Please enter faculty name.");
+                    showBanner("warn", "Please enter college name.");
+                    return;
+                }
+
+                if (!collegeType) {
+                    showBanner("warn", "Please choose college type.");
+                    return;
+                }
+
+                if (studentsCount === "" || Number.isNaN(Number(studentsCount)) || Number(studentsCount) < 0) {
+                    showBanner("warn", "Please enter a valid number of students.");
                     return;
                 }
 
                 hideBanner();
 
                 const html = id
-                    ? await post("/Home/FacultiesUpdate", { id, facultyName })
-                    : await post("/Home/FacultiesAdd", { facultyName });
+                    ? await post("/Home/FacultiesUpdate", { id, facultyName, collegeType, studentsCount })
+                    : await post("/Home/FacultiesAdd", { facultyName, collegeType, studentsCount });
 
                 c.innerHTML = html;
 

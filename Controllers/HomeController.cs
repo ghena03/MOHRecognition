@@ -13,12 +13,58 @@ namespace MOHRecognition.Controllers
     {
         private readonly IWebHostEnvironment _env;
         private readonly IRecognitionRequestService _recognitionRequestService;
+        private Dictionary<string, List<string>>? _citiesCache;
+
+
+        // Load cities from JSON file
+        private Dictionary<string, List<string>> GetCitiesDictionary()
+        {
+            if (_citiesCache != null)
+                return _citiesCache;
+
+            try
+            {
+                var jsonPath = Path.Combine(_env.WebRootPath, "Data", "cities.json");
+                var json = System.IO.File.ReadAllText(jsonPath);
+                _citiesCache = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json) 
+                    ?? new Dictionary<string, List<string>>();
+            }
+            catch
+            {
+                _citiesCache = new Dictionary<string, List<string>>();
+            }
+
+            return _citiesCache;
+        }
 
         public HomeController(IWebHostEnvironment env, IRecognitionRequestService recognitionRequestService)
         {
             _env = env;
             _recognitionRequestService = recognitionRequestService;
         }
+        [HttpPost]
+        public IActionResult GetCitiesByCountry([FromBody] CountryRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request?.Country))
+                return Json(new List<string>());
+
+            var cities = GetCitiesDictionary();
+            
+            if (cities.TryGetValue(request.Country, out var cityList))
+            {
+                var result = cityList.ToList();
+                result.Add("Other (Please specify)");
+                return Json(result);
+            }
+
+            return Json(new List<string> { "Other (Please specify)" });
+        }
+
+        public class CountryRequest
+        {
+            public string Country { get; set; } = "";
+        }
+
         public IActionResult Index()
         {
             return View("~/Views/Home/Index.cshtml");
@@ -142,7 +188,7 @@ namespace MOHRecognition.Controllers
             HttpContext.Session.SetString("UniversityEmail", Email ?? "");
             HttpContext.Session.SetString("RecognitionNumber", RecognitionNumber ?? "");
 
-            return RedirectToAction("UniDashboard", "Home");
+            return RedirectToAction("UniStatus", "Home");
         }
 
         ///////////////////////UniversityRecoverAccess/////////
@@ -185,6 +231,7 @@ namespace MOHRecognition.Controllers
                 : (JsonSerializer.Deserialize<AcademicInfoDto>(academicJson) ?? new AcademicInfoDto());
 
             ViewBag.Academic = a;
+            ViewBag.AcademicRankStaffFiles = BuildAcademicRankStaffFileNameMap(a);
 
             // ================== Admission Requirements(section 3) ==================
             ViewBag.Admission = LoadAdmission();
@@ -199,6 +246,7 @@ namespace MOHRecognition.Controllers
 
             // Faculties
             var faculties = LoadFaculties();
+            faculties.AvailableCollegeCategories = GetCollegeCategoriesFromSession();
             ViewBag.Faculties = faculties;
 
             // Programs
@@ -212,15 +260,6 @@ namespace MOHRecognition.Controllers
                 Rows = GetProgramHoursRows()
             };
 
-            // ================== Ratios / Percentages(section 9) ==================
-            var ratiosJson = HttpContext.Session.GetString("Ratios");
-            RatiosDto r = string.IsNullOrWhiteSpace(ratiosJson)
-                ? new RatiosDto()
-                : (JsonSerializer.Deserialize<RatiosDto>(ratiosJson) ?? new RatiosDto());
-
-            ViewBag.Ratios = r;
-
-
             // ================== Infrastructure(section ) ==================
             var infrastructureJson = HttpContext.Session.GetString("Infrastructure");
             InfrastructureDto infrastructure = string.IsNullOrWhiteSpace(infrastructureJson)
@@ -231,31 +270,58 @@ namespace MOHRecognition.Controllers
 
             // ================== Librarye(section ) ==================
             ViewBag.Library = LoadLibrary();
-            // ================== Attachments(section ) ==================
-            ViewBag.Attachments = LoadAttachments();
             // ================== Pictures(section ) ==================
             ViewBag.Pictures = LoadPictures();
+            ViewBag.Laboratories = LoadLaboratoriesData();
+            // ================== Accreditation Bodies(section ) ==================
+            ViewBag.AccreditationBodies = LoadAccreditationBodies();
             // ================== Submit(section ) ==================
             ViewBag.SubmitApplication = LoadSubmitApplication();
             return View("~/Views/uni/UniDashboard.cshtml");
+        }
+
+        [HttpGet]
+        public IActionResult UniDashboardDoctors()
+        {
+            return Redirect(Url.Action("UniDashboard", "Home") + "#sec-med");
         }
 
         ///////////////////////PublicInfo/////////
         [HttpPost]
         public IActionResult SavePublicInfo(PublicInfoDto dto)
         {
+            dto ??= new PublicInfoDto();
+            if (string.IsNullOrWhiteSpace(dto.City))
+            {
+                dto.City = HttpContext.Session.GetString("SignupCity") ?? "";
+            }
+
+            if (string.Equals(dto.LanguageOfInstruction, "Others", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(dto.LanguageOfInstructionOther))
+                    return BadRequest("LanguageOfInstructionOther is required.");
+
+                dto.LanguageOfInstruction = dto.LanguageOfInstructionOther.Trim();
+            }
+            else
+            {
+                dto.LanguageOfInstructionOther = "";
+            }
+
             // Required fields (must match input "name" attributes in Public Info section)
             var required = new[]
             {
-        "InstitutionName",
-        "PartyForwardingForm",
-        "FoundationDate",
-        "MailingFullAddress",
-        "DirectPhoneNumber",
-        "FaxNumber",
-        "EmailAddress",
-        "InstitutionalWebAddress"
-    };
+"InstitutionName",
+"FoundationDate",
+"DateOfEstablishment",
+"StartOfTeaching",
+"ModeOfStudy",
+"LanguageOfInstruction",
+"MailingFullAddress",
+"DirectPhoneNumber",
+"EmailAddress",
+"InstitutionalWebAddress"
+};
 
             // 1) Required check
             foreach (var key in required)
@@ -276,6 +342,21 @@ namespace MOHRecognition.Controllers
         [HttpPost]
         public IActionResult AutoSavePublicInfo(PublicInfoDto dto)
         {
+            dto ??= new PublicInfoDto();
+            if (string.IsNullOrWhiteSpace(dto.City))
+            {
+                dto.City = HttpContext.Session.GetString("SignupCity") ?? "";
+            }
+
+            if (string.Equals(dto.LanguageOfInstruction, "Others", StringComparison.OrdinalIgnoreCase))
+            {
+                dto.LanguageOfInstruction = (dto.LanguageOfInstructionOther ?? "").Trim();
+            }
+            else
+            {
+                dto.LanguageOfInstructionOther = "";
+            }
+
             var json = JsonSerializer.Serialize(dto ?? new PublicInfoDto());
             HttpContext.Session.SetString("PublicInfo", json);
             return Ok();
@@ -285,29 +366,82 @@ namespace MOHRecognition.Controllers
         [HttpPost]
         public IActionResult SaveAcademicInfo(AcademicInfoDto dto)
         {
+            dto ??= new AcademicInfoDto();
+            var existingAcademic = LoadAcademicInfoFromSession();
+            CopyRankExcelFiles(existingAcademic, dto);
+
+            int Safe(int? v) => Math.Max(0, v ?? 0);
+
+            dto.StaffProfessor = Safe(dto.StaffProfessorFullTimeCount) + Safe(dto.StaffProfessorPartTimeCount);
+            dto.StaffAssociateProfessor = Safe(dto.StaffAssociateProfessorFullTimeCount) + Safe(dto.StaffAssociateProfessorPartTimeCount);
+            dto.StaffAssistantProfessor = Safe(dto.StaffAssistantProfessorFullTimeCount) + Safe(dto.StaffAssistantProfessorPartTimeCount);
+            dto.StaffLabAssistant = Safe(dto.StaffLabAssistantFullTimeCount) + Safe(dto.StaffLabAssistantPartTimeCount);
+            dto.StaffResearcher = Safe(dto.StaffResearcherFullTimeCount) + Safe(dto.StaffResearcherPartTimeCount);
+            dto.StaffTeacher = Safe(dto.StaffTeacherFullTimeCount) + Safe(dto.StaffTeacherPartTimeCount);
+            dto.StaffAssistantTeacher = Safe(dto.StaffAssistantTeacherFullTimeCount) + Safe(dto.StaffAssistantTeacherPartTimeCount);
+            dto.StaffOthers = Safe(dto.StaffOthersFullTimeCount) + Safe(dto.StaffOthersPartTimeCount);
+            dto.StaffPractitionerPsc = Safe(dto.StaffPractitionerPscFullTimeCount) + Safe(dto.StaffPractitionerPscPartTimeCount);
+            dto.StaffPractitionerMsc = Safe(dto.StaffPractitionerMscFullTimeCount) + Safe(dto.StaffPractitionerMscPartTimeCount);
+            dto.FullTimeFacultyCount =
+                Safe(dto.StaffProfessorFullTimeCount) +
+                Safe(dto.StaffAssociateProfessorFullTimeCount) +
+                Safe(dto.StaffAssistantProfessorFullTimeCount) +
+                Safe(dto.StaffLabAssistantFullTimeCount) +
+                Safe(dto.StaffResearcherFullTimeCount) +
+                Safe(dto.StaffTeacherFullTimeCount) +
+                Safe(dto.StaffAssistantTeacherFullTimeCount) +
+                Safe(dto.StaffOthersFullTimeCount) +
+                Safe(dto.StaffPractitionerPscFullTimeCount) +
+                Safe(dto.StaffPractitionerMscFullTimeCount);
+            dto.PartTimeFacultyCount =
+                Safe(dto.StaffProfessorPartTimeCount) +
+                Safe(dto.StaffAssociateProfessorPartTimeCount) +
+                Safe(dto.StaffAssistantProfessorPartTimeCount) +
+                Safe(dto.StaffLabAssistantPartTimeCount) +
+                Safe(dto.StaffResearcherPartTimeCount) +
+                Safe(dto.StaffTeacherPartTimeCount) +
+                Safe(dto.StaffAssistantTeacherPartTimeCount) +
+                Safe(dto.StaffOthersPartTimeCount) +
+                Safe(dto.StaffPractitionerPscPartTimeCount) +
+                Safe(dto.StaffPractitionerMscPartTimeCount);
+
+            var totalPhdHolders = (decimal)(
+                Safe(dto.StaffProfessorFullTimeCount) +
+                Safe(dto.StaffAssociateProfessorFullTimeCount) +
+                Safe(dto.StaffAssistantProfessorFullTimeCount) +
+                Safe(dto.StaffTeacherFullTimeCount));
+            var allowedMscSupport = Math.Ceiling(totalPhdHolders * 0.20m);
+            var actualMscSupport = (decimal)(
+                Safe(dto.StaffAssistantTeacherFullTimeCount) +
+                Safe(dto.StaffOthersFullTimeCount));
+            var mscSupportUsed = Math.Min(allowedMscSupport, actualMscSupport);
+            var totalFacultyForRatio = totalPhdHolders + (totalPhdHolders * 0.10m) + mscSupportUsed;
+            var totalStudents = (decimal)Safe(dto.TotalStudentPopulation);
+            dto.StudentsToFacultyRatio = totalFacultyForRatio > 0
+                ? Math.Ceiling(totalStudents / totalFacultyForRatio)
+                : 0m;
+
+            if (string.Equals(dto.TypeOfAcademicInstitution, "Others", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(dto.TypeOfAcademicInstitutionOther))
+                    return BadRequest("TypeOfAcademicInstitutionOther is required.");
+
+                dto.TypeOfAcademicInstitution = dto.TypeOfAcademicInstitutionOther.Trim();
+            }
+            else
+            {
+                dto.TypeOfAcademicInstitutionOther = "";
+            }
+
             // Required fields (must match the input "name" attributes in the Academic section)
             var required = new[]
             {
         "TypeOfAcademicInstitution",
         "OfficialRecognitionInHomeCountry",
         "OfficialAccreditationQualityInHomeCountry",
-        "LanguageForDomesticStudents",
-        "LanguageForForeignStudents",
-        "ForeignStudentsJointClassroomsWithLocal",
-
+        "CollegeCategoriesCsv",
         "JordanianStudentPopulation",
-        "TotalStudentPopulation",
-
-        "StaffProfessor",
-        "StaffAssociateProfessor",
-        "StaffAssistantProfessor",
-        "StaffLabAssistant",
-        "StaffResearcher",
-        "StaffTeacher",
-        "StaffAssistantTeacher",
-
-        "ResearchItemsScopus",
-        "ResearchItemsOtherSearchEngines"
+        "TotalStudentPopulation"
     };
 
             // 1) Required check
@@ -347,9 +481,758 @@ namespace MOHRecognition.Controllers
         [HttpPost]
         public IActionResult AutoSaveAcademicInfo(AcademicInfoDto dto)
         {
+            dto ??= new AcademicInfoDto();
+            var existingAcademic = LoadAcademicInfoFromSession();
+            CopyRankExcelFiles(existingAcademic, dto);
+
+            if (string.Equals(dto.TypeOfAcademicInstitution, "Others", StringComparison.OrdinalIgnoreCase))
+            {
+                dto.TypeOfAcademicInstitution = (dto.TypeOfAcademicInstitutionOther ?? "").Trim();
+            }
+            else
+            {
+                dto.TypeOfAcademicInstitutionOther = "";
+            }
+
             var json = JsonSerializer.Serialize(dto ?? new AcademicInfoDto());
             HttpContext.Session.SetString("AcademicInfo", json);
             return Ok();
+        }
+
+        private AcademicInfoDto LoadAcademicInfoFromSession()
+        {
+            var academicJson = HttpContext.Session.GetString("AcademicInfo");
+            return string.IsNullOrWhiteSpace(academicJson)
+                ? new AcademicInfoDto()
+                : (JsonSerializer.Deserialize<AcademicInfoDto>(academicJson) ?? new AcademicInfoDto());
+        }
+
+        private List<string> GetCollegeCategoriesFromSession()
+        {
+            var academic = LoadAcademicInfoFromSession();
+            return (academic.CollegeCategoriesCsv ?? "")
+                .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToList();
+        }
+
+        private void SaveAcademicInfoToSession(AcademicInfoDto dto)
+        {
+            HttpContext.Session.SetString("AcademicInfo", JsonSerializer.Serialize(dto ?? new AcademicInfoDto()));
+        }
+
+        private void CopyRankExcelFiles(AcademicInfoDto from, AcademicInfoDto to)
+        {
+            to.ProfessorFullTimeExcelFile = from.ProfessorFullTimeExcelFile;
+            to.ProfessorFullTimeExcelFileName = from.ProfessorFullTimeExcelFileName;
+            to.ProfessorPartTimeExcelFile = from.ProfessorPartTimeExcelFile;
+            to.ProfessorPartTimeExcelFileName = from.ProfessorPartTimeExcelFileName;
+
+            to.AssociateProfessorFullTimeExcelFile = from.AssociateProfessorFullTimeExcelFile;
+            to.AssociateProfessorFullTimeExcelFileName = from.AssociateProfessorFullTimeExcelFileName;
+            to.AssociateProfessorPartTimeExcelFile = from.AssociateProfessorPartTimeExcelFile;
+            to.AssociateProfessorPartTimeExcelFileName = from.AssociateProfessorPartTimeExcelFileName;
+
+            to.AssistantProfessorFullTimeExcelFile = from.AssistantProfessorFullTimeExcelFile;
+            to.AssistantProfessorFullTimeExcelFileName = from.AssistantProfessorFullTimeExcelFileName;
+            to.AssistantProfessorPartTimeExcelFile = from.AssistantProfessorPartTimeExcelFile;
+            to.AssistantProfessorPartTimeExcelFileName = from.AssistantProfessorPartTimeExcelFileName;
+
+            to.LabAssistantFullTimeExcelFile = from.LabAssistantFullTimeExcelFile;
+            to.LabAssistantFullTimeExcelFileName = from.LabAssistantFullTimeExcelFileName;
+            to.LabAssistantPartTimeExcelFile = from.LabAssistantPartTimeExcelFile;
+            to.LabAssistantPartTimeExcelFileName = from.LabAssistantPartTimeExcelFileName;
+
+            to.ResearcherFullTimeExcelFile = from.ResearcherFullTimeExcelFile;
+            to.ResearcherFullTimeExcelFileName = from.ResearcherFullTimeExcelFileName;
+            to.ResearcherPartTimeExcelFile = from.ResearcherPartTimeExcelFile;
+            to.ResearcherPartTimeExcelFileName = from.ResearcherPartTimeExcelFileName;
+
+            to.TeacherFullTimeExcelFile = from.TeacherFullTimeExcelFile;
+            to.TeacherFullTimeExcelFileName = from.TeacherFullTimeExcelFileName;
+            to.TeacherPartTimeExcelFile = from.TeacherPartTimeExcelFile;
+            to.TeacherPartTimeExcelFileName = from.TeacherPartTimeExcelFileName;
+
+            to.AssistantTeacherFullTimeExcelFile = from.AssistantTeacherFullTimeExcelFile;
+            to.AssistantTeacherFullTimeExcelFileName = from.AssistantTeacherFullTimeExcelFileName;
+            to.AssistantTeacherPartTimeExcelFile = from.AssistantTeacherPartTimeExcelFile;
+            to.AssistantTeacherPartTimeExcelFileName = from.AssistantTeacherPartTimeExcelFileName;
+
+            to.OthersFullTimeExcelFile = from.OthersFullTimeExcelFile;
+            to.OthersFullTimeExcelFileName = from.OthersFullTimeExcelFileName;
+            to.OthersPartTimeExcelFile = from.OthersPartTimeExcelFile;
+            to.OthersPartTimeExcelFileName = from.OthersPartTimeExcelFileName;
+
+            to.PractitionerPscFullTimeExcelFile = from.PractitionerPscFullTimeExcelFile;
+            to.PractitionerPscFullTimeExcelFileName = from.PractitionerPscFullTimeExcelFileName;
+            to.PractitionerPscPartTimeExcelFile = from.PractitionerPscPartTimeExcelFile;
+            to.PractitionerPscPartTimeExcelFileName = from.PractitionerPscPartTimeExcelFileName;
+
+            to.PractitionerMscFullTimeExcelFile = from.PractitionerMscFullTimeExcelFile;
+            to.PractitionerMscFullTimeExcelFileName = from.PractitionerMscFullTimeExcelFileName;
+            to.PractitionerMscPartTimeExcelFile = from.PractitionerMscPartTimeExcelFile;
+            to.PractitionerMscPartTimeExcelFileName = from.PractitionerMscPartTimeExcelFileName;
+        }
+
+        private Dictionary<string, string> BuildAcademicRankStaffFileNameMap(AcademicInfoDto a)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Professor:fulltime"] = a.ProfessorFullTimeExcelFileName ?? "",
+                ["Professor:parttime"] = a.ProfessorPartTimeExcelFileName ?? "",
+                ["AssociateProfessor:fulltime"] = a.AssociateProfessorFullTimeExcelFileName ?? "",
+                ["AssociateProfessor:parttime"] = a.AssociateProfessorPartTimeExcelFileName ?? "",
+                ["AssistantProfessor:fulltime"] = a.AssistantProfessorFullTimeExcelFileName ?? "",
+                ["AssistantProfessor:parttime"] = a.AssistantProfessorPartTimeExcelFileName ?? "",
+                ["LabAssistant:fulltime"] = a.LabAssistantFullTimeExcelFileName ?? "",
+                ["LabAssistant:parttime"] = a.LabAssistantPartTimeExcelFileName ?? "",
+                ["Researcher:fulltime"] = a.ResearcherFullTimeExcelFileName ?? "",
+                ["Researcher:parttime"] = a.ResearcherPartTimeExcelFileName ?? "",
+                ["Teacher:fulltime"] = a.TeacherFullTimeExcelFileName ?? "",
+                ["Teacher:parttime"] = a.TeacherPartTimeExcelFileName ?? "",
+                ["AssistantTeacher:fulltime"] = a.AssistantTeacherFullTimeExcelFileName ?? "",
+                ["AssistantTeacher:parttime"] = a.AssistantTeacherPartTimeExcelFileName ?? "",
+                ["Others:fulltime"] = a.OthersFullTimeExcelFileName ?? "",
+                ["Others:parttime"] = a.OthersPartTimeExcelFileName ?? "",
+                ["PractitionerPsc:fulltime"] = a.PractitionerPscFullTimeExcelFileName ?? "",
+                ["PractitionerPsc:parttime"] = a.PractitionerPscPartTimeExcelFileName ?? "",
+                ["PractitionerMsc:fulltime"] = a.PractitionerMscFullTimeExcelFileName ?? "",
+                ["PractitionerMsc:parttime"] = a.PractitionerMscPartTimeExcelFileName ?? ""
+            };
+        }
+
+        private void SetAcademicRankFile(AcademicInfoDto academic, string rankKey, string employmentType, string fileName, string fileContentBase64)
+        {
+            var fullTime = employmentType.Equals("fulltime", StringComparison.OrdinalIgnoreCase);
+
+            switch (rankKey)
+            {
+                case "Professor":
+                    if (fullTime)
+                    {
+                        academic.ProfessorFullTimeExcelFileName = fileName;
+                        academic.ProfessorFullTimeExcelFile = fileContentBase64;
+                    }
+                    else
+                    {
+                        academic.ProfessorPartTimeExcelFileName = fileName;
+                        academic.ProfessorPartTimeExcelFile = fileContentBase64;
+                    }
+                    break;
+                case "AssociateProfessor":
+                    if (fullTime)
+                    {
+                        academic.AssociateProfessorFullTimeExcelFileName = fileName;
+                        academic.AssociateProfessorFullTimeExcelFile = fileContentBase64;
+                    }
+                    else
+                    {
+                        academic.AssociateProfessorPartTimeExcelFileName = fileName;
+                        academic.AssociateProfessorPartTimeExcelFile = fileContentBase64;
+                    }
+                    break;
+                case "AssistantProfessor":
+                    if (fullTime)
+                    {
+                        academic.AssistantProfessorFullTimeExcelFileName = fileName;
+                        academic.AssistantProfessorFullTimeExcelFile = fileContentBase64;
+                    }
+                    else
+                    {
+                        academic.AssistantProfessorPartTimeExcelFileName = fileName;
+                        academic.AssistantProfessorPartTimeExcelFile = fileContentBase64;
+                    }
+                    break;
+                case "LabAssistant":
+                    if (fullTime)
+                    {
+                        academic.LabAssistantFullTimeExcelFileName = fileName;
+                        academic.LabAssistantFullTimeExcelFile = fileContentBase64;
+                    }
+                    else
+                    {
+                        academic.LabAssistantPartTimeExcelFileName = fileName;
+                        academic.LabAssistantPartTimeExcelFile = fileContentBase64;
+                    }
+                    break;
+                case "Researcher":
+                    if (fullTime)
+                    {
+                        academic.ResearcherFullTimeExcelFileName = fileName;
+                        academic.ResearcherFullTimeExcelFile = fileContentBase64;
+                    }
+                    else
+                    {
+                        academic.ResearcherPartTimeExcelFileName = fileName;
+                        academic.ResearcherPartTimeExcelFile = fileContentBase64;
+                    }
+                    break;
+                case "Teacher":
+                    if (fullTime)
+                    {
+                        academic.TeacherFullTimeExcelFileName = fileName;
+                        academic.TeacherFullTimeExcelFile = fileContentBase64;
+                    }
+                    else
+                    {
+                        academic.TeacherPartTimeExcelFileName = fileName;
+                        academic.TeacherPartTimeExcelFile = fileContentBase64;
+                    }
+                    break;
+                case "AssistantTeacher":
+                    if (fullTime)
+                    {
+                        academic.AssistantTeacherFullTimeExcelFileName = fileName;
+                        academic.AssistantTeacherFullTimeExcelFile = fileContentBase64;
+                    }
+                    else
+                    {
+                        academic.AssistantTeacherPartTimeExcelFileName = fileName;
+                        academic.AssistantTeacherPartTimeExcelFile = fileContentBase64;
+                    }
+                    break;
+                case "Others":
+                    if (fullTime)
+                    {
+                        academic.OthersFullTimeExcelFileName = fileName;
+                        academic.OthersFullTimeExcelFile = fileContentBase64;
+                    }
+                    else
+                    {
+                        academic.OthersPartTimeExcelFileName = fileName;
+                        academic.OthersPartTimeExcelFile = fileContentBase64;
+                    }
+                    break;
+                case "PractitionerPsc":
+                    if (fullTime)
+                    {
+                        academic.PractitionerPscFullTimeExcelFileName = fileName;
+                        academic.PractitionerPscFullTimeExcelFile = fileContentBase64;
+                    }
+                    else
+                    {
+                        academic.PractitionerPscPartTimeExcelFileName = fileName;
+                        academic.PractitionerPscPartTimeExcelFile = fileContentBase64;
+                    }
+                    break;
+                case "PractitionerMsc":
+                    if (fullTime)
+                    {
+                        academic.PractitionerMscFullTimeExcelFileName = fileName;
+                        academic.PractitionerMscFullTimeExcelFile = fileContentBase64;
+                    }
+                    else
+                    {
+                        academic.PractitionerMscPartTimeExcelFileName = fileName;
+                        academic.PractitionerMscPartTimeExcelFile = fileContentBase64;
+                    }
+                    break;
+            }
+        }
+
+        private (string fileName, string fileContentBase64) GetAcademicRankFile(AcademicInfoDto academic, string rankKey, string employmentType)
+        {
+            var fullTime = employmentType.Equals("fulltime", StringComparison.OrdinalIgnoreCase);
+
+            return rankKey switch
+            {
+                "Professor" => fullTime
+                    ? (academic.ProfessorFullTimeExcelFileName ?? "", academic.ProfessorFullTimeExcelFile ?? "")
+                    : (academic.ProfessorPartTimeExcelFileName ?? "", academic.ProfessorPartTimeExcelFile ?? ""),
+                "AssociateProfessor" => fullTime
+                    ? (academic.AssociateProfessorFullTimeExcelFileName ?? "", academic.AssociateProfessorFullTimeExcelFile ?? "")
+                    : (academic.AssociateProfessorPartTimeExcelFileName ?? "", academic.AssociateProfessorPartTimeExcelFile ?? ""),
+                "AssistantProfessor" => fullTime
+                    ? (academic.AssistantProfessorFullTimeExcelFileName ?? "", academic.AssistantProfessorFullTimeExcelFile ?? "")
+                    : (academic.AssistantProfessorPartTimeExcelFileName ?? "", academic.AssistantProfessorPartTimeExcelFile ?? ""),
+                "LabAssistant" => fullTime
+                    ? (academic.LabAssistantFullTimeExcelFileName ?? "", academic.LabAssistantFullTimeExcelFile ?? "")
+                    : (academic.LabAssistantPartTimeExcelFileName ?? "", academic.LabAssistantPartTimeExcelFile ?? ""),
+                "Researcher" => fullTime
+                    ? (academic.ResearcherFullTimeExcelFileName ?? "", academic.ResearcherFullTimeExcelFile ?? "")
+                    : (academic.ResearcherPartTimeExcelFileName ?? "", academic.ResearcherPartTimeExcelFile ?? ""),
+                "Teacher" => fullTime
+                    ? (academic.TeacherFullTimeExcelFileName ?? "", academic.TeacherFullTimeExcelFile ?? "")
+                    : (academic.TeacherPartTimeExcelFileName ?? "", academic.TeacherPartTimeExcelFile ?? ""),
+                "AssistantTeacher" => fullTime
+                    ? (academic.AssistantTeacherFullTimeExcelFileName ?? "", academic.AssistantTeacherFullTimeExcelFile ?? "")
+                    : (academic.AssistantTeacherPartTimeExcelFileName ?? "", academic.AssistantTeacherPartTimeExcelFile ?? ""),
+                "Others" => fullTime
+                    ? (academic.OthersFullTimeExcelFileName ?? "", academic.OthersFullTimeExcelFile ?? "")
+                    : (academic.OthersPartTimeExcelFileName ?? "", academic.OthersPartTimeExcelFile ?? ""),
+                "PractitionerPsc" => fullTime
+                    ? (academic.PractitionerPscFullTimeExcelFileName ?? "", academic.PractitionerPscFullTimeExcelFile ?? "")
+                    : (academic.PractitionerPscPartTimeExcelFileName ?? "", academic.PractitionerPscPartTimeExcelFile ?? ""),
+                "PractitionerMsc" => fullTime
+                    ? (academic.PractitionerMscFullTimeExcelFileName ?? "", academic.PractitionerMscFullTimeExcelFile ?? "")
+                    : (academic.PractitionerMscPartTimeExcelFileName ?? "", academic.PractitionerMscPartTimeExcelFile ?? ""),
+                _ => ("", "")
+            };
+        }
+
+        private List<string> GetAcademicRankStaffRequiredColumns()
+        {
+            return new List<string>
+            {
+                "Name",
+                "Program",
+                "Major",
+                "Degree Awarded",
+                "Academic Rank",
+                "Nationality",
+                "Status"
+            };
+        }
+
+        private string NormalizeCellText(string? value)
+        {
+            return Regex.Replace((value ?? string.Empty).Trim(), @"\s+", " ");
+        }
+
+        private string GetExpectedAcademicRankName(string rankKey)
+        {
+            return rankKey switch
+            {
+                "Professor" => "Professor",
+                "AssociateProfessor" => "Associate Professor",
+                "AssistantProfessor" => "Assistant Professor",
+                "LabAssistant" => "Lab Assistant",
+                "Researcher" => "Assistant Lecturer (PSC Holders)",
+                "Teacher" => "Lecturer (PHD Holders)",
+                "AssistantTeacher" => "Lecturer (MSC Holders)",
+                "Others" => "Assistant Lecturer (MSC Holders)",
+                "PractitionerPsc" => "Practitioner (PSC Holders)",
+                "PractitionerMsc" => "Practitioner (MSC Holders)",
+                _ => rankKey
+            };
+        }
+
+        private List<string> GetAcademicRankTemplateValues()
+        {
+            return new List<string>
+            {
+                "Professor",
+                "Associate Professor",
+                "Assistant Professor",
+                "Lab Assistant",
+                "Assistant Lecturer (PSC Holders)",
+                "Lecturer (PHD Holders)",
+                "Lecturer (MSC Holders)",
+                "Assistant Lecturer (MSC Holders)",
+                "Practitioner (PSC Holders)",
+                "Practitioner (MSC Holders)"
+            };
+        }
+
+        private List<string> GetAcademicStaffStatusTemplateValues()
+        {
+            return new List<string>
+            {
+                "Full Time",
+                "Part Time"
+            };
+        }
+
+        [HttpGet]
+        public IActionResult DownloadAcademicRankExcelTemplate(string staffType = "")
+        {
+            staffType = (staffType ?? "").Trim().ToLowerInvariant();
+            if (staffType != "fulltime" && staffType != "parttime")
+                staffType = "fulltime";
+
+            using var workbook = new XLWorkbook();
+            var ws = workbook.Worksheets.Add("AcademicStaffTemplate");
+
+            var headers = GetAcademicRankStaffRequiredColumns();
+            for (int i = 0; i < headers.Count; i++)
+            {
+                var cell = ws.Cell(1, i + 1);
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#F4EADC");
+                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            }
+
+            ws.Row(1).Height = 24;
+            ws.SheetView.FreezeRows(1);
+
+            ws.Column(1).Width = 26; // Name
+            ws.Column(2).Width = 24; // Program
+            ws.Column(3).Width = 20; // Major
+            ws.Column(4).Width = 22; // Degree Awarded
+            ws.Column(5).Width = 24; // Academic Rank
+            ws.Column(6).Width = 18; // Nationality
+            ws.Column(7).Width = 14; // Status
+
+            var rankValues = string.Join(",", GetAcademicRankTemplateValues());
+            var statusValues = string.Join(",", GetAcademicStaffStatusTemplateValues());
+
+            var rankValidation = ws.Range("E2:E1000").CreateDataValidation();
+            rankValidation.List(rankValues, true);
+            rankValidation.IgnoreBlanks = true;
+            rankValidation.InCellDropdown = true;
+
+            var statusValidation = ws.Range("G2:G1000").CreateDataValidation();
+            statusValidation.List(statusValues, true);
+            statusValidation.IgnoreBlanks = true;
+            statusValidation.InCellDropdown = true;
+
+            var defaultStatus = staffType == "parttime" ? "Part Time" : "Full Time";
+            ws.Cell("G2").Value = defaultStatus;
+            ws.Range("G2:G1000").Style.Fill.BackgroundColor = XLColor.FromHtml("#F3F6FA");
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            stream.Position = 0;
+
+            var downloadName = staffType == "parttime" ? "AcademicStaffTemplate_PartTime.xlsx" : "AcademicStaffTemplate_FullTime.xlsx";
+
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                downloadName);
+        }
+
+        [HttpGet]
+        public IActionResult DownloadAcademicRankStaffFile(int id, string rankKey, string employmentType, bool inline = false)
+        {
+            if (id <= 0)
+                return NotFound();
+
+            rankKey = (rankKey ?? "").Trim();
+            employmentType = (employmentType ?? "").Trim().ToLowerInvariant();
+
+            var allowedRanks = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Professor",
+                "AssociateProfessor",
+                "AssistantProfessor",
+                "LabAssistant",
+                "Researcher",
+                "Teacher",
+                "AssistantTeacher",
+                "Others",
+                "PractitionerPsc",
+                "PractitionerMsc"
+            };
+
+            if (!allowedRanks.Contains(rankKey))
+                return BadRequest("Invalid academic rank.");
+
+            if (employmentType != "fulltime" && employmentType != "parttime")
+                return BadRequest("Invalid employment type.");
+
+            var request = _recognitionRequestService.GetById(id);
+            if (request == null)
+                return NotFound();
+
+            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
+                return Forbid();
+
+            var (fileName, fileContentBase64) = GetAcademicRankFile(request.AcademicInfo ?? new AcademicInfoDto(), rankKey, employmentType);
+
+            if (string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(fileContentBase64))
+                return NotFound("No file uploaded for this academic rank and employment type.");
+
+            byte[] fileBytes;
+            try
+            {
+                fileBytes = Convert.FromBase64String(fileContentBase64);
+            }
+            catch
+            {
+                return BadRequest("Stored file content is invalid.");
+            }
+
+            var safeName = Path.GetFileName(fileName);
+            if (string.IsNullOrWhiteSpace(safeName))
+            {
+                safeName = $"{GetExpectedAcademicRankName(rankKey).Replace(" ", "")}_{employmentType}.xlsx";
+            }
+
+            if (inline)
+            {
+                Response.Headers["Content-Disposition"] = $"inline; filename=\"{safeName}\"";
+                return File(
+                    fileBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            }
+
+            return File(
+                fileBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                safeName);
+        }
+
+        [HttpGet]
+        public IActionResult AcademicRankFilePreview(int id, string rankKey, string employmentType)
+        {
+            if (id <= 0)
+                return NotFound();
+
+            rankKey = (rankKey ?? "").Trim();
+            employmentType = (employmentType ?? "").Trim().ToLowerInvariant();
+
+            var allowedRanks = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Professor",
+                "AssociateProfessor",
+                "AssistantProfessor",
+                "LabAssistant",
+                "Researcher",
+                "Teacher",
+                "AssistantTeacher",
+                "Others",
+                "PractitionerPsc",
+                "PractitionerMsc"
+            };
+
+            if (!allowedRanks.Contains(rankKey))
+                return BadRequest("Invalid academic rank.");
+
+            if (employmentType != "fulltime" && employmentType != "parttime")
+                return BadRequest("Invalid employment type.");
+
+            var request = _recognitionRequestService.GetById(id);
+            if (request == null)
+                return NotFound();
+
+            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
+                return Forbid();
+
+            var (fileName, fileContentBase64) = GetAcademicRankFile(request.AcademicInfo ?? new AcademicInfoDto(), rankKey, employmentType);
+            if (string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(fileContentBase64))
+                return NotFound("No file uploaded for this academic rank and employment type.");
+
+            byte[] fileBytes;
+            try
+            {
+                fileBytes = Convert.FromBase64String(fileContentBase64);
+            }
+            catch
+            {
+                return BadRequest("Stored file content is invalid.");
+            }
+
+            var headers = new List<string>();
+            var rows = new List<List<string>>();
+
+            try
+            {
+                using var stream = new MemoryStream(fileBytes);
+                using var workbook = new XLWorkbook(stream);
+                var ws = workbook.Worksheets.FirstOrDefault();
+                if (ws == null)
+                    return BadRequest("The Excel file contains no worksheet.");
+
+                var usedRange = ws.RangeUsed();
+                if (usedRange != null)
+                {
+                    var firstRow = usedRange.FirstRow().RowNumber();
+                    var firstCol = usedRange.FirstColumn().ColumnNumber();
+                    var lastRow = usedRange.LastRow().RowNumber();
+                    var lastCol = usedRange.LastColumn().ColumnNumber();
+
+                    var maxCols = Math.Min(20, Math.Max(1, lastCol - firstCol + 1));
+                    for (var c = 0; c < maxCols; c++)
+                    {
+                        var value = ws.Cell(firstRow, firstCol + c).GetString();
+                        headers.Add(string.IsNullOrWhiteSpace(value) ? $"Column {c + 1}" : value);
+                    }
+
+                    var maxRows = Math.Min(lastRow, firstRow + 200);
+                    for (var r = firstRow + 1; r <= maxRows; r++)
+                    {
+                        var row = new List<string>(maxCols);
+                        for (var c = 0; c < maxCols; c++)
+                        {
+                            row.Add(ws.Cell(r, firstCol + c).GetFormattedString());
+                        }
+                        rows.Add(row);
+                    }
+                }
+            }
+            catch
+            {
+                return BadRequest("Unable to preview this Excel file.");
+            }
+
+            ViewBag.RequestId = id;
+            ViewBag.RankTitle = GetExpectedAcademicRankName(rankKey);
+            ViewBag.EmploymentType = employmentType == "fulltime" ? "Full-Time" : "Part-Time";
+            ViewBag.FileName = Path.GetFileName(fileName);
+            ViewBag.Headers = headers;
+            ViewBag.Rows = rows;
+
+            return View("~/Views/member/AcademicRankFilePreview.cshtml");
+        }
+
+        private string? ValidateAcademicRankExcelFile(byte[] fileBytes, string expectedRank, string expectedStatus)
+        {
+            using var ms = new MemoryStream(fileBytes);
+            using var workbook = new XLWorkbook(ms);
+            var worksheet = workbook.Worksheets.FirstOrDefault();
+            if (worksheet == null)
+                return "The Excel file must include at least one worksheet.";
+
+            var headerRow = worksheet.FirstRowUsed();
+            if (headerRow == null)
+                return "The Excel file is empty.";
+
+            var headerCells = headerRow.CellsUsed().ToList();
+            var headerMap = headerCells
+                .Select(c => new
+                {
+                    Name = NormalizeCellText(c.GetString()),
+                    Column = c.Address.ColumnNumber
+                })
+                .Where(x => !string.IsNullOrWhiteSpace(x.Name))
+                .GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First().Column, StringComparer.OrdinalIgnoreCase);
+
+            var requiredColumns = GetAcademicRankStaffRequiredColumns();
+            var missingColumns = requiredColumns
+                .Where(c => !headerMap.ContainsKey(c))
+                .ToList();
+
+            if (missingColumns.Any())
+                return $"Missing required column(s): {string.Join(", ", missingColumns)}.";
+
+            var statusColumn = headerMap["Status"];
+            var rankColumn = headerMap["Academic Rank"];
+            var allowedStatus = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Full Time",
+                "Part Time"
+            };
+
+            var invalidStatusRows = new List<int>();
+            var mismatchStatusRows = new List<int>();
+            var mismatchRankRows = new List<int>();
+
+            var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? headerRow.RowNumber();
+            for (int row = headerRow.RowNumber() + 1; row <= lastRow; row++)
+            {
+                var hasData = requiredColumns.Any(col =>
+                {
+                    var colIndex = headerMap[col];
+                    var v = NormalizeCellText(worksheet.Cell(row, colIndex).GetString());
+                    return !string.IsNullOrWhiteSpace(v);
+                });
+
+                if (!hasData)
+                    continue;
+
+                var rowStatus = NormalizeCellText(worksheet.Cell(row, statusColumn).GetString());
+                var rowRank = NormalizeCellText(worksheet.Cell(row, rankColumn).GetString());
+
+                if (!allowedStatus.Contains(rowStatus))
+                {
+                    invalidStatusRows.Add(row);
+                    continue;
+                }
+
+                if (!string.Equals(rowStatus, expectedStatus, StringComparison.OrdinalIgnoreCase))
+                    mismatchStatusRows.Add(row);
+
+                if (!string.Equals(rowRank, expectedRank, StringComparison.OrdinalIgnoreCase))
+                    mismatchRankRows.Add(row);
+            }
+
+            if (invalidStatusRows.Any())
+                return $"Invalid Status value in row(s): {string.Join(", ", invalidStatusRows.Take(10))}. Allowed values are: Full Time, Part Time.";
+
+            if (mismatchStatusRows.Any())
+                return $"Status mismatch in row(s): {string.Join(", ", mismatchStatusRows.Take(10))}. This file must contain '{expectedStatus}' only.";
+
+            if (mismatchRankRows.Any())
+                return $"Academic Rank mismatch in row(s): {string.Join(", ", mismatchRankRows.Take(10))}. This file must contain '{expectedRank}' only.";
+
+            return null;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadAcademicRankStaffFile(IFormFile file, string rankKey, string employmentType)
+        {
+            rankKey = (rankKey ?? "").Trim();
+            employmentType = (employmentType ?? "").Trim().ToLowerInvariant();
+
+            var allowedRanks = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Professor",
+                "AssociateProfessor",
+                "AssistantProfessor",
+                "LabAssistant",
+                "Researcher",
+                "Teacher",
+                "AssistantTeacher",
+                "Others",
+                "PractitionerPsc",
+                "PractitionerMsc"
+            };
+
+            if (!allowedRanks.Contains(rankKey))
+                return BadRequest("Invalid academic rank.");
+
+            if (employmentType != "fulltime" && employmentType != "parttime")
+                return BadRequest("Invalid employment type.");
+
+            if (file == null || file.Length == 0)
+                return BadRequest("Please choose an Excel file.");
+
+            var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+            if (ext != ".xlsx" && ext != ".xls")
+                return BadRequest("Only Excel files (.xlsx, .xls) are allowed.");
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var fileBytes = ms.ToArray();
+
+            var academic = LoadAcademicInfoFromSession();
+            var safeFileName = Path.GetFileName(file.FileName);
+            var fileContentBase64 = Convert.ToBase64String(fileBytes);
+
+            SetAcademicRankFile(academic, rankKey, employmentType, safeFileName, fileContentBase64);
+            SaveAcademicInfoToSession(academic);
+
+            return Json(new { fileName = safeFileName });
+        }
+
+        [HttpPost]
+        public IActionResult DeleteAcademicRankStaffFile(string rankKey, string employmentType)
+        {
+            rankKey = (rankKey ?? "").Trim();
+            employmentType = (employmentType ?? "").Trim().ToLowerInvariant();
+
+            var allowedRanks = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Professor",
+                "AssociateProfessor",
+                "AssistantProfessor",
+                "LabAssistant",
+                "Researcher",
+                "Teacher",
+                "AssistantTeacher",
+                "Others",
+                "PractitionerPsc",
+                "PractitionerMsc"
+            };
+
+            if (!allowedRanks.Contains(rankKey))
+                return BadRequest("Invalid academic rank.");
+
+            if (employmentType != "fulltime" && employmentType != "parttime")
+                return BadRequest("Invalid employment type.");
+
+            var academic = LoadAcademicInfoFromSession();
+            SetAcademicRankFile(academic, rankKey, employmentType, "", "");
+            SaveAcademicInfoToSession(academic);
+
+            return Json(new { ok = true });
         }
 
 
@@ -499,7 +1382,7 @@ namespace MOHRecognition.Controllers
             HttpContext.Session.SetString("StudyDuration", json);
 
             TempData["SavedBanner"] = "✅ Study Duration saved successfully!";
-            return Redirect(Url.Action("UniDashboard", "Home") + "#sec-duration");
+            return RedirectToAction("UniDashboardDoctors", "Home");
         }
         // to stay on the same page 
         [HttpPost]
@@ -507,6 +1390,100 @@ namespace MOHRecognition.Controllers
         {
             var json = JsonSerializer.Serialize(dto ?? new StudyDurationDto());
             HttpContext.Session.SetString("StudyDuration", json);
+            return Ok();
+        }
+
+        private const string ADMISSION_STUDY_REVIEW_KEY = "AdmissionStudyDurationReview";
+
+        private AdmissionStudyDurationReviewDto LoadAdmissionStudyDurationReviewFromSession()
+        {
+            var json = HttpContext.Session.GetString(ADMISSION_STUDY_REVIEW_KEY);
+            return string.IsNullOrWhiteSpace(json)
+                ? new AdmissionStudyDurationReviewDto()
+                : (JsonSerializer.Deserialize<AdmissionStudyDurationReviewDto>(json) ?? new AdmissionStudyDurationReviewDto());
+        }
+
+        private void SaveAdmissionStudyDurationReviewToSession(AdmissionStudyDurationReviewDto dto)
+        {
+            HttpContext.Session.SetString(ADMISSION_STUDY_REVIEW_KEY, JsonSerializer.Serialize(dto ?? new AdmissionStudyDurationReviewDto()));
+        }
+
+        [HttpPost]
+        public IActionResult SaveAdmissionStudyFromUni(
+            string diplomaDuration,
+            string bScDuration,
+            string higherDiplomaDuration,
+            string masterDuration,
+            string phdDuration,
+            IFormFile? diplomaSamplePdf,
+            IFormFile? bScSamplePdf,
+            IFormFile? higherDiplomaSamplePdf,
+            IFormFile? masterSamplePdf,
+            IFormFile? phdSamplePdf)
+        {
+            var existing = LoadAdmissionStudyDurationReviewFromSession();
+
+            var next = new AdmissionStudyDurationReviewDto
+            {
+                DiplomaDuration = (diplomaDuration ?? string.Empty).Trim(),
+                BScDuration = (bScDuration ?? string.Empty).Trim(),
+                HigherDiplomaDuration = (higherDiplomaDuration ?? string.Empty).Trim(),
+                MasterDuration = (masterDuration ?? string.Empty).Trim(),
+                PhdDuration = (phdDuration ?? string.Empty).Trim(),
+
+                DiplomaSamplePdfFileName = existing.DiplomaSamplePdfFileName,
+                DiplomaSamplePdfContentBase64 = existing.DiplomaSamplePdfContentBase64,
+                BScSamplePdfFileName = existing.BScSamplePdfFileName,
+                BScSamplePdfContentBase64 = existing.BScSamplePdfContentBase64,
+                HigherDiplomaSamplePdfFileName = existing.HigherDiplomaSamplePdfFileName,
+                HigherDiplomaSamplePdfContentBase64 = existing.HigherDiplomaSamplePdfContentBase64,
+                MasterSamplePdfFileName = existing.MasterSamplePdfFileName,
+                MasterSamplePdfContentBase64 = existing.MasterSamplePdfContentBase64,
+                PhdSamplePdfFileName = existing.PhdSamplePdfFileName,
+                PhdSamplePdfContentBase64 = existing.PhdSamplePdfContentBase64
+            };
+
+            var diplomaUpload = TryReadSamplePdfUpload(diplomaSamplePdf);
+            if (!diplomaUpload.ok) return BadRequest(diplomaUpload.error);
+            if (diplomaUpload.hasFile)
+            {
+                next.DiplomaSamplePdfFileName = diplomaUpload.fileName;
+                next.DiplomaSamplePdfContentBase64 = diplomaUpload.fileContentBase64;
+            }
+
+            var bScUpload = TryReadSamplePdfUpload(bScSamplePdf);
+            if (!bScUpload.ok) return BadRequest(bScUpload.error);
+            if (bScUpload.hasFile)
+            {
+                next.BScSamplePdfFileName = bScUpload.fileName;
+                next.BScSamplePdfContentBase64 = bScUpload.fileContentBase64;
+            }
+
+            var higherDiplomaUpload = TryReadSamplePdfUpload(higherDiplomaSamplePdf);
+            if (!higherDiplomaUpload.ok) return BadRequest(higherDiplomaUpload.error);
+            if (higherDiplomaUpload.hasFile)
+            {
+                next.HigherDiplomaSamplePdfFileName = higherDiplomaUpload.fileName;
+                next.HigherDiplomaSamplePdfContentBase64 = higherDiplomaUpload.fileContentBase64;
+            }
+
+            var masterUpload = TryReadSamplePdfUpload(masterSamplePdf);
+            if (!masterUpload.ok) return BadRequest(masterUpload.error);
+            if (masterUpload.hasFile)
+            {
+                next.MasterSamplePdfFileName = masterUpload.fileName;
+                next.MasterSamplePdfContentBase64 = masterUpload.fileContentBase64;
+            }
+
+            var phdUpload = TryReadSamplePdfUpload(phdSamplePdf);
+            if (!phdUpload.ok) return BadRequest(phdUpload.error);
+            if (phdUpload.hasFile)
+            {
+                next.PhdSamplePdfFileName = phdUpload.fileName;
+                next.PhdSamplePdfContentBase64 = phdUpload.fileContentBase64;
+            }
+
+            SaveAdmissionStudyDurationReviewToSession(next);
             return Ok();
         }
         // ============================================================
@@ -529,14 +1506,25 @@ namespace MOHRecognition.Controllers
             HttpContext.Session.SetString(FACULTIES_KEY, json);
         }
         [HttpPost]
-        public IActionResult FacultiesAdd(string facultyName)
+        public IActionResult FacultiesAdd(string facultyName, int? studentsCount, string collegeType)
         {
             facultyName = (facultyName ?? "").Trim();
+            collegeType = (collegeType ?? "").Trim();
             if (string.IsNullOrWhiteSpace(facultyName))
                 return BadRequest("Faculty name is required");
+            if (!studentsCount.HasValue || studentsCount.Value < 0)
+                return BadRequest("Number of students is required");
+            if (string.IsNullOrWhiteSpace(collegeType))
+                return BadRequest("College type is required");
 
             var current = LoadFaculties();
-            current.Rows.Add(new FacultyRowDto { FacultyName = facultyName });
+            current.Rows.Add(new FacultyRowDto
+            {
+                FacultyName = facultyName,
+                StudentsCount = studentsCount.Value,
+                CollegeType = collegeType
+            });
+            current.AvailableCollegeCategories = GetCollegeCategoriesFromSession();
 
             SaveFaculties(current);
 
@@ -550,6 +1538,8 @@ namespace MOHRecognition.Controllers
             var current = LoadFaculties();
             current.Rows.RemoveAll(r => r.Id == id);
 
+            current.AvailableCollegeCategories = GetCollegeCategoriesFromSession();
+
             SaveFaculties(current);
 
             // ✅ IMPORTANT: correct partial path
@@ -557,16 +1547,21 @@ namespace MOHRecognition.Controllers
         }
 
         [HttpPost]
-        public IActionResult FacultiesUpdate(string id, string facultyName)
+        public IActionResult FacultiesUpdate(string id, string facultyName, int? studentsCount, string collegeType)
         {
             id = (id ?? "").Trim();
             facultyName = (facultyName ?? "").Trim();
+            collegeType = (collegeType ?? "").Trim();
 
             if (string.IsNullOrWhiteSpace(id))
                 return BadRequest("Invalid faculty id.");
 
             if (string.IsNullOrWhiteSpace(facultyName))
                 return BadRequest("Faculty name is required.");
+            if (!studentsCount.HasValue || studentsCount.Value < 0)
+                return BadRequest("Number of students is required.");
+            if (string.IsNullOrWhiteSpace(collegeType))
+                return BadRequest("College type is required.");
 
             var current = LoadFaculties();
             var row = current.Rows.FirstOrDefault(r => r.Id == id);
@@ -574,6 +1569,10 @@ namespace MOHRecognition.Controllers
                 return BadRequest("Faculty not found.");
 
             row.FacultyName = facultyName;
+            row.StudentsCount = studentsCount.Value;
+            row.CollegeType = collegeType;
+
+            current.AvailableCollegeCategories = GetCollegeCategoriesFromSession();
 
             SaveFaculties(current);
 
@@ -649,8 +1648,8 @@ namespace MOHRecognition.Controllers
             if (graduatesTotalLast3Years < 0) return BadRequest("Graduates total for the last 3 years is required");
 
             var faculties = LoadFaculties()?.Rows ?? new List<FacultyRowDto>();
-            var selectedFaculty = faculties.FirstOrDefault(f => f.Id == facultyId);
-            if (selectedFaculty == null) return BadRequest("Please select a valid faculty");
+            var selected = faculties.FirstOrDefault(f => f.Id == facultyId);
+            if (selected == null) return BadRequest("Please select a valid college");
 
             var current = LoadPrograms();
 
@@ -659,7 +1658,7 @@ namespace MOHRecognition.Controllers
                 Id = Guid.NewGuid().ToString("N"), // ✅ force stable id
                 Program = program,
                 FacultyId = facultyId,
-                FacultyName = selectedFaculty.FacultyName,
+                FacultyName = selected.FacultyName,
 
                 DegreeAwarded = degreeAwarded,
                 NumberOfYears = numberOfYears,
@@ -705,8 +1704,8 @@ namespace MOHRecognition.Controllers
             if (string.IsNullOrWhiteSpace(id)) return BadRequest("Invalid row");
 
             var faculties = LoadFaculties()?.Rows ?? new List<FacultyRowDto>();
-            var selectedFaculty = faculties.FirstOrDefault(f => f.Id == facultyId);
-            if (selectedFaculty == null) return BadRequest("Please select a valid faculty");
+            var selected = faculties.FirstOrDefault(f => f.Id == facultyId);
+            if (selected == null) return BadRequest("Please select a valid college");
 
             var current = LoadPrograms();
 
@@ -720,7 +1719,7 @@ namespace MOHRecognition.Controllers
 
             row.Program = program;
             row.FacultyId = facultyId;
-            row.FacultyName = selectedFaculty.FacultyName;
+            row.FacultyName = selected.FacultyName;
 
             row.DegreeAwarded = degreeAwarded;
             row.NumberOfYears = numberOfYears;
@@ -868,7 +1867,7 @@ namespace MOHRecognition.Controllers
                 return BadRequest("All years are required");
 
             if (year1 < 0 || year2 < 0 || year3 < 0 || year4 < 0 || year5 < 0 || year6 < 0)
-                return BadRequest("Years values cannot be negative");
+                return BadRequest("Years values cannot be negative.");
 
             var current = LoadStudentsNumbers();
             var row = current.Rows.FirstOrDefault(r => r.Id == id);
@@ -1102,314 +2101,6 @@ namespace MOHRecognition.Controllers
         }
 
         // ============================================================
-        // Percenteges(Session Helpers + AJAX Endpoints)
-        // ============================================================
-
-        [HttpPost]
-        public IActionResult SaveRatios([Bind(Prefix = "Ratios")] RatiosDto dto)
-        {
-            // Must be like: 1:25 (digits : digits)
-            var ratioRegex = new Regex(@"^\s*\d+\s*:\s*\d+\s*$");
-
-            var ratioKeys = Request.Form.Keys
-                .Where(k => !string.IsNullOrWhiteSpace(k) && k.StartsWith("Ratios."))
-                .ToList();
-
-            if (ratioKeys.Count == 0)
-                return BadRequest("No ratios data received.");
-
-            foreach (var key in ratioKeys)
-            {
-                var val = Request.Form[key].ToString();
-
-                // Required
-                if (string.IsNullOrWhiteSpace(val))
-                    return BadRequest($"{key} is required.");
-
-                // Format
-                if (!ratioRegex.IsMatch(val))
-                    return BadRequest($"{key} has invalid format. Use 1:25.");
-            }
-
-            var json = JsonSerializer.Serialize(dto ?? new RatiosDto());
-            HttpContext.Session.SetString("Ratios", json);
-
-            return Ok();
-        }
-
-
-        // ============================================================
-        // Teaching Staff Excel Upload (Session Helpers + AJAX Endpoints)
-        // ============================================================
-        private const string TEACHING_STAFF_EXCEL_KEY = "TeachingStaffExcel";
-
-        private List<string> GetTeachingStaffRequiredColumns()
-        {
-            return new List<string>
-    {
-        "Name",
-        "Program",
-        "Major",
-        "Degree Awarded",
-        "Date of Obtaining Highest Academic Degree",
-        "Academic Rank",
-        "Status",
-        "Nationality",
-        "Name of the University for the Highest Degree"
-    };
-        }
-
-        private AttachmentDto LoadTeachingStaffExcel()
-        {
-            var json = HttpContext.Session.GetString(TEACHING_STAFF_EXCEL_KEY);
-
-            var model = string.IsNullOrWhiteSpace(json)
-                ? new AttachmentDto()
-                : (JsonSerializer.Deserialize<AttachmentDto>(json) ?? new AttachmentDto());
-
-            model.Rows ??= new List<AttachmentRowDto>();
-            model.RequiredFiles = GetTeachingStaffRequiredColumns();
-
-            return model;
-        }
-
-        private void SaveTeachingStaffExcel(AttachmentDto dto)
-        {
-            HttpContext.Session.SetString(
-                TEACHING_STAFF_EXCEL_KEY,
-                JsonSerializer.Serialize(dto ?? new AttachmentDto())
-            );
-        }
-
-        private string EnsureTeachingStaffExcelFolder()
-        {
-            var folder = Path.Combine(_env.WebRootPath, "uploads", "teachingstaff");
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
-
-            return folder;
-        }
-
-        [HttpGet]
-        public IActionResult TeachingStaffPartial()
-        {
-            var model = LoadTeachingStaffExcel();
-            return PartialView("Partial_Views/_TeachingStaff", model);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> UploadTeachingStaffExcel(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-                return BadRequest("Please choose the Teaching Staff Excel file.");
-
-            var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
-            if (ext != ".xlsx")
-                return BadRequest("Only .xlsx Excel files are allowed.");
-
-            int validRowCount = 0;
-
-            var model = LoadTeachingStaffExcel();
-            var folder = EnsureTeachingStaffExcelFolder();
-
-            foreach (var oldRow in model.Rows)
-            {
-                var oldPath = Path.Combine(folder, oldRow.StoredFileName ?? "");
-                if (System.IO.File.Exists(oldPath))
-                    System.IO.File.Delete(oldPath);
-            }
-
-            model.Rows.Clear();
-
-            var safeFileName = Path.GetFileName(file.FileName);
-            var storedFileName = $"{Guid.NewGuid()}{ext}";
-            var fullPath = Path.Combine(folder, storedFileName);
-
-            using (var stream = new FileStream(fullPath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            model.Rows.Add(new AttachmentRowDto
-            {
-                Id = Guid.NewGuid().ToString("N"),
-                Subject = "Teaching Staff Excel File",
-                FileName = safeFileName,
-                StoredFileName = storedFileName,
-                FileUrl = $"/uploads/teachingstaff/{storedFileName}",
-                ContentType = file.ContentType ?? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                UploadedAt = DateTime.UtcNow
-            });
-
-            SaveTeachingStaffExcel(model);
-
-            return PartialView("Partial_Views/_TeachingStaff", model);
-        }
-
-        [HttpPost]
-        public IActionResult DeleteTeachingStaffExcel(string id)
-        {
-            if (string.IsNullOrWhiteSpace(id))
-                return BadRequest("Invalid file id.");
-
-            var model = LoadTeachingStaffExcel();
-            var row = model.Rows.FirstOrDefault(x => x.Id == id);
-
-            if (row == null)
-                return BadRequest("File was not found.");
-
-            var folder = EnsureTeachingStaffExcelFolder();
-            var fullPath = Path.Combine(folder, row.StoredFileName ?? "");
-
-            if (System.IO.File.Exists(fullPath))
-                System.IO.File.Delete(fullPath);
-
-            model.Rows.Remove(row);
-            SaveTeachingStaffExcel(model);
-
-            return PartialView("Partial_Views/_TeachingStaff", model);
-        }
-
-
-
-        // ============================================================
-        // Staff \ PhD Holders (Session Helpers + AJAX Endpoints)
-        // ============================================================
-        private const string PHD_HOLDERS_KEY = "PhdHolders";
-
-        private PhdHoldersDto LoadPhdHolders()
-        {
-            var json = HttpContext.Session.GetString(PHD_HOLDERS_KEY);
-            if (string.IsNullOrWhiteSpace(json))
-                return new PhdHoldersDto();
-
-            return JsonSerializer.Deserialize<PhdHoldersDto>(json) ?? new PhdHoldersDto();
-        }
-
-        private void SavePhdHolders(PhdHoldersDto dto)
-        {
-            var json = JsonSerializer.Serialize(dto ?? new PhdHoldersDto());
-            HttpContext.Session.SetString(PHD_HOLDERS_KEY, json);
-        }
-
-        // Attach Programs from Programs section (Session)
-        private PhdHoldersDto AttachProgramsToPhd(PhdHoldersDto dto)
-        {
-            // Use the SAME programs loader as Teaching Staff
-            var programsDto = LoadPrograms();
-
-            // Some projects name the list "Programs" not "Rows" — so handle both safely
-            if (programsDto != null)
-            {
-                // If your LoadPrograms() returns ProgramsDto with Rows
-                dto.Programs = programsDto.Rows ?? new List<ProgramRowDto>();
-
-                // In case your ProgramsDto uses a different property name, keep this fallback:
-                if (dto.Programs == null || dto.Programs.Count == 0)
-                {
-                    var prop = programsDto.GetType().GetProperty("Programs");
-                    if (prop != null)
-                    {
-                        var val = prop.GetValue(programsDto) as List<ProgramRowDto>;
-                        if (val != null) dto.Programs = val;
-                    }
-                }
-            }
-            else
-            {
-                dto.Programs = new List<ProgramRowDto>();
-            }
-
-            return dto;
-        }
-
-        [HttpGet]
-        public IActionResult PhdHoldersPartial()
-        {
-            var dto = LoadPhdHolders();
-            dto = AttachProgramsToPhd(dto);
-            return PartialView("Partial_Views/_PhdHolders", dto);
-        }
-
-        [HttpPost]
-        public IActionResult PhdHoldersAdd(string name, string programId, string majorAreaOfStudy, string status)
-        {
-            name = (name ?? "").Trim();
-            programId = (programId ?? "").Trim();
-            majorAreaOfStudy = (majorAreaOfStudy ?? "").Trim();
-            status = (status ?? "").Trim();
-
-            if (string.IsNullOrWhiteSpace(name)) return BadRequest("Name is required.");
-            if (string.IsNullOrWhiteSpace(programId)) return BadRequest("Program is required.");
-            if (string.IsNullOrWhiteSpace(majorAreaOfStudy)) return BadRequest("Major Area of Study is required.");
-            if (string.IsNullOrWhiteSpace(status)) return BadRequest("Status is required.");
-
-            var programs = LoadPrograms()?.Rows ?? new List<ProgramRowDto>();
-            var selected = programs.FirstOrDefault(p => p.Id == programId);
-            if (selected == null) return BadRequest("Please add Programs first, then select a Program.");
-
-            var current = LoadPhdHolders();
-
-            current.Rows.Add(new PhdHolderRowDto
-            {
-                Id = Guid.NewGuid().ToString("N"),
-                Name = name,
-                ProgramId = selected.Id,
-                ProgramName = selected.Program,
-                MajorAreaOfStudy = majorAreaOfStudy,
-                Status = status
-            });
-
-            SavePhdHolders(current);
-
-            current = AttachProgramsToPhd(current);
-            return PartialView("Partial_Views/_PhdHolders", current);
-        }
-
-        [HttpPost]
-        public IActionResult PhdHoldersDelete(string id)
-        {
-            id = (id ?? "").Trim();
-            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Invalid row.");
-
-            var current = LoadPhdHolders();
-            current.Rows.RemoveAll(r => r.Id == id);
-
-            SavePhdHolders(current);
-
-            current = AttachProgramsToPhd(current);
-            return PartialView("Partial_Views/_PhdHolders", current);
-        }
-
-        // Update (Program stays fixed like TeachingStaff)
-        [HttpPost]
-        public IActionResult PhdHoldersUpdate(string id, string name, string majorAreaOfStudy, string status)
-        {
-            id = (id ?? "").Trim();
-            name = (name ?? "").Trim();
-            majorAreaOfStudy = (majorAreaOfStudy ?? "").Trim();
-            status = (status ?? "").Trim();
-
-            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Invalid row.");
-            if (string.IsNullOrWhiteSpace(name)) return BadRequest("Name is required.");
-            if (string.IsNullOrWhiteSpace(majorAreaOfStudy)) return BadRequest("Major Area of Study is required.");
-            if (string.IsNullOrWhiteSpace(status)) return BadRequest("Status is required.");
-
-            var current = LoadPhdHolders();
-            var row = current.Rows.FirstOrDefault(r => r.Id == id);
-            if (row == null) return BadRequest("Row not found.");
-
-            row.Name = name;
-            row.MajorAreaOfStudy = majorAreaOfStudy;
-            row.Status = status;
-
-            SavePhdHolders(current);
-
-            current = AttachProgramsToPhd(current);
-            return PartialView("Partial_Views/_PhdHolders", current);
-        }
-
-        // ============================================================
         // Faculties of Medicine and Dentistry Information (Numbers Only)
         // ============================================================
         private const string MED_DEN_KEY = "MedicineDentistry";
@@ -1439,72 +2130,72 @@ namespace MOHRecognition.Controllers
         // ✅ Numbers-only: all params are int? (cannot accept text)
         [HttpPost]
         public IActionResult MedicineDentistrySave(
-            int? med_students,
-            int? med_teachingStaff,
-            int? med_professor,
-            int? med_associateProfessor,
-            int? med_assistantProfessor,
-            int? med_lecturer,
-            int? med_teacher,
-            int? med_assistantTeacher,
-            int? med_fullTimeLecturer,
+            int? med_fullTimeProfessor,
+            int? med_fullTimeAssociateProfessor,
+            int? med_fullTimeAssistantProfessor,
+            int? med_fullTimeLecturerPhd,
+            int? med_fullTimeLecturerMsc,
+            int? med_fullTimeAssistantLecturerMsc,
+            int? med_fullTimeAssistantLecturerPsc,
+            int? med_fullTimePractitionerPsc,
+            int? med_fullTimePractitionerMsc,
 
-            int? den_students,
-            int? den_teachingStaff,
-            int? den_professor,
-            int? den_associateProfessor,
-            int? den_assistantProfessor,
-            int? den_lecturer,
-            int? den_teacher,
-            int? den_assistantTeacher,
-            int? den_fullTimeLecturer
+            int? den_fullTimeProfessor,
+            int? den_fullTimeAssociateProfessor,
+            int? den_fullTimeAssistantProfessor,
+            int? den_fullTimeLecturerPhd,
+            int? den_fullTimeLecturerMsc,
+            int? den_fullTimeAssistantLecturerMsc,
+            int? den_fullTimeAssistantLecturerPsc,
+            int? den_fullTimePractitionerPsc,
+            int? den_fullTimePractitionerMsc
         )
         {
             // Optional: block negative numbers (professional)
             bool hasNegative =
-                (med_students ?? 0) < 0 ||
-                (med_teachingStaff ?? 0) < 0 ||
-                (med_professor ?? 0) < 0 ||
-                (med_associateProfessor ?? 0) < 0 ||
-                (med_assistantProfessor ?? 0) < 0 ||
-                (med_lecturer ?? 0) < 0 ||
-                (med_teacher ?? 0) < 0 ||
-                (med_assistantTeacher ?? 0) < 0 ||
-                (med_fullTimeLecturer ?? 0) < 0 ||
-                (den_students ?? 0) < 0 ||
-                (den_teachingStaff ?? 0) < 0 ||
-                (den_professor ?? 0) < 0 ||
-                (den_associateProfessor ?? 0) < 0 ||
-                (den_assistantProfessor ?? 0) < 0 ||
-                (den_lecturer ?? 0) < 0 ||
-                (den_teacher ?? 0) < 0 ||
-                (den_assistantTeacher ?? 0) < 0 ||
-                (den_fullTimeLecturer ?? 0) < 0;
+                (med_fullTimeProfessor ?? 0) < 0 ||
+                (med_fullTimeAssociateProfessor ?? 0) < 0 ||
+                (med_fullTimeAssistantProfessor ?? 0) < 0 ||
+                (med_fullTimeLecturerPhd ?? 0) < 0 ||
+                (med_fullTimeLecturerMsc ?? 0) < 0 ||
+                (med_fullTimeAssistantLecturerMsc ?? 0) < 0 ||
+                (med_fullTimeAssistantLecturerPsc ?? 0) < 0 ||
+                (med_fullTimePractitionerPsc ?? 0) < 0 ||
+                (med_fullTimePractitionerMsc ?? 0) < 0 ||
+                (den_fullTimeProfessor ?? 0) < 0 ||
+                (den_fullTimeAssociateProfessor ?? 0) < 0 ||
+                (den_fullTimeAssistantProfessor ?? 0) < 0 ||
+                (den_fullTimeLecturerPhd ?? 0) < 0 ||
+                (den_fullTimeLecturerMsc ?? 0) < 0 ||
+                (den_fullTimeAssistantLecturerMsc ?? 0) < 0 ||
+                (den_fullTimeAssistantLecturerPsc ?? 0) < 0 ||
+                (den_fullTimePractitionerPsc ?? 0) < 0 ||
+                (den_fullTimePractitionerMsc ?? 0) < 0;
 
             if (hasNegative)
                 return BadRequest("All fields must be non-negative numbers.");
 
             var dto = new MedicineDentistryDto
             {
-                Med_Students = med_students,
-                Med_TeachingStaff = med_teachingStaff,
-                Med_Professor = med_professor,
-                Med_AssociateProfessor = med_associateProfessor,
-                Med_AssistantProfessor = med_assistantProfessor,
-                Med_Lecturer = med_lecturer,
-                Med_Teacher = med_teacher,
-                Med_AssistantTeacher = med_assistantTeacher,
-                Med_FullTimeLecturer = med_fullTimeLecturer,
+                Med_FullTimeProfessor = med_fullTimeProfessor,
+                Med_FullTimeAssociateProfessor = med_fullTimeAssociateProfessor,
+                Med_FullTimeAssistantProfessor = med_fullTimeAssistantProfessor,
+                Med_FullTimeLecturerPhd = med_fullTimeLecturerPhd,
+                Med_FullTimeLecturerMsc = med_fullTimeLecturerMsc,
+                Med_FullTimeAssistantLecturerMsc = med_fullTimeAssistantLecturerMsc,
+                Med_FullTimeAssistantLecturerPsc = med_fullTimeAssistantLecturerPsc,
+                Med_FullTimePractitionerPsc = med_fullTimePractitionerPsc,
+                Med_FullTimePractitionerMsc = med_fullTimePractitionerMsc,
 
-                Den_Students = den_students,
-                Den_TeachingStaff = den_teachingStaff,
-                Den_Professor = den_professor,
-                Den_AssociateProfessor = den_associateProfessor,
-                Den_AssistantProfessor = den_assistantProfessor,
-                Den_Lecturer = den_lecturer,
-                Den_Teacher = den_teacher,
-                Den_AssistantTeacher = den_assistantTeacher,
-                Den_FullTimeLecturer = den_fullTimeLecturer
+                Den_FullTimeProfessor = den_fullTimeProfessor,
+                Den_FullTimeAssociateProfessor = den_fullTimeAssociateProfessor,
+                Den_FullTimeAssistantProfessor = den_fullTimeAssistantProfessor,
+                Den_FullTimeLecturerPhd = den_fullTimeLecturerPhd,
+                Den_FullTimeLecturerMsc = den_fullTimeLecturerMsc,
+                Den_FullTimeAssistantLecturerMsc = den_fullTimeAssistantLecturerMsc,
+                Den_FullTimeAssistantLecturerPsc = den_fullTimeAssistantLecturerPsc,
+                Den_FullTimePractitionerPsc = den_fullTimePractitionerPsc,
+                Den_FullTimePractitionerMsc = den_fullTimePractitionerMsc
             };
 
             SaveMedDen(dto);
@@ -1528,14 +2219,16 @@ namespace MOHRecognition.Controllers
                 return new HospitalsDto
                 {
                     Rows = new List<HospitalRowDto>(),
-                    Specializations = new List<string>()
+                    Specializations = new List<string>(),
+                    HospitalContracts = new List<HospitalFileDto>()
                 };
             }
 
             return JsonSerializer.Deserialize<HospitalsDto>(json) ?? new HospitalsDto
             {
                 Rows = new List<HospitalRowDto>(),
-                Specializations = new List<string>()
+                Specializations = new List<string>(),
+                HospitalContracts = new List<HospitalFileDto>()
             };
         }
 
@@ -1555,6 +2248,9 @@ namespace MOHRecognition.Controllers
 
             if (model.Specializations == null)
                 model.Specializations = new List<string>();
+
+            if (model.HospitalContracts == null)
+                model.HospitalContracts = new List<HospitalFileDto>();
 
             var json = JsonSerializer.Serialize(model);
             HttpContext.Session.SetString(HOSPITALS_KEY, json);
@@ -1612,32 +2308,19 @@ namespace MOHRecognition.Controllers
             public string Specialization { get; set; } = "";
             public string Name { get; set; } = "";
             public string Major { get; set; } = "";
-
-            public List<IFormFile> RecognitionFiles { get; set; } = new();
-            public List<IFormFile> ContractFiles { get; set; } = new();
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddHospital([FromForm] HospitalUploadRequest row)
+        public IActionResult AddHospital([FromForm] HospitalUploadRequest row)
         {
             if (row == null)
                 return Json(new { success = false, message = "Invalid data." });
 
             if (string.IsNullOrWhiteSpace(row.Specialization) ||
-                string.IsNullOrWhiteSpace(row.Name) ||
-                string.IsNullOrWhiteSpace(row.Major))
+                string.IsNullOrWhiteSpace(row.Name))
             {
                 return Json(new { success = false, message = "Please fill all required fields." });
             }
-
-            if (row.RecognitionFiles == null || !row.RecognitionFiles.Any())
-                return Json(new { success = false, message = "Please upload the hospital recognition/accreditation file." });
-
-            if (row.ContractFiles == null || !row.ContractFiles.Any())
-                return Json(new { success = false, message = "Please upload the hospital training contract or supporting file." });
-
-            var allowedExts = new[] { ".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx" };
-            var uploadsFolder = EnsureHospitalUploadsFolder();
 
             var model = GetHospitalsData();
             model.Rows ??= new List<HospitalRowDto>();
@@ -1647,54 +2330,8 @@ namespace MOHRecognition.Controllers
                 Id = Guid.NewGuid().ToString(),
                 Specialization = row.Specialization.Trim(),
                 Name = row.Name.Trim(),
-                Major = row.Major.Trim(),
-                RecognitionFiles = new List<HospitalFileDto>(),
-                ContractFiles = new List<HospitalFileDto>()
+                Major = (row.Major ?? string.Empty).Trim()
             };
-
-            foreach (var file in row.RecognitionFiles.Where(f => f != null && f.Length > 0))
-            {
-                var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
-                if (string.IsNullOrWhiteSpace(ext) || !allowedExts.Contains(ext))
-                    return Json(new { success = false, message = $"Recognition file type is not allowed: {file.FileName}" });
-
-                var stored = $"{Guid.NewGuid()}{ext}";
-                var path = Path.Combine(uploadsFolder, stored);
-
-                using (var stream = new FileStream(path, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
-
-                newRow.RecognitionFiles.Add(new HospitalFileDto
-                {
-                    OriginalFileName = Path.GetFileName(file.FileName),
-                    StoredFileName = stored,
-                    FileUrl = $"/uploads/hospitals/{stored}"
-                });
-            }
-
-            foreach (var file in row.ContractFiles.Where(f => f != null && f.Length > 0))
-            {
-                var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
-                if (string.IsNullOrWhiteSpace(ext) || !allowedExts.Contains(ext))
-                    return Json(new { success = false, message = $"Contract/supporting file type is not allowed: {file.FileName}" });
-
-                var stored = $"{Guid.NewGuid()}{ext}";
-                var path = Path.Combine(uploadsFolder, stored);
-
-                using (var stream = new FileStream(path, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
-
-                newRow.ContractFiles.Add(new HospitalFileDto
-                {
-                    OriginalFileName = Path.GetFileName(file.FileName),
-                    StoredFileName = stored,
-                    FileUrl = $"/uploads/hospitals/{stored}"
-                });
-            }
 
             model.Rows.Add(newRow);
             SaveHospitalsData(model);
@@ -1703,14 +2340,13 @@ namespace MOHRecognition.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateHospital([FromForm] HospitalUploadRequest row)
+        public IActionResult UpdateHospital([FromForm] HospitalUploadRequest row)
         {
             if (row == null || string.IsNullOrWhiteSpace(row.Id))
                 return Json(new { success = false, message = "Invalid data." });
 
             if (string.IsNullOrWhiteSpace(row.Specialization) ||
-                string.IsNullOrWhiteSpace(row.Name) ||
-                string.IsNullOrWhiteSpace(row.Major))
+                string.IsNullOrWhiteSpace(row.Name))
             {
                 return Json(new { success = false, message = "Please fill all required fields." });
             }
@@ -1723,89 +2359,9 @@ namespace MOHRecognition.Controllers
             if (existing == null)
                 return Json(new { success = false, message = "Row not found." });
 
-            var allowedExts = new[] { ".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx" };
-            var uploadsFolder = EnsureHospitalUploadsFolder();
-
             existing.Specialization = row.Specialization.Trim();
             existing.Name = row.Name.Trim();
-            existing.Major = row.Major.Trim();
-
-            existing.RecognitionFiles ??= new List<HospitalFileDto>();
-            existing.ContractFiles ??= new List<HospitalFileDto>();
-
-            if (row.RecognitionFiles != null && row.RecognitionFiles.Any(f => f != null && f.Length > 0))
-            {
-                foreach (var oldFile in existing.RecognitionFiles)
-                {
-                    if (!string.IsNullOrWhiteSpace(oldFile.StoredFileName))
-                    {
-                        var oldPath = Path.Combine(uploadsFolder, oldFile.StoredFileName);
-                        if (System.IO.File.Exists(oldPath))
-                            System.IO.File.Delete(oldPath);
-                    }
-                }
-
-                existing.RecognitionFiles.Clear();
-
-                foreach (var file in row.RecognitionFiles.Where(f => f != null && f.Length > 0))
-                {
-                    var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
-                    if (string.IsNullOrWhiteSpace(ext) || !allowedExts.Contains(ext))
-                        return Json(new { success = false, message = $"Recognition file type is not allowed: {file.FileName}" });
-
-                    var stored = $"{Guid.NewGuid()}{ext}";
-                    var path = Path.Combine(uploadsFolder, stored);
-
-                    using (var stream = new FileStream(path, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    existing.RecognitionFiles.Add(new HospitalFileDto
-                    {
-                        OriginalFileName = Path.GetFileName(file.FileName),
-                        StoredFileName = stored,
-                        FileUrl = $"/uploads/hospitals/{stored}"
-                    });
-                }
-            }
-
-            if (row.ContractFiles != null && row.ContractFiles.Any(f => f != null && f.Length > 0))
-            {
-                foreach (var oldFile in existing.ContractFiles)
-                {
-                    if (!string.IsNullOrWhiteSpace(oldFile.StoredFileName))
-                    {
-                        var oldPath = Path.Combine(uploadsFolder, oldFile.StoredFileName);
-                        if (System.IO.File.Exists(oldPath))
-                            System.IO.File.Delete(oldPath);
-                    }
-                }
-
-                existing.ContractFiles.Clear();
-
-                foreach (var file in row.ContractFiles.Where(f => f != null && f.Length > 0))
-                {
-                    var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
-                    if (string.IsNullOrWhiteSpace(ext) || !allowedExts.Contains(ext))
-                        return Json(new { success = false, message = $"Contract/supporting file type is not allowed: {file.FileName}" });
-
-                    var stored = $"{Guid.NewGuid()}{ext}";
-                    var path = Path.Combine(uploadsFolder, stored);
-
-                    using (var stream = new FileStream(path, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    existing.ContractFiles.Add(new HospitalFileDto
-                    {
-                        OriginalFileName = Path.GetFileName(file.FileName),
-                        StoredFileName = stored,
-                        FileUrl = $"/uploads/hospitals/{stored}"
-                    });
-                }
-            }
+            existing.Major = (row.Major ?? string.Empty).Trim();
 
             SaveHospitalsData(model);
 
@@ -1826,38 +2382,251 @@ namespace MOHRecognition.Controllers
             if (existing == null)
                 return Json(new { success = false, message = "Row not found." });
 
-            var uploadsFolder = EnsureHospitalUploadsFolder();
-
-            if (existing.RecognitionFiles != null)
-            {
-                foreach (var file in existing.RecognitionFiles)
-                {
-                    if (!string.IsNullOrWhiteSpace(file.StoredFileName))
-                    {
-                        var path = Path.Combine(uploadsFolder, file.StoredFileName);
-                        if (System.IO.File.Exists(path))
-                            System.IO.File.Delete(path);
-                    }
-                }
-            }
-
-            if (existing.ContractFiles != null)
-            {
-                foreach (var file in existing.ContractFiles)
-                {
-                    if (!string.IsNullOrWhiteSpace(file.StoredFileName))
-                    {
-                        var path = Path.Combine(uploadsFolder, file.StoredFileName);
-                        if (System.IO.File.Exists(path))
-                            System.IO.File.Delete(path);
-                    }
-                }
-            }
-
             model.Rows.Remove(existing);
             SaveHospitalsData(model);
 
             return Json(new { success = true, message = "Hospital row deleted successfully." });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveHospitalContracts(List<IFormFile> files)
+        {
+            if (files == null || files.Count == 0)
+                return Json(new { success = false, message = "Please choose one or more files." });
+
+            var allowedExts = new[] { ".pdf", ".jpg", ".jpeg", ".png", ".webp", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".zip" };
+            var uploadsFolder = EnsureHospitalUploadsFolder();
+
+            var model = GetHospitalsData();
+            model.HospitalContracts ??= new List<HospitalFileDto>();
+
+            foreach (var file in files.Where(f => f != null && f.Length > 0))
+            {
+                var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+
+                // Save each file as-is (including PDFs).
+                var stored = $"{Guid.NewGuid()}{ext}";
+                var path = Path.Combine(uploadsFolder, stored);
+
+                using (var stream = new FileStream(path, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                model.HospitalContracts.Add(new HospitalFileDto
+                {
+                    OriginalFileName = Path.GetFileName(file.FileName),
+                    StoredFileName = stored,
+                    FileUrl = $"/uploads/hospitals/{stored}"
+                });
+            }
+
+            SaveHospitalsData(model);
+            return Json(new { success = true, message = "Training contracts/supporting documents uploaded successfully." });
+        }
+
+        [HttpPost]
+        public IActionResult DeleteHospitalContract([FromBody] string storedFileName)
+        {
+            if (string.IsNullOrWhiteSpace(storedFileName))
+                return Json(new { success = false, message = "Invalid file." });
+
+            var model = GetHospitalsData();
+            model.HospitalContracts ??= new List<HospitalFileDto>();
+
+            var row = model.HospitalContracts.FirstOrDefault(x =>
+                string.Equals(x.StoredFileName, storedFileName, StringComparison.OrdinalIgnoreCase));
+
+            if (row == null)
+                return Json(new { success = false, message = "File not found." });
+
+            var uploadsFolder = EnsureHospitalUploadsFolder();
+            var path = Path.Combine(uploadsFolder, row.StoredFileName);
+            if (System.IO.File.Exists(path))
+                System.IO.File.Delete(path);
+
+            model.HospitalContracts.Remove(row);
+            SaveHospitalsData(model);
+
+            return Json(new { success = true, message = "File removed successfully." });
+        }
+
+        // ============================================================
+        // Accreditation Bodies (Session Helpers + AJAX Endpoints)
+        // ============================================================
+        private const string ACCREDITATION_BODIES_KEY = "AccreditationBodies";
+
+        private AccreditationBodiesDto LoadAccreditationBodies()
+        {
+            var json = HttpContext.Session.GetString(ACCREDITATION_BODIES_KEY);
+            if (string.IsNullOrWhiteSpace(json))
+                return new AccreditationBodiesDto();
+
+            return JsonSerializer.Deserialize<AccreditationBodiesDto>(json) ?? new AccreditationBodiesDto();
+        }
+
+        private void SaveAccreditationBodies(AccreditationBodiesDto dto)
+        {
+            dto ??= new AccreditationBodiesDto();
+            dto.Rows ??= new List<AccreditationBodyRowDto>();
+
+            HttpContext.Session.SetString(ACCREDITATION_BODIES_KEY, JsonSerializer.Serialize(dto));
+        }
+
+        private string EnsureAccreditationBodiesUploadsFolder()
+        {
+            var folder = Path.Combine(_env.WebRootPath, "uploads", "accreditation-bodies");
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            return folder;
+        }
+
+        public class AccreditationBodyUploadRequest
+        {
+            public string Id { get; set; } = "";
+            public string AccreditationBodyName { get; set; } = "";
+            public string AccreditationType { get; set; } = "";
+            public IFormFile? PdfFile { get; set; }
+        }
+
+        [HttpGet]
+        public IActionResult AccreditationBodiesPartial()
+        {
+            return PartialView("Partial_Views/_AccreditationBodies", LoadAccreditationBodies());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AccreditationBodiesAdd([FromForm] AccreditationBodyUploadRequest row)
+        {
+            if (row == null)
+                return BadRequest("Invalid data.");
+
+            row.AccreditationBodyName = (row.AccreditationBodyName ?? "").Trim();
+            row.AccreditationType = (row.AccreditationType ?? "").Trim();
+
+            if (string.IsNullOrWhiteSpace(row.AccreditationBodyName) ||
+                string.IsNullOrWhiteSpace(row.AccreditationType))
+            {
+                return BadRequest("Please fill all required fields.");
+            }
+
+            if (row.PdfFile == null || row.PdfFile.Length == 0)
+                return BadRequest("Please upload one PDF file for this row.");
+
+            var ext = Path.GetExtension(row.PdfFile.FileName)?.ToLowerInvariant();
+            if (!string.Equals(ext, ".pdf", StringComparison.OrdinalIgnoreCase))
+                return BadRequest("Only PDF files are allowed.");
+
+            var uploadsFolder = EnsureAccreditationBodiesUploadsFolder();
+            var stored = $"{Guid.NewGuid()}{ext}";
+            var path = Path.Combine(uploadsFolder, stored);
+
+            await using (var stream = new FileStream(path, FileMode.Create))
+            {
+                await row.PdfFile.CopyToAsync(stream);
+            }
+
+            var model = LoadAccreditationBodies();
+            model.Rows ??= new List<AccreditationBodyRowDto>();
+
+            model.Rows.Add(new AccreditationBodyRowDto
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                AccreditationBodyName = row.AccreditationBodyName,
+                AccreditationType = row.AccreditationType,
+                PdfOriginalFileName = Path.GetFileName(row.PdfFile.FileName),
+                PdfStoredFileName = stored,
+                PdfFileUrl = $"/uploads/accreditation-bodies/{stored}"
+            });
+
+            SaveAccreditationBodies(model);
+            return PartialView("Partial_Views/_AccreditationBodies", model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AccreditationBodiesUpdate([FromForm] AccreditationBodyUploadRequest row)
+        {
+            if (row == null || string.IsNullOrWhiteSpace(row.Id))
+                return BadRequest("Invalid row.");
+
+            row.AccreditationBodyName = (row.AccreditationBodyName ?? "").Trim();
+            row.AccreditationType = (row.AccreditationType ?? "").Trim();
+
+            if (string.IsNullOrWhiteSpace(row.AccreditationBodyName) ||
+                string.IsNullOrWhiteSpace(row.AccreditationType))
+            {
+                return BadRequest("Please fill all required fields.");
+            }
+
+            var model = LoadAccreditationBodies();
+            model.Rows ??= new List<AccreditationBodyRowDto>();
+
+            var existing = model.Rows.FirstOrDefault(x => x.Id == row.Id);
+            if (existing == null)
+                return BadRequest("Row not found.");
+
+            existing.AccreditationBodyName = row.AccreditationBodyName;
+            existing.AccreditationType = row.AccreditationType;
+
+            if (row.PdfFile != null && row.PdfFile.Length > 0)
+            {
+                var ext = Path.GetExtension(row.PdfFile.FileName)?.ToLowerInvariant();
+                if (!string.Equals(ext, ".pdf", StringComparison.OrdinalIgnoreCase))
+                    return BadRequest("Only PDF files are allowed.");
+
+                var uploadsFolder = EnsureAccreditationBodiesUploadsFolder();
+
+                if (!string.IsNullOrWhiteSpace(existing.PdfStoredFileName))
+                {
+                    var oldPath = Path.Combine(uploadsFolder, existing.PdfStoredFileName);
+                    if (System.IO.File.Exists(oldPath))
+                        System.IO.File.Delete(oldPath);
+                }
+
+                var stored = $"{Guid.NewGuid()}{ext}";
+                var path = Path.Combine(uploadsFolder, stored);
+
+                await using (var stream = new FileStream(path, FileMode.Create))
+                {
+                    await row.PdfFile.CopyToAsync(stream);
+                }
+
+                existing.PdfOriginalFileName = Path.GetFileName(row.PdfFile.FileName);
+                existing.PdfStoredFileName = stored;
+                existing.PdfFileUrl = $"/uploads/accreditation-bodies/{stored}";
+            }
+
+            SaveAccreditationBodies(model);
+            return PartialView("Partial_Views/_AccreditationBodies", model);
+        }
+
+        [HttpPost]
+        public IActionResult AccreditationBodiesDelete(string id)
+        {
+            id = (id ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(id))
+                return BadRequest("Invalid row.");
+
+            var model = LoadAccreditationBodies();
+            model.Rows ??= new List<AccreditationBodyRowDto>();
+
+            var row = model.Rows.FirstOrDefault(x => x.Id == id);
+            if (row == null)
+                return BadRequest("Row not found.");
+
+            if (!string.IsNullOrWhiteSpace(row.PdfStoredFileName))
+            {
+                var uploadsFolder = EnsureAccreditationBodiesUploadsFolder();
+                var path = Path.Combine(uploadsFolder, row.PdfStoredFileName);
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+
+            model.Rows.Remove(row);
+            SaveAccreditationBodies(model);
+
+            return PartialView("Partial_Views/_AccreditationBodies", model);
         }
 
         // ============================================================
@@ -1866,10 +2635,9 @@ namespace MOHRecognition.Controllers
         private InfrastructureDto LoadInfrastructure()
         {
             var json = HttpContext.Session.GetString("Infrastructure");
-            if (string.IsNullOrWhiteSpace(json))
-                return new InfrastructureDto();
-
-            return JsonSerializer.Deserialize<InfrastructureDto>(json) ?? new InfrastructureDto();
+            return string.IsNullOrWhiteSpace(json)
+                ? new InfrastructureDto()
+                : (JsonSerializer.Deserialize<InfrastructureDto>(json) ?? new InfrastructureDto());
         }
 
         [HttpGet]
@@ -1888,9 +2656,7 @@ namespace MOHRecognition.Controllers
         "CampusesCount",
         "StadiumsCount",
         "ClassroomsAndLectureHallsCount",
-        "LibrariesCount",
-        "LaboratoriesDetails",
-        "StudentServicingBuildingsDetails"
+        "LibrariesCount"
     };
 
             foreach (var key in required)
@@ -1909,18 +2675,41 @@ namespace MOHRecognition.Controllers
         // ============================================================
         // Laboratories (Session Helpers + AJAX Endpoints)
         // ============================================================
-        private List<LaboratoryRowDto> LoadLaboratoryRows()
+        private LaboratoriesDto LoadLaboratoriesData()
         {
-            var json = HttpContext.Session.GetString("LaboratoriesRows");
-            if (string.IsNullOrWhiteSpace(json))
-                return new List<LaboratoryRowDto>();
+            var json = HttpContext.Session.GetString("Laboratories");
+            LaboratoriesDto model;
 
-            return JsonSerializer.Deserialize<List<LaboratoryRowDto>>(json) ?? new List<LaboratoryRowDto>();
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                // Backward compatibility with old rows-only session key
+                var legacyRowsJson = HttpContext.Session.GetString("LaboratoriesRows");
+                var legacyRows = string.IsNullOrWhiteSpace(legacyRowsJson)
+                    ? new List<LaboratoryRowDto>()
+                    : (JsonSerializer.Deserialize<List<LaboratoryRowDto>>(legacyRowsJson) ?? new List<LaboratoryRowDto>());
+
+                model = new LaboratoriesDto
+                {
+                    Rows = legacyRows
+                };
+            }
+            else
+            {
+                model = JsonSerializer.Deserialize<LaboratoriesDto>(json) ?? new LaboratoriesDto();
+            }
+
+            model.Rows ??= new List<LaboratoryRowDto>();
+            model.UploadedFiles ??= new List<LaboratoryFileDto>();
+            return model;
         }
 
-        private void SaveLaboratoryRows(List<LaboratoryRowDto> rows)
+        private void SaveLaboratoriesData(LaboratoriesDto dto)
         {
-            HttpContext.Session.SetString("LaboratoriesRows", JsonSerializer.Serialize(rows));
+            dto ??= new LaboratoriesDto();
+            dto.Rows ??= new List<LaboratoryRowDto>();
+            dto.UploadedFiles ??= new List<LaboratoryFileDto>();
+
+            HttpContext.Session.SetString("Laboratories", JsonSerializer.Serialize(dto));
         }
 
         private LaboratoriesDto AttachFacultiesToLaboratories(LaboratoriesDto dto)
@@ -1932,10 +2721,117 @@ namespace MOHRecognition.Controllers
         [HttpGet]
         public IActionResult LaboratoriesPartial()
         {
-            var model = new LaboratoriesDto
+            var model = LoadLaboratoriesData();
+
+            return PartialView("Partial_Views/_Laboratories", AttachFacultiesToLaboratories(model));
+        }
+
+        [HttpPost]
+        public IActionResult SaveLaboratoriesSummary(LaboratoriesDto dto)
+        {
+            if (dto == null)
+                return BadRequest("No data was received.");
+
+            if (!dto.TotalLaboratoriesCount.HasValue ||
+                !dto.TotalFacilitiesCount.HasValue ||
+                !dto.TeachingHallsCount.HasValue ||
+                !dto.StadiumsCount.HasValue)
             {
-                Rows = LoadLaboratoryRows()
+                return BadRequest("Please fill all required summary fields.");
+            }
+
+            var model = LoadLaboratoriesData();
+            model.TotalLaboratoriesCount = dto.TotalLaboratoriesCount;
+            model.TotalFacilitiesCount = dto.TotalFacilitiesCount;
+            model.TeachingHallsCount = dto.TeachingHallsCount;
+            model.StadiumsCount = dto.StadiumsCount;
+
+            SaveLaboratoriesData(model);
+
+            return PartialView("Partial_Views/_Laboratories", AttachFacultiesToLaboratories(model));
+        }
+
+        private string EnsureLaboratoriesFolder()
+        {
+            var folder = Path.Combine(_env.WebRootPath, "uploads", "laboratories");
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            return folder;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadLaboratoryFile(IFormFile file, string subject)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("Please choose a file.");
+
+            if (string.IsNullOrWhiteSpace(subject))
+                return BadRequest("Please enter the subject.");
+
+            var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+            var allowedImageExtensions = new[]
+            {
+                ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tif", ".tiff", ".svg", ".heic", ".heif"
             };
+
+            var isPdf = string.Equals(ext, ".pdf", StringComparison.OrdinalIgnoreCase);
+            var isImage = (!string.IsNullOrWhiteSpace(file.ContentType) && file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                          || (!string.IsNullOrWhiteSpace(ext) && allowedImageExtensions.Contains(ext));
+
+            if (!isPdf && !isImage)
+                return BadRequest("Only PDF or image files are allowed.");
+
+            var model = LoadLaboratoriesData();
+
+            var folder = EnsureLaboratoriesFolder();
+            var safeFileName = Path.GetFileName(file.FileName);
+            var storedFileName = $"{Guid.NewGuid()}{ext}";
+            var fullPath = Path.Combine(folder, storedFileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            model.UploadedFiles.Add(new LaboratoryFileDto
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Subject = subject.Trim(),
+                OriginalFileName = safeFileName,
+                StoredFileName = storedFileName,
+                FileUrl = $"/uploads/laboratories/{storedFileName}",
+                ContentType = file.ContentType ?? "application/octet-stream",
+                UploadedAt = DateTime.UtcNow
+            });
+
+            SaveLaboratoriesData(model);
+
+            return PartialView("Partial_Views/_Laboratories", AttachFacultiesToLaboratories(model));
+        }
+
+        [HttpPost]
+        public IActionResult DeleteLaboratoryFile(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return BadRequest("Invalid file id.");
+
+            var model = LoadLaboratoriesData();
+            var row = model.UploadedFiles.FirstOrDefault(x => x.Id == id);
+
+            if (row == null)
+                return BadRequest("File was not found.");
+
+            var folder = EnsureLaboratoriesFolder();
+            var fullPath = Path.Combine(folder, row.StoredFileName ?? "");
+
+            if (System.IO.File.Exists(fullPath))
+            {
+                System.IO.File.Delete(fullPath);
+            }
+
+            model.UploadedFiles.Remove(row);
+            SaveLaboratoriesData(model);
 
             return PartialView("Partial_Views/_Laboratories", AttachFacultiesToLaboratories(model));
         }
@@ -1964,7 +2860,8 @@ namespace MOHRecognition.Controllers
             if (faculty == null)
                 return BadRequest("Selected faculty was not found.");
 
-            var rows = LoadLaboratoryRows();
+            var model = LoadLaboratoriesData();
+            var rows = model.Rows;
 
             var existing = rows.FirstOrDefault(x => x.Id == dto.Id);
 
@@ -1984,13 +2881,9 @@ namespace MOHRecognition.Controllers
                 existing.PersonalComputers = dto.PersonalComputers;
             }
 
-            SaveLaboratoryRows(rows);
-
-            var model = new LaboratoriesDto
-            {
-                Rows = rows,
-                Faculties = faculties
-            };
+            model.Rows = rows;
+            model.Faculties = faculties;
+            SaveLaboratoriesData(model);
 
             return PartialView("Partial_Views/_Laboratories", model);
         }
@@ -2001,20 +2894,17 @@ namespace MOHRecognition.Controllers
             if (string.IsNullOrWhiteSpace(id))
                 return BadRequest("Invalid row id.");
 
-            var rows = LoadLaboratoryRows();
+            var model = LoadLaboratoriesData();
+            var rows = model.Rows;
             var target = rows.FirstOrDefault(x => x.Id == id);
 
             if (target == null)
                 return NotFound("Row not found.");
 
             rows.Remove(target);
-            SaveLaboratoryRows(rows);
-
-            var model = new LaboratoriesDto
-            {
-                Rows = rows,
-                Faculties = LoadFaculties()?.Rows ?? new List<FacultyRowDto>()
-            };
+            model.Rows = rows;
+            model.Faculties = LoadFaculties()?.Rows ?? new List<FacultyRowDto>();
+            SaveLaboratoriesData(model);
 
             return PartialView("Partial_Views/_Laboratories", model);
         }
@@ -2032,6 +2922,17 @@ namespace MOHRecognition.Controllers
         {
             HttpContext.Session.SetString("Library", JsonSerializer.Serialize(dto));
         }
+
+        private string EnsurePicturesFolder()
+        {
+            var folder = Path.Combine(_env.WebRootPath, "uploads", "pictures");
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            return folder;
+        }
+
+
         [HttpGet]
         public IActionResult LibraryPartial()
         {
@@ -2064,121 +2965,30 @@ namespace MOHRecognition.Controllers
 
 
 
-
         // ============================================================
-        // Attachments (Session Helpers + AJAX Endpoints)
+        // Hospital Contracts => request attachment payload mapper
         // ============================================================
-        private AttachmentDto LoadAttachments()
+        private AttachmentDto BuildHospitalContractsAttachments()
         {
-            var json = HttpContext.Session.GetString("Attachments");
-            var model = string.IsNullOrWhiteSpace(json)
-                ? new AttachmentDto()
-                : (JsonSerializer.Deserialize<AttachmentDto>(json) ?? new AttachmentDto());
+            var hospitals = GetHospitalsData();
+            hospitals.HospitalContracts ??= new List<HospitalFileDto>();
 
-            model.RequiredFiles ??= new List<string>
-    {
-      "University establishment document (such as royal decree, law, official decision, or establishment resolution).",
-    "Official certified local accreditation document of the institution by the overseeing authority in the home country of the applying institution.",
-    "International accreditation document of the institution, if applicable.",
-    "Official program(s) accreditation document(s) by entrusted authorities in the institution's home country.",
-    "Official certified accreditation documents of all fostered degree programs by the institution by the overseeing authority in the home country of the applying institution.",
-    "A detailed curriculum for each program offering.",
-    "International academic standing, in terms of institutional rank, of the applying institution, including the name of the ranking organization.",
-    "Student guide as pertains to the institution.",
-    "Course descriptions for academic programs.",
-    "Authenticated (notarized/certified) copies of signed agreements and/or MoUs.",
-    "Training contracts for hospitals.",
-    "Other supporting documents, if any."
-    };
-
-            model.Rows ??= new List<AttachmentRowDto>();
-            return model;
-        }
-
-        private void SaveAttachmentsToSession(AttachmentDto dto)
-        {
-            HttpContext.Session.SetString("Attachments", JsonSerializer.Serialize(dto));
-        }
-
-        private string EnsureAttachmentFolder()
-        {
-            var folder = Path.Combine(_env.WebRootPath, "uploads", "attachments");
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
-
-            return folder;
-        }
-
-        [HttpGet]
-        public IActionResult AttachmentsPartial()
-        {
-            var model = LoadAttachments();
-            return PartialView("Partial_Views/_Attachments", model);
-        }
-
-
-        [HttpPost]
-        public async Task<IActionResult> UploadAttachment(IFormFile file, string subject)
-        {
-            if (file == null || file.Length == 0)
-                return BadRequest("Please choose a file.");
-
-            if (string.IsNullOrWhiteSpace(subject))
-                return BadRequest("Please enter the subject.");
-
-            var model = LoadAttachments();
-
-            var folder = EnsureAttachmentFolder();
-            var ext = Path.GetExtension(file.FileName);
-            var safeFileName = Path.GetFileName(file.FileName);
-            var storedFileName = $"{Guid.NewGuid()}{ext}";
-            var fullPath = Path.Combine(folder, storedFileName);
-
-            using (var stream = new FileStream(fullPath, FileMode.Create))
+            var dto = new AttachmentDto
             {
-                await file.CopyToAsync(stream);
-            }
+                RequiredFiles = new List<string>(),
+                Rows = hospitals.HospitalContracts.Select(x => new AttachmentRowDto
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    Subject = "Hospital Training Contracts and Supporting Documents",
+                    FileName = x.OriginalFileName,
+                    StoredFileName = x.StoredFileName,
+                    FileUrl = x.FileUrl,
+                    ContentType = "application/octet-stream",
+                    UploadedAt = DateTime.UtcNow
+                }).ToList()
+            };
 
-            model.Rows.Add(new AttachmentRowDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                Subject = subject.Trim(),
-                FileName = safeFileName,
-                StoredFileName = storedFileName,
-                FileUrl = $"/uploads/attachments/{storedFileName}",
-                ContentType = file.ContentType ?? "application/octet-stream",
-                UploadedAt = DateTime.UtcNow
-            });
-
-            SaveAttachmentsToSession(model);
-
-            return PartialView("Partial_Views/_Attachments", model);
-        }
-
-        [HttpPost]
-        public IActionResult DeleteAttachment(string id)
-        {
-            if (string.IsNullOrWhiteSpace(id))
-                return BadRequest("Invalid attachment id.");
-
-            var model = LoadAttachments();
-            var row = model.Rows.FirstOrDefault(x => x.Id == id);
-
-            if (row == null)
-                return BadRequest("Attachment was not found.");
-
-            var folder = EnsureAttachmentFolder();
-            var fullPath = Path.Combine(folder, row.StoredFileName ?? "");
-
-            if (System.IO.File.Exists(fullPath))
-            {
-                System.IO.File.Delete(fullPath);
-            }
-
-            model.Rows.Remove(row);
-            SaveAttachmentsToSession(model);
-
-            return PartialView("Partial_Views/_Attachments", model);
+            return dto;
         }
 
 
@@ -2201,20 +3011,11 @@ namespace MOHRecognition.Controllers
             HttpContext.Session.SetString("Pictures", JsonSerializer.Serialize(dto));
         }
 
-        private string EnsurePicturesFolder()
-        {
-            var folder = Path.Combine(_env.WebRootPath, "uploads", "pictures");
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
-
-            return folder;
-        }
-
-
         [HttpGet]
         public IActionResult PicturesPartial()
         {
             var model = LoadPictures();
+            ViewBag.Laboratories = LoadLaboratoriesData();
             return PartialView("Partial_Views/_Pictures", model);
         }
 
@@ -2222,16 +3023,24 @@ namespace MOHRecognition.Controllers
         public async Task<IActionResult> UploadPicture(IFormFile file, string subject)
         {
             if (file == null || file.Length == 0)
-                return BadRequest("Please choose a picture.");
+                return BadRequest("Please choose a file.");
 
             if (string.IsNullOrWhiteSpace(subject))
                 return BadRequest("Please enter the subject.");
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
             var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
 
-            if (string.IsNullOrWhiteSpace(ext) || !allowedExtensions.Contains(ext))
-                return BadRequest("Only image files are allowed.");
+            var allowedImageExtensions = new[]
+            {
+                ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tif", ".tiff", ".svg", ".heic", ".heif"
+            };
+
+            var isPdf = string.Equals(ext, ".pdf", StringComparison.OrdinalIgnoreCase);
+            var isImage = (!string.IsNullOrWhiteSpace(file.ContentType) && file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                          || (!string.IsNullOrWhiteSpace(ext) && allowedImageExtensions.Contains(ext));
+
+            if (!isPdf && !isImage)
+                return BadRequest("Only PDF or image files are allowed.");
 
             var model = LoadPictures();
 
@@ -2319,8 +3128,7 @@ namespace MOHRecognition.Controllers
                 return BadRequest("No data was received.");
 
             if (string.IsNullOrWhiteSpace(dto.ApplicantName) ||
-                string.IsNullOrWhiteSpace(dto.WorkPlace) ||
-                string.IsNullOrWhiteSpace(dto.Email))
+                string.IsNullOrWhiteSpace(dto.WorkPlace))
             {
                 return BadRequest("Please fill all required fields.");
             }
@@ -2352,20 +3160,89 @@ namespace MOHRecognition.Controllers
                 ? new PublicInfoDto()
                 : (JsonSerializer.Deserialize<PublicInfoDto>(publicJson) ?? new PublicInfoDto());
 
+            var fallbackUniversityEmail = HttpContext.Session.GetString("UniversityEmail") ?? "";
+            var resolvedEmail = !string.IsNullOrWhiteSpace(publicInfo.EmailAddress)
+                ? publicInfo.EmailAddress
+                : (!string.IsNullOrWhiteSpace(dto.Email) ? dto.Email : fallbackUniversityEmail);
+
+            dto.Email = resolvedEmail;
+
+            if (string.IsNullOrWhiteSpace(publicInfo.City))
+            {
+                publicInfo.City = HttpContext.Session.GetString("SignupCity") ?? "";
+            }
+
             AcademicInfoDto academicInfo = string.IsNullOrWhiteSpace(academicJson)
                 ? new AcademicInfoDto()
                 : (JsonSerializer.Deserialize<AcademicInfoDto>(academicJson) ?? new AcademicInfoDto());
+
+            var submittedFaculties = LoadFaculties().Rows
+                .Select(f => new FacultyRowDto
+                {
+                    Id = f.Id,
+                    FacultyName = f.FacultyName,
+                    StudentsCount = f.StudentsCount
+                })
+                .ToList();
+
+            var submittedAccreditationBodies = LoadAccreditationBodies().Rows
+                .Select(a => new AccreditationBodyRowDto
+                {
+                    Id = a.Id,
+                    AccreditationBodyName = a.AccreditationBodyName,
+                    AccreditationType = a.AccreditationType,
+                    PdfOriginalFileName = a.PdfOriginalFileName,
+                    PdfStoredFileName = a.PdfStoredFileName,
+                    PdfFileUrl = a.PdfFileUrl
+                })
+                .ToList();
+
+            var submittedPrograms = LoadPrograms().Rows
+                .Select(p => new ProgramRowDto
+                {
+                    Id = p.Id,
+                    Program = p.Program,
+                    FacultyId = p.FacultyId,
+                    FacultyName = p.FacultyName,
+                    DegreeAwarded = p.DegreeAwarded,
+                    NumberOfYears = p.NumberOfYears,
+                    CreditHours = p.CreditHours,
+                    EducationalSystem = p.EducationalSystem,
+                    Language = p.Language,
+                    AccreditationDate = p.AccreditationDate,
+                    CreationDate = p.CreationDate,
+                    GraduationDateOfLastRegiment = p.GraduationDateOfLastRegiment,
+                    GraduatesTotalLast3Years = p.GraduatesTotalLast3Years
+                })
+                .ToList();
+
+            var submittedProgramHours = GetProgramHoursRows()
+                .Select(h => new ProgramHoursRowDto
+                {
+                    Id = h.Id,
+                    ProgramId = h.ProgramId,
+                    ProgramName = h.ProgramName,
+                    TheoreticalHours = h.TheoreticalHours,
+                    PracticalHours = h.PracticalHours
+                })
+                .ToList();
+
+            var submittedAdmission = LoadAdmission();
+            var durationJson = HttpContext.Session.GetString("StudyDuration");
+            var submittedStudyDuration = string.IsNullOrWhiteSpace(durationJson)
+                ? new StudyDurationDto()
+                : (JsonSerializer.Deserialize<StudyDurationDto>(durationJson) ?? new StudyDurationDto());
 
             var request = new RecognitionRequestRecord
             {
                 RecognitionNumber = recognitionNumber,
                 UniversityName = string.IsNullOrWhiteSpace(publicInfo.InstitutionName) ? "Unknown University" : publicInfo.InstitutionName,
                 Country = string.IsNullOrWhiteSpace(signupCountry) ? "Unknown" : signupCountry,
-                UniversityEmail = string.IsNullOrWhiteSpace(publicInfo.EmailAddress) ? dto.Email : publicInfo.EmailAddress,
+                UniversityEmail = resolvedEmail,
 
                 ApplicantName = dto.ApplicantName,
                 WorkPlace = dto.WorkPlace,
-                ApplicantEmail = dto.Email,
+                ApplicantEmail = resolvedEmail,
 
                 AssignedMember = "Unassigned",
                 Status = "Pending",
@@ -2374,7 +3251,19 @@ namespace MOHRecognition.Controllers
 
                 PublicInfo = publicInfo,
                 AcademicInfo = academicInfo,
-                SubmitApplication = dto
+                SubmitApplication = dto,
+                Faculties = submittedFaculties,
+                Programs = submittedPrograms,
+                ProgramHours = submittedProgramHours,
+                AccreditationBodies = submittedAccreditationBodies,
+                AdmissionRequirements = submittedAdmission,
+                StudyDuration = submittedStudyDuration,
+                MedicineDentistry = LoadMedDen(),
+                AdmissionStudyDurationReview = LoadAdmissionStudyDurationReviewFromSession(),
+                Attachments = BuildHospitalContractsAttachments(),
+                Pictures = LoadPictures(),
+                Laboratories = LoadLaboratoriesData(),
+                Infrastructure = LoadInfrastructure()
             };
 
             var saved = _recognitionRequestService.Add(request);
@@ -2424,7 +3313,7 @@ namespace MOHRecognition.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult NewUniAccount(string Institution, string Country, string Email, string Password, string ConfirmPassword, bool Agree)
+        public IActionResult NewUniAccount(string Institution, string Country, string City, string CityOther, string Email, string Password, string ConfirmPassword, bool Agree)
         {
             var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "countries.json");
             var countries = new List<string>();
@@ -2456,8 +3345,19 @@ namespace MOHRecognition.Controllers
                 ViewBag.ErrorMessage = "Password must be at least 8 characters and include 1 uppercase letter and 1 special character.";
                 return View("~/Views/Home/NewUniAccount.cshtml");
             }
+            var resolvedCity = City ?? "";
+            if (!string.IsNullOrWhiteSpace(CityOther))
+            {
+                if (resolvedCity.Contains("Other", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(resolvedCity))
+                {
+                    resolvedCity = CityOther.Trim();
+                }
+            }
+
             HttpContext.Session.SetString("SignupCountry", Country ?? "");
-            return RedirectToAction("UniDashboard", "Home");
+            HttpContext.Session.SetString("SignupCity", resolvedCity);
+
+            return RedirectToAction("UniStatus", "Home");
         }
 
         ///////////////////////UniStatus/////////
@@ -2468,7 +3368,7 @@ namespace MOHRecognition.Controllers
             ViewBag.HasRequest = request != null;
             ViewBag.RequestNumber = request?.ReferenceNumber ?? "";
             ViewBag.SubmittedOn = request?.SubmittedAt.ToString("yyyy/MM/dd") ?? "";
-            ViewBag.StatusText = request?.Status ?? "No Request";
+            ViewBag.StatusText = request?.Status ?? "New Account";
             ViewBag.UniversityName = request?.UniversityName ?? "University Account";
             ViewBag.UniversityEmail = request?.UniversityEmail ?? (HttpContext.Session.GetString("UniversityEmail") ?? "");
 
@@ -2509,6 +3409,532 @@ namespace MOHRecognition.Controllers
             return _recognitionRequestService.GetById(id.Value);
         }
 
+        [HttpGet]
+        public IActionResult AdminDashboard()
+        {
+            var model = _recognitionRequestService.GetAll();
+            return View("~/Views/admin/AdminDashboard.cshtml", model);
+        }
+
+        [HttpGet]
+        public IActionResult Archive()
+        {
+            var model = _recognitionRequestService.GetAll();
+            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(GetCurrentRecognitionMember());
+            return View("~/Views/member/Archive.cshtml", model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AssignToMember(int id, string assignedMember)
+        {
+            if (id <= 0)
+                return Redirect("/Home/AdminDashboard#assignments");
+
+            _recognitionRequestService.AssignMember(id, assignedMember ?? "Unassigned");
+
+            return Redirect("/Home/AdminDashboard#assignments");
+        }
+
+        [HttpGet]
+        public IActionResult RecognitionMemberDashboard()
+        {
+            var currentMember = GetCurrentRecognitionMember();
+            var assignedToCurrentMember = _recognitionRequestService
+                .GetAll()
+                .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
+            ViewBag.TotalRequests = assignedToCurrentMember.Count;
+            ViewBag.PendingCount = assignedToCurrentMember.Count(x => x.Status == "Pending" || x.Status == "Assigned");
+            ViewBag.ApprovedCount = assignedToCurrentMember.Count(x => x.Status == "Approved");
+            ViewBag.RejectedCount = assignedToCurrentMember.Count(x => x.Status == "Rejected");
+            ViewBag.MissingDocsCount = assignedToCurrentMember.Count(x => x.Status == "Missing Docs");
+
+            return View("~/Views/member/RecognitionMemberDashboard.cshtml", assignedToCurrentMember);
+        }
+
+        [HttpGet]
+        public IActionResult ElectronicRequests()
+        {
+            var currentMember = GetCurrentRecognitionMember();
+            var model = _recognitionRequestService
+                .GetAll()
+                .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
+            return View("~/Views/member/ElectronicRequests.cshtml", model);
+        }
+
+        [HttpGet]
+        public IActionResult DetailsBasicInfo(int? id)
+        {
+            if (id == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var request = _recognitionRequestService.GetById(id.Value);
+            if (request == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
+                return RedirectToAction("ElectronicRequests");
+
+            return View("~/Views/member/DetailsBasicInfo.cshtml", request);
+        }
+
+        [HttpGet]
+        public IActionResult DetailsStatistics(int? id)
+        {
+            if (id == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var request = _recognitionRequestService.GetById(id.Value);
+            if (request == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
+                return RedirectToAction("ElectronicRequests");
+
+            ViewBag.RequestId = request.Id;
+            ViewBag.InstitutionName = request.UniversityName;
+            return View("~/Views/member/DetailsStatistics.cshtml", request);
+        }
+
+        [HttpGet]
+        public IActionResult DetailsAdmissionDuration(int? id)
+        {
+            if (id == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var request = _recognitionRequestService.GetById(id.Value);
+            if (request == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
+                return RedirectToAction("ElectronicRequests");
+
+            request.AdmissionStudyDurationReview ??= new AdmissionStudyDurationReviewDto();
+            request.StudyDuration ??= new StudyDurationDto();
+
+            return View("~/Views/member/DetailsAdmissionDuration.cshtml", request);
+        }
+
+        [HttpGet]
+        public IActionResult DetailsDoctors(int? id)
+        {
+            if (id == null)
+                return RedirectToAction("ElectronicRequests");
+
+            return RedirectToAction("DetailsAcademicInfo", new { id = id.Value });
+        }
+
+        [HttpGet]
+        public IActionResult DetailsAcademicInfo(int? id)
+        {
+            if (id == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var request = _recognitionRequestService.GetById(id.Value);
+            if (request == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
+                return RedirectToAction("ElectronicRequests");
+
+            ViewBag.RequestId = request.Id;
+            ViewBag.InstitutionName = request.UniversityName;
+            return View("~/Views/member/DetailsAcademicInfo.cshtml", request);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SaveAdmissionDurationReview(
+            int id,
+            string diplomaDuration,
+            string bScDuration,
+            string higherDiplomaDuration,
+            string masterDuration,
+            string phdDuration,
+            IFormFile? diplomaSamplePdf,
+            IFormFile? bScSamplePdf,
+            IFormFile? higherDiplomaSamplePdf,
+            IFormFile? masterSamplePdf,
+            IFormFile? phdSamplePdf)
+        {
+            var request = _recognitionRequestService.GetById(id);
+            if (!IsCurrentRecognitionMemberOwner(request))
+            {
+                TempData["ArchiveError"] = "You can only update data for requests assigned to you.";
+                return RedirectToAction("ElectronicRequests");
+            }
+
+            var existing = request!.AdmissionStudyDurationReview ?? new AdmissionStudyDurationReviewDto();
+            var next = new AdmissionStudyDurationReviewDto
+            {
+                DiplomaDuration = (diplomaDuration ?? string.Empty).Trim(),
+                BScDuration = (bScDuration ?? string.Empty).Trim(),
+                HigherDiplomaDuration = (higherDiplomaDuration ?? string.Empty).Trim(),
+                MasterDuration = (masterDuration ?? string.Empty).Trim(),
+                PhdDuration = (phdDuration ?? string.Empty).Trim(),
+
+                DiplomaSamplePdfFileName = existing.DiplomaSamplePdfFileName,
+                DiplomaSamplePdfContentBase64 = existing.DiplomaSamplePdfContentBase64,
+                BScSamplePdfFileName = existing.BScSamplePdfFileName,
+                BScSamplePdfContentBase64 = existing.BScSamplePdfContentBase64,
+                HigherDiplomaSamplePdfFileName = existing.HigherDiplomaSamplePdfFileName,
+                HigherDiplomaSamplePdfContentBase64 = existing.HigherDiplomaSamplePdfContentBase64,
+                MasterSamplePdfFileName = existing.MasterSamplePdfFileName,
+                MasterSamplePdfContentBase64 = existing.MasterSamplePdfContentBase64,
+                PhdSamplePdfFileName = existing.PhdSamplePdfFileName,
+                PhdSamplePdfContentBase64 = existing.PhdSamplePdfContentBase64
+            };
+
+            var diplomaUpload = TryReadSamplePdfUpload(diplomaSamplePdf);
+            if (!diplomaUpload.ok)
+            {
+                TempData["AdmissionDurationError"] = diplomaUpload.error;
+                return RedirectToAction("DetailsAdmissionDuration", new { id });
+            }
+            if (diplomaUpload.hasFile)
+            {
+                next.DiplomaSamplePdfFileName = diplomaUpload.fileName;
+                next.DiplomaSamplePdfContentBase64 = diplomaUpload.fileContentBase64;
+            }
+
+            var bScUpload = TryReadSamplePdfUpload(bScSamplePdf);
+            if (!bScUpload.ok)
+            {
+                TempData["AdmissionDurationError"] = bScUpload.error;
+                return RedirectToAction("DetailsAdmissionDuration", new { id });
+            }
+            if (bScUpload.hasFile)
+            {
+                next.BScSamplePdfFileName = bScUpload.fileName;
+                next.BScSamplePdfContentBase64 = bScUpload.fileContentBase64;
+            }
+
+            var higherDiplomaUpload = TryReadSamplePdfUpload(higherDiplomaSamplePdf);
+            if (!higherDiplomaUpload.ok)
+            {
+                TempData["AdmissionDurationError"] = higherDiplomaUpload.error;
+                return RedirectToAction("DetailsAdmissionDuration", new { id });
+            }
+            if (higherDiplomaUpload.hasFile)
+            {
+                next.HigherDiplomaSamplePdfFileName = higherDiplomaUpload.fileName;
+                next.HigherDiplomaSamplePdfContentBase64 = higherDiplomaUpload.fileContentBase64;
+            }
+
+            var masterUpload = TryReadSamplePdfUpload(masterSamplePdf);
+            if (!masterUpload.ok)
+            {
+                TempData["AdmissionDurationError"] = masterUpload.error;
+                return RedirectToAction("DetailsAdmissionDuration", new { id });
+            }
+            if (masterUpload.hasFile)
+            {
+                next.MasterSamplePdfFileName = masterUpload.fileName;
+                next.MasterSamplePdfContentBase64 = masterUpload.fileContentBase64;
+            }
+
+            var phdUpload = TryReadSamplePdfUpload(phdSamplePdf);
+            if (!phdUpload.ok)
+            {
+                TempData["AdmissionDurationError"] = phdUpload.error;
+                return RedirectToAction("DetailsAdmissionDuration", new { id });
+            }
+            if (phdUpload.hasFile)
+            {
+                next.PhdSamplePdfFileName = phdUpload.fileName;
+                next.PhdSamplePdfContentBase64 = phdUpload.fileContentBase64;
+            }
+
+            var ok = _recognitionRequestService.SaveAdmissionStudyDurationReview(id, next);
+            if (!ok)
+            {
+                TempData["AdmissionDurationError"] = "Unable to save Admission Requirements and Study Duration.";
+                return RedirectToAction("DetailsAdmissionDuration", new { id });
+            }
+
+            TempData["AdmissionDurationSaved"] = "Admission Requirements and Study Duration saved successfully.";
+            return RedirectToAction("DetailsAdmissionDuration", new { id });
+        }
+
+        [HttpGet]
+        public IActionResult DownloadAdmissionSamplePdf(int id, string level, bool inline = false)
+        {
+            var request = _recognitionRequestService.GetById(id);
+            if (request == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
+                return RedirectToAction("ElectronicRequests");
+
+            var review = request.AdmissionStudyDurationReview ?? new AdmissionStudyDurationReviewDto();
+            var normalizedLevel = (level ?? string.Empty).Trim();
+
+            var file = normalizedLevel switch
+            {
+                "Diploma" => (review.DiplomaSamplePdfFileName, review.DiplomaSamplePdfContentBase64),
+                "BSc" => (review.BScSamplePdfFileName, review.BScSamplePdfContentBase64),
+                "HigherDiploma" => (review.HigherDiplomaSamplePdfFileName, review.HigherDiplomaSamplePdfContentBase64),
+                "Master" => (review.MasterSamplePdfFileName, review.MasterSamplePdfContentBase64),
+                "PhD" => (review.PhdSamplePdfFileName, review.PhdSamplePdfContentBase64),
+                _ => (string.Empty, string.Empty)
+            };
+
+            if (string.IsNullOrWhiteSpace(file.Item1) || string.IsNullOrWhiteSpace(file.Item2))
+                return NotFound("No sample PDF uploaded for this level.");
+
+            byte[] bytes;
+            try
+            {
+                var base64 = file.Item2.Trim();
+                if (base64.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var commaIndex = base64.IndexOf(',');
+                    if (commaIndex >= 0 && commaIndex + 1 < base64.Length)
+                        base64 = base64[(commaIndex + 1)..];
+                }
+
+                bytes = Convert.FromBase64String(base64);
+            }
+            catch
+            {
+                return BadRequest("Stored PDF content is invalid.");
+            }
+
+            var safeName = Path.GetFileName(file.Item1);
+            if (inline)
+            {
+                Response.Headers["Content-Disposition"] = $"inline; filename=\"{safeName}\"";
+                return File(bytes, "application/pdf");
+            }
+
+            return File(bytes, "application/pdf", safeName);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SaveGlobalRankings(
+            int id,
+            string arwuValue,
+            bool arwuIsNa,
+            string qsValue,
+            bool qsIsNa,
+            string theValue,
+            bool theIsNa,
+            string scopusValue,
+            bool scopusIsNa)
+        {
+            var request = _recognitionRequestService.GetById(id);
+            if (!IsCurrentRecognitionMemberOwner(request))
+            {
+                TempData["ArchiveError"] = "You can only update data for requests assigned to you.";
+                return RedirectToAction("ElectronicRequests");
+            }
+
+            var model = new GlobalRankingsDto
+            {
+                ArwuIsNa = arwuIsNa,
+                ArwuValue = arwuIsNa ? string.Empty : (arwuValue ?? string.Empty).Trim(),
+                QsIsNa = qsIsNa,
+                QsValue = qsIsNa ? string.Empty : (qsValue ?? string.Empty).Trim(),
+                TheIsNa = theIsNa,
+                TheValue = theIsNa ? string.Empty : (theValue ?? string.Empty).Trim(),
+                ScopusIsNa = scopusIsNa,
+                ScopusValue = scopusIsNa ? string.Empty : (scopusValue ?? string.Empty).Trim()
+            };
+
+            var ok = _recognitionRequestService.SaveGlobalRankings(id, model);
+            if (!ok)
+            {
+                TempData["RankingsError"] = "Unable to save rankings data.";
+                return RedirectToAction("DetailsAccreditationBodies", new { id });
+            }
+
+            TempData["RankingsSaved"] = "Research & Global Rankings saved successfully.";
+            return RedirectToAction("DetailsAccreditationBodies", new { id });
+        }
+
+        [HttpGet]
+        public IActionResult DetailsAccreditationBodies(int? id)
+        {
+            if (id == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var request = _recognitionRequestService.GetById(id.Value);
+            if (request == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
+                return RedirectToAction("ElectronicRequests");
+
+            ViewBag.RequestId = request.Id;
+            ViewBag.InstitutionName = request.UniversityName;
+            return View("~/Views/member/DetailsAccreditationBodies.cshtml", request);
+        }
+
+        [HttpGet]
+        public IActionResult DetailsRankings(int? id)
+        {
+            if (id == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var request = _recognitionRequestService.GetById(id.Value);
+            if (request == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
+                return RedirectToAction("ElectronicRequests");
+
+            return RedirectToAction("DetailsAccreditationBodies", new { id = request.Id });
+        }
+
+        [HttpGet]
+        public IActionResult DetailsInfrastructure(int? id)
+        {
+            if (id == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var request = _recognitionRequestService.GetById(id.Value);
+            if (request == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
+                return RedirectToAction("ElectronicRequests");
+
+            return View("~/Views/member/DetailsInfrastructure.cshtml", request);
+        }
+
+        [HttpGet]
+        public IActionResult DetailsRecommendation(int? id)
+        {
+            if (id == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var request = _recognitionRequestService.GetById(id.Value);
+            if (request == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
+                return RedirectToAction("ElectronicRequests");
+
+            return View("~/Views/member/DetailsRecommendation.cshtml", request);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SaveInfrastructureNotes(
+            int id,
+            string facultiesAssessment,
+            string hospitalsAssessment,
+            string hospitalEnvironmentAssessment,
+            string laboratoriesFacilitiesAssessment,
+            string libraryAssessment,
+            string facultiesAssessmentNote,
+            string hospitalsAssessmentNote,
+            string hospitalEnvironmentAssessmentNote,
+            string laboratoriesFacilitiesAssessmentNote,
+            string libraryAssessmentNote)
+        {
+            var request = _recognitionRequestService.GetById(id);
+            if (!IsCurrentRecognitionMemberOwner(request))
+            {
+                TempData["ArchiveError"] = "You can only update notes for requests assigned to you.";
+                return RedirectToAction("ElectronicRequests");
+            }
+
+            bool needsImprovementMissingNote =
+                (string.Equals(facultiesAssessment, "Needs Improvement", StringComparison.Ordinal) && string.IsNullOrWhiteSpace(facultiesAssessmentNote)) ||
+                (string.Equals(hospitalsAssessment, "Needs Improvement", StringComparison.Ordinal) && string.IsNullOrWhiteSpace(hospitalsAssessmentNote)) ||
+                (string.Equals(hospitalEnvironmentAssessment, "Needs Improvement", StringComparison.Ordinal) && string.IsNullOrWhiteSpace(hospitalEnvironmentAssessmentNote)) ||
+                (string.Equals(laboratoriesFacilitiesAssessment, "Needs Improvement", StringComparison.Ordinal) && string.IsNullOrWhiteSpace(laboratoriesFacilitiesAssessmentNote)) ||
+                (string.Equals(libraryAssessment, "Needs Improvement", StringComparison.Ordinal) && string.IsNullOrWhiteSpace(libraryAssessmentNote));
+
+            if (needsImprovementMissingNote)
+            {
+                TempData["InfraSaveError"] = "Please add a professional note for each section marked as Needs Improvement.";
+                return RedirectToAction("DetailsInfrastructure", new { id });
+            }
+
+            var ok = _recognitionRequestService.SaveInfrastructureNotes(
+                id,
+                facultiesAssessment,
+                hospitalsAssessment,
+                hospitalEnvironmentAssessment,
+                laboratoriesFacilitiesAssessment,
+                libraryAssessment,
+                facultiesAssessmentNote,
+                hospitalsAssessmentNote,
+                hospitalEnvironmentAssessmentNote,
+                laboratoriesFacilitiesAssessmentNote,
+                libraryAssessmentNote);
+            if (!ok)
+            {
+                TempData["InfraSaveError"] = "Unable to save infrastructure assessments.";
+            }
+            else
+            {
+                TempData["InfraSaved"] = "Infrastructure assessments saved successfully.";
+            }
+
+            return RedirectToAction("DetailsInfrastructure", new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SaveRecommendationDecision(int id, string decision, string reason)
+        {
+            var request = _recognitionRequestService.GetById(id);
+            if (!IsCurrentRecognitionMemberOwner(request))
+            {
+                TempData["ArchiveError"] = "You can only update decisions for requests assigned to you.";
+                return RedirectToAction("ElectronicRequests");
+            }
+
+            var normalizedDecision = (decision ?? string.Empty).Trim();
+            var isValidDecision =
+                string.Equals(normalizedDecision, "Recognition", StringComparison.Ordinal) ||
+                string.Equals(normalizedDecision, "Recognition with Modifications", StringComparison.Ordinal) ||
+                string.Equals(normalizedDecision, "No Recognition", StringComparison.Ordinal);
+
+            if (!isValidDecision)
+            {
+                TempData["RecommendationError"] = "Please select a valid final decision.";
+                return RedirectToAction("DetailsRecommendation", new { id });
+            }
+
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                TempData["RecommendationError"] = "Please provide a professional justification note.";
+                return RedirectToAction("DetailsRecommendation", new { id });
+            }
+
+            var ok = _recognitionRequestService.SaveBasicInfoAssessment(id, normalizedDecision, (reason ?? string.Empty).Trim());
+            if (!ok)
+            {
+                TempData["RecommendationError"] = "Unable to save recommendation decision.";
+            }
+            else
+            {
+                TempData["RecommendationSaved"] = "Final recommendation decision saved successfully.";
+            }
+
+            return RedirectToAction("DetailsRecommendation", new { id });
+        }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -2528,7 +3954,21 @@ namespace MOHRecognition.Controllers
             return RedirectToAction("Archive");
         }
 
+        public IActionResult Requests()
+        {
+            var requests = _recognitionRequestService.GetAll();
+            return View("~/Views/Admin/Requests.cshtml", requests);
+        }
 
+        public IActionResult AdminRequestDetails(int id)
+        {
+            var request = _recognitionRequestService.GetById(id);
+
+            if (request == null)
+                return NotFound();
+
+            return View("~/Views/Admin/AdminRequestDetails.cshtml", request);
+        }
         private string GetCurrentRecognitionMember()
         {
             var raw = HttpContext.Session.GetString("CurrentRecognitionMember") ?? "";
@@ -2575,151 +4015,30 @@ namespace MOHRecognition.Controllers
             };
         }
 
-
-        /// ///////////////////////////////////////////////////////////////////////////////////////////
-        ///  /// ///////////////////////////////////////////////////////////////////////////////////////////
-        ///  Doctorssssssssssssssssssssss
-        ///   /// ///////////////////////////////////////////////////////////////////////////////////////////
-        ///   /// ///////////////////////////////////////////////////////////////////////////////////////////
-        ///   /// ///////////////////////////////////////////////////////////////////////////////////////////
-        public IActionResult AdminDashboard()
+        private static (bool ok, bool hasFile, string fileName, string fileContentBase64, string error) TryReadSamplePdfUpload(IFormFile? file)
         {
-            var model = _recognitionRequestService.GetAll();
-            return View("~/Views/admin/AdminDashboard.cshtml", model);
+            if (file == null || file.Length == 0)
+                return (true, false, string.Empty, string.Empty, string.Empty);
+
+            var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+            if (ext != ".pdf")
+                return (false, false, string.Empty, string.Empty, "Only PDF files are allowed for sample requirement upload.");
+
+            const long maxSizeBytes = 10 * 1024 * 1024;
+            if (file.Length > maxSizeBytes)
+                return (false, false, string.Empty, string.Empty, "Sample requirement PDF must be 10 MB or smaller.");
+
+            using var ms = new MemoryStream();
+            file.CopyTo(ms);
+            var bytes = ms.ToArray();
+
+            return (
+                true,
+                true,
+                Path.GetFileName(file.FileName),
+                Convert.ToBase64String(bytes),
+                string.Empty
+            );
         }
-        [HttpGet]
-        public IActionResult Archive()
-        {
-            var model = _recognitionRequestService.GetAll();
-
-            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(GetCurrentRecognitionMember());
-
-            return View("~/Views/member/Archive.cshtml", model);
-        }
-
-
-        [HttpGet]
-        public IActionResult RecognitionMemberDashboard()
-        {
-            var currentMember = GetCurrentRecognitionMember();
-
-            var assignedToCurrentMember = _recognitionRequestService
-                .GetAll()
-                .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
-
-            ViewBag.TotalRequests = assignedToCurrentMember.Count;
-            ViewBag.PendingCount = assignedToCurrentMember.Count(x =>
-                x.Status == "Pending" || x.Status == "Assigned");
-            ViewBag.ApprovedCount = assignedToCurrentMember.Count(x => x.Status == "Approved");
-            ViewBag.RejectedCount = assignedToCurrentMember.Count(x => x.Status == "Rejected");
-            ViewBag.MissingDocsCount = assignedToCurrentMember.Count(x => x.Status == "Missing Docs");
-
-            return View("~/Views/member/RecognitionMemberDashboard.cshtml", assignedToCurrentMember);
-        }
-
-        [HttpGet]
-        public IActionResult ElectronicRequests()
-        {
-            var currentMember = GetCurrentRecognitionMember();
-
-            var model = _recognitionRequestService
-                .GetAll()
-                .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
-
-            return View("~/Views/member/ElectronicRequests.cshtml", model);
-        }
-
-        [HttpGet]
-        public IActionResult DetailsBasicInfo(int? id)
-        {
-            if (id == null)
-                return RedirectToAction("ElectronicRequests");
-
-            var request = _recognitionRequestService.GetById(id.Value);
-            if (request == null)
-                return RedirectToAction("ElectronicRequests");
-
-            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
-
-            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!IsCurrentRecognitionMemberOwner(request))
-                    return RedirectToAction("ElectronicRequests");
-            }
-
-            return View("~/Views/member/DetailsBasicInfo.cshtml", request);
-        }
-
-        [HttpGet]
-        public IActionResult DetailsInfrastructure(int? id)
-        {
-            ViewBag.RequestId = id ?? 0;
-            ViewBag.InstitutionName = "University Request";
-            return View("~/Views/member/DetailsInfrastructure.cshtml");
-        }
-
-        [HttpGet]
-        public IActionResult DetailsRankings(int? id)
-        {
-            ViewBag.RequestId = id ?? 0;
-            ViewBag.InstitutionName = "University Request";
-            return View("~/Views/member/DetailsRankings.cshtml");
-        }
-
-        [HttpGet]
-        public IActionResult DetailsRecommendation(int? id)
-        {
-            ViewBag.RequestId = id ?? 0;
-            ViewBag.InstitutionName = "University Request";
-            return View("~/Views/member/DetailsRecommendation.cshtml");
-        }
-
-        [HttpGet]
-        public IActionResult DetailsStatistics(int? id)
-        {
-            ViewBag.RequestId = id ?? 0;
-            ViewBag.InstitutionName = "University Request";
-            return View("~/Views/member/DetailsStatistics.cshtml");
-        }
-
-        /// ///////////////////////////////////////////////////////////////////////////////////////////
-        ///  /// ///////////////////////////////////////////////////////////////////////////////////////////
-        ///  DataFLowwwww
-        ///   /// ///////////////////////////////////////////////////////////////////////////////////////////
-        ///   /// ///////////////////////////////////////////////////////////////////////////////////////////
-        ///   /// /////////////////////////////////////////////////////////////////////////////////////////// 
-        ///   
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult AssignToMember(int id, string assignedMember)
-        {
-            if (id <= 0)
-                return RedirectToAction("AdminDashboard");
-
-            var normalizedMember = NormalizeRecognitionMemberIdentity(assignedMember);
-            var valueToStore = string.IsNullOrWhiteSpace(normalizedMember) ? "Unassigned" : normalizedMember;
-
-            _recognitionRequestService.AssignMember(id, valueToStore);
-
-            return RedirectToAction("AdminDashboard");
-        }
-
-
-
-
-
-
-
-
-
-
-
     }
 }

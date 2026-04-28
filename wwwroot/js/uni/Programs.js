@@ -104,7 +104,7 @@
         const fail = (msg, fieldId) => ({ msg, fieldId });
 
         if (!v("prg_program")) return fail("Program is required", "prg_program");
-        if (!v("prg_faculty")) return fail("Faculty is required", "prg_faculty");
+        if (!v("prg_faculty")) return fail("College is required", "prg_faculty");
         if (!v("prg_degree")) return fail("Degree Awarded is required", "prg_degree");
         if (!v("prg_system")) return fail("Educational System is required", "prg_system");
         if (!v("prg_lang")) return fail("Language is required", "prg_lang");
@@ -130,17 +130,6 @@
     async function refreshDependents() {
         if (typeof refreshStudentsNumbersNoJump === "function") {
             await refreshStudentsNumbersNoJump();
-        }
-        if (typeof window.refreshHoursNoJump === "function") {
-            await window.refreshHoursNoJump();
-        }
-        // ✅ NEW: refresh Teaching Staff dropdown/table
-        if (typeof window.refreshTeachingStaffNoJump === "function") {
-            await window.refreshTeachingStaffNoJump();
-        } 
-        // ✅ refresh PhD Holders dropdown/table
-        if (typeof window.refreshPhdHoldersNoJump === "function") {
-            await window.refreshPhdHoldersNoJump();
         }
     }
 

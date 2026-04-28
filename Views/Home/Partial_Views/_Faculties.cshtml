@@ -2,7 +2,7 @@
 @using System.Linq
 
 <div class="fac-wrap">
-    <div class="fac-titlebar">Faculties List</div>
+    <div class="fac-titlebar">Colleges List</div>
 
     <div class="fac-body">
 
@@ -17,8 +17,35 @@
         <input type="hidden" id="fac_editId" value="" />
 
         <div class="fac-add">
-            <input id="fac_name" class="fac-input" type="text" placeholder="Enter faculty name..." />
-            <button type="button" class="btn-primary" data-fac-add id="fac_btnAdd">Add</button>
+            <div class="fac-field fac-field-name">
+                <label for="fac_name">College Name</label>
+                <input id="fac_name" class="fac-input" type="text" placeholder="Enter college name..." />
+            </div>
+
+            <div class="fac-field fac-field-type">
+                <label for="fac_type">College Type</label>
+                <select id="fac_type" class="fac-input">
+                    <option value="">-- Choose --</option>
+                    @if (Model?.AvailableCollegeCategories != null && Model.AvailableCollegeCategories.Any())
+                    {
+                        foreach (var cat in Model.AvailableCollegeCategories)
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    }
+                    else
+                    {
+                        <option value="" disabled>(Select categories in Academic Info)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="fac-field fac-field-students">
+                <label for="fac_studentsCount">Number of Students</label>
+                <input id="fac_studentsCount" class="fac-input" type="number" min="0" placeholder="e.g., 1200" />
+            </div>
+
+            <button type="button" class="btn-primary fac-add-btn" data-fac-add id="fac_btnAdd">Add</button>
         </div>
 
         <div class="fac-table-scroll">
@@ -26,7 +53,9 @@
                 <thead>
                     <tr>
                         <th style="width:80px;">#</th>
-                        <th>Faculty Name</th>
+                        <th>College Name</th>
+                        <th>College Type</th>
+                        <th>Number of Students</th>
                         <th style="width:160px; text-align:center;">Action</th>
                     </tr>
                 </thead>
@@ -40,6 +69,8 @@
                             <tr>
                                 <td class="fac-num">@i</td>
                                 <td class="fac-name">@r.FacultyName</td>
+                                <td>@(string.IsNullOrWhiteSpace(r.CollegeType) ? "—" : r.CollegeType)</td>
+                                <td>@(r.StudentsCount?.ToString() ?? "—")</td>
                                 <td class="fac-action">
                                     <div class="icon-actions">
                                         <!-- EDIT (professional icon button) -->
@@ -49,7 +80,9 @@
                                                 aria-label="Edit"
                                                 data-fac-edit
                                                 data-id="@r.Id"
-                                                data-name="@r.FacultyName">
+                                                data-name="@r.FacultyName"
+                                                data-type="@r.CollegeType"
+                                                data-students="@(r.StudentsCount?.ToString() ?? "")">
                                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                                 <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.83H5v-.92l9.06-9.06.92.92L5.92 20.08zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                                             </svg>
@@ -73,7 +106,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="3" class="fac-empty">No faculties added yet.</td>
+                            <td colspan="5" class="fac-empty">No colleges added yet.</td>
                         </tr>
                     }
                 </tbody>

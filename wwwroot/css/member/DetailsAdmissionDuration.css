@@ -1,0 +1,113 @@
+@import url("./DetailsBasicInfo.css");
+
+.adm-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.adm-card {
+    border: 1px solid #e7dfd7;
+    border-radius: 14px;
+    background: #fff;
+    padding: 14px;
+    box-shadow: 0 6px 18px rgba(17, 24, 39, .05);
+}
+
+.adm-card h3 {
+    margin: 0 0 10px;
+    color: #7a2d2a;
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.adm-file-meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 700;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.adm-file-row {
+    margin-top: 8px;
+    border: 1px solid #e7dfd7;
+    border-radius: 12px;
+    background: #faf7f3;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.adm-file-name {
+    color: #334155;
+    font-size: 13px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.adm-file-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.adm-file-empty {
+    margin-top: 8px;
+    border: 1px dashed #d9cec3;
+    border-radius: 12px;
+    background: #fcfaf8;
+    color: #8b6f57;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 10px 12px;
+}
+
+.adm-file-meta a {
+    text-decoration: none;
+    font-weight: 800;
+}
+
+.adm-note {
+    margin-top: 12px;
+    border: 1px solid #dbe2ea;
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.adm-saved {
+    border: 1px solid rgba(21, 128, 61, .25);
+    background: rgba(21, 128, 61, .08);
+    color: #14532d;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.adm-error {
+    border: 1px solid rgba(153, 27, 27, .25);
+    background: rgba(153, 27, 27, .08);
+    color: #7f1d1d;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 980px) {
+    .adm-grid {
+        grid-template-columns: 1fr;
+    }
+}

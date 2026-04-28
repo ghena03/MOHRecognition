@@ -31,15 +31,13 @@
         return {
             ApplicantName: document.getElementById("subapp_name")?.value?.trim() || "",
             WorkPlace: document.getElementById("subapp_workplace")?.value?.trim() || "",
-            Email: document.getElementById("subapp_email")?.value?.trim() || "",
             IsAcknowledged: document.getElementById("subapp_ack")?.checked || false
         };
     }
 
     function validate(data) {
         return data.ApplicantName !== "" &&
-            data.WorkPlace !== "" &&
-            data.Email !== "";
+            data.WorkPlace !== "";
     }
 
     function bindSubmitButton() {
@@ -74,7 +72,6 @@
                     body: new URLSearchParams({
                         ApplicantName: data.ApplicantName,
                         WorkPlace: data.WorkPlace,
-                        Email: data.Email,
                         IsAcknowledged: data.IsAcknowledged
                     }).toString()
                 });

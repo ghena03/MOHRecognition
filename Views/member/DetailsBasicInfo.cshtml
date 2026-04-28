@@ -3,6 +3,22 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Basic Information";
+    var p = Model.PublicInfo ?? new DTOs.PublicInfoDto();
+    var a = Model.AcademicInfo ?? new DTOs.AcademicInfoDto();
+
+    var degrees = new List<string>();
+    if (a.DegreeDiploma) degrees.Add("Diploma");
+    if (a.DegreeBSC) degrees.Add("Bachelor");
+    if (a.DegreeHigherDiploma) degrees.Add("Higher Diploma");
+    if (a.DegreeMaster) degrees.Add("Master");
+    if (a.DegreePhD) degrees.Add("PhD");
+
+    var systems = new List<string>();
+    if (a.SystemYearlyProgram) systems.Add("Yearly Program");
+    if (a.SystemSemesterProgram) systems.Add("Semester Program");
+    if (a.SystemCreditHours) systems.Add("Credit Hours");
+    if (a.SystemECTS) systems.Add("ECTS");
+
 }
 
 <!doctype html>
@@ -66,58 +82,122 @@
                 <div>
                     <h1>Request Details</h1>
                     <p class="rd-inst">Institution: <b>@Model.UniversityName</b></p>
-                    <p>Step 1 of 5 — Basic Information.</p>
+                    <p>Step 1 of 7 — Institution Basic Information.</p>
                 </div>
 
                 <div class="rd-meta">
                     <div class="meta-pill"><span>Request ID</span><b>#@Model.Id</b></div>
                     <div class="meta-pill"><span>Reference</span><b>@Model.ReferenceNumber</b></div>
+                    <div class="meta-pill"><span>Step</span><b>1 / 7</b></div>
                 </div>
             </section>
 
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2>Institution Basic Info</h2>
-                    <p>General information from the submitted university request.</p>
+                    <h2>Institution Information Review</h2>
+                    <p>Submitted data for professional evaluation.</p>
                 </div>
 
-                <div class="rd-grid4">
-                    <div class="rd-field">
-                        <label>Country</label>
-                        <input type="text" value="@Model.Country" readonly />
-                    </div>
-                    <div class="rd-field">
-                        <label>Institution Name</label>
-                        <input type="text" value="@Model.UniversityName" readonly />
-                    </div>
-                    <div class="rd-field">
-                        <label>Website</label>
-                        <input type="text" value="@Model.PublicInfo.InstitutionalWebAddress" readonly />
-                    </div>
-                    <div class="rd-field">
-                        <label>Institution Type</label>
-                        <input type="text" value="@Model.AcademicInfo.TypeOfAcademicInstitution" readonly />
+                <!-- Essential Fields Section -->
+                <div class="info-section">
+                    <div class="section-title">Location & Contact Information</div>
+                    <div class="rd-grid4">
+                        <div class="rd-field">
+                            <label>Institution Name</label>
+                            <input type="text" value="@p.InstitutionName" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Country</label>
+                            <input type="text" value="@Model.Country" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>City</label>
+                            <input type="text" value="@p.City" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Address</label>
+                            <input type="text" value="@p.MailingFullAddress" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Website</label>
+                            <input type="text" value="@p.InstitutionalWebAddress" readonly />
+                        </div>
                     </div>
                 </div>
 
-                <div class="rd-grid4" style="margin-top:18px;">
-                    <div class="rd-field">
-                        <label>University Email</label>
-                        <input type="text" value="@Model.UniversityEmail" readonly />
-                    </div>
-                    <div class="rd-field">
-                        <label>Applicant Name</label>
-                        <input type="text" value="@Model.ApplicantName" readonly />
-                    </div>
-                    <div class="rd-field">
-                        <label>Work Place</label>
-                        <input type="text" value="@Model.WorkPlace" readonly />
-                    </div>
-                    <div class="rd-field">
-                        <label>Applicant Email</label>
-                        <input type="text" value="@Model.ApplicantEmail" readonly />
+                <!-- Important Dates Section -->
+                <div class="info-section" style="margin-top:18px;">
+                    <div class="section-title">Key Dates</div>
+                    <div class="rd-grid3">
+                        <div class="rd-field">
+                            <label>Founding Date</label>
+                            <input type="text" value="@p.FoundationDate" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Date of Establishment</label>
+                            <input type="text" value="@p.DateOfEstablishment" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Start of Teaching</label>
+                            <input type="text" value="@p.StartOfTeaching" readonly />
+                        </div>
                     </div>
                 </div>
+
+                <!-- Institution Details Section -->
+                <div class="info-section" style="margin-top:18px;">
+                    <div class="section-title">Institution Profile</div>
+                    <div class="rd-grid2">
+                        <div class="rd-field">
+                            <label>Institution Type</label>
+                            <input type="text" value="@a.TypeOfAcademicInstitution" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Language of Instruction</label>
+                            <input type="text" value="@p.LanguageOfInstruction" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Education & Degrees Section -->
+                <div class="info-section" style="margin-top:18px;">
+                    <div class="section-title">Education & Degrees</div>
+                    
+                    <div class="info-block">
+                        <label class="block-title">Degrees Offered</label>
+                        <div class="chip-list">
+                            @if (degrees.Any())
+                            {
+                                @foreach (var d in degrees)
+                                {
+                                    <span class="chip">@d</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="chip muted">No degrees submitted</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="info-block" style="margin-top:12px;">
+                        <label class="block-title">Educational System in Effect</label>
+                        <div class="chip-list">
+                            @if (systems.Any())
+                            {
+                                @foreach (var s in systems)
+                                {
+                                    <span class="chip">@s</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="chip muted">No system submitted</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
             </section>
 
             <section class="rm-card rd-actions">
@@ -128,7 +208,6 @@
                 </div>
                 <div class="rd-actions-right">
                     <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsStatistics", "Home", new { id = Model.Id })">Next</a>
-                    <button class="rm-btn rm-btn-primary" type="button"><i class="bi bi-save"></i> Save</button>
                 </div>
             </section>
         </main>

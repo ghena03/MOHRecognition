@@ -2,11 +2,9 @@
 @{
     Layout = null;
 
-    // Countries loaded in controller via ViewBag
-    var countries = ViewBag.Countries as List<string> ?? new List<string>();
-
     // optional error message (if you want later)
     var error = ViewBag.ErrorMessage as string ?? "";
+    var countries = ViewBag.Countries as List<string> ?? new List<string>();
 }
 
 <!doctype html>
@@ -60,13 +58,26 @@
                     <!-- Country -->
                     <div class="row">
                         <span class="icon"><i class="fa-solid fa-earth-americas"></i></span>
-                        <select name="Country" required>
+                        <select name="Country" id="CountrySelect" required>
                             <option value="" disabled selected>Country</option>
                             @foreach (var c in countries)
                             {
                                 <option value="@c">@c</option>
                             }
                         </select>
+                    </div>
+
+                    <!-- City -->
+                    <div class="row">
+                        <span class="icon"><i class="fa-solid fa-city"></i></span>
+                        <select name="City" id="CitySelect" required>
+                            <option value="" disabled selected>City</option>
+                        </select>
+                    </div>
+
+                    <div class="row" id="OtherCityWrap" style="display:none;">
+                        <span class="icon"><i class="fa-solid fa-city"></i></span>
+                        <input type="text" name="CityOther" id="CityOther" placeholder="Other City" />
                     </div>
 
                     <!-- Email -->
@@ -116,5 +127,7 @@
 
         </div>
     </div>
+
+    <script src="~/js/uni/CitySelect.js" asp-append-version="true"></script>
 </body>
 </html>

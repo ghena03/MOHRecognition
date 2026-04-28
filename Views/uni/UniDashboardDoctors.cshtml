@@ -1,0 +1,95 @@
+@model DTOs.MedicineDentistryDto
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Doctors / Medicine Colleges</title>
+    <link rel="stylesheet" href="~/css/uni/UniDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/uni/UniDashboardDoctors.css" asp-append-version="true" />
+</head>
+<body class="submitapp-page ltr">
+    <header class="top-header en">
+        <div class="hdr-grid">
+            <div class="hdr-lang"></div>
+
+            <nav class="hdr-nav">
+                <a class="hdr-link" href="@Url.Action("UniDashboard", "Home")">← Back to Application</a>
+                <a class="hdr-link" href="https://www.mohe.gov.jo/" target="_blank" rel="noopener">Ministry Website</a>
+                <a class="hdr-link" href="@Url.Action("UniStatus", "Home")">Status</a>
+            </nav>
+
+            <div class="hdr-logo">
+                <a href="https://www.mohe.gov.jo/" target="_blank" rel="noopener">
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+                </a>
+            </div>
+        </div>
+        <div class="brand-bar"></div>
+    </header>
+
+    <div class="layout doctors-page-layout">
+        <aside class="sidebar doctors-step-side">
+            <a href="@Url.Action("UniStatus", "Home")" class="side-user">
+                <div class="user-avatar">UN</div>
+                <div class="user-info">
+                    <span class="user-name">University Account</span>
+                    <span class="user-link">Submission Flow</span>
+                </div>
+            </a>
+
+            <div class="doctors-step-list">
+                <a class="doctors-step-item" href="@Url.Action("UniDashboard", "Home")#sec-general"><span>1</span><b>Public Info</b></a>
+                <a class="doctors-step-item" href="@Url.Action("UniDashboard", "Home")#sec-academic"><span>2</span><b>Academic Info</b></a>
+                <a class="doctors-step-item" href="@Url.Action("UniDashboard", "Home")#sec-admission-duration"><span>3</span><b>Admission & Study Duration</b></a>
+                <div class="doctors-step-item active"><span>4</span><b>Doctors / Medicine Colleges</b></div>
+                <a class="doctors-step-item" href="@Url.Action("UniDashboard", "Home")#sec-academic"><span>5</span><b>Research & Global Rankings</b></a>
+                <a class="doctors-step-item" href="@Url.Action("UniDashboard", "Home")#sec-infra"><span>6</span><b>Infrastructure & Finish</b></a>
+            </div>
+
+            <div class="side-footer">
+                <a class="logout" href="@Url.Action("Logout", "Home")">Logout</a>
+            </div>
+        </aside>
+
+        <main class="content doctors-main">
+            <section class="card doctors-head-card">
+                <div class="card-bd doctors-head-grid">
+                    <div>
+                        <h2>Request Details</h2>
+                        <p class="doctors-head-sub">Step 4 of 6 — Doctors / Medicine Colleges</p>
+                    </div>
+                    <div class="doctors-meta">
+                        <div class="doctors-meta-pill"><span>Step</span><b>4 / 6</b></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-bd">
+                    <div id="medDenContainer"
+                         data-partial-url="@Url.Action("MedicineDentistryPartial", "Home")"
+                         data-save-url="@Url.Action("MedicineDentistrySave", "Home")">
+                        @await Html.PartialAsync("Partial_Views/_MedicineDentistry", Model)
+                    </div>
+                </div>
+            </section>
+
+            <section class="card doctors-nav-card">
+                <div class="card-bd doctors-nav-actions">
+                    <a class="btn-ghost" href="@Url.Action("UniDashboard", "Home")#sec-admission-duration">Previous Step</a>
+                    <a class="btn-primary" href="@Url.Action("UniDashboard", "Home")#sec-academic">Next Step</a>
+                </div>
+            </section>
+
+            <footer class="foot">© Ministry of Higher Education</footer>
+        </main>
+    </div>
+
+    <script src="~/js/uni/MedicineDentistry.js" asp-append-version="true"></script>
+</body>
+</html>

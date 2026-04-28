@@ -27,12 +27,8 @@
         banner.style.display = "flex";
     }
 
-    function getFileInput() {
-        return document.getElementById("att_file");
-    }
-
-    function getSubjectInput() {
-        return document.getElementById("att_subject");
+    function getFileInputById(inputId) {
+        return document.getElementById(inputId);
     }
 
     async function loadPartial(showMessage = false, message = "", isError = false) {
@@ -53,20 +49,23 @@
         }
     }
 
-    window.AttachmentUpload = async function () {
-        const fileInput = getFileInput();
-        const subjectInput = getSubjectInput();
+    window.AttachmentUploadCategory = async function (subject, fileInputId) {
+        const fileInput = getFileInputById(fileInputId);
+        const files = Array.from(fileInput?.files || []);
 
-        const file = fileInput?.files?.[0];
-        const subject = subjectInput?.value?.trim() || "";
-
-        if (!file) {
-            showBanner("Please choose a file.", true);
+        if (!subject) {
+            showBanner("Attachment category is missing.", true);
             return;
         }
 
-        if (!subject) {
-            showBanner("Please select the document type.", true);
+        if (!files.length) {
+            showBanner("Please choose one or more PDF files.", true);
+            return;
+        }
+
+        const nonPdf = files.find(f => !(f.name || "").toLowerCase().endsWith(".pdf"));
+        if (nonPdf) {
+            showBanner("Only PDF files are allowed in Attachments section.", true);
             return;
         }
 
@@ -76,24 +75,25 @@
             return;
         }
 
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("subject", subject);
-
         try {
-            const res = await fetch(url, {
-                method: "POST",
-                body: formData
-            });
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("subject", subject);
 
-            const html = await res.text();
-            render(html);
+                const res = await fetch(url, {
+                    method: "POST",
+                    body: formData
+                });
 
-            if (res.ok) {
-                showBanner("Attachment uploaded successfully.", false);
-            } else {
-                showBanner(html || "Upload failed.", true);
+                if (!res.ok) {
+                    const errText = await res.text();
+                    showBanner(errText || "Upload failed.", true);
+                    return;
+                }
             }
+
+            await loadPartial(true, "Files uploaded successfully.", false);
         } catch (err) {
             console.error(err);
             showBanner("An unexpected error happened while uploading.", true);

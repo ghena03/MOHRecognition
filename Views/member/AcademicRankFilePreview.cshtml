@@ -1,0 +1,172 @@
+@{
+    Layout = null;
+    var requestId = (int)(ViewBag.RequestId ?? 0);
+    var rankTitle = (string)(ViewBag.RankTitle ?? "Academic Rank");
+    var employmentType = (string)(ViewBag.EmploymentType ?? "");
+    var fileName = (string)(ViewBag.FileName ?? "Uploaded file");
+    var headers = ViewBag.Headers as List<string> ?? new List<string>();
+    var rows = ViewBag.Rows as List<List<string>> ?? new List<List<string>>();
+    var rankKey = (string)(Context.Request.Query["rankKey"].ToString() ?? "");
+    var employmentKey = (string)(Context.Request.Query["employmentType"].ToString() ?? "");
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Excel Preview - @rankTitle (@employmentType)</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .head {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .head h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .meta {
+            font-size: 14px;
+            color: #4b5563;
+            margin-top: 4px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            text-decoration: none;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            background: #f8fafc;
+        }
+
+        .btn:hover {
+            background: #f1f5f9;
+        }
+
+        .table-wrap {
+            overflow: auto;
+            max-height: calc(100vh - 180px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th, td {
+            border-bottom: 1px solid #e5e7eb;
+            border-right: 1px solid #f1f5f9;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f8fafc;
+            font-weight: 800;
+        }
+
+        .empty {
+            padding: 20px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <div class="head">
+                <div>
+                    <h1>@rankTitle - @employmentType</h1>
+                    <div class="meta">Request #@requestId · @fileName</div>
+                </div>
+                <div class="actions">
+                    <a class="btn" href="@Url.Action("DownloadAcademicRankStaffFile", "Home", new { id = requestId, rankKey = rankKey, employmentType = employmentKey })" target="_blank" rel="noopener">Download File</a>
+                </div>
+            </div>
+
+            @if (headers.Any())
+            {
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                @foreach (var h in headers)
+                                {
+                                    <th>@h</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (rows.Any())
+                            {
+                                @foreach (var row in rows)
+                                {
+                                    <tr>
+                                        @for (var i = 0; i < headers.Count; i++)
+                                        {
+                                            var cell = i < row.Count ? row[i] : "";
+                                            <td>@cell</td>
+                                        }
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="@headers.Count" class="empty">No data rows found in this worksheet.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty">No readable data found in this Excel file.</div>
+            }
+        </div>
+    </div>
+</body>
+</html>

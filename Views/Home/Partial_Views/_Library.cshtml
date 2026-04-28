@@ -11,53 +11,19 @@
         <button type="button" class="x" onclick="document.getElementById('libBanner').style.display='none'">×</button>
     </div>
 
-    <div class="lib-table-wrap" style="margin-top:14px;">
-        <table class="table lib-table">
-            <tbody>
-                <tr>
-                    <th style="width:70%;">Area (m2) <span class="req">*</span></th>
-                    <td>
-                        <input id="lib_area" type="number" min="0" value="@(Model?.Area?.ToString() ?? "")" />
-                    </td>
-                </tr>
-                <tr>
-                    <th>Total Student Capacity <span class="req">*</span></th>
-                    <td>
-                        <input id="lib_capacity" type="number" min="0" value="@(Model?.TotalStudentCapacity?.ToString() ?? "")" />
-                    </td>
-                </tr>
-                <tr>
-                    <th>Number of Arabic Books (for non-Arabic Institutions) <span class="req">*</span></th>
-                    <td>
-                        <input id="lib_arabicBooks" type="number" min="0" value="@(Model?.NumberOfArabicBooks?.ToString() ?? "")" />
-                    </td>
-                </tr>
-                <tr>
-                    <th>Number of English Books (for non-Arabic Institutions) <span class="req">*</span></th>
-                    <td>
-                        <input id="lib_englishBooks" type="number" min="0" value="@(Model?.NumberOfEnglishBooks?.ToString() ?? "")" />
-                    </td>
-                </tr>
-                <tr>
-                    <th>Number of Paper Journals <span class="req">*</span></th>
-                    <td>
-                        <input id="lib_paperJournals" type="number" min="0" value="@(Model?.NumberOfPaperJournals?.ToString() ?? "")" />
-                    </td>
-                </tr>
-                <tr>
-                    <th>Number of Electronic Books <span class="req">*</span></th>
-                    <td>
-                        <input id="lib_electronicBooks" type="number" min="0" value="@(Model?.NumberOfElectronicBooks?.ToString() ?? "")" />
-                    </td>
-                </tr>
-                <tr>
-                    <th>Number of Electronic Journals <span class="req">*</span></th>
-                    <td>
-                        <input id="lib_electronicJournals" type="number" min="0" value="@(Model?.NumberOfElectronicJournals?.ToString() ?? "")" />
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="library-note-box" style="margin-top:12px;">
+        <div class="library-note-title">Library Resources Profile</div>
+        <div class="library-note-text">Provide current quantitative indicators for physical and digital library resources.</div>
+    </div>
+
+    <div class="lib-modern-grid" style="margin-top:14px;">
+        <div class="lib-field-card"><label>Area (m2) <span class="req">*</span></label><input id="lib_area" type="number" min="0" value="@(Model?.Area?.ToString() ?? "")" /></div>
+        <div class="lib-field-card"><label>Total Student Capacity <span class="req">*</span></label><input id="lib_capacity" type="number" min="0" value="@(Model?.TotalStudentCapacity?.ToString() ?? "")" /></div>
+        <div class="lib-field-card"><label>Number of Arabic Books (for non-Arabic Institutions) <span class="req">*</span></label><input id="lib_arabicBooks" type="number" min="0" value="@(Model?.NumberOfArabicBooks?.ToString() ?? "")" /></div>
+        <div class="lib-field-card"><label>Number of English Books (for non-Arabic Institutions) <span class="req">*</span></label><input id="lib_englishBooks" type="number" min="0" value="@(Model?.NumberOfEnglishBooks?.ToString() ?? "")" /></div>
+        <div class="lib-field-card"><label>Number of Paper Journals <span class="req">*</span></label><input id="lib_paperJournals" type="number" min="0" value="@(Model?.NumberOfPaperJournals?.ToString() ?? "")" /></div>
+        <div class="lib-field-card"><label>Number of Electronic Books <span class="req">*</span></label><input id="lib_electronicBooks" type="number" min="0" value="@(Model?.NumberOfElectronicBooks?.ToString() ?? "")" /></div>
+        <div class="lib-field-card"><label>Number of Electronic Journals <span class="req">*</span></label><input id="lib_electronicJournals" type="number" min="0" value="@(Model?.NumberOfElectronicJournals?.ToString() ?? "")" /></div>
     </div>
 
     <div style="display:flex; justify-content:center; margin-top:18px;">

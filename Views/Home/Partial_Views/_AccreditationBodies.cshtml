@@ -1,0 +1,116 @@
+@model DTOs.AccreditationBodiesDto
+@using System.Linq
+
+<div class="accb-wrap">
+    <div id="accBodiesBanner" class="banner warn" style="display:none; margin-bottom:14px;">
+        <span class="dot"></span>
+        <span class="txt"></span>
+        <button type="button" class="x" onclick="document.getElementById('accBodiesBanner').style.display='none'">×</button>
+    </div>
+
+    <input type="hidden" id="accb_editId" value="" />
+
+    <div class="accb-info-banner">
+        <span class="accb-info-icon">i</span>
+        <span>All uploaded documents must be in English.</span>
+    </div>
+
+    <div class="accb-form-grid">
+        <div class="field">
+            <label>Accreditation Body Name <span class="req">*</span></label>
+            <input id="accb_bodyName" type="text" placeholder="Enter accreditation body name" />
+        </div>
+
+        <div class="field">
+            <label>Accreditation Type <span class="req">*</span></label>
+            <select id="accb_type">
+                <option value="">-- Choose --</option>
+                <option value="Local">Local</option>
+                <option value="International">International</option>
+                <option value="Regional">Regional</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>PDF File Upload <span class="req">*</span></label>
+            <input id="accb_pdf" type="file" accept=".pdf,application/pdf" />
+            <div class="file-note" id="accb_pdf_note">One PDF file is required for each accreditation body row.</div>
+        </div>
+    </div>
+
+    <div class="actions accb-actions">
+        <button type="button" class="btn-primary" id="accb_addBtn">Add</button>
+        <button type="button" class="btn-ghost" id="accb_cancelBtn" style="display:none;">Cancel</button>
+    </div>
+
+    <div class="accb-table-wrap">
+        <table class="accb-table">
+            <thead>
+                <tr>
+                    <th style="width:60px;">#</th>
+                    <th>Accreditation Body</th>
+                    <th>Type</th>
+                    <th>Uploaded PDF</th>
+                    <th style="width:140px; text-align:center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model?.Rows == null || !Model.Rows.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="accb-empty">No accreditation bodies added yet.</td>
+                    </tr>
+                }
+                else
+                {
+                    var i = 1;
+                    foreach (var r in Model.Rows)
+                    {
+                        <tr>
+                            <td class="accb-num">@i</td>
+                            <td class="accb-body">@r.AccreditationBodyName</td>
+                            <td>@r.AccreditationType</td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(r.PdfFileUrl))
+                                {
+                                    <a class="accb-file-link" href="@r.PdfFileUrl" target="_blank">@r.PdfOriginalFileName</a>
+                                }
+                                else
+                                {
+                                    <span class="accb-empty-file">No file</span>
+                                }
+                            </td>
+                            <td style="text-align:center;">
+                                <div class="icon-actions">
+                                    <button type="button"
+                                            class="iconbtn iconbtn-edit"
+                                            data-accb-edit
+                                            data-id="@r.Id"
+                                            data-body="@r.AccreditationBodyName"
+                                            data-type="@r.AccreditationType"
+                                            title="Edit"
+                                            aria-label="Edit">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                            <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.83H5v-.92l9.06-9.06.92.92L5.92 20.08zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" />
+                                        </svg>
+                                    </button>
+
+                                    <button type="button"
+                                            class="iconbtn iconbtn-del"
+                                            data-accb-del
+                                            data-id="@r.Id"
+                                            title="Delete"
+                                            aria-label="Delete">
+                                        ×
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -32,8 +32,6 @@
         const specialization = document.getElementById("hosp_specialization");
         const name = document.getElementById("hosp_name");
         const major = document.getElementById("hosp_major");
-        const recognitionFile = document.getElementById("hosp_recognitionFile");
-        const contractFile = document.getElementById("hosp_contractFile");
         const addBtn = document.getElementById("hosp_addBtn");
         const cancelBtn = document.getElementById("hosp_cancelBtn");
 
@@ -41,8 +39,6 @@
         if (specialization) specialization.value = "";
         if (name) name.value = "";
         if (major) major.value = "";
-        if (recognitionFile) recognitionFile.value = "";
-        if (contractFile) contractFile.value = "";
 
         if (addBtn) addBtn.textContent = "Add";
         if (cancelBtn) cancelBtn.style.display = "none";
@@ -86,35 +82,18 @@
         const specializationEl = document.getElementById("hosp_specialization");
         const nameEl = document.getElementById("hosp_name");
         const majorEl = document.getElementById("hosp_major");
-        const recognitionInput = document.getElementById("hosp_recognitionFile");
-        const contractInput = document.getElementById("hosp_contractFile");
 
         const editId = editIdEl ? editIdEl.value.trim() : "";
         const specialization = specializationEl ? specializationEl.value.trim() : "";
         const name = nameEl ? nameEl.value.trim() : "";
         const major = majorEl ? majorEl.value.trim() : "";
 
-        const recognitionFiles = Array.from(recognitionInput?.files || []);
-        const contractFiles = Array.from(contractInput?.files || []);
-
-        if (!specialization || !name || !major) {
+        if (!specialization || !name) {
             showBanner("Please fill all required fields.", true);
             return;
         }
 
         const isEdit = !!editId;
-
-        if (!isEdit) {
-            if (recognitionFiles.length === 0) {
-                showBanner("Please upload the hospital recognition/accreditation file.", true);
-                return;
-            }
-
-            if (contractFiles.length === 0) {
-                showBanner("Please upload the hospital training contract or supporting file.", true);
-                return;
-            }
-        }
 
         const url = isEdit
             ? getUrl("data-update-url")
@@ -130,14 +109,6 @@
         formData.append("Specialization", specialization);
         formData.append("Name", name);
         formData.append("Major", major);
-
-        for (const file of recognitionFiles) {
-            formData.append("RecognitionFiles", file);
-        }
-
-        for (const file of contractFiles) {
-            formData.append("ContractFiles", file);
-        }
 
         try {
             const res = await fetch(url, {
@@ -163,8 +134,6 @@
         const specialization = document.getElementById("hosp_specialization");
         const name = document.getElementById("hosp_name");
         const major = document.getElementById("hosp_major");
-        const recognitionFile = document.getElementById("hosp_recognitionFile");
-        const contractFile = document.getElementById("hosp_contractFile");
         const addBtn = document.getElementById("hosp_addBtn");
         const cancelBtn = document.getElementById("hosp_cancelBtn");
 
@@ -176,13 +145,67 @@
         if (specialization && rowSpecialization) specialization.value = rowSpecialization.value;
         if (name && rowName) name.value = rowName.value;
         if (major && rowMajor) major.value = rowMajor.value;
-        if (recognitionFile) recognitionFile.value = "";
-        if (contractFile) contractFile.value = "";
 
         if (addBtn) addBtn.textContent = "Update";
         if (cancelBtn) cancelBtn.style.display = "inline-block";
 
         location.hash = "#sec-hosp";
+    };
+
+    window.HospSaveContracts = async function () {
+        const input = document.getElementById("hosp_contracts_global");
+        const files = Array.from(input?.files || []);
+        if (!files.length) {
+            showBanner("Please choose one or more contracts/supporting files.", true);
+            return;
+        }
+
+        const url = getUrl("data-save-contracts-url");
+        if (!url) {
+            showBanner("Contracts upload URL is missing.", true);
+            return;
+        }
+
+        const formData = new FormData();
+        files.forEach(f => formData.append("files", f));
+
+        try {
+            const res = await fetch(url, { method: "POST", body: formData });
+            const data = await res.json();
+            if (data.success) {
+                await loadPartial(true, data.message, false, true);
+                location.hash = "#sec-hosp";
+            } else {
+                showBanner(data.message || "Upload failed.", true);
+            }
+        } catch {
+            showBanner("An error occurred while uploading contracts.", true);
+        }
+    };
+
+    window.HospDeleteContract = async function (storedFileName) {
+        const url = getUrl("data-delete-contract-url");
+        if (!url) {
+            showBanner("Contracts delete URL is missing.", true);
+            return;
+        }
+
+        try {
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(storedFileName)
+            });
+            const data = await res.json();
+            if (data.success) {
+                await loadPartial(true, data.message, false, true);
+                location.hash = "#sec-hosp";
+            } else {
+                showBanner(data.message || "Delete failed.", true);
+            }
+        } catch {
+            showBanner("An error occurred while deleting contract file.", true);
+        }
     };
 
     window.HospCancelEdit = function () {

@@ -20,15 +20,48 @@
 </head>
 
 <body class="afterlogin-page ltr">
+    <div class="video-bg">
+        <iframe src="https://www.youtube.com/embed/ELa-_CyRJis?autoplay=1&mute=1&loop=1&playlist=ELa-_CyRJis&controls=0&modestbranding=1"
+                frameborder="0"
+                allow="autoplay; fullscreen"
+                allowfullscreen>
+            <div class="video-overlay"></div>
+        </iframe>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const video = document.getElementById("bgVideo");
+            if (!video) return;
+
+            video.muted = true;
+
+            const tryPlay = () => {
+                video.play().catch(() => { });
+            };
+
+            tryPlay();
+
+            video.addEventListener("ended", function () {
+                video.currentTime = 0;
+                tryPlay();
+            });
+
+            video.addEventListener("canplay", tryPlay);
+        });
+    </script>
 
     <header class="top-header">
         <div class="hdr-grid">
-
             <div class="hdr-left"></div>
 
             <nav class="hdr-nav">
                 <a class="hdr-link" href="https://www.mohe.gov.jo/" target="_blank" rel="noopener">
                     Ministry Website
+                </a>
+                <a class="hdr-link" href="#portalSection">
+                    Status
                 </a>
                 <a class="hdr-link" href="#faqs">
                     FAQs
@@ -37,127 +70,194 @@
 
             <div class="hdr-logo">
                 <a href="https://www.mohe.gov.jo/" target="_blank" rel="noopener">
-                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+                    <img class="mohe-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
                 </a>
             </div>
-
         </div>
 
         <div class="brand-bar"></div>
     </header>
 
-    <main class="dash-wrap">
+    <main class="page-shell">
 
-        <aside class="dash-card steps-card">
-            <div class="card-hd">
-                <h2>Request Submission Steps</h2>
-                <p>Quick guide before you start.</p>
+        <!-- Hero -->
+        <section class="hero-section">
+            <div class="hero-chip">Ministry of Higher Education & Scientific Research</div>
+
+            <h1 class="hero-title">Recognition Request Portal</h1>
+
+            <p class="hero-text">
+                Submit your recognition request, review the required steps,
+                and track the progress of your application through your account.
+            </p>
+
+            <div class="hero-actions">
+                <a class="btn-primary" href="@Url.Action("UniDashboardDoctors", "Home")">
+                    Start Application
+                </a>
+                <a class="btn-secondary" href="#portalSection">
+                    Track Status
+                </a>
             </div>
-            <div class="card-bd">
-                <ol class="steps-list">
-                    <li>Review instructions</li>
-                    <li>Prepare required documents</li>
-                    <li>Submit the request</li>
-                    <li>Track request status</li>
-                    <li>Receive the decision</li>
-                </ol>
+        </section>
+
+        <!-- Main Professional Panel -->
+        <section id="portalSection" class="content-panel">
+
+            <!-- Summary Row -->
+            <div class="summary-row">
+                <div class="summary-box summary-wide">
+                    <span class="summary-label">Institution</span>
+                    <strong>@universityName</strong>
+                    <small>@universityEmail</small>
+                </div>
+
+                <div class="summary-box">
+                    <span class="summary-label">Account Type</span>
+                    <strong>Applicant</strong>
+                </div>
+
+                <div class="summary-box">
+                    <span class="summary-label">Current Status</span>
+                    <strong>@(hasRequest? statusText : "No Active Request")</strong>
+                </div>
             </div>
-        </aside>
 
-        @if (hasRequest)
-        {
-            <section class="dash-card center-card">
-                <div class="welcome-card">
-                    <div class="welcome-icon" aria-hidden="true">📄</div>
+            <!-- Main Area -->
+            <div class="portal-grid">
 
-                    <h1 class="welcome-title">You Have an Active Request</h1>
-
-                    <p class="welcome-text">
-                        You can track your request status here.
-                    </p>
-
-                    <div class="status-box">
-                        <div class="status-row">
-                            <span>Request Number:</span>
-                            <strong>@requestNumber</strong>
+                <!-- Status -->
+                <section class="main-status">
+                    @if (hasRequest)
+                    {
+                        <div class="section-head">
+                            <span class="section-kicker">Request Status</span>
+                            <h2>You Have an Active Request</h2>
+                            <p>You can review your request details and latest updates below.</p>
                         </div>
 
-                        <div class="status-row">
-                            <span>Submitted On:</span>
-                            <strong>@submittedOn</strong>
+                        <div class="status-card">
+                            <div class="status-item">
+                                <span>Request Number</span>
+                                <strong>@requestNumber</strong>
+                            </div>
+
+                            <div class="status-item">
+                                <span>Submitted On</span>
+                                <strong>@submittedOn</strong>
+                            </div>
+
+                            <div class="status-item">
+                                <span>Status</span>
+                                <span class="status-pill">@statusText</span>
+                            </div>
                         </div>
 
-                        <div class="status-row">
-                            <span>Status:</span>
-                            <span class="badge badge-pending">@statusText</span>
+                        <div class="actions-row">
+                            <a class="btn-primary" href="@Url.Action("UniDashboardDoctors", "Home")">
+                                Open Application
+                            </a>
+                        </div>
+
+                        <div class="info-note">
+                            Status will be updated automatically whenever there is a new change in your request.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="section-head">
+                            <span class="section-kicker">Request Status</span>
+                            <h2>No Active Requests at the Moment</h2>
+                            <p>
+                                You have not submitted any recognition request yet.
+                                Start a new application to begin the process.
+                            </p>
+                        </div>
+
+                        <div class="empty-card">
+                            <div class="empty-icon">📝</div>
+
+                            <div class="empty-details">
+                                <div class="empty-row">
+                                    <span>Current Status</span>
+                                    <strong>No Request Submitted</strong>
+                                </div>
+
+                                <div class="empty-row">
+                                    <span>Next Step</span>
+                                    <strong>Start a new application</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="actions-row">
+                            <a class="btn-primary" href="@Url.Action("UniDashboardDoctors", "Home")">
+                                Start Application
+                            </a>
+                        </div>
+
+                        <div class="info-note">
+                            After submitting the request, you can track its status and review the final decision through your account.
+                        </div>
+                    }
+                </section>
+
+                <!-- Steps -->
+                <aside class="steps-side">
+                    <div class="section-head side-head">
+                        <span class="section-kicker">Guide</span>
+                        <h2>Submission Steps</h2>
+                        <p>Follow these steps to complete your request correctly.</p>
+                    </div>
+
+                    <div class="steps-clean">
+                        <div class="clean-step">
+                            <div class="step-num">1</div>
+                            <div>
+                                <strong>Review instructions</strong>
+                                <span>Read the submission requirements before starting.</span>
+                            </div>
+                        </div>
+
+                        <div class="clean-step">
+                            <div class="step-num">2</div>
+                            <div>
+                                <strong>Prepare required documents</strong>
+                                <span>Collect all required files and information.</span>
+                            </div>
+                        </div>
+
+                        <div class="clean-step">
+                            <div class="step-num">3</div>
+                            <div>
+                                <strong>Submit the request</strong>
+                                <span>Complete the application and upload the documents.</span>
+                            </div>
+                        </div>
+
+                        <div class="clean-step">
+                            <div class="step-num">4</div>
+                            <div>
+                                <strong>Track request status</strong>
+                                <span>Monitor the request and review any updates.</span>
+                            </div>
+                        </div>
+
+                        <div class="clean-step">
+                            <div class="step-num">5</div>
+                            <div>
+                                <strong>Receive the decision</strong>
+                                <span>Review the final result once processing is complete.</span>
+                            </div>
                         </div>
                     </div>
+                </aside>
 
-                    <div class="actions">
-                        <a class="btn-primary" href="@Url.Action("UniDashboard", "Home")">
-                            Open Application
-                        </a>
-                    </div>
-
-                    <div class="muted">
-                        Status will be updated automatically when it changes.
-                    </div>
-                </div>
-            </section>
-        }
-        else
-        {
-            <section class="dash-card center-card">
-                <div class="welcome-card">
-                    <div class="welcome-icon" aria-hidden="true">📝</div>
-
-                    <h1 class="welcome-title">You have no requests at the moment</h1>
-
-                    <p class="welcome-text">
-                        You haven’t submitted any recognition request yet.
-                        <br />
-                        To get started, review the instructions and make sure your documents are ready, then
-                        <b>submit a new request through the system.</b>
-                    </p>
-
-                    <div class="actions">
-                        <a class="btn-primary" href="@Url.Action("UniDashboard", "Home")">
-                            Start Application
-                        </a>
-                    </div>
-
-                    <div class="muted">
-                        After submitting the request, you can track its status and view decisions through your account.
-                    </div>
-                </div>
-            </section>
-        }
-
-        <aside class="dash-card account-card">
-            <div class="card-hd">
-                <h2>Account</h2>
-                <p>Institution information.</p>
             </div>
+        </section>
 
-            <div class="card-bd">
-                <div class="acc-name">@universityName</div>
-                <div class="acc-email">@universityEmail</div>
-
-                <div class="acc-type">
-                    Account type: <span class="role">Applicant</span>
-                </div>
-
-                <div class="actions">
-                    <a class="btn-ghost" href="@Url.Action("UniDashboard", "Home")">
-                        Open Application
-                    </a>
-                </div>
-            </div>
-        </aside>
-
+        <div id="faqs"></div>
     </main>
-
-    <div id="faqs"></div>
 
 </body>
 </html>

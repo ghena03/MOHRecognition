@@ -1,0 +1,244 @@
+@model MOHRecognition.Services.RecognitionRequestRecord
+@using System.Linq
+@{
+    Layout = null;
+    ViewData["Title"] = "Request Details - Academic Info";
+    var requestId = ViewBag.RequestId ?? Model?.Id ?? 0;
+    var inst = ViewBag.InstitutionName ?? Model?.UniversityName ?? "—";
+    var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
+
+    string YesNo(bool value) => value ? "Yes" : "No";
+    var teachingMethods = (A.TeachingMethodsCsv ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
+    var assessmentMethods = (A.AssessmentMethodsCsv ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
+    var platforms = (A.PlatformsCsv ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
+    var eAssessmentMethods = (A.EAssessmentMethodsCsv ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
+    var studyPlanRows = Model?.StudyPlanComplianceRows ?? new List<DTOs.StudyPlanComplianceRowDto>();
+    var programs = Model?.Programs ?? new List<DTOs.ProgramRowDto>();
+    var attachments = Model?.Attachments?.Rows ?? new List<DTOs.AttachmentRowDto>();
+    var medDen = Model?.MedicineDentistry ?? new DTOs.MedicineDentistryDto();
+
+    int NV(int? v) => v ?? 0;
+
+    bool RowCompliant(DTOs.StudyPlanComplianceRowDto r)
+    {
+        var totalPlanHours = r.UniversityRequirementsHours + r.FacultyRequirementsHours + r.SpecializationRequirementsHours;
+        var p = programs.FirstOrDefault(x => x.Id == r.ProgramId);
+        var hasProgram = p != null;
+        var creditMatch = !hasProgram || p!.CreditHours <= 0 || totalPlanHours == p.CreditHours;
+        var uniValid = r.UniversityRequirementsHours >= 21 && r.UniversityRequirementsHours <= 27;
+        var facValid = totalPlanHours > 0 && r.FacultyRequirementsHours <= Math.Floor(totalPlanHours * 0.15m);
+        var specValid = totalPlanHours > 0 && r.SpecializationRequirementsHours >= Math.Ceiling(totalPlanHours * 0.60m);
+        var splitValid = (r.SpecializationTheoreticalPercent + r.SpecializationPracticalPercent) == 100
+                         && r.SpecializationTheoreticalPercent >= 40 && r.SpecializationTheoreticalPercent <= 50
+                         && r.SpecializationPracticalPercent >= 50 && r.SpecializationPracticalPercent <= 60;
+        var domainsValid = r.BasicDomainsCount >= 4;
+        var trainingValid = r.PracticalTrainingMonths >= 3;
+        var projectValid = r.GraduationProjectHours >= 3;
+
+        return uniValid && facValid && specValid && splitValid && domainsValid && trainingValid && projectValid && creditMatch;
+    }
+
+    var studyPlanOkCount = studyPlanRows.Count(RowCompliant);
+    var studyPlanLevel = studyPlanRows.Count == 0 ? 2 : (studyPlanOkCount == studyPlanRows.Count ? 0 : 1);
+
+    int ParseInt(string? value)
+    {
+        return int.TryParse((value ?? "").Trim(), out var n) ? n : -1;
+    }
+
+    string ResultText(int level) => level == 2 ? "Not Compliant" : level == 1 ? "Warning" : "Complies";
+    string ResultClass(int level) => level == 2 ? "fail" : level == 1 ? "warn" : "ok";
+
+    var anyDegree = A.DegreeDiploma || A.DegreeBSC || A.DegreeHigherDiploma || A.DegreeMaster || A.DegreePhD;
+    var hasType = !string.IsNullOrWhiteSpace(A.TypeOfAcademicInstitution);
+    var recognitionMissing = !string.Equals(A.OfficialRecognitionInHomeCountry, "Yes", StringComparison.OrdinalIgnoreCase);
+    var accreditationMissing = !string.Equals(A.OfficialAccreditationQualityInHomeCountry, "Yes", StringComparison.OrdinalIgnoreCase);
+    var degreeTypeMismatch = string.Equals(A.TypeOfAcademicInstitution, "International", StringComparison.OrdinalIgnoreCase)
+                     && A.DegreeDiploma && !A.DegreeBSC && !A.DegreeMaster && !A.DegreePhD;
+
+    var identityLevel = 0;
+    if (!hasType || !anyDegree || recognitionMissing || accreditationMissing) identityLevel = 2;
+    else if (degreeTypeMismatch) identityLevel = 1;
+
+    var anySystem = A.SystemYearlyProgram || A.SystemSemesterProgram || A.SystemCreditHours || A.SystemECTS;
+    var minH = A.MinHours ?? -1;
+    var maxH = A.MaxHours ?? -1;
+    var minMaxValid = minH >= 0 && maxH >= 0 && minH <= maxH;
+    var transferHours = ParseInt(A.MaxTransferHours);
+    var transferYears = ParseInt(A.MaxTransferYears);
+    var transferSem = ParseInt(A.MaxTransferSemesters);
+    var transferPercent = ParseInt(A.PercentageTransferCreditsAllowed);
+    var transferNonNegative = transferHours >= 0 && transferYears >= 0 && transferSem >= 0;
+    var transferPercentValid = transferPercent >= 0 && transferPercent <= 100;
+    var acceptIntermediate = string.Equals(A.AcceptIntermediateDegreeStudents, "Yes", StringComparison.OrdinalIgnoreCase);
+    var bridgingFieldsFilled = !string.IsNullOrWhiteSpace(A.MaxTransferHours)
+                               && !string.IsNullOrWhiteSpace(A.MaxTransferYears)
+                               && !string.IsNullOrWhiteSpace(A.MaxTransferSemesters)
+                               && !string.IsNullOrWhiteSpace(A.PercentageTransferCreditsAllowed);
+
+    var structureLevel = 0;
+    if (!anySystem || !minMaxValid || !transferNonNegative || !transferPercentValid) structureLevel = 2;
+    else if (acceptIntermediate && !bridgingFieldsFilled) structureLevel = 1;
+
+    var hasTeaching = teachingMethods.Any();
+    var hasAssessment = assessmentMethods.Any();
+    var usesELearningYes = string.Equals(A.UsesELearning, "Yes", StringComparison.OrdinalIgnoreCase);
+    var usesELearningNo = string.Equals(A.UsesELearning, "No", StringComparison.OrdinalIgnoreCase);
+    var ePct = A.ELearningPercentage ?? -1;
+    var ePctValid = ePct >= 0 && ePct <= 100;
+    var deliveryValid = !string.IsNullOrWhiteSpace(A.DeliveryType);
+    var eLearningRequiredValid = !usesELearningYes || (deliveryValid && ePctValid);
+    var distanceYes = string.Equals(A.DistanceLearningStudentsAdmissible, "Yes", StringComparison.OrdinalIgnoreCase);
+    var eLearningConsistencyIssue = distanceYes && usesELearningNo;
+    var programLooksMedical = teachingMethods.Any(x => string.Equals(x, "Clinical Training", StringComparison.OrdinalIgnoreCase));
+    var professionalRegValid = !programLooksMedical || !string.IsNullOrWhiteSpace(A.ForeignGraduatesAllowedToPractice);
+
+    var teachingLevel = 0;
+    if (!hasTeaching || !hasAssessment || !eLearningRequiredValid) teachingLevel = 2;
+    else if (eLearningConsistencyIssue || !professionalRegValid) teachingLevel = 1;
+
+    var overallLevel = Math.Max(Math.Max(identityLevel, structureLevel), Math.Max(teachingLevel, studyPlanLevel));
+}
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/DetailsAcademicInfo.css" asp-append-version="true" />
+</head>
+<body class="rm-page">
+    <header class="rm-header">
+        <div class="rm-brandbar"></div><div class="rm-top">
+            <div class="rm-top-inner">
+                <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
+                <div class="rm-user">
+                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>Recognition Member</b></span></div>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="rm-shell">
+        <aside class="rm-sidebar">
+            <div class="rm-side-title">Navigation</div><nav class="rm-nav">
+                <a class="rm-navitem" href="@Url.Action("RecognitionMemberDashboard", "Home")"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
+                <a class="rm-navitem active" href="@Url.Action("ElectronicRequests", "Home")"><i class="bi bi-send-check"></i><span>My Assigned Requests</span></a>
+                <a class="rm-navitem" href="@Url.Action("Archive", "Home")"><i class="bi bi-inboxes"></i><span>Requests Archive</span></a>
+                <a class="rm-navitem danger" href="@Url.Action("Logout", "Home")"><i class="bi bi-power"></i><span>Sign Out</span></a>
+            </nav>
+        </aside>
+
+        <main class="rm-main">
+            <section class="rm-card rd-head">
+                <div>
+                    <h1>Request Details</h1>
+                    <p class="rd-inst">Institution: <b>@inst</b></p>
+                    <p>Step 4 of 7 — Academic Information Review.</p>
+                </div>
+                <div class="rd-meta">
+                    <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
+                    <div class="meta-pill"><span>Step</span><b>4 / 7</b></div>
+                </div>
+            </section>
+
+            <section id="sec-hospitals" class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2><i class="bi bi-hospital"></i> Hospitals Section — Training Contracts & Supporting Documents</h2>
+                    <p>Hospital training agreements and supporting files submitted by the university.</p>
+                </div>
+
+                @if (attachments.Any())
+                {
+                    <div class="rd-tablewrap">
+                        <table class="rd-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:90px;">#</th>
+                                    <th>Subject</th>
+                                    <th>File</th>
+                                    <th style="width:220px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ var ordered = attachments.OrderByDescending(x => x.UploadedAt).ToList(); }
+                                @for (var i = 0; i < ordered.Count; i++)
+                                {
+                                    var f = ordered[i];
+                                    <tr>
+                                        <td>@(i + 1)</td>
+                                        <td>@f.Subject</td>
+                                        <td>@f.FileName</td>
+                                        <td>
+                                            <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">Open</a>
+                                            <a class="rm-mini" href="@f.FileUrl" download="@f.FileName">Download</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="rd-field"><input type="text" value="No hospital training/supporting documents were uploaded." readonly /></div>
+                }
+            </section>
+
+            <section id="sec-doctors-colleges" class="rm-card rd-card doctors-review-section">
+                <div class="rd-card-hd">
+                    <h2><i class="bi bi-person-vcard"></i> Doctors / Medicine Colleges</h2>
+                    <p>Submitted full-time doctor categories for Medicine and Dentistry colleges.</p>
+                </div>
+
+                <div class="studyplan-table-wrap">
+                    <table class="rd-table doctors-review-table">
+                        <thead>
+                            <tr>
+                                <th>Full-Time Category</th>
+                                <th>College of Medicine</th>
+                                <th>College of Dentistry</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Full-Time Professor</td><td>@NV(medDen.Med_FullTimeProfessor)</td><td>@NV(medDen.Den_FullTimeProfessor)</td></tr>
+                            <tr><td>Full-Time Associate Professor</td><td>@NV(medDen.Med_FullTimeAssociateProfessor)</td><td>@NV(medDen.Den_FullTimeAssociateProfessor)</td></tr>
+                            <tr><td>Full-Time Assistant Professor</td><td>@NV(medDen.Med_FullTimeAssistantProfessor)</td><td>@NV(medDen.Den_FullTimeAssistantProfessor)</td></tr>
+                            <tr><td>Full-Time Lecturer (PhD Holders)</td><td>@NV(medDen.Med_FullTimeLecturerPhd)</td><td>@NV(medDen.Den_FullTimeLecturerPhd)</td></tr>
+                            <tr><td>Full-Time Lecturer (MSC Holders)</td><td>@NV(medDen.Med_FullTimeLecturerMsc)</td><td>@NV(medDen.Den_FullTimeLecturerMsc)</td></tr>
+                            <tr><td>Full-Time Assistant Lecturer (MSC Holders)</td><td>@NV(medDen.Med_FullTimeAssistantLecturerMsc)</td><td>@NV(medDen.Den_FullTimeAssistantLecturerMsc)</td></tr>
+                            <tr><td>Full-Time Assistant Lecturer (PSC Holders)</td><td>@NV(medDen.Med_FullTimeAssistantLecturerPsc)</td><td>@NV(medDen.Den_FullTimeAssistantLecturerPsc)</td></tr>
+                            <tr><td>Full-Time Practitioner (PSC Holders)</td><td>@NV(medDen.Med_FullTimePractitionerPsc)</td><td>@NV(medDen.Den_FullTimePractitionerPsc)</td></tr>
+                            <tr><td>Full-Time Practitioner (MSC Holders)</td><td>@NV(medDen.Med_FullTimePractitionerMsc)</td><td>@NV(medDen.Den_FullTimePractitionerMsc)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="studyplan-metrics doctors-metrics">
+                    <div class="metric-item"><span>PhD Holders (Medicine)</span><b>@medDen.Med_PhdHolders</b></div>
+                    <div class="metric-item"><span>PhD Holders (Dentistry)</span><b>@medDen.Den_PhdHolders</b></div>
+                    <div class="metric-item"><span>MSC Holders (Medicine)</span><b>@medDen.Med_MscHolders</b></div>
+                    <div class="metric-item"><span>MSC Holders (Dentistry)</span><b>@medDen.Den_MscHolders</b></div>
+                    <div class="metric-item"><span>PSC Holders (Medicine)</span><b>@medDen.Med_PscHolders</b></div>
+                    <div class="metric-item"><span>PSC Holders (Dentistry)</span><b>@medDen.Den_PscHolders</b></div>
+                </div>
+            </section>
+
+            <section class="rm-card rd-actions">
+                <div class="rd-actions-left">
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAdmissionDuration", "Home", new { id = requestId })">Previous</a>
+                </div>
+                <div class="rd-actions-right">
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAccreditationBodies", "Home", new { id = requestId })">Next</a>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

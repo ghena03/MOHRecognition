@@ -7,8 +7,18 @@
     gap: 14px;
 }
 
+.rd-grid5 {
+    display: grid;
+    grid-template-columns: repeat(5,minmax(0,1fr));
+    gap: 14px;
+}
+
 @media (max-width:900px) {
     .rd-grid2 {
+        grid-template-columns: 1fr;
+    }
+
+    .rd-grid5 {
         grid-template-columns: 1fr;
     }
 }

@@ -19,12 +19,12 @@
                 </div>
 
                 <div class="prg-cell">
-                    <label>Faculty <span class="req">*</span></label>
+                    <label>College <span class="req">*</span></label>
                     <select id="prg_faculty" class="prg-control">
                         <option value="">--Choose--</option>
                         @if (Model?.Faculties == null || Model.Faculties.Count == 0)
                         {
-                            <option value="" disabled>(Add faculties first)</option>
+                            <option value="" disabled>(Add colleges first)</option>
                         }
                         else
                         {
@@ -108,7 +108,7 @@
         <!-- ACTION BUTTONS -->
         <div class="icon-actions">
             <button type="button" class="prg-btn" data-prg-add id="prg_addBtn">Add</button>
-            <button type="button" class="prg-btn" data-prg-update id="prg_updateBtn" style="display:none;background:#1976d2;">Update</button>
+            <button type="button" class="prg-btn" data-prg-update id="prg_updateBtn" style="display:none;background:#1976d2;">Save</button>
         </div>
 
         <!-- TABLE -->
@@ -118,7 +118,7 @@
                     <tr>
                         <th style="width:60px;">#</th>
                         <th>Program</th>
-                        <th>Faculty</th>
+                        <th>College</th>
                         <th>Degree Awarded</th>
                         <th>Number of Years</th>
                         <th>Credit Hours</th>

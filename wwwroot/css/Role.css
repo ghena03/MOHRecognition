@@ -47,9 +47,7 @@ body {
     gap: 12px;
 }
 
-.header__spacer {
-    /* left empty column to balance privacy on the right */
-}
+
 
 .header__brand {
     grid-column: 2;

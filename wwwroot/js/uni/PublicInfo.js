@@ -36,35 +36,73 @@
         else el.classList.remove("input-invalid");
     }
 
-    function showError(sec, text) {
-        let b = sec.querySelector("#publicBanner");
-        if (!b) {
-            b = document.createElement("div");
-            b.id = "publicBanner";
-            b.className = "banner warn";
-            b.style.marginTop = "12px";
-            b.innerHTML = `<span class="dot"></span><span class="txt"></span><button type="button" class="x">×</button>`;
-
-            const bd = sec.querySelector(".card-bd") || sec;
-            bd.insertBefore(b, bd.firstChild);
-
-            b.querySelector(".x").addEventListener("click", () => (b.style.display = "none"));
+    function showToast(text, isError) {
+        let host = document.getElementById("uniToastHost");
+        if (!host) {
+            host = document.createElement("div");
+            host.id = "uniToastHost";
+            host.style.position = "fixed";
+            host.style.inset = "0";
+            host.style.zIndex = "9999";
+            host.style.display = "grid";
+            host.style.placeItems = "center";
+            host.style.pointerEvents = "none";
+            document.body.appendChild(host);
         }
 
-        b.style.display = "flex";
-        b.classList.remove("ok");
-        b.classList.add("warn");
-        b.querySelector(".txt").textContent = text;
+        const toast = document.createElement("div");
+        toast.style.padding = "14px 16px";
+        toast.style.borderRadius = "12px";
+        toast.style.border = isError ? "1px solid rgba(185, 28, 28, .25)" : "1px solid rgba(22, 163, 74, .25)";
+        toast.style.background = isError ? "#fef2f2" : "#f0fdf4";
+        toast.style.color = isError ? "#991b1b" : "#166534";
+        toast.style.boxShadow = "0 16px 38px rgba(2,8,23,.18)";
+        toast.style.fontWeight = "800";
+        toast.style.fontSize = "14px";
+        toast.style.minWidth = "320px";
+        toast.style.maxWidth = "520px";
+        toast.style.textAlign = "center";
+        toast.style.pointerEvents = "auto";
+        toast.textContent = text;
+        host.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            toast.style.transform = "translateY(-6px)";
+            toast.style.transition = "all .2s ease";
+            setTimeout(() => toast.remove(), 220);
+        }, 2200);
+    }
+
+    function wireLanguageOfInstructionOther(sec) {
+        const languageEl = sec.querySelector("[name='LanguageOfInstruction']");
+        const otherWrap = sec.querySelector("#LanguageOfInstructionOtherWrap");
+        const otherEl = sec.querySelector("[name='LanguageOfInstructionOther']");
+        if (!languageEl || !otherWrap || !otherEl) return;
+
+        const toggle = () => {
+            const isOther = (languageEl.value || "").trim() === "Others";
+            otherWrap.style.display = isOther ? "block" : "none";
+            if (!isOther) {
+                otherEl.value = "";
+                otherEl.classList.remove("input-invalid");
+            }
+        };
+
+        languageEl.addEventListener("change", toggle);
+        toggle();
     }
 
     // ✅ Required fields (the ones with * in your Public Info section)
     const REQUIRED_FIELDS = [
         "InstitutionName",
-        "PartyForwardingForm",
         "FoundationDate",
+        "DateOfEstablishment",
+        "StartOfTeaching",
+        "ModeOfStudy",
+        "LanguageOfInstruction",
         "MailingFullAddress",
         "DirectPhoneNumber",
-        "FaxNumber",
         "EmailAddress",
         "InstitutionalWebAddress"
     ];
@@ -83,6 +121,15 @@
             const invalid = v.length === 0;
             markInvalid(el, invalid);
             if (invalid) ok = false;
+        }
+
+        const languageEl = sec.querySelector("[name='LanguageOfInstruction']");
+        const otherEl = sec.querySelector("[name='LanguageOfInstructionOther']");
+        if (languageEl && otherEl) {
+            const needsOther = (languageEl.value || "").trim() === "Others";
+            const otherInvalid = needsOther && (otherEl.value || "").trim().length === 0;
+            markInvalid(otherEl, otherInvalid);
+            if (otherInvalid) ok = false;
         }
 
         return ok;
@@ -106,29 +153,32 @@
         const btn = document.getElementById("btnSavePublic");
         if (!sec || !btn) return;
 
+        wireLanguageOfInstructionOther(sec);
+
         btn.addEventListener("click", async () => {
             try {
                 if (!validateRequired(sec)) {
-                    showError(sec, "Please fill all required fields before saving.");
+                    showToast("Please fill all required fields before saving.", true);
                     return;
                 }
 
                 const url = btn.getAttribute("data-save-url");
                 if (!url) {
-                    showError(sec, "Save URL is missing.");
+                    showToast("Save URL is missing.", true);
                     return;
                 }
 
                 const data = collect("sec-general");
                 await postForm(url, data);
 
-                // no success message
+                // Success
+                showToast("Public Info saved successfully.", false);
                 const b = sec.querySelector("#publicBanner");
                 if (b) b.style.display = "none";
 
             } catch (e) {
                 const msg = e.message || "Save failed.";
-                showError(sec, msg);
+                showToast(msg, true);
                 highlightFieldFromServerMessage(sec, msg);
             }
         });

@@ -1,4 +1,4 @@
-﻿@using DTOs
+@using DTOs
 @{
     Layout = null;
 }
@@ -57,22 +57,16 @@
 
             <a class="side-item" href="#sec-general">Public Info</a>
             <a class="side-item" href="#sec-academic">Academic Info</a>
-            <a class="side-item" href="#sec-admission">Admission Requirements</a>
-            <a class="side-item" href="#sec-duration">Studying Duration</a>
-            <a class="side-item" href="#sec-faculties">Faculties</a>
+            <a class="side-item" href="#sec-admission-duration">Admission Requirements and Study Duration</a>
+            <a class="side-item" href="#sec-faculties">Colleges</a>
             <a class="side-item" href="#sec-programs">Programs</a>
-            <a class="side-item" href="#sec-students">Number of Students</a>
-            <a class="side-item" href="#sec-hours">Number of Hours</a>
-            <a class="side-item" href="#sec-ratios">Percentages</a>
-            <a class="side-item" href="#sec-staff">Teaching Staff</a>
-            <a class="side-item" href="#sec-phd">PhD Holders</a>
-            <a class="side-item" href="#sec-med">Medicine Faculties</a>
+            <a class="side-item" href="#sec-med">Medicine Colleges</a>
             <a class="side-item" href="#sec-hosp">Hospitals</a>
             <a class="side-item" href="#sec-infra">Infrastructure</a>
             <a class="side-item" href="#sec-labs">Laboratories</a>
             <a class="side-item" href="#sec-library">Library</a>
-            <a class="side-item" href="#sec-attachments">Attachments</a>
-            <a class="side-item" href="#sec-pictures">Pictures</a>
+            <a class="side-item" href="#sec-pictures">Photos / Media</a>
+            <a class="side-item" href="#sec-accreditation-bodies">Accreditation Bodies</a>
             <a class="side-item" href="#sec-submit-application">Finish &amp; Submit</a>
            
 
@@ -106,11 +100,50 @@
             </section>
 
             <!-- ✅ ONE MAIN FORM ONLY (no nested forms) -->
-            <form method="post" class="form-root" novalidate>
+            <form method="post" class="form-root" novalidate enctype="multipart/form-data">
 
                 <!-- ===================== Public / General Info ===================== -->
                 @{
                     var P = ViewBag.Public as DTOs.PublicInfoDto ?? new DTOs.PublicInfoDto();
+                    var languageOfInstruction = (P.LanguageOfInstruction ?? "").Trim();
+                    var languageInstructionOptions = new[]
+                    {
+                        "English only",
+                        "Arabic only",
+                        "English + Arabic",
+                        "English + Spanish",
+                        "English + French",
+                        "English + Hindi",
+                        "English + Turkish",
+                        "English + German",
+                        "English + Portuguese",
+                        "English + Chinese (Mandarin)",
+                        "English + Russian",
+                        "English + Japanese",
+                        "English + Korean",
+                        "English + Italian",
+                        "English + Urdu",
+                        "English + Bengali",
+                        "English + Persian",
+                        "English + Indonesian",
+                        "English + Malay",
+                        "English + Dutch",
+                        "English + Swahili",
+                        "English + Tamil",
+                        "English + Punjabi",
+                        "English + Vietnamese",
+                        "English + Thai",
+                        "English + Filipino (Tagalog)",
+                        "English + Greek",
+                        "English + Polish",
+                        "English + Ukrainian"
+                    };
+                    var isKnownLanguageOption = languageInstructionOptions.Any(opt =>
+                        languageOfInstruction.Equals(opt, StringComparison.OrdinalIgnoreCase));
+                    var isOtherLanguage = !string.IsNullOrWhiteSpace(languageOfInstruction)
+                        && !isKnownLanguageOption
+                        && !languageOfInstruction.Equals("Others", StringComparison.OrdinalIgnoreCase);
+                    var showOtherLanguageInput = isOtherLanguage || languageOfInstruction.Equals("Others", StringComparison.OrdinalIgnoreCase);
                 }
 
                 <section class="card" id="sec-general">
@@ -129,8 +162,13 @@
                             </div>
 
                             <div class="field">
-                                <label>Party Forwarding Form <span class="req">*</span></label>
-                                <input name="PartyForwardingForm" value="@P.PartyForwardingForm" />
+                                <label>Official Entity Possessing Oversight Rights</label>
+                                <select name="OversightRightsEntity">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(P.OversightRightsEntity == "Ministry")">Ministry</option>
+                                    <option selected="@(P.OversightRightsEntity == "Accreditation Body")">Accreditation Body</option>
+                                    <option selected="@(P.OversightRightsEntity == "Other")">Other</option>
+                                </select>
                             </div>
                         </div>
 
@@ -142,24 +180,41 @@
                             </div>
 
                             <div class="field">
-                                <label>Date of Conventional Academic Offerings</label>
-                                <input name="ConventionalAcademicOfferingsDate" type="date" value="@P.ConventionalAcademicOfferingsDate" />
+                                <label>Date of Establishment <span class="req">*</span></label>
+                                <input name="DateOfEstablishment" type="date" value="@P.DateOfEstablishment" />
                             </div>
 
                             <div class="field">
-                                <label>Date of non-conventional Program Offerings</label>
-                                <input name="NonConventionalProgramOfferingsDate" type="date" value="@P.NonConventionalProgramOfferingsDate" />
-                            </div>
-
-                            <div class="field">
-                                <label>Official Entity Possessing Oversight Rights</label>
-                                <select name="OversightRightsEntity">
+                                <label>Mode of Study <span class="req">*</span></label>
+                                <select name="ModeOfStudy">
                                     <option value="">-- Choose --</option>
-                                    <option selected="@(P.OversightRightsEntity == "Ministry")">Ministry</option>
-                                    <option selected="@(P.OversightRightsEntity == "Accreditation Body")">Accreditation Body</option>
-                                    <option selected="@(P.OversightRightsEntity == "Other")">Other</option>
+                                    <option selected="@(P.ModeOfStudy == "On-campus")">On-campus</option>
+                                    <option selected="@(P.ModeOfStudy == "Blended")">Blended</option>
+                                    <option selected="@(P.ModeOfStudy == "Online")">Online</option>
                                 </select>
                             </div>
+
+                            <div class="field">
+                                <label>Language of Instruction <span class="req">*</span></label>
+                                <select name="LanguageOfInstruction" id="LanguageOfInstruction">
+                                    <option value="">-- Choose --</option>
+                                    @foreach (var languageOption in languageInstructionOptions)
+                                    {
+                                        <option value="@languageOption" selected="@(languageOfInstruction.Equals(languageOption, StringComparison.OrdinalIgnoreCase))">@languageOption</option>
+                                    }
+                                    <option value="Others" selected="@showOtherLanguageInput">Others</option>
+                                </select>
+
+                                <div id="LanguageOfInstructionOtherWrap" style="margin-top:10px; display:@(showOtherLanguageInput ? "block" : "none");">
+                                    <input type="text" name="LanguageOfInstructionOther" id="LanguageOfInstructionOther" placeholder="Please specify" value="@(isOtherLanguage ? languageOfInstruction : "")" />
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label>Start of Teaching <span class="req">*</span></label>
+                                <input name="StartOfTeaching" type="date" value="@P.StartOfTeaching" />
+                            </div>
+
                         </div>
 
                         <!-- President info -->
@@ -168,14 +223,6 @@
                             <div class="field">
                                 <label>Name</label>
                                 <input name="PresidentName" value="@P.PresidentName" />
-                            </div>
-                            <div class="field">
-                                <label>Highest Academic Degree</label>
-                                <input name="PresidentHighestAcademicDegree" value="@P.PresidentHighestAcademicDegree" />
-                            </div>
-                            <div class="field">
-                                <label>Major Area of Study</label>
-                                <input name="PresidentMajorAreaOfStudy" value="@P.PresidentMajorAreaOfStudy" />
                             </div>
                         </div>
 
@@ -193,11 +240,6 @@
                             </div>
 
                             <div class="field">
-                                <label>Fax Number <span class="req">*</span></label>
-                                <input name="FaxNumber" value="@P.FaxNumber" inputmode="tel" />
-                            </div>
-
-                            <div class="field">
                                 <label>Email Address <span class="req">*</span></label>
                                 <input name="EmailAddress" value="@P.EmailAddress" type="email" />
                             </div>
@@ -207,33 +249,6 @@
                                 <input name="InstitutionalWebAddress" value="@P.InstitutionalWebAddress" type="url" placeholder="https://..." />
                             </div>
 
-                            <div class="field">
-                                <label>Last Date Website Updated</label>
-                                <input name="LastDateWebsiteUpdated" type="date" value="@P.LastDateWebsiteUpdated" />
-                            </div>
-                        </div>
-
-                        <!-- Identity -->
-                        <div class="subhead">Institution Identity</div>
-
-                        <div class="field">
-                            <label>Institutional Vision Statement</label>
-                            <textarea name="InstitutionalVisionStatement" rows="3">@P.InstitutionalVisionStatement</textarea>
-                        </div>
-
-                        <div class="field">
-                            <label>Institutional Mission Statement</label>
-                            <textarea name="InstitutionalMissionStatement" rows="3">@P.InstitutionalMissionStatement</textarea>
-                        </div>
-
-                        <div class="field">
-                            <label>Institutional Targetted Objectives</label>
-                            <textarea name="InstitutionalTargettedObjectives" rows="3">@P.InstitutionalTargettedObjectives</textarea>
-                        </div>
-
-                        <div class="field">
-                            <label>Institutional Values</label>
-                            <textarea name="InstitutionalValues" rows="3">@P.InstitutionalValues</textarea>
                         </div>
 
                         <!-- Save (AJAX - NO RELOAD, NO SCROLL) -->
@@ -251,6 +266,20 @@
                 <!-- ===================== AcademicInfo ===================== -->
                 @{
                     var A = ViewBag.Academic as DTOs.AcademicInfoDto ?? new DTOs.AcademicInfoDto();
+                    var rankStaffFileNames = ViewBag.AcademicRankStaffFiles as IDictionary<string, string> ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    string GetRankStaffFileName(string rankKey, string employmentType)
+                    {
+                        var key = $"{rankKey}:{employmentType}";
+                        return rankStaffFileNames.TryGetValue(key, out var fileName) ? fileName : "";
+                    }
+                    var institutionType = (A.TypeOfAcademicInstitution ?? "").Trim();
+                    var isOtherInstitutionType = !string.IsNullOrWhiteSpace(institutionType)
+                        && !institutionType.Equals("Governmental", StringComparison.OrdinalIgnoreCase)
+                        && !institutionType.Equals("National", StringComparison.OrdinalIgnoreCase)
+                        && !institutionType.Equals("Private", StringComparison.OrdinalIgnoreCase)
+                        && !institutionType.Equals("Public", StringComparison.OrdinalIgnoreCase)
+                        && !institutionType.Equals("Others", StringComparison.OrdinalIgnoreCase);
+                    var showOtherInstitutionTypeInput = isOtherInstitutionType || institutionType.Equals("Others", StringComparison.OrdinalIgnoreCase);
                 }
 
                 <section id="sec-academic" class="card">
@@ -265,17 +294,22 @@
                         <div class="grid-2">
                             <div class="field">
                                 <label>Type of Academic Institution <span class="req">*</span></label>
-                                <select name="TypeOfAcademicInstitution">
+                                <select name="TypeOfAcademicInstitution" id="TypeOfAcademicInstitution">
                                     <option value="">-- Choose --</option>
-                                    <option selected="@(A.TypeOfAcademicInstitution == "Governmental")">Governmental</option>
-                                    <option selected="@(A.TypeOfAcademicInstitution == "Regional")">Regional</option>
-                                    <option selected="@(A.TypeOfAcademicInstitution == "International")">International</option>
-                                    <option selected="@(A.TypeOfAcademicInstitution == "Others")">Others</option>
+                                    <option value="Governmental" selected="@(institutionType.Equals("Governmental", StringComparison.OrdinalIgnoreCase))">Governmental</option>
+                                    <option value="National" selected="@(institutionType.Equals("National", StringComparison.OrdinalIgnoreCase))">National</option>
+                                    <option value="Private" selected="@(institutionType.Equals("Private", StringComparison.OrdinalIgnoreCase))">Private</option>
+                                    <option value="Public" selected="@(institutionType.Equals("Public", StringComparison.OrdinalIgnoreCase))">Public</option>
+                                    <option value="Others" selected="@showOtherInstitutionTypeInput">Others</option>
                                 </select>
+
+                                <div id="TypeOfAcademicInstitutionOtherWrap" style="margin-top:10px; display:@(showOtherInstitutionTypeInput ? "block" : "none");">
+                                    <input type="text" name="TypeOfAcademicInstitutionOther" id="TypeOfAcademicInstitutionOther" placeholder="Please specify" value="@(isOtherInstitutionType ? institutionType : "")" />
+                                </div>
                             </div>
                             <div class="field">
                                 <label></label>
-                                <div class="muted" style="margin-top:10px;">Degrees in institution <span class="req">*</span></div>
+                                <div class="degrees-institution-title" style="margin-top:10px;">Degrees in institution <span class="req">*</span></div>
 
                                 <div class="degree-options" style="margin-top:10px;">
                                     <label class="degree-pill">
@@ -323,30 +357,29 @@
                             </div>
                         </div>
 
-                        <!-- Language -->
-                        <div class="subhead">Language of Instruction <span class="req">*</span></div>
-                        <div class="grid-2">
-                            <div class="field">
-                                <label>For Domestic Students <span class="req">*</span></label>
-                                <input name="LanguageForDomesticStudents" value="@A.LanguageForDomesticStudents" />
+                        <!-- College Categories -->
+                        <div class="subhead">College Categories <span class="req">*</span></div>
+                        <div class="card" style="padding:16px; border:1px solid #e5e7eb; border-radius:12px; margin-top:10px;">
+                            <div class="degree-options" style="margin-top:0;">
+                                <label class="degree-pill">
+                                    <input type="checkbox" data-group="college-categories" value="Scientific" />
+                                    <span>Scientific Colleges</span>
+                                </label>
+                                <label class="degree-pill">
+                                    <input type="checkbox" data-group="college-categories" value="Humanities" />
+                                    <span>Humanities Colleges</span>
+                                </label>
+                                <label class="degree-pill">
+                                    <input type="checkbox" data-group="college-categories" value="Medical" />
+                                    <span>Medical Colleges</span>
+                                </label>
+                                <label class="degree-pill">
+                                    <input type="checkbox" data-group="college-categories" value="Applied" />
+                                    <span>Applied Colleges</span>
+                                </label>
                             </div>
-                            <div class="field">
-                                <label>For Foreign Students <span class="req">*</span></label>
-                                <input name="LanguageForForeignStudents" value="@A.LanguageForForeignStudents" />
-                            </div>
-                        </div>
-
-                        <!-- Joint classrooms -->
-                        <div class="grid-2">
-                            <div class="field">
-                                <label>Are Foreign Students offered programs in joint classrooms with local students? <span class="req">*</span></label>
-                                <select name="ForeignStudentsJointClassroomsWithLocal">
-                                    <option value="">-- Choose --</option>
-                                    <option selected="@(A.ForeignStudentsJointClassroomsWithLocal == "Yes")">Yes</option>
-                                    <option selected="@(A.ForeignStudentsJointClassroomsWithLocal == "No")">No</option>
-                                </select>
-                            </div>
-                            <div class="field"></div>
+                            <input type="hidden" name="CollegeCategoriesCsv" id="CollegeCategoriesCsv" value="@A.CollegeCategoriesCsv" />
+                            <input type="hidden" name="StudentsToFacultyRatio" id="StudentsToFacultyRatio" value="@(A.StudentsToFacultyRatio?.ToString() ?? "")" />
                         </div>
 
                         <!-- Student population -->
@@ -361,31 +394,468 @@
                                 <input type="number" min="0" name="ForeignStudentPopulation" value="@(A.ForeignStudentPopulation?.ToString() ?? "")" />
                             </div>
                             <div class="field">
-                                <label>Jordanian Student Population <span class="req">*</span></label>
+                                <label class="inline-required">Jordanian Student Population <span class="req">*</span></label>
                                 <input type="number" min="0" name="JordanianStudentPopulation" value="@(A.JordanianStudentPopulation?.ToString() ?? "")" />
                             </div>
                             <div class="field">
                                 <label>Total <span class="req">*</span></label>
-                                <input type="number" min="0" name="TotalStudentPopulation" value="@(A.TotalStudentPopulation?.ToString() ?? "")" />
+                                <input type="number" min="0" name="TotalStudentPopulation" value="@(A.TotalStudentPopulation?.ToString() ?? "")" readonly />
                             </div>
                         </div>
 
                         <!-- Staff headcount -->
-                        <div class="subhead">Academic Staff Head Count Per Academic Rank <span class="req">*</span></div>
-                        <div class="grid-4">
-                            <div class="field"><label>Professor <span class="req">*</span></label><input type="number" min="0" name="StaffProfessor" value="@(A.StaffProfessor?.ToString() ?? "")" /></div>
-                            <div class="field"><label>Associate Professor <span class="req">*</span></label><input type="number" min="0" name="StaffAssociateProfessor" value="@(A.StaffAssociateProfessor?.ToString() ?? "")" /></div>
-                            <div class="field"><label>Assistant Professor <span class="req">*</span></label><input type="number" min="0" name="StaffAssistantProfessor" value="@(A.StaffAssistantProfessor?.ToString() ?? "")" /></div>
-                            <div class="field"><label>Lab Assistant <span class="req">*</span></label><input type="number" min="0" name="StaffLabAssistant" value="@(A.StaffLabAssistant?.ToString() ?? "")" /></div>
+                        <div class="subhead subhead-rank">Academic Staff Head Count Per Academic Rank <span class="req">*</span></div>
+                        <div class="academic-rank-section">
+                            <div class="rank-section-header">
+                                <div>
+                                    <div class="rank-section-kicker">Academic Staffing Matrix</div>
+                                    <h4>Academic Staff by Rank</h4>
+                                    <p>Enter Full-Time and Part-Time headcounts for each rank, then upload the supporting Excel files.</p>
+                                </div>
+                            </div>
 
-                            <div class="field"><label>Researcher <span class="req">*</span></label><input type="number" min="0" name="StaffResearcher" value="@(A.StaffResearcher?.ToString() ?? "")" /></div>
-                            <div class="field"><label>Teacher <span class="req">*</span></label><input type="number" min="0" name="StaffTeacher" value="@(A.StaffTeacher?.ToString() ?? "")" /></div>
-                            <div class="field"><label>Assistant Teacher <span class="req">*</span></label><input type="number" min="0" name="StaffAssistantTeacher" value="@(A.StaffAssistantTeacher?.ToString() ?? "")" /></div>
-                            <div class="field"><label>Others</label><input type="number" min="0" name="StaffOthers" value="@(A.StaffOthers?.ToString() ?? "")" /></div>
+                            <div class="rank-section-tools">
+                                <a class="rank-template-btn" href="@Url.Action("DownloadAcademicRankExcelTemplate", "Home", new { staffType = "fulltime" })">
+                                    Download Full-Time Excel Template
+                                </a>
+                                <a class="rank-template-btn" href="@Url.Action("DownloadAcademicRankExcelTemplate", "Home", new { staffType = "parttime" })">
+                                    Download Part-Time Excel Template
+                                </a>
+                            </div>
+
+                            <div id="academicRankUploadBanner" class="banner warn rank-info-banner" style="display:none;">
+                                <span class="dot"></span>
+                                <span class="txt"></span>
+                                <button type="button" class="x" onclick="document.getElementById('academicRankUploadBanner').style.display='none'">×</button>
+                            </div>
+
+                            <div class="rank-group-grid">
+                                <div class="rank-group-card">
+                                    <div class="rank-group-title">Professor</div>
+                                    <div class="rank-group-columns">
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Full-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffProfessorFullTimeCount" value="@(A.StaffProfessorFullTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="Professor" data-employment-type="fulltime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("Professor", "fulltime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Part-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffProfessorPartTimeCount" value="@(A.StaffProfessorPartTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="Professor" data-employment-type="parttime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("Professor", "parttime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rank-group-card">
+                                    <div class="rank-group-title">Associate Professor</div>
+                                    <div class="rank-group-columns">
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Full-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffAssociateProfessorFullTimeCount" value="@(A.StaffAssociateProfessorFullTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="AssociateProfessor" data-employment-type="fulltime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("AssociateProfessor", "fulltime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Part-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffAssociateProfessorPartTimeCount" value="@(A.StaffAssociateProfessorPartTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="AssociateProfessor" data-employment-type="parttime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("AssociateProfessor", "parttime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rank-group-card">
+                                    <div class="rank-group-title">Assistant Professor</div>
+                                    <div class="rank-group-columns">
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Full-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffAssistantProfessorFullTimeCount" value="@(A.StaffAssistantProfessorFullTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="AssistantProfessor" data-employment-type="fulltime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("AssistantProfessor", "fulltime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Part-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffAssistantProfessorPartTimeCount" value="@(A.StaffAssistantProfessorPartTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="AssistantProfessor" data-employment-type="parttime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("AssistantProfessor", "parttime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rank-group-card">
+                                    <div class="rank-group-title">Lab Assistant</div>
+                                    <div class="rank-group-columns">
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Full-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffLabAssistantFullTimeCount" value="@(A.StaffLabAssistantFullTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="LabAssistant" data-employment-type="fulltime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("LabAssistant", "fulltime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Part-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffLabAssistantPartTimeCount" value="@(A.StaffLabAssistantPartTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="LabAssistant" data-employment-type="parttime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("LabAssistant", "parttime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rank-group-card">
+                                    <div class="rank-group-title">Lecturer (PHD Holders)</div>
+                                    <div class="rank-group-columns">
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Full-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffTeacherFullTimeCount" value="@(A.StaffTeacherFullTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="Teacher" data-employment-type="fulltime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("Teacher", "fulltime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Part-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffTeacherPartTimeCount" value="@(A.StaffTeacherPartTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="Teacher" data-employment-type="parttime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("Teacher", "parttime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rank-group-card">
+                                    <div class="rank-group-title">Lecturer (MSC Holders)</div>
+                                    <div class="rank-group-columns">
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Full-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffAssistantTeacherFullTimeCount" value="@(A.StaffAssistantTeacherFullTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="AssistantTeacher" data-employment-type="fulltime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("AssistantTeacher", "fulltime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Part-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffAssistantTeacherPartTimeCount" value="@(A.StaffAssistantTeacherPartTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="AssistantTeacher" data-employment-type="parttime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("AssistantTeacher", "parttime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rank-group-card">
+                                    <div class="rank-group-title">Assistant Lecturer (MSC Holders)</div>
+                                    <div class="rank-group-columns">
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Full-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffOthersFullTimeCount" value="@(A.StaffOthersFullTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="Others" data-employment-type="fulltime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("Others", "fulltime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Part-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffOthersPartTimeCount" value="@(A.StaffOthersPartTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="Others" data-employment-type="parttime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("Others", "parttime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rank-group-card">
+                                    <div class="rank-group-title">Assistant Lecturer (PSC Holders)</div>
+                                    <div class="rank-group-columns">
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Full-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffResearcherFullTimeCount" value="@(A.StaffResearcherFullTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="Researcher" data-employment-type="fulltime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("Researcher", "fulltime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Part-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffResearcherPartTimeCount" value="@(A.StaffResearcherPartTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="Researcher" data-employment-type="parttime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("Researcher", "parttime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rank-group-card">
+                                    <div class="rank-group-title">Practitioner (PSC Holders)</div>
+                                    <div class="rank-group-columns">
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Full-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffPractitionerPscFullTimeCount" value="@(A.StaffPractitionerPscFullTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="PractitionerPsc" data-employment-type="fulltime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("PractitionerPsc", "fulltime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Part-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffPractitionerPscPartTimeCount" value="@(A.StaffPractitionerPscPartTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="PractitionerPsc" data-employment-type="parttime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("PractitionerPsc", "parttime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rank-group-card">
+                                    <div class="rank-group-title">Practitioner (MSC Holders)</div>
+                                    <div class="rank-group-columns">
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Full-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffPractitionerMscFullTimeCount" value="@(A.StaffPractitionerMscFullTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="PractitionerMsc" data-employment-type="fulltime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("PractitionerMsc", "fulltime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rank-mini-section">
+                                            <div class="rank-mini-title">Part-Time</div>
+                                            <div class="rank-mini-grid">
+                                                <div class="field rank-mini-field">
+                                                    <label>Count <span class="req">*</span></label>
+                                                    <input type="number" min="0" name="StaffPractitionerMscPartTimeCount" value="@(A.StaffPractitionerMscPartTimeCount?.ToString() ?? "")" />
+                                                </div>
+                                                <div class="field rank-mini-field rank-upload-field">
+                                                    <div class="rank-upload-shell">
+                                                        <label class="rank-upload-trigger">
+                                                            <input type="file" class="rank-staff-upload" data-rank-key="PractitionerMsc" data-employment-type="parttime" accept=".xlsx,.xls" />
+                                                            Select Excel File
+                                                        </label>
+                                                        <div class="file-note rank-upload-note">@GetRankStaffFileName("PractitionerMsc", "parttime")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
+
                         <!-- Education system -->
-                        <div class="subhead">Educational System in Effect</div>
+                        <div class="subhead">Educational System in Effect <span class="req">*</span></div>
                         <div class="grid-4">
                             <label class="check-label"><input type="checkbox" name="SystemYearlyProgram" value="true" @(A.SystemYearlyProgram ? "checked" : "") /> Yearly Program</label>
                             <label class="check-label"><input type="checkbox" name="SystemSemesterProgram" value="true" @(A.SystemSemesterProgram ? "checked" : "") /> Semester Program</label>
@@ -400,39 +870,6 @@
                             <div class="field"><label>Max Hours</label><input type="number" min="0" name="MaxHours" value="@(A.MaxHours?.ToString() ?? "")" /></div>
                         </div>
 
-                        <!-- Research -->
-                        <div class="subhead">Research Activities By Faculty <span class="req">*</span></div>
-                        <div class="grid-2">
-                            <div class="field"><label>Items accounted by Scopus <span class="req">*</span></label><input type="number" min="0" name="ResearchItemsScopus" value="@(A.ResearchItemsScopus?.ToString() ?? "")" /></div>
-                            <div class="field"><label>Items accounted by other search engines <span class="req">*</span></label><input type="number" min="0" name="ResearchItemsOtherSearchEngines" value="@(A.ResearchItemsOtherSearchEngines?.ToString() ?? "")" /></div>
-                        </div>
-
-                        <!-- Practice -->
-                        <div class="grid-2">
-                            <div class="field">
-                                <label>Are foreign graduates (Medicine/Dentistry/Pharmacy) allowed to practice in home country?</label>
-                                <select name="ForeignGraduatesAllowedToPractice">
-                                    <option value="">-- Choose --</option>
-                                    <option selected="@(A.ForeignGraduatesAllowedToPractice == "Yes")">Yes</option>
-                                    <option selected="@(A.ForeignGraduatesAllowedToPractice == "No")">No</option>
-                                </select>
-                            </div>
-
-                            <div class="field">
-                                <label>Does institution enforce class attendance for all specialties?</label>
-                                <select name="EnforceClassAttendance">
-                                    <option value="">-- Choose --</option>
-                                    <option selected="@(A.EnforceClassAttendance == "Yes")">Yes</option>
-                                    <option selected="@(A.EnforceClassAttendance == "No")">No</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="field">
-                            <label>Mention Exceptions</label>
-                            <input name="MentionExceptions" value="@A.MentionExceptions" />
-                        </div>
-
                         <!-- Transfers -->
                         <div class="grid-2">
                             <div class="field">
@@ -443,10 +880,7 @@
                                     <option selected="@(A.PartTimeStudentsAllowedToTransfer == "No")">No</option>
                                 </select>
                             </div>
-                            <div class="field">
-                                <label>Elaborate Requirements and Procedures</label>
-                                <input name="TransferElaborateRequirements" value="@A.TransferElaborateRequirements" />
-                            </div>
+                            <div class="field"></div>
                         </div>
 
                         <div class="grid-2">
@@ -505,156 +939,121 @@
                     </div>
                 </section>
 
-                @* ===================== Admission Requirements ===================== *@
-                <section id="sec-admission">
-                    <div class="card">
-                        <div class="card-hd">
-                            <div class="card-title">Admission Requirements</div>
-                        </div>
-
-                        <div id="admission-container"
-                             data-add-url="@Url.Action("AdmissionAdd","Home")"
-                             data-del-url="@Url.Action("AdmissionDelete","Home")">
-                            @await Html.PartialAsync("Partial_Views/_AdmissionRequirements", (DTOs.AdmissionRequirementsDto)ViewBag.Admission)
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ===================== Study Duration ===================== -->
-                <section id="sec-duration" class="card">
+                <!-- ===================== Admission Requirements + Study Duration ===================== -->
+                <section id="sec-admission-duration" class="card">
                     <div class="card-hd">
-                        <h2>Study Duration</h2>
-                        <p>Minimum required duration for attendance and completion of the degree.</p>
+                        <h2>Admission Requirements and Study Duration</h2>
+                        <p>Upload optional sample requirement PDFs and enter study duration by qualification level.</p>
                     </div>
 
                     <div class="card-bd">
-                      
+                        @{
+                            var D = (DTOs.StudyDurationDto)(ViewBag.Duration ?? new DTOs.StudyDurationDto());
+                        }
 
-                       @{
-    var D = (DTOs.StudyDurationDto)(ViewBag.Duration ?? new DTOs.StudyDurationDto());
-}
+                        <div class="adm-study-grid">
+                            <article class="adm-study-card">
+                                <h3>Diploma</h3>
+                                <div class="field">
+                                    <label>Upload sample requirement PDF (optional)</label>
+                                    <input type="file" name="AdmissionStudy.DiplomaSamplePdf" accept=".pdf,application/pdf" />
+                                </div>
+                                <div class="field">
+                                    <label>Study duration</label>
+                                    <input type="text" name="AdmissionStudy.DiplomaDuration" value="@(string.IsNullOrWhiteSpace(D.DiplomaObtain) ? D.DiplomaEnrollment : D.DiplomaObtain)" placeholder="e.g., 2 years" />
+                                </div>
+                            </article>
 
-                        <div class="duration-wrap">
-                            <div class="duration-titlebar">
-                                Minimum Required Duration for Attendance and Completion of the Degree
-                            </div>
+                            <article class="adm-study-card">
+                                <h3>BSc</h3>
+                                <div class="field">
+                                    <label>Upload sample requirement PDF (optional)</label>
+                                    <input type="file" name="AdmissionStudy.BScSamplePdf" accept=".pdf,application/pdf" />
+                                </div>
+                                <div class="field">
+                                    <label>Study duration</label>
+                                    <input type="text" name="AdmissionStudy.BScDuration" value="@(string.IsNullOrWhiteSpace(D.BachelorObtain) ? D.BachelorEnrollment : D.BachelorObtain)" placeholder="e.g., 4 years" />
+                                </div>
+                            </article>
 
-                            <div class="duration-table-scroll">
-                                <table class="duration-table">
-                                    <thead>
-                                        <tr>
-                                            <th class="col-degree"></th>
-                                            <th class="col-metric">
-                                                Minimum Period for Completion <span class="req">*</span>
-                                            </th>
-                                            <th class="col-metric">
-                                                Minimum Period for Attendance <span class="req">*</span>
-                                            </th>
-                                        </tr>
-                                    </thead>
+                            <article class="adm-study-card">
+                                <h3>Higher Diploma</h3>
+                                <div class="field">
+                                    <label>Upload sample requirement PDF (optional)</label>
+                                    <input type="file" name="AdmissionStudy.HigherDiplomaSamplePdf" accept=".pdf,application/pdf" />
+                                </div>
+                                <div class="field">
+                                    <label>Study duration</label>
+                                    <input type="text" name="AdmissionStudy.HigherDiplomaDuration" value="@(string.IsNullOrWhiteSpace(D.HigherDiplomaObtain) ? D.HigherDiplomaEnrollment : D.HigherDiplomaObtain)" placeholder="e.g., 1 year" />
+                                </div>
+                            </article>
 
-                                    <tbody>
-                                        <tr>
-                                            <td class="degree-cell">Diploma <span class="req">*</span></td>
-                                            <td>
-                                                <input class="duration-input"
-                                                       name="Duration.DiplomaObtain"
-                                                       value="@D.DiplomaObtain"
-                                                       placeholder="e.g., 2 years" />
-                                            </td>
-                                            <td>
-                                                <input class="duration-input"
-                                                       name="Duration.DiplomaEnrollment"
-                                                       value="@D.DiplomaEnrollment"
-                                                       placeholder="e.g., 1 year" />
-                                            </td>
-                                        </tr>
+                            <article class="adm-study-card">
+                                <h3>Master</h3>
+                                <div class="field">
+                                    <label>Upload sample requirement PDF (optional)</label>
+                                    <input type="file" name="AdmissionStudy.MasterSamplePdf" accept=".pdf,application/pdf" />
+                                </div>
+                                <div class="field">
+                                    <label>Study duration</label>
+                                    <input type="text" name="AdmissionStudy.MasterDuration" value="@(string.IsNullOrWhiteSpace(D.MasterObtain) ? D.MasterEnrollment : D.MasterObtain)" placeholder="e.g., 2 years" />
+                                </div>
+                            </article>
 
-                                        <tr>
-                                            <td class="degree-cell">BSC <span class="req">*</span></td>
-                                            <td>
-                                                <input class="duration-input"
-                                                       name="Duration.BachelorObtain"
-                                                       value="@D.BachelorObtain"
-                                                       placeholder="e.g., 4 years" />
-                                            </td>
-                                            <td>
-                                                <input class="duration-input"
-                                                       name="Duration.BachelorEnrollment"
-                                                       value="@D.BachelorEnrollment"
-                                                       placeholder="e.g., 3 years" />
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <td class="degree-cell">Higher Diploma <span class="req">*</span></td>
-                                            <td>
-                                                <input class="duration-input"
-                                                       name="Duration.HigherDiplomaObtain"
-                                                       value="@D.HigherDiplomaObtain"
-                                                       placeholder="e.g., 1 year" />
-                                            </td>
-                                            <td>
-                                                <input class="duration-input"
-                                                       name="Duration.HigherDiplomaEnrollment"
-                                                       value="@D.HigherDiplomaEnrollment"
-                                                       placeholder="e.g., 6 months" />
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <td class="degree-cell">Master <span class="req">*</span></td>
-                                            <td>
-                                                <input class="duration-input"
-                                                       name="Duration.MasterObtain"
-                                                       value="@D.MasterObtain"
-                                                       placeholder="e.g., 2 years" />
-                                            </td>
-                                            <td>
-                                                <input class="duration-input"
-                                                       name="Duration.MasterEnrollment"
-                                                       value="@D.MasterEnrollment"
-                                                       placeholder="e.g., 1 year" />
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <td class="degree-cell">PhD <span class="req">*</span></td>
-                                            <td>
-                                                <input class="duration-input"
-                                                       name="Duration.PhDObtain"
-                                                       value="@D.PhDObtain"
-                                                       placeholder="e.g., 3 years" />
-                                            </td>
-                                            <td>
-                                                <input class="duration-input"
-                                                       name="Duration.PhDEnrollment"
-                                                       value="@D.PhDEnrollment"
-                                                       placeholder="e.g., 2 years" />
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <article class="adm-study-card">
+                                <h3>PhD</h3>
+                                <div class="field">
+                                    <label>Upload sample requirement PDF (optional)</label>
+                                    <input type="file" name="AdmissionStudy.PhDSamplePdf" accept=".pdf,application/pdf" />
+                                </div>
+                                <div class="field">
+                                    <label>Study duration</label>
+                                    <input type="text" name="AdmissionStudy.PhDDuration" value="@(string.IsNullOrWhiteSpace(D.PhDObtain) ? D.PhDEnrollment : D.PhDObtain)" placeholder="e.g., 3 years" />
+                                </div>
+                            </article>
                         </div>
 
-                        <!-- Save (AJAX - NO RELOAD, NO SCROLL) -->
-                        <div class="actions" style="justify-content:center; margin-top:16px;">
-                            <button type="button" class="btn-primary" id="btnSaveDuration">
-                                Save Duration
-                            </button>
+                        <div class="actions" style="justify-content:center; margin-top:14px;">
+                            <button type="button" class="btn-primary" id="btnSaveAdmissionRequirement">Save</button>
                         </div>
                     </div>
                 </section>
 
-                <!-- ===================== Faculties ===================== -->
+                <!-- ===================== Colleges ===================== -->
                 <section id="sec-faculties" class="card">
                     <div class="card-hd">
-                        <h2>Faculties</h2>
-                        <p>Add all faculties in your institution.</p>
+                        <h2>Colleges</h2>
+                        <p>Add all colleges in your institution.</p>
                     </div>
 
                     <div class="card-bd">
+                        @{
+                            var collegeCategories = (A.CollegeCategoriesCsv ?? "")
+                                .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                                .Select(x => x.Trim())
+                                .Where(x => !string.IsNullOrWhiteSpace(x))
+                                .ToList();
+                        }
+
+                        <div class="field" style="margin-bottom:12px;">
+                            <label>Selected College Categories</label>
+                            <div class="degree-options" style="margin-top:6px;">
+                                @if (collegeCategories.Any())
+                                {
+                                    foreach (var cat in collegeCategories)
+                                    {
+                                        <span class="degree-pill" style="pointer-events:none;">
+                                            <span>@cat</span>
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span style="color:#6b7280;">No categories selected.</span>
+                                }
+                            </div>
+                        </div>
+
                         <div id="faculties-container"
                              data-add-url="@Url.Action("FacultiesAdd","Home")"
                              data-del-url="@Url.Action("FacultiesDelete","Home")"
@@ -667,7 +1066,7 @@
                 <section id="sec-programs" class="card">
                     <div class="card-hd">
                         <h2>Programs</h2>
-                        <p>Add all programs. Faculty is selected from Faculties section.</p>
+                        <p>Add all programs. College is selected from Colleges section.</p>
                     </div>
 
                     <div class="card-bd">
@@ -680,210 +1079,9 @@
                     </div>
                 </section>
 
-                <!-- ===================== StudentsNumbers ===================== -->
-                <section id="sec-students" class="card">
-                    <div class="card-hd">
-                        <h2>Number of Students</h2>
-                        <p>Add students numbers per program.</p>
-                    </div>
-
-                    <div class="card-bd">
-                            <div id="studentsNumbersContainer"
-                                 data-partial-url="@Url.Action("StudentsNumbersPartial", "Home")"
-                                 data-add-url="@Url.Action("StudentsNumbersAdd", "Home")"
-                                 data-update-url="@Url.Action("StudentsNumbersUpdate", "Home")"
-                                 data-del-url="@Url.Action("StudentsNumbersDelete", "Home")">
-                        </div>
-                    </div>
-                </section>
-
-
-                <!-- ===================== Number of Hours ===================== -->             
-                <section id="sec-hours" class="card">
-                    <div class="card-hd">
-                        <h2>Number of Hours</h2>
-                        <p>Number of theoretical and practical hours in each program.</p>
-                    </div>
-
-                    <div class="card-bd">
-                            <div id="hoursContainer"
-                                 data-partial-url="@Url.Action("ProgramHoursPartial", "Home")"
-                                 data-add-url="@Url.Action("ProgramHoursAdd", "Home")"
-                                 data-update-url="@Url.Action("ProgramHoursUpdate", "Home")"
-                                 data-del-url="@Url.Action("ProgramHoursDelete", "Home")">
-                        </div>
-                    </div>
-                </section>
-
-
-                <!-- ===================== Ratio & Percenteges ===================== -->
-                @using DTOs
-                @{
-                    var R = (RatiosDto)(ViewBag.Ratios ?? new RatiosDto());
-                }
-
-                <section id="sec-ratios" class="card">
-                    <div class="card-hd">
-                        <h2>Percentages</h2>
-                    </div>
-
-                    <div class="card-bd">
-
-                        <div class="ratios-grid">
-                            <!-- LEFT TABLE -->
-                            <div class="ratios-box">
-                                <div class="ratios-title">Overall Students and Teaching Staff Ratio</div>
-
-                                <div class="ratios-table theme-mint">
-                                    <div class="rrow">
-                                        <div class="rlabel">Student: Full Time Teachers <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.StudentToFullTimeTeachers" value="@R.StudentToFullTimeTeachers" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Student: Full And Part Time Teachers <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.StudentToFullAndPartTimeTeachers" value="@R.StudentToFullAndPartTimeTeachers" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Associate Professor: Full Time Teachers <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.AssociateProfessorToFullTimeTeachers" value="@R.AssociateProfessorToFullTimeTeachers" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Assistant Professor: Full Time Teachers <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.AssistantProfessorToFullTimeTeachers" value="@R.AssistantProfessorToFullTimeTeachers" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Professor: Full Time Teachers <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.ProfessorToFullTimeTeachers" value="@R.ProfessorToFullTimeTeachers" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Ph.D: Full Time Teachers <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.PhDToFullTimeTeachers" value="@R.PhDToFullTimeTeachers" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Professor: Part Time Teachers <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.ProfessorToPartTimeTeachers" value="@R.ProfessorToPartTimeTeachers" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Ph.D: Part Time Teachers <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.PhDToPartTimeTeachers" value="@R.PhDToPartTimeTeachers" placeholder="1:25" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- RIGHT TABLE -->
-                            <div class="ratios-box">
-                                <div class="ratios-title">Teacher Rank - Student Ratio (for M.Sc. and Ph.D Degree)</div>
-
-                                <div class="ratios-table theme-mint">
-                                    <div class="rrow">
-                                        <div class="rlabel">Full Time Professor: Student <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.FullTimeProfessorToStudent" value="@R.FullTimeProfessorToStudent" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Part Time Professor: Student <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.PartTimeProfessorToStudent" value="@R.PartTimeProfessorToStudent" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Full Time Associate Professor: Student <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.FullTimeAssociateProfessorToStudent" value="@R.FullTimeAssociateProfessorToStudent" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Part Time Associate Professor: Student <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.PartTimeAssociateProfessorToStudent" value="@R.PartTimeAssociateProfessorToStudent" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Full Time Assistant Professor: Student <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.FullTimeAssistantProfessorToStudent" value="@R.FullTimeAssistantProfessorToStudent" placeholder="1:25" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rrow">
-                                        <div class="rlabel">Part Time Assistant Professor: Student <span class="req">*</span></div>
-                                        <div class="rinput">
-                                                <input name="Ratios.PartTimeAssistantProfessorToStudent" value="@R.PartTimeAssistantProfessorToStudent" placeholder="1:25" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="actions" style="justify-content:flex-end;">
-    <button type="button" id="btnSaveRatios" class="btn-primary">Save</button>
-</div>
-                     
-
-                    </div>
-                </section> 
-
-
-
-
-                    <!-- ---------------------- Teaching staff ------------------ -->
-                <section id="sec-staff" class="card">
-                    <div class="card-hd">
-                        <h2>Teaching Staff</h2>
-                    </div>
-                    <div class="card-bd">
-                        <div id="teachingStaffContainer"
-                             data-load-url="@Url.Action("TeachingStaffPartial", "Home")"
-                             data-upload-url="@Url.Action("UploadTeachingStaffExcel", "Home")"
-                             data-delete-url="@Url.Action("DeleteTeachingStaffExcel", "Home")">
-                        </div>
-                    </div>
-                </section>
-
-
-                    <!-- ---------------------- PhD Holders ------------------ -->
-                    <section id="sec-phd" class="card">
-                        <div class="card-hd"><h2>PhD Holders</h2></div>
-                        <div class="card-bd">
-                            <div id="phdHoldersContainer"
-                                 data-partial-url="@Url.Action("PhdHoldersPartial", "Home")"
-                                 data-add-url="@Url.Action("PhdHoldersAdd", "Home")"
-                                 data-update-url="@Url.Action("PhdHoldersUpdate", "Home")"
-                                 data-del-url="@Url.Action("PhdHoldersDelete", "Home")">
-                            </div>
-                        </div>
-                    </section>
-
                     <!-- ---------------------- Medicine and Dentistry------------------ -->
                     <section id="sec-med" class="card">
-                        <div class="card-hd"><h2>Medicine Faculties</h2></div>
+                        <div class="card-hd"><h2>Medicine Colleges</h2></div>
 
                         <div class="card-bd">
                             <div id="medDenContainer"
@@ -899,30 +1097,41 @@
                              data-load-url="@Url.Action("HospitalsPartial", "Home")"
                              data-add-url="@Url.Action("AddHospital", "Home")"
                              data-update-url="@Url.Action("UpdateHospital", "Home")"
-                             data-delete-url="@Url.Action("DeleteHospital", "Home")">
+                             data-delete-url="@Url.Action("DeleteHospital", "Home")"
+                             data-save-contracts-url="@Url.Action("SaveHospitalContracts", "Home")"
+                             data-delete-contract-url="@Url.Action("DeleteHospitalContract", "Home")">
                         </div>
                     </section>
                     <!-- ---------------------- INFASTRUCTURE------------------ -->
                     <section id="sec-infra" class="card">
-                        <div id="infrastructureContainer"
-                             data-load-url="@Url.Action("InfrastructurePartial", "Home")"
-                             data-save-url="@Url.Action("SaveInfrastructure", "Home")">
+                        <div class="card-hd">
+                            <h2>Infrastructure</h2>
+                            <p>Provide consolidated infrastructure information required for evaluation.</p>
+                        </div>
+
+                        <div class="card-bd">
+                            <div id="infrastructureContainer"
+                                 data-load-url="@Url.Action("InfrastructurePartial", "Home")"
+                                 data-save-url="@Url.Action("SaveInfrastructure", "Home")">
+                            </div>
                         </div>
                     </section>
-                    <!-- ---------------------- Laboratories ------------------ -->
-                <section id="sec-labs" class="card">
-                    <div class="card-hd">
-                        <h2>Laboratories</h2>
-                    </div>
 
-                    <div class="card-bd">
-                        <div id="laboratoriesContainer"
-                             data-load-url="@Url.Action("LaboratoriesPartial", "Home")"
-                             data-add-url="@Url.Action("AddOrUpdateLaboratory", "Home")"
-                             data-delete-url="@Url.Action("DeleteLaboratory", "Home")">
+                    <!-- ---------------------- LABORATORIES ------------------ -->
+                    <section id="sec-labs" class="card">
+                        <div class="card-hd">
+                            <h2>Laboratories</h2>
+                            <p>Add laboratories by college in a separate section.</p>
                         </div>
-                    </div>
-                </section>
+
+                        <div class="card-bd">
+                            <div id="laboratoriesContainer"
+                                 data-load-url="@Url.Action("LaboratoriesPartial", "Home")"
+                                 data-add-url="@Url.Action("AddOrUpdateLaboratory", "Home")"
+                                 data-delete-url="@Url.Action("DeleteLaboratory", "Home")">
+                            </div>
+                        </div>
+                    </section>
                 <!-- ---------------------- Libraries ------------------ -->
                 <section id="sec-library" class="card">
                     <div class="card-hd">
@@ -937,26 +1146,10 @@
                         </div>
                     </div>
                 </section>
-                <!-- ---------------------- Attachments ------------------ -->
-                <section id="sec-attachments" class="card">
-                    <div class="card-hd">
-                        <h2>Attachments</h2>
-                    </div>
-
-                    <div class="card-bd">
-                        <div id="attachmentsContainer"
-                             data-load-url="@Url.Action("AttachmentsPartial", "Home")"
-                             data-upload-url="@Url.Action("UploadAttachment", "Home")"
-                             data-delete-url="@Url.Action("DeleteAttachment", "Home")">
-                            @await Html.PartialAsync("Partial_Views/_Attachments", (DTOs.AttachmentDto)ViewBag.Attachments)
-                        </div>
-                    </div>
-                </section>
-
                 <!-- ---------------------- pictures------------------ -->
                 <section id="sec-pictures" class="card">
                     <div class="card-hd">
-                        <h2>Pictures</h2>
+                        <h2>Photos / Media</h2>
                     </div>
 
                     <div class="card-bd">
@@ -968,7 +1161,23 @@
                         </div>
                     </div>
                 </section>
+                <!--============================= accreditation-bodies ========================= -->
+                <section id="sec-accreditation-bodies" class="card">
+                    <div class="card-hd">
+                        <h2>Accreditation Bodies</h2>
+                        <p>Add recognition and accreditation bodies with one English PDF document per row.</p>
+                    </div>
 
+                    <div class="card-bd">
+                        <div id="accreditationBodiesContainer"
+                             data-load-url="@Url.Action("AccreditationBodiesPartial", "Home")"
+                             data-add-url="@Url.Action("AccreditationBodiesAdd", "Home")"
+                             data-update-url="@Url.Action("AccreditationBodiesUpdate", "Home")"
+                             data-delete-url="@Url.Action("AccreditationBodiesDelete", "Home")">
+                            @await Html.PartialAsync("Partial_Views/_AccreditationBodies", (DTOs.AccreditationBodiesDto)ViewBag.AccreditationBodies)
+                        </div>
+                    </div>
+                </section>
                 <!-- ===================== SUBMIT ===================== -->
                 <section id="sec-submit-application" class="card">
                     <div class="card-hd">
@@ -990,7 +1199,7 @@
         </main>
     </div>
     <!-- JSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS===================== -->
-    <!-- ===================== Programs refresh helper (used by Faculties) ===================== -->
+    <!-- ===================== Programs refresh helper (used by Colleges) ===================== -->
     <script>
         async function refreshProgramsNoJump() {
           const container = document.getElementById("programs-container");
@@ -1039,26 +1248,95 @@
         }
     </script>
 
+    <script>
+        (function () {
+            async function saveAdmissionStudyDurations() {
+                const btn = document.getElementById("btnSaveAdmissionRequirement");
+                if (!btn) return;
+
+                const sec = document.getElementById("sec-admission-duration");
+                if (!sec) return;
+
+                const diploma = sec.querySelector('input[name="AdmissionStudy.DiplomaDuration"]')?.value?.trim() || "";
+                const bsc = sec.querySelector('input[name="AdmissionStudy.BScDuration"]')?.value?.trim() || "";
+                const higherDiploma = sec.querySelector('input[name="AdmissionStudy.HigherDiplomaDuration"]')?.value?.trim() || "";
+                const master = sec.querySelector('input[name="AdmissionStudy.MasterDuration"]')?.value?.trim() || "";
+                const phd = sec.querySelector('input[name="AdmissionStudy.PhDDuration"]')?.value?.trim() || "";
+
+                const body = new URLSearchParams({
+                    "Duration.DiplomaObtain": diploma,
+                    "Duration.BachelorObtain": bsc,
+                    "Duration.HigherDiplomaObtain": higherDiploma,
+                    "Duration.MasterObtain": master,
+                    "Duration.PhDObtain": phd
+                });
+
+                const formData = new FormData();
+                formData.append("diplomaDuration", diploma);
+                formData.append("bScDuration", bsc);
+                formData.append("higherDiplomaDuration", higherDiploma);
+                formData.append("masterDuration", master);
+                formData.append("phdDuration", phd);
+
+                const diplomaPdf = sec.querySelector('input[name="AdmissionStudy.DiplomaSamplePdf"]')?.files?.[0];
+                const bScPdf = sec.querySelector('input[name="AdmissionStudy.BScSamplePdf"]')?.files?.[0];
+                const higherDiplomaPdf = sec.querySelector('input[name="AdmissionStudy.HigherDiplomaSamplePdf"]')?.files?.[0];
+                const masterPdf = sec.querySelector('input[name="AdmissionStudy.MasterSamplePdf"]')?.files?.[0];
+                const phdPdf = sec.querySelector('input[name="AdmissionStudy.PhDSamplePdf"]')?.files?.[0];
+
+                if (diplomaPdf) formData.append("diplomaSamplePdf", diplomaPdf);
+                if (bScPdf) formData.append("bScSamplePdf", bScPdf);
+                if (higherDiplomaPdf) formData.append("higherDiplomaSamplePdf", higherDiplomaPdf);
+                if (masterPdf) formData.append("masterSamplePdf", masterPdf);
+                if (phdPdf) formData.append("phdSamplePdf", phdPdf);
+
+                btn.disabled = true;
+                try {
+                    const durationRes = await fetch("@Url.Action("AutoSaveDuration", "Home")", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+                        body: body.toString()
+                    });
+
+                    const admissionRes = await fetch("@Url.Action("SaveAdmissionStudyFromUni", "Home")", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    if (!durationRes.ok || !admissionRes.ok) {
+                        throw new Error("Save failed");
+                    }
+                    alert("Saved successfully.");
+                } catch {
+                    alert("Save failed. Please try again.");
+                } finally {
+                    btn.disabled = false;
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const btn = document.getElementById("btnSaveAdmissionRequirement");
+                if (!btn) return;
+
+                btn.addEventListener("click", saveAdmissionStudyDurations);
+            });
+        })();
+    </script>
+
    
     <script src="~/js/uni/UniDashboard.js" asp-append-version="true"></script> 
     <script src="~/js/uni/PublicInfo.js" asp-append-version="true"></script> 
     <script src="~/js/uni/AcademicInfo.js" asp-append-version="true"></script>
-    <script src="~/js/uni/AdmissionRequirements.js" asp-append-version="true"></script>
-    <script src="~/js/uni/StudyDuration.js" asp-append-version="true"></script>
     <script src="~/js/uni/Faculties.js" asp-append-version="true"></script>
     <script src="~/js/uni/Programs.js" asp-append-version="true"></script>
     <script src="~/js/uni/StudentsNumbers.js" asp-append-version="true"></script>
-    <script src="~/js/uni/ProgramHours.js" asp-append-version="true"></script>
-    <script src="~/js/uni/Ratios.js" asp-append-version="true"></script>
-    <script src="~/js/uni/TeachingStaff.js" asp-append-version="true"></script>
-    <script src="~/js/uni/PhdHolders.js" asp-append-version="true"></script> 
     <script src="~/js/uni/MedicineDentistry.js" asp-append-version="true"></script>
     <script src="~/js/uni/Hospitals.js" asp-append-version="true"></script>
     <script src="~/js/uni/Infrastructure.js" asp-append-version="true"></script>
     <script src="~/js/uni/Laboratories.js" asp-append-version="true"></script>
     <script src="~/js/uni/Library.js" asp-append-version="true"></script>
-    <script src="~/js/uni/Attachments.js" asp-append-version="true"></script> 
     <script src="~/js/uni/Pictures.js" asp-append-version="true"></script>
+    <script src="~/js/uni/AccreditationBodies.js" asp-append-version="true"></script>
     <script src="~/js/uni/SubmitApplication.js" asp-append-version="true"></script>
 
 </body>
@@ -1074,10 +1352,6 @@
 
     
  
-
-   
- 
-
 
    
 

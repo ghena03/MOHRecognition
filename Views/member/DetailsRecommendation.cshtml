@@ -1,9 +1,13 @@
-﻿@{
+﻿@model MOHRecognition.Services.RecognitionRequestRecord
+@{
     Layout = null;
     ViewData["Title"] = "Request Details - Recommendation";
-    var requestId = ViewBag.RequestId ?? 0;
-    var inst = ViewBag.InstitutionName ?? "—";
+    var requestId = Model?.Id ?? 0;
+    var inst = Model?.UniversityName ?? "—";
+    var recommendationDecision = Model?.BasicInfoAssessmentDecision ?? string.Empty;
+    var recommendationNote = Model?.BasicInfoAssessmentReason ?? string.Empty;
 }
+
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
@@ -23,7 +27,7 @@
             <div class="rm-top-inner">
                 <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
                 <div class="rm-user">
-                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>Dr. Khaled Ahmed</b></span></div>
+                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>Recognition Member</b></span></div>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </div>
             </div>
@@ -34,8 +38,8 @@
         <aside class="rm-sidebar">
             <div class="rm-side-title">Navigation</div><nav class="rm-nav">
                 <a class="rm-navitem" href="@Url.Action("RecognitionMemberDashboard", "Home")"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
-                <a class="rm-navitem active" href="@Url.Action("ElectronicHome", "Home")"><i class="bi bi-send-check"></i><span>My Assigned Home</span></a>
-                <a class="rm-navitem" href="@Url.Action("Archive", "Home")"><i class="bi bi-inboxes"></i><span>Home Archive</span></a>
+                <a class="rm-navitem active" href="@Url.Action("ElectronicRequests", "Home")"><i class="bi bi-send-check"></i><span>My Assigned Requests</span></a>
+                <a class="rm-navitem" href="@Url.Action("Archive", "Home")"><i class="bi bi-inboxes"></i><span>Requests Archive</span></a>
                 <a class="rm-navitem danger" href="@Url.Action("Logout", "Home")"><i class="bi bi-power"></i><span>Sign Out</span></a>
             </nav>
         </aside>
@@ -45,45 +49,69 @@
                 <div>
                     <h1>Request Details</h1>
                     <p class="rd-inst">Institution: <b>@inst</b></p>
-                    <p>Step 5 of 5 — Analysis & Recommendation.</p>
+                    <p>Final Stage — Analysis & Recommendation.</p>
                 </div>
                 <div class="rd-meta">
                     <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
-                    <div class="meta-pill"><span>Step</span><b>5 / 5</b></div>
+                    <div class="meta-pill"><span>Stage</span><b>Final</b></div>
                 </div>
             </section>
 
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2>Analysis</h2>
-                    <p>Recognition member analysis notes.</p>
-                </div>
-                <div class="rd-field">
-                    <label>Analysis Notes</label>
-                    <input type="text" placeholder="Write analysis..." />
-                </div>
-            </section>
-
-            <section class="rm-card rd-card">
-                <div class="rd-card-hd">
-                    <h2>Recommendation</h2>
-                    <p>Final recommendation for this request.</p>
+                    <h2>Final Recognition Decision</h2>
+                    <p>Choose a professional recommendation and provide a justification note.</p>
                 </div>
 
-                <div class="rd-grid3">
-                    <div class="rd-field">
-                        <label>Decision</label>
-                        <select>
-                            <option>Approve</option>
-                            <option>Reject</option>
-                            <option>Missing Documents</option>
-                        </select>
+                @if (TempData["RecommendationSaved"] != null)
+                {
+                    <div class="infra-saved">@TempData["RecommendationSaved"]</div>
+                }
+
+                @if (TempData["RecommendationError"] != null)
+                {
+                    <div class="infra-error">@TempData["RecommendationError"]</div>
+                }
+
+                <form asp-controller="Home" asp-action="SaveRecommendationDecision" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@requestId" />
+
+                    <div class="decision-grid">
+                        <label class="decision-card accepted">
+                            <input type="radio" name="decision" value="Recognized" @(recommendationDecision == "Recognized" ? "checked" : null) required />
+                            <span class="decision-check"><i class="bi bi-check-circle-fill"></i></span>
+                            <span class="decision-pill">Recognized</span>
+                            <strong>Recognize University</strong>
+                            <small>The university satisfies recognition standards.</small>
+                        </label>
+
+                        <label class="decision-card modified">
+                            <input type="radio" name="decision" value="Recognized with Modifications" @(recommendationDecision == "Recognized with Modifications" ? "checked" : null) required />
+                            <span class="decision-check"><i class="bi bi-check-circle-fill"></i></span>
+                            <span class="decision-pill">With Modifications</span>
+                            <strong>Recognition with Modifications</strong>
+                            <small>Recognition is possible after required improvements are completed.</small>
+                        </label>
+
+                        <label class="decision-card rejected">
+                            <input type="radio" name="decision" value="Not Recognized" @(recommendationDecision == "Not Recognized" ? "checked" : null) required />
+                            <span class="decision-check"><i class="bi bi-check-circle-fill"></i></span>
+                            <span class="decision-pill">Not Recognized</span>
+                            <strong>Do Not Recognize University</strong>
+                            <small>The university does not currently meet recognition requirements.</small>
+                        </label>
                     </div>
-                    <div class="rd-field" style="grid-column: span 2;">
-                        <label>Recommendation Notes</label>
-                        <input type="text" placeholder="Write recommendation..." />
+
+                    <div class="rd-field" style="margin-top:14px;">
+                        <label for="decisionReason">Professional Justification Note</label>
+                        <textarea id="decisionReason" class="doc-notes" name="reason" placeholder="Provide a clear professional explanation for the selected decision..." required>@recommendationNote</textarea>
                     </div>
-                </div>
+
+                    <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+                        <button class="rm-btn rm-btn-primary" type="submit"><i class="bi bi-check2-circle"></i> Save Decision</button>
+                    </div>
+                </form>
             </section>
 
             <section class="rm-card rd-actions">
@@ -91,11 +119,35 @@
                     <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsInfrastructure", "Home", new { id = requestId })">Previous</a>
                 </div>
                 <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("ElectronicHome", "Home")">Exit</a>
-                    <button class="rm-btn rm-btn-primary" type="button"><i class="bi bi-check2-circle"></i> Submit Decision</button>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("ElectronicRequests", "Home")">Exit</a>
                 </div>
             </section>
         </main>
     </div>
+
+    <script>
+        (function () {
+            const cards = document.querySelectorAll('.decision-card');
+
+            function refreshSelectedState() {
+                cards.forEach((card) => {
+                    const input = card.querySelector('input[type="radio"]');
+                    if (!input) return;
+
+                    card.classList.toggle('is-selected', input.checked);
+                });
+            }
+
+            cards.forEach((card) => {
+                const input = card.querySelector('input[type="radio"]');
+                if (!input) return;
+
+                input.addEventListener('change', refreshSelectedState);
+                card.addEventListener('click', refreshSelectedState);
+            });
+
+            refreshSelectedState();
+        })();
+    </script>
 </body>
 </html>

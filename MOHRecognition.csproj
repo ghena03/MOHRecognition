@@ -11,12 +11,22 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\ArchiveService.cs\Services.csproj" />
-	  <ProjectReference Include="..\DTOs\DTOs.csproj" />
+	  <ProjectReference Include="ArchiveService.cs\Services.csproj" />
+	  <ProjectReference Include="DTOs\DTOs.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="ArchiveService.cs\**\*.cs" />
+	  <Compile Remove="DTOs\**\*.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Folder Include="PdfReaderTool\" />
+	  <Folder Include="Services\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include=".github\copilot-instructions.md" />
 	</ItemGroup>
 
 </Project>

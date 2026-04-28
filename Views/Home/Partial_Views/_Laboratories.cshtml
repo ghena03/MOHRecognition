@@ -3,124 +3,134 @@
 
 <div class="duration-wrap" style="margin-top:0;">
     <div class="duration-titlebar">
-        Labratories of the University
+        Laboratories of the University
     </div>
 
     <!-- UI Banner -->
-    <div id="labBanner" class="banner warn" style="display:none; margin-top:12px;">
+    <div id="labBanner" class="banner warn" style="display:none; margin-top:12px;" role="status" aria-live="polite">
         <span class="dot"></span>
         <span class="txt"></span>
         <button type="button" class="x" onclick="document.getElementById('labBanner').style.display='none'">×</button>
     </div>
 
-    <!-- Edit -->
-    <input type="hidden" id="lab_editId" value="" />
+    <div class="lab-modern-wrap">
+        <!-- Edit -->
+        <input type="hidden" id="lab_editId" value="" />
 
-    <div class="grid-5" style="margin-top:14px;">
-        <div class="field">
-            <label>Faculty <span class="req">*</span></label>
-            <select id="lab_facultyId">
-                <option value="">--Choose--</option>
-                @if (Model?.Faculties != null)
-                {
-                    foreach (var f in Model.Faculties)
-                    {
-                        <option value="@f.Id">@f.FacultyName</option>
-                    }
-                }
-            </select>
-        </div>
+        <div class="lab-section-card">
+            <div class="lab-section-title">Laboratories by College</div>
+            <div class="lab-section-sub">Add detailed counts for each college.</div>
 
-        <div class="field">
-            <label>Computers <span class="req">*</span></label>
-            <input id="lab_computers" type="number" min="0" />
-        </div>
+            <div id="labEditorForm" style="display:grid; gap:12px; margin-top:14px;">
+                <div class="grid-5">
+                    <div class="field">
+                        <label>College <span class="req">*</span></label>
+                        <select id="lab_facultyId">
+                            <option value="">--Choose--</option>
+                            @if (Model?.Faculties != null)
+                            {
+                                foreach (var fac in Model.Faculties)
+                                {
+                                    <option value="@fac.Id">@fac.FacultyName</option>
+                                }
+                            }
+                        </select>
+                    </div>
 
-        <div class="field">
-            <label>Workshops <span class="req">*</span></label>
-            <input id="lab_workshops" type="number" min="0" />
-        </div>
+                    <div class="field">
+                        <label>Computers <span class="req">*</span></label>
+                        <input id="lab_computers" type="number" min="0" step="1" inputmode="numeric" />
+                    </div>
 
-        <div class="field">
-            <label>Laboratories <span class="req">*</span></label>
-            <input id="lab_laboratories" type="number" min="0" />
-        </div>
+                    <div class="field">
+                        <label>Workshops <span class="req">*</span></label>
+                        <input id="lab_workshops" type="number" min="0" step="1" inputmode="numeric" />
+                    </div>
 
-        <div class="field">
-            <label>Personal Computers <span class="req">*</span></label>
-            <input id="lab_personalComputers" type="number" min="0" />
-        </div>
-    </div>
+                    <div class="field">
+                        <label>Laboratories <span class="req">*</span></label>
+                        <input id="lab_laboratories" type="number" min="0" step="1" inputmode="numeric" />
+                    </div>
 
-    <div style="display:flex; justify-content:center; gap:10px; margin:14px 0 8px;">
-        <button type="button" class="btn-primary" id="lab_addBtn" onclick="LabAdd()">Add</button>
-        <button type="button" class="btn-ghost" id="lab_cancelBtn" style="display:none;" onclick="LabCancelEdit()">Cancel</button>
-    </div>
+                    <div class="field">
+                        <label>Personal Computers <span class="req">*</span></label>
+                        <input id="lab_personalComputers" type="number" min="0" step="1" inputmode="numeric" />
+                    </div>
+                </div>
 
-    <div class="table-wrap" style="margin-top:10px;">
-        <table class="tbl">
-            <thead>
-                <tr>
-                    <th style="width:55px;">#</th>
-                    <th>Name</th>
-                    <th>Computers</th>
-                    <th>Workshops</th>
-                    <th>Laboratories</th>
-                    <th>Personal Computers</th>
-                    <th style="width:120px;"></th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model?.Rows == null || !Model.Rows.Any())
-                {
-                    <tr>
-                        <td colspan="7" style="text-align:left; font-weight:600;">No Data Found !</td>
-                    </tr>
-                }
-                else
-                {
-                    var i = 1;
-                    foreach (var r in Model.Rows)
-                    {
+                <div class="lab-actions-row">
+                    <button type="button" class="btn-primary" id="lab_addBtn">Add</button>
+                    <button type="button" class="btn-ghost" id="lab_cancelBtn" style="display:none;">Cancel</button>
+                </div>
+            </div>
+
+            <div class="table-wrap" style="margin-top:10px;">
+                <table class="tbl" id="labRowsTable">
+                    <thead>
                         <tr>
-                            <td>@i</td>
-                            <td>@r.FacultyName</td>
-                            <td>@r.Computers</td>
-                            <td>@r.Workshops</td>
-                            <td>@r.Laboratories</td>
-                            <td>@r.PersonalComputers</td>
-                            <td style="white-space:nowrap; text-align:center;">
-                                <div class="icon-actions">
-                                    <button type="button"
-                                            class="iconbtn iconbtn-edit"
-                                            onclick="LabStartEdit('@r.Id')"
-                                            title="Edit"
-                                            aria-label="Edit">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                            <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.83H5v-.92l9.06-9.06.92.92L5.92 20.08zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" />
-                                        </svg>
-                                    </button>
-
-                                    <button type="button"
-                                            class="iconbtn iconbtn-del"
-                                            onclick="LabDelete('@r.Id')"
-                                            title="Delete"
-                                            aria-label="Delete">
-                                        ×
-                                    </button>
-                                </div>
-
-                                <input type="hidden" id="lab_row_facultyId_@r.Id" value="@r.FacultyId" />
-                                <input type="hidden" id="lab_row_computers_@r.Id" value="@r.Computers" />
-                                <input type="hidden" id="lab_row_workshops_@r.Id" value="@r.Workshops" />
-                                <input type="hidden" id="lab_row_laboratories_@r.Id" value="@r.Laboratories" />
-                                <input type="hidden" id="lab_row_personalComputers_@r.Id" value="@r.PersonalComputers" />
-                            </td>
+                            <th style="width:55px;">#</th>
+                            <th>College</th>
+                            <th>Computers</th>
+                            <th>Workshops</th>
+                            <th>Laboratories</th>
+                            <th>Personal Computers</th>
+                            <th style="width:120px;"></th>
                         </tr>
-                        i++;
-                    }
-                }
-            </tbody>
-        </table>
+                    </thead>
+                    <tbody>
+                        @if (Model?.Rows == null || !Model.Rows.Any())
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align:left; font-weight:600;">No Data Found !</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            var i = 1;
+                            foreach (var r in Model.Rows)
+                            {
+                                <tr>
+                                    <td>@i</td>
+                                    <td>@r.FacultyName</td>
+                                    <td>@r.Computers</td>
+                                    <td>@r.Workshops</td>
+                                    <td>@r.Laboratories</td>
+                                    <td>@r.PersonalComputers</td>
+                                    <td style="white-space:nowrap; text-align:center;">
+                                        <div class="icon-actions">
+                                            <button type="button"
+                                                    class="iconbtn iconbtn-edit"
+                                                    data-lab-action="edit"
+                                                    data-id="@r.Id"
+                                                    data-faculty-id="@r.FacultyId"
+                                                    data-computers="@r.Computers"
+                                                    data-workshops="@r.Workshops"
+                                                    data-laboratories="@r.Laboratories"
+                                                    data-personal-computers="@r.PersonalComputers"
+                                                    title="Edit"
+                                                    aria-label="Edit">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                    <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.83H5v-.92l9.06-9.06.92.92L5.92 20.08zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" />
+                                                </svg>
+                                            </button>
+
+                                            <button type="button"
+                                                    class="iconbtn iconbtn-del"
+                                                    data-lab-action="delete"
+                                                    data-id="@r.Id"
+                                                    title="Delete"
+                                                    aria-label="Delete">
+                                                ×
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                i++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>

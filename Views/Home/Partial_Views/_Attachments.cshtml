@@ -1,119 +1,94 @@
 ﻿@model DTOs.AttachmentDto
 
-<div class="attach-grid">
-    <!-- Left: Upload card -->
-    <div class="attach-card">
-        <div class="duration-titlebar">
-            Attachments Upload
-        </div>
+@{
+    var rows = Model?.Rows ?? new List<DTOs.AttachmentRowDto>();
+}
 
-        <div id="attBanner" class="banner warn" style="display:none; margin-top:12px;">
-            <span class="dot"></span>
-            <span class="txt"></span>
-            <button type="button" class="x" onclick="document.getElementById('attBanner').style.display='none'">×</button>
-        </div>
+<div class="attach-card">
+    <div class="duration-titlebar">Required PDF Photos Upload</div>
 
-        <input type="hidden" id="att_deleteId" value="" />
+    <div id="attBanner" class="banner warn" style="display:none; margin-top:12px;">
+        <span class="dot"></span>
+        <span class="txt"></span>
+        <button type="button" class="x" onclick="document.getElementById('attBanner').style.display='none'">×</button>
+    </div>
 
-        <div class="attach-note-box" style="margin-top:16px;">
-            <div class="attach-note-title">Important Note</div>
-            <div class="attach-note-text">
-                The university must upload the official establishment document and the local accreditation document.
-                The international accreditation document should also be uploaded, if applicable.
-            </div>
-        </div>
-
-        <div class="attach-form" style="margin-top:16px;">
-            <div class="field">
-                <label>Choose File <span class="req">*</span></label>
-                <input id="att_file" type="file" />
-            </div>
-
-            <div class="field" style="margin-top:14px;">
-                <label>Subject <span class="req">*</span></label>
-                <select id="att_subject">
-                    <option value="">-- Select document type --</option>
-                    <option value="University establishment document">University establishment document</option>
-                    <option value="Local accreditation document">Local accreditation document</option>
-                    <option value="International accreditation document">International accreditation document</option>
-                    <option value="Program accreditation document">Program accreditation document</option>
-                    <option value="Detailed curriculum">Detailed curriculum</option>
-                    <option value="Student guide">Student guide</option>
-                    <option value="Course descriptions">Course descriptions</option>
-                    <option value="Signed agreements / MoUs">Signed agreements / MoUs</option>
-                    <option value="Training contracts for hospitals">Training contracts for hospitals</option>
-                    <option value="Other supporting documents">Other supporting documents</option>
-                </select>
-            </div>
-
-            <div style="display:flex; justify-content:center; margin-top:18px;">
-                <button type="button" class="btn-primary" onclick="AttachmentUpload()">Upload</button>
-            </div>
-        </div>
-
-        <div class="attach-table-wrap" style="margin-top:22px;">
-            <table class="table attach-table">
-                <thead>
-                    <tr>
-                        <th style="width:70px;">#</th>
-                        <th>Subject</th>
-                        <th>File Name</th>
-                        <th style="width:110px;">View</th>
-                        <th style="width:120px;">Download</th>
-                        <th style="width:110px;">Delete</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model?.Rows == null || !Model.Rows.Any())
-                    {
-                        <tr>
-                            <td colspan="6" style="font-weight:700;">No Data Found !</td>
-                        </tr>
-                    }
-                    else
-                    {
-                        int i = 1;
-                        foreach (var row in Model.Rows)
-                        {
-                            <tr>
-                                <td>@i</td>
-                                <td>@row.Subject</td>
-                                <td>@row.FileName</td>
-                                <td>
-                                    <a class="btn-table-action btn-view" href="@row.FileUrl" target="_blank">View</a>
-                                </td>
-                                <td>
-                                    <a class="btn-table-action btn-download" href="@row.FileUrl" download="@row.FileName">Download</a>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn-table-action btn-delete" onclick="AttachmentDelete('@row.Id')">Delete</button>
-                                </td>
-                            </tr>
-                            i++;
-                        }
-                    }
-                </tbody>
-            </table>
+    <div class="attach-note-box" style="margin-top:16px;">
+        <div class="attach-note-title">Upload Instructions</div>
+        <div class="attach-note-text">
+            Please upload <b>PDF files only</b> for the following three categories.
+            You can upload <b>multiple files</b> in each category.
         </div>
     </div>
 
-    <!-- Right: Required files -->
-    <div class="attach-card attach-side">
-        <div class="duration-titlebar">
-            Files to Attach
+    <div class="attach-form" style="margin-top:16px;">
+        <div class="attach-card" style="margin-top:10px;">
+            <div class="duration-titlebar">1) Library Photos (PDF)</div>
+            <div class="field" style="margin-top:12px;">
+                <input id="att_library_files" type="file" multiple accept=".pdf,application/pdf" />
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+                <button type="button" class="btn-primary" onclick="AttachmentUploadCategory('Library photos (PDF)','att_library_files')">Upload Library PDFs</button>
+            </div>
         </div>
 
-        <div class="attach-requirements">
-            @if (Model?.RequiredFiles != null && Model.RequiredFiles.Any())
-            {
-                foreach (var item in Model.RequiredFiles)
-                {
-                    <div class="attach-req-item">
-                        <span class="attach-req-dot">*</span>
-                        <span>@item</span>
-                    </div>
-                }
-            }
+        <div class="attach-card" style="margin-top:12px;">
+            <div class="duration-titlebar">2) Hospital Photos (PDF)</div>
+            <div class="field" style="margin-top:12px;">
+                <input id="att_hospital_files" type="file" multiple accept=".pdf,application/pdf" />
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+                <button type="button" class="btn-primary" onclick="AttachmentUploadCategory('Hospital photos (PDF)','att_hospital_files')">Upload Hospital PDFs</button>
+            </div>
         </div>
+
+        <div class="attach-card" style="margin-top:12px;">
+            <div class="duration-titlebar">3) Colleges Photos (PDF)</div>
+            <div class="field" style="margin-top:12px;">
+                <input id="att_faculties_files" type="file" multiple accept=".pdf,application/pdf" />
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+                <button type="button" class="btn-primary" onclick="AttachmentUploadCategory('Colleges photos (PDF)','att_faculties_files')">Upload Colleges PDFs</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="attach-table-wrap" style="margin-top:22px;">
+        <table class="table attach-table">
+            <thead>
+                <tr>
+                    <th style="width:70px;">#</th>
+                    <th>Category</th>
+                    <th>File Name</th>
+                    <th style="width:110px;">View</th>
+                    <th style="width:120px;">Download</th>
+                    <th style="width:110px;">Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!rows.Any())
+                {
+                    <tr>
+                        <td colspan="6" style="font-weight:700;">No files uploaded yet.</td>
+                    </tr>
+                }
+                else
+                {
+                    int i = 1;
+                    foreach (var row in rows)
+                    {
+                        <tr>
+                            <td>@i</td>
+                            <td>@row.Subject</td>
+                            <td>@row.FileName</td>
+                            <td><a class="btn-table-action btn-view" href="@row.FileUrl" target="_blank">View</a></td>
+                            <td><a class="btn-table-action btn-download" href="@row.FileUrl" download="@row.FileName">Download</a></td>
+                            <td><button type="button" class="btn-table-action btn-delete" onclick="AttachmentDelete('@row.Id')">Delete</button></td>
+                        </tr>
+                        i++;
+                    }
+                }
+            </tbody>
+        </table>
     </div>
 </div>

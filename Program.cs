@@ -1,4 +1,6 @@
 using MOHRecognition.Services;
+using System.Diagnostics;
+using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddSingleton<IRecognitionRequestService, InMemoryRecognitionRequestService>();
 
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

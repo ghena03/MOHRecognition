@@ -1,8 +1,216 @@
-﻿@{
+﻿@model MOHRecognition.Services.RecognitionRequestRecord
+@{
     Layout = null;
-    ViewData["Title"] = "Request Details - Statistics";
-    var requestId = ViewBag.RequestId ?? 0;
-    var inst = ViewBag.InstitutionName ?? "—";
+    ViewData["Title"] = "Request Details - Students Numbers";
+    var requestId = ViewBag.RequestId ?? Model?.Id ?? 0;
+    var inst = ViewBag.InstitutionName ?? Model?.UniversityName ?? "—";
+    var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
+    var professorFullTime = A.StaffProfessorFullTimeCount ?? 0;
+    var associateProfessorFullTime = A.StaffAssociateProfessorFullTimeCount ?? 0;
+    var assistantProfessorFullTime = A.StaffAssistantProfessorFullTimeCount ?? 0;
+    var teacherFullTime = A.StaffTeacherFullTimeCount ?? 0;
+    var labAssistantFullTime = A.StaffLabAssistantFullTimeCount ?? 0;
+    var researcherFullTime = A.StaffResearcherFullTimeCount ?? 0;
+    var assistantTeacherFullTime = A.StaffAssistantTeacherFullTimeCount ?? 0;
+    var othersFullTime = A.StaffOthersFullTimeCount ?? 0;
+    var practitionerPscFullTime = A.StaffPractitionerPscFullTimeCount ?? 0;
+    var practitionerMscFullTime = A.StaffPractitionerMscFullTimeCount ?? 0;
+    var allFullTimeTeachingStaff =
+        professorFullTime + associateProfessorFullTime + assistantProfessorFullTime +
+        labAssistantFullTime + researcherFullTime + teacherFullTime + assistantTeacherFullTime + othersFullTime + practitionerPscFullTime + practitionerMscFullTime;
+    var academicRankTotal =
+        (A.StaffProfessorFullTimeCount ?? 0) + (A.StaffProfessorPartTimeCount ?? 0) +
+        (A.StaffAssociateProfessorFullTimeCount ?? 0) + (A.StaffAssociateProfessorPartTimeCount ?? 0) +
+        (A.StaffAssistantProfessorFullTimeCount ?? 0) + (A.StaffAssistantProfessorPartTimeCount ?? 0) +
+        (A.StaffLabAssistantFullTimeCount ?? 0) + (A.StaffLabAssistantPartTimeCount ?? 0) +
+        (A.StaffResearcherFullTimeCount ?? 0) + (A.StaffResearcherPartTimeCount ?? 0) +
+        (A.StaffTeacherFullTimeCount ?? 0) + (A.StaffTeacherPartTimeCount ?? 0) +
+        (A.StaffAssistantTeacherFullTimeCount ?? 0) + (A.StaffAssistantTeacherPartTimeCount ?? 0) +
+        (A.StaffOthersFullTimeCount ?? 0) + (A.StaffOthersPartTimeCount ?? 0) +
+        (A.StaffPractitionerPscFullTimeCount ?? 0) + (A.StaffPractitionerPscPartTimeCount ?? 0) +
+        (A.StaffPractitionerMscFullTimeCount ?? 0) + (A.StaffPractitionerMscPartTimeCount ?? 0);
+
+    var totalPhdHolders = professorFullTime + associateProfessorFullTime + assistantProfessorFullTime + teacherFullTime;
+    var fullTimeFacultyForDoctorate =
+        professorFullTime + associateProfessorFullTime + assistantProfessorFullTime + teacherFullTime +
+        assistantTeacherFullTime + othersFullTime + researcherFullTime;
+    var doctorateHoldersPercentage = fullTimeFacultyForDoctorate > 0
+        ? Math.Floor(((decimal)totalPhdHolders * 100m) / fullTimeFacultyForDoctorate)
+        : 0m;
+    var doctorateStatus = fullTimeFacultyForDoctorate > 0
+        ? (doctorateHoldersPercentage >= 50m ? "green" : "red")
+        : "";
+    var allowedMscSupport = Math.Ceiling(0.20m * totalPhdHolders);
+    var actualMscSupport = assistantTeacherFullTime + othersFullTime;
+    var mscSupportUsed = Math.Min(allowedMscSupport, actualMscSupport);
+    var totalFacultyForRatio = totalPhdHolders + (0.10m * totalPhdHolders) + mscSupportUsed;
+    var totalStudents = A.TotalStudentPopulation ?? 0;
+    var studentsToFacultyRatio = totalFacultyForRatio > 0
+        ? Math.Ceiling((decimal)totalStudents / totalFacultyForRatio)
+        : 0m;
+    var labAndResearchSum = labAssistantFullTime + researcherFullTime;
+    var assistantTeacherCount = assistantTeacherFullTime;
+    var combinedAcademicStaff = academicRankTotal;
+
+    var totalFaculty = allFullTimeTeachingStaff;
+    var seniorFaculty = professorFullTime + associateProfessorFullTime;
+    var appliedDoctorateAddition = (0.10m * totalPhdHolders) + mscSupportUsed;
+
+    var difference = totalFacultyForRatio - totalStudents;
+    var studentWithinCapacity = totalStudents <= totalFacultyForRatio;
+
+    var facultyDataValid = totalFaculty >= 0 && totalPhdHolders >= 0 && totalFacultyForRatio >= 0;
+    var facultySufficiencyAcceptable = facultyDataValid && totalFaculty > 0 && totalFacultyForRatio > 0;
+
+    var rankLevel = 0; // 0=ok,1=warn,2=fail
+    if (seniorFaculty <= 0) rankLevel = 2;
+    else if (totalFaculty > 0 && seniorFaculty < Math.Max(1, totalFaculty / 10)) rankLevel = 1;
+
+    var doctorateContributionValid = totalPhdHolders > 0 && appliedDoctorateAddition > 0;
+
+    var anyStudySystem = A.SystemYearlyProgram || A.SystemSemesterProgram || A.SystemCreditHours || A.SystemECTS;
+    var appliedRuleName = "PhD + MSc Support Capacity Rule";
+    var appliedFormulaType = "C = D + 0.10D + min(0.20D, MSc Support)";
+    var appliedRuleCorrect = anyStudySystem && totalFacultyForRatio >= 0;
+
+    var doctorateTenPercent = 0.10m * totalPhdHolders;
+    var teacherLimitedPart = mscSupportUsed;
+
+    var studentLevel = studentWithinCapacity ? 0 : 2;
+    var facultyLevel = (facultyDataValid && facultySufficiencyAcceptable) ? 0 : 2;
+    var doctorateLevel = doctorateContributionValid ? 0 : 2;
+    var ruleLevel = appliedRuleCorrect ? 0 : 2;
+    var overallLevel = new[] { studentLevel, facultyLevel, rankLevel, doctorateLevel, ruleLevel }.Max();
+
+    var ratioValue = A.StudentsToFacultyRatio ?? 0m;
+
+    var selectedCollegeCategories = (A.CollegeCategoriesCsv ?? "")
+        .Split(';', StringSplitOptions.RemoveEmptyEntries)
+        .Select(x => x.Trim())
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .ToList();
+
+    var categoryRatioMap = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Scientific"] = 20m,
+        ["Humanities"] = 35m,
+        ["Medical"] = 25m,
+        ["Applied"] = 20m
+    };
+
+    var selectedRatios = selectedCollegeCategories
+        .Where(k => categoryRatioMap.ContainsKey(k))
+        .Select(k => categoryRatioMap[k])
+        .ToList();
+
+    var avg = selectedRatios.Any() ? selectedRatios.Average() : 0m;
+    var orangeLimit = avg + (avg * 0.25m);
+    var numericRatio = ratioValue;
+
+    var ratioStatus = "";
+    if (numericRatio >= 1m && avg > 0m)
+    {
+        if (numericRatio <= avg) ratioStatus = "green";
+        else if (numericRatio <= orangeLimit) ratioStatus = "orange";
+        else ratioStatus = "red";
+    }
+
+    var rankRows = new[]
+    {
+        new
+        {
+            Key = "Professor",
+            Title = "Professor",
+            FullTimeCount = A.StaffProfessorFullTimeCount ?? 0,
+            PartTimeCount = A.StaffProfessorPartTimeCount ?? 0,
+            FullTimeFile = A.ProfessorFullTimeExcelFileName,
+            PartTimeFile = A.ProfessorPartTimeExcelFileName
+        },
+        new
+        {
+            Key = "AssociateProfessor",
+            Title = "Associate Professor",
+            FullTimeCount = A.StaffAssociateProfessorFullTimeCount ?? 0,
+            PartTimeCount = A.StaffAssociateProfessorPartTimeCount ?? 0,
+            FullTimeFile = A.AssociateProfessorFullTimeExcelFileName,
+            PartTimeFile = A.AssociateProfessorPartTimeExcelFileName
+        },
+        new
+        {
+            Key = "AssistantProfessor",
+            Title = "Assistant Professor",
+            FullTimeCount = A.StaffAssistantProfessorFullTimeCount ?? 0,
+            PartTimeCount = A.StaffAssistantProfessorPartTimeCount ?? 0,
+            FullTimeFile = A.AssistantProfessorFullTimeExcelFileName,
+            PartTimeFile = A.AssistantProfessorPartTimeExcelFileName
+        },
+        new
+        {
+            Key = "LabAssistant",
+            Title = "Lab Assistant",
+            FullTimeCount = A.StaffLabAssistantFullTimeCount ?? 0,
+            PartTimeCount = A.StaffLabAssistantPartTimeCount ?? 0,
+            FullTimeFile = A.LabAssistantFullTimeExcelFileName,
+            PartTimeFile = A.LabAssistantPartTimeExcelFileName
+        },
+        new
+        {
+            Key = "Teacher",
+            Title = "Lecturer (PHD Holders)",
+            FullTimeCount = A.StaffTeacherFullTimeCount ?? 0,
+            PartTimeCount = A.StaffTeacherPartTimeCount ?? 0,
+            FullTimeFile = A.TeacherFullTimeExcelFileName,
+            PartTimeFile = A.TeacherPartTimeExcelFileName
+        },
+        new
+        {
+            Key = "AssistantTeacher",
+            Title = "Lecturer (MSC Holders)",
+            FullTimeCount = A.StaffAssistantTeacherFullTimeCount ?? 0,
+            PartTimeCount = A.StaffAssistantTeacherPartTimeCount ?? 0,
+            FullTimeFile = A.AssistantTeacherFullTimeExcelFileName,
+            PartTimeFile = A.AssistantTeacherPartTimeExcelFileName
+        },
+        new
+        {
+            Key = "Others",
+            Title = "Assistant Lecturer (MSC Holders)",
+            FullTimeCount = A.StaffOthersFullTimeCount ?? 0,
+            PartTimeCount = A.StaffOthersPartTimeCount ?? 0,
+            FullTimeFile = A.OthersFullTimeExcelFileName,
+            PartTimeFile = A.OthersPartTimeExcelFileName
+        },
+        new
+        {
+            Key = "Researcher",
+            Title = "Assistant Lecturer (PSC Holders)",
+            FullTimeCount = A.StaffResearcherFullTimeCount ?? 0,
+            PartTimeCount = A.StaffResearcherPartTimeCount ?? 0,
+            FullTimeFile = A.ResearcherFullTimeExcelFileName,
+            PartTimeFile = A.ResearcherPartTimeExcelFileName
+        },
+        new
+        {
+            Key = "PractitionerPsc",
+            Title = "Practitioner (PSC Holders)",
+            FullTimeCount = A.StaffPractitionerPscFullTimeCount ?? 0,
+            PartTimeCount = A.StaffPractitionerPscPartTimeCount ?? 0,
+            FullTimeFile = A.PractitionerPscFullTimeExcelFileName,
+            PartTimeFile = A.PractitionerPscPartTimeExcelFileName
+        },
+        new
+        {
+            Key = "PractitionerMsc",
+            Title = "Practitioner (MSC Holders)",
+            FullTimeCount = A.StaffPractitionerMscFullTimeCount ?? 0,
+            PartTimeCount = A.StaffPractitionerMscPartTimeCount ?? 0,
+            FullTimeFile = A.PractitionerMscFullTimeExcelFileName,
+            PartTimeFile = A.PractitionerMscPartTimeExcelFileName
+        }
+    };
+
+    string LevelText(int level) => level == 2 ? "Not Compliant" : level == 1 ? "Needs Review" : "Complies";
+    string LevelClass(int level) => level == 2 ? "fail" : level == 1 ? "warn" : "ok";
 }
 
 <!doctype html>
@@ -49,11 +257,11 @@
                 <a class="rm-navitem" href="@Url.Action("RecognitionMemberDashboard", "Home")">
                     <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
                 </a>
-                <a class="rm-navitem active" href="@Url.Action("ElectronicHome", "Home")">
-                    <i class="bi bi-send-check"></i><span>My Assigned Home</span>
+                <a class="rm-navitem active" href="@Url.Action("ElectronicRequests", "Home")">
+                    <i class="bi bi-send-check"></i><span>My Assigned Requests</span>
                 </a>
                 <a class="rm-navitem" href="@Url.Action("Archive", "Home")">
-                    <i class="bi bi-inboxes"></i><span>Home Archive</span>
+                    <i class="bi bi-inboxes"></i><span>Requests Archive</span>
                 </a>
                 <a class="rm-navitem danger" href="@Url.Action("Logout", "Home")">
                     <i class="bi bi-power"></i><span>Sign Out</span>
@@ -66,42 +274,27 @@
                 <div>
                     <h1>Request Details</h1>
                     <p class="rd-inst">Institution: <b>@inst</b></p>
-                    <p>Step 2 of 5 — Students & Faculty.</p>
+                    <p>Step 2 of 7 — Students Numbers.</p>
                 </div>
 
                 <div class="rd-meta">
                     <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
-                    <div class="meta-pill"><span>Step</span><b>2 / 5</b></div>
+                    <div class="meta-pill"><span>Step</span><b>2 / 7</b></div>
                 </div>
             </section>
 
-            <!-- ✅ Paste your existing sections from Details.cshtml (Students/Faculty/Ranks/Ratios/Colleges/Accreditation) -->
-            @* Students *@
-            <section class="rm-card rd-card">
+            @* Students numbers *@
+            <section id="sec-doctors-page" class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2>Students</h2>
-                    <p>Student counts by category.</p>
+                    <h2>Students Numbers</h2>
+                    <p>Student numbers by category.</p>
                 </div>
 
                 <div class="rd-grid4">
-                    <div class="rd-field"><label>Total Students</label><input type="number" value="0" min="0" /></div>
-                    <div class="rd-field"><label>Local Students</label><input type="number" value="0" min="0" /></div>
-                    <div class="rd-field"><label>Jordanian Students</label><input type="number" value="0" min="0" /></div>
-                    <div class="rd-field"><label>International Students</label><input type="number" value="0" min="0" /></div>
-                </div>
-            </section>
-
-            @* Faculty *@
-            <section class="rm-card rd-card">
-                <div class="rd-card-hd">
-                    <h2>Faculty Members</h2>
-                    <p>Total, full-time, and part-time faculty.</p>
-                </div>
-
-                <div class="rd-grid3">
-                    <div class="rd-field"><label>Total Faculty Members</label><input type="number" value="386" min="0" /></div>
-                    <div class="rd-field"><label>Full-time Faculty</label><input type="number" value="386" min="0" /></div>
-                    <div class="rd-field"><label>Part-time Faculty</label><input type="number" value="0" min="0" /></div>
+                    <div class="rd-field"><label>Total Students</label><input type="number" value="@(A.TotalStudentPopulation?.ToString() ?? "0")" min="0" readonly /></div>
+                    <div class="rd-field"><label>Local Students</label><input type="number" value="@(A.LocalStudentPopulation?.ToString() ?? "0")" min="0" readonly /></div>
+                    <div class="rd-field"><label>Jordanian Students</label><input type="number" value="@(A.JordanianStudentPopulation?.ToString() ?? "0")" min="0" readonly /></div>
+                    <div class="rd-field"><label>International Students</label><input type="number" value="@(A.ForeignStudentPopulation?.ToString() ?? "0")" min="0" readonly /></div>
                 </div>
             </section>
 
@@ -109,88 +302,237 @@
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
                     <h2>Academic Ranks</h2>
-                    <p>Faculty count by rank.</p>
+                    <p>Faculty count by rank with visible Excel evidence files.</p>
                 </div>
 
-                <div class="rd-grid5">
-                    <div class="rd-field"><label>Professor</label><input type="number" value="20" min="0" /></div>
-                    <div class="rd-field"><label>Associate Professor</label><input type="number" value="66" min="0" /></div>
-                    <div class="rd-field"><label>Assistant Professor</label><input type="number" value="300" min="0" /></div>
-                    <div class="rd-field"><label>Lecturer</label><input type="number" value="70" min="0" /></div>
-                    <div class="rd-field"><label>Other</label><input type="number" value="44" min="0" /></div>
+                <div class="rank-overview-grid">
+                    <div class="rank-overview-item">
+                        <span>Total Academic Staff</span>
+                        <b>@combinedAcademicStaff</b>
+                    </div>
+                    <div class="rank-overview-item">
+                        <span>Full-Time Faculty</span>
+                        <b>@(A.FullTimeFacultyCount ?? 0)</b>
+                    </div>
+                    <div class="rank-overview-item">
+                        <span>Part-Time Faculty</span>
+                        <b>@(A.PartTimeFacultyCount ?? 0)</b>
+                    </div>
+                </div>
+
+                <div class="rank-review-grid">
+                    @foreach (var rank in rankRows)
+                    {
+                        <article class="rank-review-card">
+                            <header>
+                                <h3>@rank.Title</h3>
+                                <span class="rank-total-pill">Total: @(rank.FullTimeCount + rank.PartTimeCount)</span>
+                            </header>
+
+                            <div class="rank-review-split">
+                                <div class="rank-review-block">
+                                    <label>Full-Time</label>
+                                    <input type="number" value="@rank.FullTimeCount" readonly />
+                                    @if (!string.IsNullOrWhiteSpace(rank.FullTimeFile))
+                                    {
+                                        <div class="rank-file-actions">
+                                            <div class="rank-file-pill"><i class="bi bi-file-earmark-excel"></i> @rank.FullTimeFile</div>
+                                            <div class="rank-file-links">
+                                                <a class="rank-file-download"
+                                                   href="@Url.Action("AcademicRankFilePreview", "Home", new { id = requestId, rankKey = rank.Key, employmentType = "fulltime" })"
+                                                   target="_blank"
+                                                   rel="noopener">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                                <a class="rank-file-download"
+                                                   href="@Url.Action("DownloadAcademicRankStaffFile", "Home", new { id = requestId, rankKey = rank.Key, employmentType = "fulltime" })"
+                                                   target="_blank"
+                                                   rel="noopener">
+                                                    <i class="bi bi-download"></i> Download
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="rank-file-empty">No file uploaded</div>
+                                    }
+                                </div>
+
+                                <div class="rank-review-block">
+                                    <label>Part-Time</label>
+                                    <input type="number" value="@rank.PartTimeCount" readonly />
+                                    @if (!string.IsNullOrWhiteSpace(rank.PartTimeFile))
+                                    {
+                                        <div class="rank-file-actions">
+                                            <div class="rank-file-pill"><i class="bi bi-file-earmark-excel"></i> @rank.PartTimeFile</div>
+                                            <div class="rank-file-links">
+                                                <a class="rank-file-download"
+                                                   href="@Url.Action("AcademicRankFilePreview", "Home", new { id = requestId, rankKey = rank.Key, employmentType = "parttime" })"
+                                                   target="_blank"
+                                                   rel="noopener">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                                <a class="rank-file-download"
+                                                   href="@Url.Action("DownloadAcademicRankStaffFile", "Home", new { id = requestId, rankKey = rank.Key, employmentType = "parttime" })"
+                                                   target="_blank"
+                                                   rel="noopener">
+                                                    <i class="bi bi-download"></i> Download
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="rank-file-empty">No file uploaded</div>
+                                    }
+                                </div>
+                            </div>
+                        </article>
+                    }
                 </div>
             </section>
 
-            @* Ratios *@
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2>Ratios</h2>
-                    <p>Key ratios used for recognition.</p>
+                    <h2>Ratios & Percentages</h2>
+                    <p>Submitted ratios from the university.</p>
                 </div>
 
-                <div class="rd-grid4">
-                    <div class="rd-field"><label>PhD Holders Ratio (%)</label><input type="number" value="30" min="0" max="100" /></div>
-                    <div class="rd-field"><label>Professors Ratio (%)</label><input type="number" value="10" min="0" max="100" /></div>
-                    <div class="rd-field"><label>Associate Professors Ratio (%)</label><input type="number" value="10" min="0" max="100" /></div>
-                    <div class="rd-field"><label>Students : Faculty</label><input type="text" value="1:25" /></div>
+                <div class="rd-grid2">
+                    <div class="rd-field doctorate-field @(doctorateStatus == "green" ? "green" : doctorateStatus == "red" ? "red" : "")"><label>Doctorate Holders (%)</label><input type="number" value="@doctorateHoldersPercentage.ToString("0")" min="0" readonly /></div>
+                    <div class="rd-field ratio-field @(ratioStatus == "green" ? "green" : ratioStatus == "orange" ? "orange" : ratioStatus == "red" ? "red" : "")">
+                        <label>Students to Faculty Ratio</label>
+                        <input type="text" value="@(ratioValue > 0 ? $"1:{ratioValue:0}" : "")" readonly />
+                    </div>
+                </div>
+
+                <div class="ratios-extra-row">
+                    <div class="intake-notes">
+                        <label>Intake Capacity Notes</label>
+                        <textarea rows="3" class="rd-note">@(string.IsNullOrWhiteSpace(A.IntakeCapacityNotes) ? "" : A.IntakeCapacityNotes)</textarea>
+                    </div>
+                    <div class="color-rules-wrapper">
+                        <label>Color Rules</label>
+                        <div class="rd-color-rules color-rules-card" aria-label="Color Rules">
+                            <div class="rd-color-section">
+                                <div class="rd-color-label">Students to Faculty Ratio</div>
+                                <ul>
+                                    <li><span class="rd-dot green"></span>Green = ratio is within the selected college average.</li>
+                                    <li><span class="rd-dot orange"></span>Orange = ratio is above the average but still within the allowed 25% tolerance.</li>
+                                    <li><span class="rd-dot red"></span>Red = ratio exceeds the 25% tolerance.</li>
+                                </ul>
+                            </div>
+                            <div class="rd-color-section">
+                                <div class="rd-color-label">Doctorate Holders (%)</div>
+                                <ul>
+                                    <li><span class="rd-dot green"></span>Green = 50% or more of full-time faculty are doctorate holders.</li>
+                                    <li><span class="rd-dot red"></span>Red = less than 50% of full-time faculty are doctorate holders.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            @* Colleges + Accreditation (same as your Details) *@
-            <section class="rm-card rd-card">
+            <section id="sec-colleges" class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2>Colleges in the Institution</h2>
-                    <p>Add and manage colleges.</p>
-                </div>
-
-                <div class="rd-inline">
-                    <div class="rd-field grow"><label>College Name</label><input type="text" placeholder="Enter college name..." /></div>
-                    <button class="rm-btn rm-btn-light" type="button"><i class="bi bi-plus-circle"></i> Add College</button>
+                    <h2>Colleges</h2>
+                    <p>Submitted colleges from the university.</p>
                 </div>
 
                 <div class="rd-tablewrap">
                     <table class="rd-table">
                         <thead>
-                            <tr><th style="width:90px;">#</th><th>College Name</th><th class="right" style="width:140px;">Action</th></tr>
+                            <tr><th style="width:90px;">#</th><th>College Name</th><th>College Type</th><th>Number of Students</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td>1</td><td>Faculty of Computer & IT</td><td class="right"><button class="rd-del" type="button">Delete</button></td></tr>
-                            <tr><td>2</td><td>Faculty of Administrative Sciences</td><td class="right"><button class="rd-del" type="button">Delete</button></td></tr>
+                            @if (Model?.Faculties != null && Model.Faculties.Any())
+                            {
+                                for (var i = 0; i < Model.Faculties.Count; i++)
+                                {
+                                    <tr>
+                                        <td>@(i + 1)</td>
+                                        <td>@Model.Faculties[i].FacultyName</td>
+                                        <td>@(string.IsNullOrWhiteSpace(Model.Faculties[i].CollegeType) ? "—" : Model.Faculties[i].CollegeType)</td>
+                                        <td>@(Model.Faculties[i].StudentsCount?.ToString() ?? "—")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" style="text-align:center;">No colleges were submitted.</td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <section class="rm-card rd-card">
+            <section id="sec-programs" class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2>Accreditation Bodies</h2>
-                    <p>Accreditation bodies recognized by the institution.</p>
-                </div>
-
-                <div class="rd-inline">
-                    <div class="rd-field grow"><label>Body Name</label><input type="text" placeholder="Enter body name..." /></div>
-                    <div class="rd-field"><label>Type</label><select><option>Local</option><option>International</option></select></div>
-                    <button class="rm-btn rm-btn-light" type="button"><i class="bi bi-plus-circle"></i> Add Body</button>
+                    <h2>Programs</h2>
+                    <p>Submitted programs from the university.</p>
                 </div>
 
                 <div class="rd-tablewrap">
                     <table class="rd-table">
                         <thead>
-                            <tr><th style="width:90px;">#</th><th>Body Name</th><th style="width:160px;">Type</th><th class="right" style="width:140px;">Action</th></tr>
+                            <tr>
+                                <th style="width:90px;">#</th>
+                                <th>Program Name</th>
+                                <th>College</th>
+                                <th>Degree Awarded</th>
+                                <th>Number of Years</th>
+                                <th>Credit Hours</th>
+                                <th>Educational System</th>
+                                <th>Language</th>
+                                <th>Accreditation Date</th>
+                                <th>Creation Date</th>
+                                <th>Graduation date of last regiment</th>
+                                <th>Graduates total for the last 3 years</th>
+                            </tr>
                         </thead>
                         <tbody>
-                            <tr><td>1</td><td>Ministry of Higher Education and Scientific Research</td><td>Local</td><td class="right"><button class="rd-del" type="button">Delete</button></td></tr>
+                            @if (Model?.Programs != null && Model.Programs.Any())
+                            {
+                                for (var i = 0; i < Model.Programs.Count; i++)
+                                {
+                                    <tr>
+                                        <td>@(i + 1)</td>
+                                        <td>@Model.Programs[i].Program</td>
+                                        <td>@Model.Programs[i].FacultyName</td>
+                                        <td>@Model.Programs[i].DegreeAwarded</td>
+                                        <td>@Model.Programs[i].NumberOfYears</td>
+                                        <td>@Model.Programs[i].CreditHours</td>
+                                        <td>@Model.Programs[i].EducationalSystem</td>
+                                        <td>@Model.Programs[i].Language</td>
+                                        <td>@(Model.Programs[i].AccreditationDate?.ToString("dd/MM/yyyy") ?? "")</td>
+                                        <td>@(Model.Programs[i].CreationDate?.ToString("dd/MM/yyyy") ?? "")</td>
+                                        <td>@(Model.Programs[i].GraduationDateOfLastRegiment?.ToString("dd/MM/yyyy") ?? "")</td>
+                                        <td>@Model.Programs[i].GraduatesTotalLast3Years</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="12" style="text-align:center;">No programs were submitted.</td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
             </section>
+
 
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
                     <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsBasicInfo", "Home", new { id = requestId })">Previous</a>
                 </div>
                 <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsRankings", "Home", new { id = requestId })">Next</a>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAdmissionDuration", "Home", new { id = requestId })">Next</a>
                     <button class="rm-btn rm-btn-primary" type="button"><i class="bi bi-save"></i> Save</button>
                 </div>
             </section>

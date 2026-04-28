@@ -1,0 +1,137 @@
+@model MOHRecognition.Services.RecognitionRequestRecord
+@{
+    Layout = null;
+    ViewData["Title"] = "Request Details - Doctors / Medicine Colleges";
+    var requestId = Model?.Id ?? 0;
+    var inst = Model?.UniversityName ?? "—";
+    var medDen = Model?.MedicineDentistry ?? new DTOs.MedicineDentistryDto();
+    var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
+    var collegeCategories = (A.CollegeCategoriesCsv ?? "")
+        .Split(';', StringSplitOptions.RemoveEmptyEntries)
+        .Select(x => x.Trim())
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .ToList();
+
+    string N(int? value) => (value ?? 0).ToString();
+}
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/DetailsDoctors.css" asp-append-version="true" />
+</head>
+<body class="rm-page">
+    <header class="rm-header">
+        <div class="rm-brandbar"></div><div class="rm-top">
+            <div class="rm-top-inner">
+                <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
+                <div class="rm-user">
+                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>Recognition Member</b></span></div>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="rm-shell">
+        <aside class="rm-sidebar">
+            <div class="rm-side-title">Navigation</div><nav class="rm-nav">
+                <a class="rm-navitem" href="@Url.Action("RecognitionMemberDashboard", "Home")"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
+                <a class="rm-navitem active" href="@Url.Action("ElectronicRequests", "Home")"><i class="bi bi-send-check"></i><span>My Assigned Requests</span></a>
+                <a class="rm-navitem" href="@Url.Action("Archive", "Home")"><i class="bi bi-inboxes"></i><span>Requests Archive</span></a>
+                <a class="rm-navitem danger" href="@Url.Action("Logout", "Home")"><i class="bi bi-power"></i><span>Sign Out</span></a>
+            </nav>
+        </aside>
+
+        <main class="rm-main">
+            <section class="rm-card rd-head">
+                <div>
+                    <h1>Request Details</h1>
+                    <p class="rd-inst">Institution: <b>@inst</b></p>
+                    <p>Step 4 of 6 — Doctors / Medicine Colleges.</p>
+                </div>
+                <div class="rd-meta">
+                    <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
+                    <div class="meta-pill"><span>Step</span><b>4 / 6</b></div>
+                </div>
+            </section>
+
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>College Categories</h2>
+                    <p>Submitted college categories for this institution.</p>
+                </div>
+
+                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:6px;">
+                    @if (collegeCategories.Any())
+                    {
+                        foreach (var cat in collegeCategories)
+                        {
+                            <span style="display:inline-flex; align-items:center; padding:6px 12px; border-radius:999px; border:1px solid #e5e7eb; font-weight:700;">@cat</span>
+                        }
+                    }
+                    else
+                    {
+                        <span style="color:#6b7280;">No categories submitted.</span>
+                    }
+                </div>
+            </section>
+
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>Doctors / Medicine Colleges</h2>
+                    <p>Submitted full-time staff categories for Medicine and Dentistry colleges.</p>
+                </div>
+
+                <div class="rd-tablewrap">
+                    <table class="rd-table">
+                        <thead>
+                            <tr>
+                                <th>Full-Time Academic Category</th>
+                                <th>College of Medicine</th>
+                                <th>College of Dentistry</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Full-Time Professor</td><td>@N(medDen.Med_FullTimeProfessor)</td><td>@N(medDen.Den_FullTimeProfessor)</td></tr>
+                            <tr><td>Full-Time Associate Professor</td><td>@N(medDen.Med_FullTimeAssociateProfessor)</td><td>@N(medDen.Den_FullTimeAssociateProfessor)</td></tr>
+                            <tr><td>Full-Time Assistant Professor</td><td>@N(medDen.Med_FullTimeAssistantProfessor)</td><td>@N(medDen.Den_FullTimeAssistantProfessor)</td></tr>
+                            <tr><td>Full-Time Lecturer (PhD Holders)</td><td>@N(medDen.Med_FullTimeLecturerPhd)</td><td>@N(medDen.Den_FullTimeLecturerPhd)</td></tr>
+                            <tr><td>Full-Time Lecturer (MSC Holders)</td><td>@N(medDen.Med_FullTimeLecturerMsc)</td><td>@N(medDen.Den_FullTimeLecturerMsc)</td></tr>
+                            <tr><td>Full-Time Assistant Lecturer (MSC Holders)</td><td>@N(medDen.Med_FullTimeAssistantLecturerMsc)</td><td>@N(medDen.Den_FullTimeAssistantLecturerMsc)</td></tr>
+                            <tr><td>Full-Time Assistant Lecturer (PSC Holders)</td><td>@N(medDen.Med_FullTimeAssistantLecturerPsc)</td><td>@N(medDen.Den_FullTimeAssistantLecturerPsc)</td></tr>
+                            <tr><td>Full-Time Practitioner (PSC Holders)</td><td>@N(medDen.Med_FullTimePractitionerPsc)</td><td>@N(medDen.Den_FullTimePractitionerPsc)</td></tr>
+                            <tr><td>Full-Time Practitioner (MSC Holders)</td><td>@N(medDen.Med_FullTimePractitionerMsc)</td><td>@N(medDen.Den_FullTimePractitionerMsc)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="doctors-summary-grid">
+                    <div class="doctors-summary-item"><span>PhD Holders (Medicine)</span><b>@medDen.Med_PhdHolders</b></div>
+                    <div class="doctors-summary-item"><span>PhD Holders (Dentistry)</span><b>@medDen.Den_PhdHolders</b></div>
+                    <div class="doctors-summary-item"><span>MSC Holders (Medicine)</span><b>@medDen.Med_MscHolders</b></div>
+                    <div class="doctors-summary-item"><span>MSC Holders (Dentistry)</span><b>@medDen.Den_MscHolders</b></div>
+                    <div class="doctors-summary-item"><span>PSC Holders (Medicine)</span><b>@medDen.Med_PscHolders</b></div>
+                    <div class="doctors-summary-item"><span>PSC Holders (Dentistry)</span><b>@medDen.Den_PscHolders</b></div>
+                </div>
+            </section>
+
+            <section class="rm-card rd-actions">
+                <div class="rd-actions-left">
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAdmissionDuration", "Home", new { id = requestId })">Previous</a>
+                </div>
+                <div class="rd-actions-right">
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAcademicInfo", "Home", new { id = requestId })">Next</a>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

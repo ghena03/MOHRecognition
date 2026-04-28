@@ -1,90 +1,115 @@
 ﻿@model DTOs.MedicineDentistryDto
 
-<div class="duration-wrap" style="margin-top:0;">
-    <div class="duration-titlebar">
-        Faculties of Medicine and Dentistry Information
-    </div>
+@{
+    string N(int? v) => v.HasValue ? v.Value.ToString() : "";
+}
 
-    <!-- UI Banner -->
-    <div id="medDenBanner" class="banner warn" style="display:none; margin-top:12px;">
+<div class="duration-wrap medden-wrap" style="margin-top:0;">
+    <div class="duration-titlebar">
+        Doctors / Medicine Colleges
+    </div>
+    <div class="medden-kicker">Full-time academic staff by category for Medicine and Dentistry colleges.</div>
+
+    <div id="medDenBanner" class="banner warn medden-banner" style="display:none;">
         <span class="dot"></span>
         <span class="txt"></span>
         <button type="button" class="x" onclick="document.getElementById('medDenBanner').style.display='none'">×</button>
     </div>
 
-    <div class="table-wrap" style="margin-top:12px;">
-        <table class="tbl">
+    <div class="table-wrap medden-table-wrap">
+        <table class="tbl medden-table">
             <thead>
                 <tr>
-                    <th style="width:280px;">&nbsp;</th>
-                    <th>Faculty of Medicine</th>
-                    <th>Faculty of Dentistry</th>
+                    <th class="medden-col-label">Full-Time Academic Category</th>
+                    <th>College of Medicine</th>
+                    <th>College of Dentistry</th>
                 </tr>
             </thead>
-
             <tbody>
-                @* Helper: input number *@
-                @functions {
-                    string N(int? v) => v.HasValue ? v.Value.ToString() : "";
-                }
-
                 <tr>
-                    <td style="background:#f4eadc; font-weight:600;">Number of Students In Faculty</td>
-                    <td><input class="num" id="med_students" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_Students)" /></td>
-                    <td><input class="num" id="den_students" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_Students)" /></td>
+                    <td class="medden-row-label">1. Full-Time Professor</td>
+                    <td><input class="num" id="med_fullTimeProfessor" type="number" min="0" step="1" value="@N(Model.Med_FullTimeProfessor)" /></td>
+                    <td><input class="num" id="den_fullTimeProfessor" type="number" min="0" step="1" value="@N(Model.Den_FullTimeProfessor)" /></td>
                 </tr>
-
                 <tr>
-                    <td style="background:#f4eadc; font-weight:600;">Teaching Staff</td>
-                    <td><input class="num" id="med_teachingStaff" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_TeachingStaff)" /></td>
-                    <td><input class="num" id="den_teachingStaff" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_TeachingStaff)" /></td>
+                    <td class="medden-row-label">2. Full-Time Associate Professor</td>
+                    <td><input class="num" id="med_fullTimeAssociateProfessor" type="number" min="0" step="1" value="@N(Model.Med_FullTimeAssociateProfessor)" /></td>
+                    <td><input class="num" id="den_fullTimeAssociateProfessor" type="number" min="0" step="1" value="@N(Model.Den_FullTimeAssociateProfessor)" /></td>
                 </tr>
-
                 <tr>
-                    <td style="background:#f4eadc; font-weight:600;">Professor</td>
-                    <td><input class="num" id="med_professor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_Professor)" /></td>
-                    <td><input class="num" id="den_professor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_Professor)" /></td>
+                    <td class="medden-row-label">3. Full-Time Assistant Professor</td>
+                    <td><input class="num" id="med_fullTimeAssistantProfessor" type="number" min="0" step="1" value="@N(Model.Med_FullTimeAssistantProfessor)" /></td>
+                    <td><input class="num" id="den_fullTimeAssistantProfessor" type="number" min="0" step="1" value="@N(Model.Den_FullTimeAssistantProfessor)" /></td>
                 </tr>
-
                 <tr>
-                    <td style="background:#f4eadc; font-weight:600;">Associate Professor</td>
-                    <td><input class="num" id="med_associateProfessor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_AssociateProfessor)" /></td>
-                    <td><input class="num" id="den_associateProfessor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_AssociateProfessor)" /></td>
+                    <td class="medden-row-label">4. Full-Time Lecturer (PhD Holders)</td>
+                    <td><input class="num" id="med_fullTimeLecturerPhd" type="number" min="0" step="1" value="@N(Model.Med_FullTimeLecturerPhd)" /></td>
+                    <td><input class="num" id="den_fullTimeLecturerPhd" type="number" min="0" step="1" value="@N(Model.Den_FullTimeLecturerPhd)" /></td>
                 </tr>
-
                 <tr>
-                    <td style="background:#f4eadc; font-weight:600;">Assistant Professor</td>
-                    <td><input class="num" id="med_assistantProfessor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_AssistantProfessor)" /></td>
-                    <td><input class="num" id="den_assistantProfessor" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_AssistantProfessor)" /></td>
+                    <td class="medden-row-label">5. Full-Time Lecturer (MSC Holders)</td>
+                    <td><input class="num" id="med_fullTimeLecturerMsc" type="number" min="0" step="1" value="@N(Model.Med_FullTimeLecturerMsc)" /></td>
+                    <td><input class="num" id="den_fullTimeLecturerMsc" type="number" min="0" step="1" value="@N(Model.Den_FullTimeLecturerMsc)" /></td>
                 </tr>
-
                 <tr>
-                    <td style="background:#f4eadc; font-weight:600;">Lecturer</td>
-                    <td><input class="num" id="med_lecturer" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_Lecturer)" /></td>
-                    <td><input class="num" id="den_lecturer" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_Lecturer)" /></td>
+                    <td class="medden-row-label">6. Full-Time Assistant Lecturer (MSC Holders)</td>
+                    <td><input class="num" id="med_fullTimeAssistantLecturerMsc" type="number" min="0" step="1" value="@N(Model.Med_FullTimeAssistantLecturerMsc)" /></td>
+                    <td><input class="num" id="den_fullTimeAssistantLecturerMsc" type="number" min="0" step="1" value="@N(Model.Den_FullTimeAssistantLecturerMsc)" /></td>
                 </tr>
-
                 <tr>
-                    <td style="background:#f4eadc; font-weight:600;">Teacher</td>
-                    <td><input class="num" id="med_teacher" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_Teacher)" /></td>
-                    <td><input class="num" id="den_teacher" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_Teacher)" /></td>
+                    <td class="medden-row-label">7. Full-Time Assistant Lecturer (PSC Holders)</td>
+                    <td><input class="num" id="med_fullTimeAssistantLecturerPsc" type="number" min="0" step="1" value="@N(Model.Med_FullTimeAssistantLecturerPsc)" /></td>
+                    <td><input class="num" id="den_fullTimeAssistantLecturerPsc" type="number" min="0" step="1" value="@N(Model.Den_FullTimeAssistantLecturerPsc)" /></td>
                 </tr>
-
                 <tr>
-                    <td style="background:#f4eadc; font-weight:600;">Assistant Teacher</td>
-                    <td><input class="num" id="med_assistantTeacher" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_AssistantTeacher)" /></td>
-                    <td><input class="num" id="den_assistantTeacher" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_AssistantTeacher)" /></td>
+                    <td class="medden-row-label">8. Full-Time Practitioner (PSC Holders)</td>
+                    <td><input class="num" id="med_fullTimePractitionerPsc" type="number" min="0" step="1" value="@N(Model.Med_FullTimePractitionerPsc)" /></td>
+                    <td><input class="num" id="den_fullTimePractitionerPsc" type="number" min="0" step="1" value="@N(Model.Den_FullTimePractitionerPsc)" /></td>
                 </tr>
-
                 <tr>
-                    <td style="background:#f4eadc; font-weight:600;">Full-Time Lecturer</td>
-                    <td><input class="num" id="med_fullTimeLecturer" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Med_FullTimeLecturer)" /></td>
-                    <td><input class="num" id="den_fullTimeLecturer" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" value="@N(Model.Den_FullTimeLecturer)" /></td>
+                    <td class="medden-row-label">9. Full-Time Practitioner (MSC Holders)</td>
+                    <td><input class="num" id="med_fullTimePractitionerMsc" type="number" min="0" step="1" value="@N(Model.Med_FullTimePractitionerMsc)" /></td>
+                    <td><input class="num" id="den_fullTimePractitionerMsc" type="number" min="0" step="1" value="@N(Model.Den_FullTimePractitionerMsc)" /></td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <div style="display:flex; justify-content:center; margin:14px 0 8px;">
-        <button type="button" class="btn-primary" onclick="MedDenSave()">Save</button>
+    <div class="medden-summary-wrap">
+        <div class="medden-summary-title">Computed Read-Only Summary</div>
+        <div class="medden-summary-sub">Totals are automatically calculated for each college.</div>
+
+        <div class="medden-summary-grid">
+            <div class="medden-summary-item">
+                <div class="medden-summary-label">PhD Holders (Medicine)</div>
+                <input class="medden-summary-value" id="med_phdHolders" type="number" value="@Model.Med_PhdHolders" readonly />
+            </div>
+            <div class="medden-summary-item">
+                <div class="medden-summary-label">PhD Holders (Dentistry)</div>
+                <input class="medden-summary-value" id="den_phdHolders" type="number" value="@Model.Den_PhdHolders" readonly />
+            </div>
+
+            <div class="medden-summary-item">
+                <div class="medden-summary-label">MSC Holders (Medicine)</div>
+                <input class="medden-summary-value" id="med_mscHolders" type="number" value="@Model.Med_MscHolders" readonly />
+            </div>
+            <div class="medden-summary-item">
+                <div class="medden-summary-label">MSC Holders (Dentistry)</div>
+                <input class="medden-summary-value" id="den_mscHolders" type="number" value="@Model.Den_MscHolders" readonly />
+            </div>
+
+            <div class="medden-summary-item">
+                <div class="medden-summary-label">PSC Holders (Medicine)</div>
+                <input class="medden-summary-value" id="med_pscHolders" type="number" value="@Model.Med_PscHolders" readonly />
+            </div>
+            <div class="medden-summary-item">
+                <div class="medden-summary-label">PSC Holders (Dentistry)</div>
+                <input class="medden-summary-value" id="den_pscHolders" type="number" value="@Model.Den_PscHolders" readonly />
+            </div>
+        </div>
+    </div>
+
+    <div class="medden-actions">
+        <button type="button" class="btn-primary medden-save-btn" onclick="MedDenSave()">Save</button>
+    </div>
 </div>

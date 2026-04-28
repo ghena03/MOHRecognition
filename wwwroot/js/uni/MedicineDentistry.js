@@ -52,7 +52,63 @@
 
                 if (!/^\d$/.test(e.key)) e.preventDefault();
             });
+
+            inp.addEventListener("input", recalcSummary);
         });
+
+        recalcSummary();
+    }
+
+    function asInt(id) {
+        const el = document.getElementById(id);
+        if (!el) return 0;
+        const n = parseInt((el.value || "").trim(), 10);
+        return Number.isFinite(n) && n > 0 ? n : 0;
+    }
+
+    function setReadOnlyValue(id, value) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = value.toString();
+    }
+
+    function recalcSummary() {
+        const medPhd =
+            asInt("med_fullTimeProfessor") +
+            asInt("med_fullTimeAssociateProfessor") +
+            asInt("med_fullTimeAssistantProfessor") +
+            asInt("med_fullTimeLecturerPhd");
+
+        const denPhd =
+            asInt("den_fullTimeProfessor") +
+            asInt("den_fullTimeAssociateProfessor") +
+            asInt("den_fullTimeAssistantProfessor") +
+            asInt("den_fullTimeLecturerPhd");
+
+        const medMsc =
+            asInt("med_fullTimeLecturerMsc") +
+            asInt("med_fullTimeAssistantLecturerMsc") +
+            asInt("med_fullTimePractitionerMsc");
+
+        const denMsc =
+            asInt("den_fullTimeLecturerMsc") +
+            asInt("den_fullTimeAssistantLecturerMsc") +
+            asInt("den_fullTimePractitionerMsc");
+
+        const medPsc =
+            asInt("med_fullTimeAssistantLecturerPsc") +
+            asInt("med_fullTimePractitionerPsc");
+
+        const denPsc =
+            asInt("den_fullTimeAssistantLecturerPsc") +
+            asInt("den_fullTimePractitionerPsc");
+
+        setReadOnlyValue("med_phdHolders", medPhd);
+        setReadOnlyValue("den_phdHolders", denPhd);
+        setReadOnlyValue("med_mscHolders", medMsc);
+        setReadOnlyValue("den_mscHolders", denMsc);
+        setReadOnlyValue("med_pscHolders", medPsc);
+        setReadOnlyValue("den_pscHolders", denPsc);
     }
 
     function lockHeight(el) {
@@ -105,25 +161,25 @@
         }
 
         const payload = new URLSearchParams();
-        payload.append("med_students", v("med_students"));
-        payload.append("med_teachingStaff", v("med_teachingStaff"));
-        payload.append("med_professor", v("med_professor"));
-        payload.append("med_associateProfessor", v("med_associateProfessor"));
-        payload.append("med_assistantProfessor", v("med_assistantProfessor"));
-        payload.append("med_lecturer", v("med_lecturer"));
-        payload.append("med_teacher", v("med_teacher"));
-        payload.append("med_assistantTeacher", v("med_assistantTeacher"));
-        payload.append("med_fullTimeLecturer", v("med_fullTimeLecturer"));
+        payload.append("med_fullTimeProfessor", v("med_fullTimeProfessor"));
+        payload.append("med_fullTimeAssociateProfessor", v("med_fullTimeAssociateProfessor"));
+        payload.append("med_fullTimeAssistantProfessor", v("med_fullTimeAssistantProfessor"));
+        payload.append("med_fullTimeLecturerPhd", v("med_fullTimeLecturerPhd"));
+        payload.append("med_fullTimeLecturerMsc", v("med_fullTimeLecturerMsc"));
+        payload.append("med_fullTimeAssistantLecturerMsc", v("med_fullTimeAssistantLecturerMsc"));
+        payload.append("med_fullTimeAssistantLecturerPsc", v("med_fullTimeAssistantLecturerPsc"));
+        payload.append("med_fullTimePractitionerPsc", v("med_fullTimePractitionerPsc"));
+        payload.append("med_fullTimePractitionerMsc", v("med_fullTimePractitionerMsc"));
 
-        payload.append("den_students", v("den_students"));
-        payload.append("den_teachingStaff", v("den_teachingStaff"));
-        payload.append("den_professor", v("den_professor"));
-        payload.append("den_associateProfessor", v("den_associateProfessor"));
-        payload.append("den_assistantProfessor", v("den_assistantProfessor"));
-        payload.append("den_lecturer", v("den_lecturer"));
-        payload.append("den_teacher", v("den_teacher"));
-        payload.append("den_assistantTeacher", v("den_assistantTeacher"));
-        payload.append("den_fullTimeLecturer", v("den_fullTimeLecturer"));
+        payload.append("den_fullTimeProfessor", v("den_fullTimeProfessor"));
+        payload.append("den_fullTimeAssociateProfessor", v("den_fullTimeAssociateProfessor"));
+        payload.append("den_fullTimeAssistantProfessor", v("den_fullTimeAssistantProfessor"));
+        payload.append("den_fullTimeLecturerPhd", v("den_fullTimeLecturerPhd"));
+        payload.append("den_fullTimeLecturerMsc", v("den_fullTimeLecturerMsc"));
+        payload.append("den_fullTimeAssistantLecturerMsc", v("den_fullTimeAssistantLecturerMsc"));
+        payload.append("den_fullTimeAssistantLecturerPsc", v("den_fullTimeAssistantLecturerPsc"));
+        payload.append("den_fullTimePractitionerPsc", v("den_fullTimePractitionerPsc"));
+        payload.append("den_fullTimePractitionerMsc", v("den_fullTimePractitionerMsc"));
 
         try {
             const res = await fetch(saveUrl, {
