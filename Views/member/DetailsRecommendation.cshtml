@@ -72,40 +72,23 @@
                 {
                     <div class="infra-error">@TempData["RecommendationError"]</div>
                 }
+           
 
                 <form asp-controller="Home" asp-action="SaveRecommendationDecision" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@requestId" />
+                    <input type="hidden" name="decision" value="Auto" />
+                       <div class="rm-card" style="margin-top:15px;">
+                        <h3>Point 1: Accreditation & Recognition</h3>
 
-                    <div class="decision-grid">
-                        <label class="decision-card accepted">
-                            <input type="radio" name="decision" value="Recognized" @(recommendationDecision == "Recognized" ? "checked" : null) required />
-                            <span class="decision-check"><i class="bi bi-check-circle-fill"></i></span>
-                            <span class="decision-pill">Recognized</span>
-                            <strong>Recognize University</strong>
-                            <small>The university satisfies recognition standards.</small>
-                        </label>
-
-                        <label class="decision-card modified">
-                            <input type="radio" name="decision" value="Recognized with Modifications" @(recommendationDecision == "Recognized with Modifications" ? "checked" : null) required />
-                            <span class="decision-check"><i class="bi bi-check-circle-fill"></i></span>
-                            <span class="decision-pill">With Modifications</span>
-                            <strong>Recognition with Modifications</strong>
-                            <small>Recognition is possible after required improvements are completed.</small>
-                        </label>
-
-                        <label class="decision-card rejected">
-                            <input type="radio" name="decision" value="Not Recognized" @(recommendationDecision == "Not Recognized" ? "checked" : null) required />
-                            <span class="decision-check"><i class="bi bi-check-circle-fill"></i></span>
-                            <span class="decision-pill">Not Recognized</span>
-                            <strong>Do Not Recognize University</strong>
-                            <small>The university does not currently meet recognition requirements.</small>
-                        </label>
-                    </div>
-
-                    <div class="rd-field" style="margin-top:14px;">
-                        <label for="decisionReason">Professional Justification Note</label>
-                        <textarea id="decisionReason" class="doc-notes" name="reason" placeholder="Provide a clear professional explanation for the selected decision..." required>@recommendationNote</textarea>
+                        <div class="rd-field" style="margin-top:15px;">
+                            <label for="decisionReason"><strong>Write Your Assessment Note</strong></label>
+                            <textarea id="decisionReason"
+                                      class="doc-notes"
+                                      name="reason"
+                                      placeholder="Write your professional evaluation regarding accreditation and recognition..."
+                                      required>@recommendationNote</textarea>
+                        </div>
                     </div>
 
                     <div style="display:flex; justify-content:flex-end; margin-top:14px;">
