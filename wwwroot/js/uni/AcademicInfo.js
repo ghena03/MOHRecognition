@@ -176,8 +176,6 @@
         "StaffAssociateProfessorPartTimeCount",
         "StaffAssistantProfessorFullTimeCount",
         "StaffAssistantProfessorPartTimeCount",
-        "StaffLabAssistantFullTimeCount",
-        "StaffLabAssistantPartTimeCount",
         "StaffResearcherFullTimeCount",
         "StaffResearcherPartTimeCount",
         "StaffTeacherFullTimeCount",
@@ -190,17 +188,6 @@
         "StaffPractitionerPscPartTimeCount",
         "StaffPractitionerMscFullTimeCount",
         "StaffPractitionerMscPartTimeCount",
-
-        "MinHours",
-        "MaxHours",
-        "PartTimeStudentsAllowedToTransfer",
-        "DistanceLearningStudentsAdmissible",
-        "MaxTransferHours",
-        "MaxTransferYears",
-        "MaxTransferSemesters",
-        "AcceptIntermediateDegreeStudents",
-        "MatriculationExamRequiredForTransfers",
-        "PercentageTransferCreditsAllowed",
 
         "TeachingMethodsCsv",
         "AssessmentMethodsCsv",
@@ -280,8 +267,6 @@
             "StaffAssociateProfessorPartTimeCount",
             "StaffAssistantProfessorFullTimeCount",
             "StaffAssistantProfessorPartTimeCount",
-            "StaffLabAssistantFullTimeCount",
-            "StaffLabAssistantPartTimeCount",
             "StaffResearcherFullTimeCount",
             "StaffResearcherPartTimeCount",
             "StaffTeacherFullTimeCount",
@@ -567,9 +552,6 @@
         const elearningSection = document.getElementById("acad-elearning");
         const elearningDetailsCard = elearningSection?.querySelector(".acad-adv-card");
 
-        const distanceAdmissible = sec.querySelector("[name='DistanceLearningStudentsAdmissible']");
-        const transferBlock = sec.querySelector("[name='MaxTransferHours']")?.closest(".acad-num-row");
-
         const professionalRegSection = document.getElementById("professionalRegulationSection");
         const clinicalTrainingCheck = sec.querySelector("input[data-group='teaching'][value='Clinical Training']");
 
@@ -589,12 +571,6 @@
             setDisabledIn(elearningDetailsCard, hide);
         };
 
-        const toggleTransferFollowup = () => {
-            if (!distanceAdmissible || !transferBlock) return;
-            const hide = distanceAdmissible.value === "No";
-            transferBlock.style.display = hide ? "none" : "block";
-        };
-
         const toggleProfessionalRegulation = () => {
             if (!professionalRegSection || !clinicalTrainingCheck) return;
             const show = clinicalTrainingCheck.checked;
@@ -605,10 +581,6 @@
         if (usesElearning) {
             usesElearning.addEventListener("change", toggleElearning);
             toggleElearning();
-        }
-        if (distanceAdmissible) {
-            distanceAdmissible.addEventListener("change", toggleTransferFollowup);
-            toggleTransferFollowup();
         }
         if (clinicalTrainingCheck) {
             clinicalTrainingCheck.addEventListener("change", toggleProfessionalRegulation);

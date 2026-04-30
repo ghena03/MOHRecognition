@@ -50,7 +50,6 @@
             computers: document.getElementById("lab_computers"),
             workshops: document.getElementById("lab_workshops"),
             laboratories: document.getElementById("lab_laboratories"),
-            personalComputers: document.getElementById("lab_personalComputers"),
             addBtn: document.getElementById("lab_addBtn"),
             cancelBtn: document.getElementById("lab_cancelBtn")
         };
@@ -63,7 +62,6 @@
             computers,
             workshops,
             laboratories,
-            personalComputers,
             addBtn,
             cancelBtn
         } = getFormElements();
@@ -73,7 +71,6 @@
         if (computers) computers.value = "";
         if (workshops) workshops.value = "";
         if (laboratories) laboratories.value = "";
-        if (personalComputers) personalComputers.value = "";
 
         if (addBtn) {
             addBtn.textContent = defaultAddLabel;
@@ -81,7 +78,7 @@
         }
         if (cancelBtn) cancelBtn.style.display = "none";
 
-        [facultyId, computers, workshops, laboratories, personalComputers]
+        [facultyId, computers, workshops, laboratories]
             .filter(Boolean)
             .forEach(el => el.classList.remove("is-invalid"));
     }
@@ -92,8 +89,7 @@
             FacultyId: document.getElementById("lab_facultyId")?.value?.trim() || "",
             Computers: document.getElementById("lab_computers")?.value?.trim() || "",
             Workshops: document.getElementById("lab_workshops")?.value?.trim() || "",
-            Laboratories: document.getElementById("lab_laboratories")?.value?.trim() || "",
-            PersonalComputers: document.getElementById("lab_personalComputers")?.value?.trim() || ""
+            Laboratories: document.getElementById("lab_laboratories")?.value?.trim() || ""
         };
     }
 
@@ -106,11 +102,10 @@
             facultyId,
             computers,
             workshops,
-            laboratories,
-            personalComputers
+            laboratories
         } = getFormElements();
 
-        [facultyId, computers, workshops, laboratories, personalComputers]
+        [facultyId, computers, workshops, laboratories]
             .filter(Boolean)
             .forEach(el => el.classList.remove("is-invalid"));
 
@@ -122,8 +117,7 @@
         const numericFields = [
             ["Computers", data.Computers, computers],
             ["Workshops", data.Workshops, workshops],
-            ["Laboratories", data.Laboratories, laboratories],
-            ["Personal Computers", data.PersonalComputers, personalComputers]
+            ["Laboratories", data.Laboratories, laboratories]
         ];
 
         for (const [label, value, element] of numericFields) {
@@ -248,7 +242,6 @@
             computers,
             workshops,
             laboratories,
-            personalComputers,
             addBtn,
             cancelBtn
         } = getFormElements();
@@ -258,7 +251,6 @@
         if (computers) computers.value = btn.dataset.computers || "";
         if (workshops) workshops.value = btn.dataset.workshops || "";
         if (laboratories) laboratories.value = btn.dataset.laboratories || "";
-        if (personalComputers) personalComputers.value = btn.dataset.personalComputers || "";
 
         if (addBtn) addBtn.textContent = defaultUpdateLabel;
         if (cancelBtn) cancelBtn.style.display = "inline-flex";

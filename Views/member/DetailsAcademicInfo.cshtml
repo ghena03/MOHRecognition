@@ -41,11 +41,6 @@
     var studyPlanOkCount = studyPlanRows.Count(RowCompliant);
     var studyPlanLevel = studyPlanRows.Count == 0 ? 2 : (studyPlanOkCount == studyPlanRows.Count ? 0 : 1);
 
-    int ParseInt(string? value)
-    {
-        return int.TryParse((value ?? "").Trim(), out var n) ? n : -1;
-    }
-
     string ResultText(int level) => level == 2 ? "Not Compliant" : level == 1 ? "Warning" : "Complies";
     string ResultClass(int level) => level == 2 ? "fail" : level == 1 ? "warn" : "ok";
 
@@ -61,24 +56,9 @@
     else if (degreeTypeMismatch) identityLevel = 1;
 
     var anySystem = A.SystemYearlyProgram || A.SystemSemesterProgram || A.SystemCreditHours || A.SystemECTS;
-    var minH = A.MinHours ?? -1;
-    var maxH = A.MaxHours ?? -1;
-    var minMaxValid = minH >= 0 && maxH >= 0 && minH <= maxH;
-    var transferHours = ParseInt(A.MaxTransferHours);
-    var transferYears = ParseInt(A.MaxTransferYears);
-    var transferSem = ParseInt(A.MaxTransferSemesters);
-    var transferPercent = ParseInt(A.PercentageTransferCreditsAllowed);
-    var transferNonNegative = transferHours >= 0 && transferYears >= 0 && transferSem >= 0;
-    var transferPercentValid = transferPercent >= 0 && transferPercent <= 100;
-    var acceptIntermediate = string.Equals(A.AcceptIntermediateDegreeStudents, "Yes", StringComparison.OrdinalIgnoreCase);
-    var bridgingFieldsFilled = !string.IsNullOrWhiteSpace(A.MaxTransferHours)
-                               && !string.IsNullOrWhiteSpace(A.MaxTransferYears)
-                               && !string.IsNullOrWhiteSpace(A.MaxTransferSemesters)
-                               && !string.IsNullOrWhiteSpace(A.PercentageTransferCreditsAllowed);
 
     var structureLevel = 0;
-    if (!anySystem || !minMaxValid || !transferNonNegative || !transferPercentValid) structureLevel = 2;
-    else if (acceptIntermediate && !bridgingFieldsFilled) structureLevel = 1;
+    if (!anySystem) structureLevel = 2;
 
     var hasTeaching = teachingMethods.Any();
     var hasAssessment = assessmentMethods.Any();
@@ -88,14 +68,12 @@
     var ePctValid = ePct >= 0 && ePct <= 100;
     var deliveryValid = !string.IsNullOrWhiteSpace(A.DeliveryType);
     var eLearningRequiredValid = !usesELearningYes || (deliveryValid && ePctValid);
-    var distanceYes = string.Equals(A.DistanceLearningStudentsAdmissible, "Yes", StringComparison.OrdinalIgnoreCase);
-    var eLearningConsistencyIssue = distanceYes && usesELearningNo;
     var programLooksMedical = teachingMethods.Any(x => string.Equals(x, "Clinical Training", StringComparison.OrdinalIgnoreCase));
     var professionalRegValid = !programLooksMedical || !string.IsNullOrWhiteSpace(A.ForeignGraduatesAllowedToPractice);
 
     var teachingLevel = 0;
     if (!hasTeaching || !hasAssessment || !eLearningRequiredValid) teachingLevel = 2;
-    else if (eLearningConsistencyIssue || !professionalRegValid) teachingLevel = 1;
+    else if (!professionalRegValid) teachingLevel = 1;
 
     var overallLevel = Math.Max(Math.Max(identityLevel, structureLevel), Math.Max(teachingLevel, studyPlanLevel));
 }
@@ -211,11 +189,11 @@
                             <tr><td>Full-Time Associate Professor</td><td>@NV(medDen.Med_FullTimeAssociateProfessor)</td><td>@NV(medDen.Den_FullTimeAssociateProfessor)</td></tr>
                             <tr><td>Full-Time Assistant Professor</td><td>@NV(medDen.Med_FullTimeAssistantProfessor)</td><td>@NV(medDen.Den_FullTimeAssistantProfessor)</td></tr>
                             <tr><td>Full-Time Lecturer (PhD Holders)</td><td>@NV(medDen.Med_FullTimeLecturerPhd)</td><td>@NV(medDen.Den_FullTimeLecturerPhd)</td></tr>
-                            <tr><td>Full-Time Lecturer (MSC Holders)</td><td>@NV(medDen.Med_FullTimeLecturerMsc)</td><td>@NV(medDen.Den_FullTimeLecturerMsc)</td></tr>
-                            <tr><td>Full-Time Assistant Lecturer (MSC Holders)</td><td>@NV(medDen.Med_FullTimeAssistantLecturerMsc)</td><td>@NV(medDen.Den_FullTimeAssistantLecturerMsc)</td></tr>
-                            <tr><td>Full-Time Assistant Lecturer (PSC Holders)</td><td>@NV(medDen.Med_FullTimeAssistantLecturerPsc)</td><td>@NV(medDen.Den_FullTimeAssistantLecturerPsc)</td></tr>
-                            <tr><td>Full-Time Practitioner (PSC Holders)</td><td>@NV(medDen.Med_FullTimePractitionerPsc)</td><td>@NV(medDen.Den_FullTimePractitionerPsc)</td></tr>
-                            <tr><td>Full-Time Practitioner (MSC Holders)</td><td>@NV(medDen.Med_FullTimePractitionerMsc)</td><td>@NV(medDen.Den_FullTimePractitionerMsc)</td></tr>
+                            <tr><td>Full-Time Lecturer (MSc Holders)</td><td>@NV(medDen.Med_FullTimeLecturerMsc)</td><td>@NV(medDen.Den_FullTimeLecturerMsc)</td></tr>
+                            <tr><td>Full-Time Assistant Lecturer (MSc Holders)</td><td>@NV(medDen.Med_FullTimeAssistantLecturerMsc)</td><td>@NV(medDen.Den_FullTimeAssistantLecturerMsc)</td></tr>
+                            <tr><td>Full-Time Assistant Lecturer (PhD Holders)</td><td>@NV(medDen.Med_FullTimeAssistantLecturerPsc)</td><td>@NV(medDen.Den_FullTimeAssistantLecturerPsc)</td></tr>
+                            <tr><td>Full-Time Practitioner (BSc Holders)</td><td>@NV(medDen.Med_FullTimePractitionerPsc)</td><td>@NV(medDen.Den_FullTimePractitionerPsc)</td></tr>
+                            <tr><td>Full-Time Practitioner (MSc Holders)</td><td>@NV(medDen.Med_FullTimePractitionerMsc)</td><td>@NV(medDen.Den_FullTimePractitionerMsc)</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -223,10 +201,10 @@
                 <div class="studyplan-metrics doctors-metrics">
                     <div class="metric-item"><span>PhD Holders (Medicine)</span><b>@medDen.Med_PhdHolders</b></div>
                     <div class="metric-item"><span>PhD Holders (Dentistry)</span><b>@medDen.Den_PhdHolders</b></div>
-                    <div class="metric-item"><span>MSC Holders (Medicine)</span><b>@medDen.Med_MscHolders</b></div>
-                    <div class="metric-item"><span>MSC Holders (Dentistry)</span><b>@medDen.Den_MscHolders</b></div>
-                    <div class="metric-item"><span>PSC Holders (Medicine)</span><b>@medDen.Med_PscHolders</b></div>
-                    <div class="metric-item"><span>PSC Holders (Dentistry)</span><b>@medDen.Den_PscHolders</b></div>
+                    <div class="metric-item"><span>MSc Holders (Medicine)</span><b>@medDen.Med_MscHolders</b></div>
+                    <div class="metric-item"><span>MSc Holders (Dentistry)</span><b>@medDen.Den_MscHolders</b></div>
+                    <div class="metric-item"><span>BSc Holders (Medicine)</span><b>@medDen.Med_PscHolders</b></div>
+                    <div class="metric-item"><span>BSc Holders (Dentistry)</span><b>@medDen.Den_PscHolders</b></div>
                 </div>
             </section>
 

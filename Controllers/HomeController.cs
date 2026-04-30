@@ -8,7 +8,6 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 namespace MOHRecognition.Controllers 
-// kamelia 9 
 {
     public class HomeController : Controller
     {
@@ -16,7 +15,7 @@ namespace MOHRecognition.Controllers
         private readonly IRecognitionRequestService _recognitionRequestService;
         private Dictionary<string, List<string>>? _citiesCache;
 
-        //hiii
+
         // Load cities from JSON file
         private Dictionary<string, List<string>> GetCitiesDictionary()
         {
@@ -376,7 +375,6 @@ namespace MOHRecognition.Controllers
             dto.StaffProfessor = Safe(dto.StaffProfessorFullTimeCount) + Safe(dto.StaffProfessorPartTimeCount);
             dto.StaffAssociateProfessor = Safe(dto.StaffAssociateProfessorFullTimeCount) + Safe(dto.StaffAssociateProfessorPartTimeCount);
             dto.StaffAssistantProfessor = Safe(dto.StaffAssistantProfessorFullTimeCount) + Safe(dto.StaffAssistantProfessorPartTimeCount);
-            dto.StaffLabAssistant = Safe(dto.StaffLabAssistantFullTimeCount) + Safe(dto.StaffLabAssistantPartTimeCount);
             dto.StaffResearcher = Safe(dto.StaffResearcherFullTimeCount) + Safe(dto.StaffResearcherPartTimeCount);
             dto.StaffTeacher = Safe(dto.StaffTeacherFullTimeCount) + Safe(dto.StaffTeacherPartTimeCount);
             dto.StaffAssistantTeacher = Safe(dto.StaffAssistantTeacherFullTimeCount) + Safe(dto.StaffAssistantTeacherPartTimeCount);
@@ -387,7 +385,6 @@ namespace MOHRecognition.Controllers
                 Safe(dto.StaffProfessorFullTimeCount) +
                 Safe(dto.StaffAssociateProfessorFullTimeCount) +
                 Safe(dto.StaffAssistantProfessorFullTimeCount) +
-                Safe(dto.StaffLabAssistantFullTimeCount) +
                 Safe(dto.StaffResearcherFullTimeCount) +
                 Safe(dto.StaffTeacherFullTimeCount) +
                 Safe(dto.StaffAssistantTeacherFullTimeCount) +
@@ -398,7 +395,6 @@ namespace MOHRecognition.Controllers
                 Safe(dto.StaffProfessorPartTimeCount) +
                 Safe(dto.StaffAssociateProfessorPartTimeCount) +
                 Safe(dto.StaffAssistantProfessorPartTimeCount) +
-                Safe(dto.StaffLabAssistantPartTimeCount) +
                 Safe(dto.StaffResearcherPartTimeCount) +
                 Safe(dto.StaffTeacherPartTimeCount) +
                 Safe(dto.StaffAssistantTeacherPartTimeCount) +
@@ -540,11 +536,6 @@ namespace MOHRecognition.Controllers
             to.AssistantProfessorPartTimeExcelFile = from.AssistantProfessorPartTimeExcelFile;
             to.AssistantProfessorPartTimeExcelFileName = from.AssistantProfessorPartTimeExcelFileName;
 
-            to.LabAssistantFullTimeExcelFile = from.LabAssistantFullTimeExcelFile;
-            to.LabAssistantFullTimeExcelFileName = from.LabAssistantFullTimeExcelFileName;
-            to.LabAssistantPartTimeExcelFile = from.LabAssistantPartTimeExcelFile;
-            to.LabAssistantPartTimeExcelFileName = from.LabAssistantPartTimeExcelFileName;
-
             to.ResearcherFullTimeExcelFile = from.ResearcherFullTimeExcelFile;
             to.ResearcherFullTimeExcelFileName = from.ResearcherFullTimeExcelFileName;
             to.ResearcherPartTimeExcelFile = from.ResearcherPartTimeExcelFile;
@@ -586,8 +577,6 @@ namespace MOHRecognition.Controllers
                 ["AssociateProfessor:parttime"] = a.AssociateProfessorPartTimeExcelFileName ?? "",
                 ["AssistantProfessor:fulltime"] = a.AssistantProfessorFullTimeExcelFileName ?? "",
                 ["AssistantProfessor:parttime"] = a.AssistantProfessorPartTimeExcelFileName ?? "",
-                ["LabAssistant:fulltime"] = a.LabAssistantFullTimeExcelFileName ?? "",
-                ["LabAssistant:parttime"] = a.LabAssistantPartTimeExcelFileName ?? "",
                 ["Researcher:fulltime"] = a.ResearcherFullTimeExcelFileName ?? "",
                 ["Researcher:parttime"] = a.ResearcherPartTimeExcelFileName ?? "",
                 ["Teacher:fulltime"] = a.TeacherFullTimeExcelFileName ?? "",
@@ -643,18 +632,6 @@ namespace MOHRecognition.Controllers
                     {
                         academic.AssistantProfessorPartTimeExcelFileName = fileName;
                         academic.AssistantProfessorPartTimeExcelFile = fileContentBase64;
-                    }
-                    break;
-                case "LabAssistant":
-                    if (fullTime)
-                    {
-                        academic.LabAssistantFullTimeExcelFileName = fileName;
-                        academic.LabAssistantFullTimeExcelFile = fileContentBase64;
-                    }
-                    else
-                    {
-                        academic.LabAssistantPartTimeExcelFileName = fileName;
-                        academic.LabAssistantPartTimeExcelFile = fileContentBase64;
                     }
                     break;
                 case "Researcher":
@@ -747,9 +724,6 @@ namespace MOHRecognition.Controllers
                 "AssistantProfessor" => fullTime
                     ? (academic.AssistantProfessorFullTimeExcelFileName ?? "", academic.AssistantProfessorFullTimeExcelFile ?? "")
                     : (academic.AssistantProfessorPartTimeExcelFileName ?? "", academic.AssistantProfessorPartTimeExcelFile ?? ""),
-                "LabAssistant" => fullTime
-                    ? (academic.LabAssistantFullTimeExcelFileName ?? "", academic.LabAssistantFullTimeExcelFile ?? "")
-                    : (academic.LabAssistantPartTimeExcelFileName ?? "", academic.LabAssistantPartTimeExcelFile ?? ""),
                 "Researcher" => fullTime
                     ? (academic.ResearcherFullTimeExcelFileName ?? "", academic.ResearcherFullTimeExcelFile ?? "")
                     : (academic.ResearcherPartTimeExcelFileName ?? "", academic.ResearcherPartTimeExcelFile ?? ""),
@@ -798,13 +772,12 @@ namespace MOHRecognition.Controllers
                 "Professor" => "Professor",
                 "AssociateProfessor" => "Associate Professor",
                 "AssistantProfessor" => "Assistant Professor",
-                "LabAssistant" => "Lab Assistant",
-                "Researcher" => "Assistant Lecturer (PSC Holders)",
-                "Teacher" => "Lecturer (PHD Holders)",
-                "AssistantTeacher" => "Lecturer (MSC Holders)",
-                "Others" => "Assistant Lecturer (MSC Holders)",
-                "PractitionerPsc" => "Practitioner (PSC Holders)",
-                "PractitionerMsc" => "Practitioner (MSC Holders)",
+                "Researcher" => "Assistant Lecturer (PhD Holders)",
+                "Teacher" => "Lecturer (PhD Holders)",
+                "AssistantTeacher" => "Lecturer (MSc Holders)",
+                "Others" => "Assistant Lecturer (MSc Holders)",
+                "PractitionerPsc" => "Practitioner (BSc Holders)",
+                "PractitionerMsc" => "Practitioner (MSc Holders)",
                 _ => rankKey
             };
         }
@@ -816,13 +789,12 @@ namespace MOHRecognition.Controllers
                 "Professor",
                 "Associate Professor",
                 "Assistant Professor",
-                "Lab Assistant",
-                "Assistant Lecturer (PSC Holders)",
-                "Lecturer (PHD Holders)",
-                "Lecturer (MSC Holders)",
-                "Assistant Lecturer (MSC Holders)",
-                "Practitioner (PSC Holders)",
-                "Practitioner (MSC Holders)"
+                "Assistant Lecturer (PhD Holders)",
+                "Lecturer (PhD Holders)",
+                "Lecturer (MSc Holders)",
+                "Assistant Lecturer (MSc Holders)",
+                "Practitioner (MSc Holders)",
+                "Practitioner (BSc Holders)"
             };
         }
 
@@ -910,7 +882,6 @@ namespace MOHRecognition.Controllers
                 "Professor",
                 "AssociateProfessor",
                 "AssistantProfessor",
-                "LabAssistant",
                 "Researcher",
                 "Teacher",
                 "AssistantTeacher",
@@ -982,7 +953,6 @@ namespace MOHRecognition.Controllers
                 "Professor",
                 "AssociateProfessor",
                 "AssistantProfessor",
-                "LabAssistant",
                 "Researcher",
                 "Teacher",
                 "AssistantTeacher",
@@ -1167,7 +1137,6 @@ namespace MOHRecognition.Controllers
                 "Professor",
                 "AssociateProfessor",
                 "AssistantProfessor",
-                "LabAssistant",
                 "Researcher",
                 "Teacher",
                 "AssistantTeacher",
@@ -1214,7 +1183,6 @@ namespace MOHRecognition.Controllers
                 "Professor",
                 "AssociateProfessor",
                 "AssistantProfessor",
-                "LabAssistant",
                 "Researcher",
                 "Teacher",
                 "AssistantTeacher",
@@ -2849,8 +2817,7 @@ namespace MOHRecognition.Controllers
 
             if (!dto.Computers.HasValue ||
                 !dto.Workshops.HasValue ||
-                !dto.Laboratories.HasValue ||
-                !dto.PersonalComputers.HasValue)
+                !dto.Laboratories.HasValue)
             {
                 return BadRequest("Please fill all required fields.");
             }
@@ -2879,7 +2846,6 @@ namespace MOHRecognition.Controllers
                 existing.Computers = dto.Computers;
                 existing.Workshops = dto.Workshops;
                 existing.Laboratories = dto.Laboratories;
-                existing.PersonalComputers = dto.PersonalComputers;
             }
 
             model.Rows = rows;

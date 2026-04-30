@@ -9,7 +9,6 @@
     var associateProfessorFullTime = A.StaffAssociateProfessorFullTimeCount ?? 0;
     var assistantProfessorFullTime = A.StaffAssistantProfessorFullTimeCount ?? 0;
     var teacherFullTime = A.StaffTeacherFullTimeCount ?? 0;
-    var labAssistantFullTime = A.StaffLabAssistantFullTimeCount ?? 0;
     var researcherFullTime = A.StaffResearcherFullTimeCount ?? 0;
     var assistantTeacherFullTime = A.StaffAssistantTeacherFullTimeCount ?? 0;
     var othersFullTime = A.StaffOthersFullTimeCount ?? 0;
@@ -17,12 +16,11 @@
     var practitionerMscFullTime = A.StaffPractitionerMscFullTimeCount ?? 0;
     var allFullTimeTeachingStaff =
         professorFullTime + associateProfessorFullTime + assistantProfessorFullTime +
-        labAssistantFullTime + researcherFullTime + teacherFullTime + assistantTeacherFullTime + othersFullTime + practitionerPscFullTime + practitionerMscFullTime;
+        researcherFullTime + teacherFullTime + assistantTeacherFullTime + othersFullTime + practitionerPscFullTime + practitionerMscFullTime;
     var academicRankTotal =
         (A.StaffProfessorFullTimeCount ?? 0) + (A.StaffProfessorPartTimeCount ?? 0) +
         (A.StaffAssociateProfessorFullTimeCount ?? 0) + (A.StaffAssociateProfessorPartTimeCount ?? 0) +
         (A.StaffAssistantProfessorFullTimeCount ?? 0) + (A.StaffAssistantProfessorPartTimeCount ?? 0) +
-        (A.StaffLabAssistantFullTimeCount ?? 0) + (A.StaffLabAssistantPartTimeCount ?? 0) +
         (A.StaffResearcherFullTimeCount ?? 0) + (A.StaffResearcherPartTimeCount ?? 0) +
         (A.StaffTeacherFullTimeCount ?? 0) + (A.StaffTeacherPartTimeCount ?? 0) +
         (A.StaffAssistantTeacherFullTimeCount ?? 0) + (A.StaffAssistantTeacherPartTimeCount ?? 0) +
@@ -48,7 +46,7 @@
     var studentsToFacultyRatio = totalFacultyForRatio > 0
         ? Math.Ceiling((decimal)totalStudents / totalFacultyForRatio)
         : 0m;
-    var labAndResearchSum = labAssistantFullTime + researcherFullTime;
+    var labAndResearchSum = researcherFullTime;
     var assistantTeacherCount = assistantTeacherFullTime;
     var combinedAcademicStaff = academicRankTotal;
 
@@ -146,17 +144,8 @@
         },
         new
         {
-            Key = "LabAssistant",
-            Title = "Lab Assistant",
-            FullTimeCount = A.StaffLabAssistantFullTimeCount ?? 0,
-            PartTimeCount = A.StaffLabAssistantPartTimeCount ?? 0,
-            FullTimeFile = A.LabAssistantFullTimeExcelFileName,
-            PartTimeFile = A.LabAssistantPartTimeExcelFileName
-        },
-        new
-        {
             Key = "Teacher",
-            Title = "Lecturer (PHD Holders)",
+            Title = "Lecturer (PhD Holders)",
             FullTimeCount = A.StaffTeacherFullTimeCount ?? 0,
             PartTimeCount = A.StaffTeacherPartTimeCount ?? 0,
             FullTimeFile = A.TeacherFullTimeExcelFileName,
@@ -165,7 +154,7 @@
         new
         {
             Key = "AssistantTeacher",
-            Title = "Lecturer (MSC Holders)",
+            Title = "Lecturer (MSc Holders)",
             FullTimeCount = A.StaffAssistantTeacherFullTimeCount ?? 0,
             PartTimeCount = A.StaffAssistantTeacherPartTimeCount ?? 0,
             FullTimeFile = A.AssistantTeacherFullTimeExcelFileName,
@@ -174,7 +163,7 @@
         new
         {
             Key = "Others",
-            Title = "Assistant Lecturer (MSC Holders)",
+            Title = "Assistant Lecturer (MSc Holders)",
             FullTimeCount = A.StaffOthersFullTimeCount ?? 0,
             PartTimeCount = A.StaffOthersPartTimeCount ?? 0,
             FullTimeFile = A.OthersFullTimeExcelFileName,
@@ -183,7 +172,7 @@
         new
         {
             Key = "Researcher",
-            Title = "Assistant Lecturer (PSC Holders)",
+            Title = "Assistant Lecturer (PhD Holders)",
             FullTimeCount = A.StaffResearcherFullTimeCount ?? 0,
             PartTimeCount = A.StaffResearcherPartTimeCount ?? 0,
             FullTimeFile = A.ResearcherFullTimeExcelFileName,
@@ -191,21 +180,21 @@
         },
         new
         {
-            Key = "PractitionerPsc",
-            Title = "Practitioner (PSC Holders)",
-            FullTimeCount = A.StaffPractitionerPscFullTimeCount ?? 0,
-            PartTimeCount = A.StaffPractitionerPscPartTimeCount ?? 0,
-            FullTimeFile = A.PractitionerPscFullTimeExcelFileName,
-            PartTimeFile = A.PractitionerPscPartTimeExcelFileName
-        },
-        new
-        {
             Key = "PractitionerMsc",
-            Title = "Practitioner (MSC Holders)",
+            Title = "Practitioner (MSc Holders)",
             FullTimeCount = A.StaffPractitionerMscFullTimeCount ?? 0,
             PartTimeCount = A.StaffPractitionerMscPartTimeCount ?? 0,
             FullTimeFile = A.PractitionerMscFullTimeExcelFileName,
             PartTimeFile = A.PractitionerMscPartTimeExcelFileName
+        },
+        new
+        {
+            Key = "PractitionerPsc",
+            Title = "Practitioner (BSc Holders)",
+            FullTimeCount = A.StaffPractitionerPscFullTimeCount ?? 0,
+            PartTimeCount = A.StaffPractitionerPscPartTimeCount ?? 0,
+            FullTimeFile = A.PractitionerPscFullTimeExcelFileName,
+            PartTimeFile = A.PractitionerPscPartTimeExcelFileName
         }
     };
 

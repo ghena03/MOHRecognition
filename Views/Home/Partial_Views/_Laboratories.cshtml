@@ -22,7 +22,7 @@
             <div class="lab-section-sub">Add detailed counts for each college.</div>
 
             <div id="labEditorForm" style="display:grid; gap:12px; margin-top:14px;">
-                <div class="grid-5">
+                <div class="grid-4">
                     <div class="field">
                         <label>College <span class="req">*</span></label>
                         <select id="lab_facultyId">
@@ -52,10 +52,6 @@
                         <input id="lab_laboratories" type="number" min="0" step="1" inputmode="numeric" />
                     </div>
 
-                    <div class="field">
-                        <label>Personal Computers <span class="req">*</span></label>
-                        <input id="lab_personalComputers" type="number" min="0" step="1" inputmode="numeric" />
-                    </div>
                 </div>
 
                 <div class="lab-actions-row">
@@ -73,7 +69,6 @@
                             <th>Computers</th>
                             <th>Workshops</th>
                             <th>Laboratories</th>
-                            <th>Personal Computers</th>
                             <th style="width:120px;"></th>
                         </tr>
                     </thead>
@@ -81,7 +76,7 @@
                         @if (Model?.Rows == null || !Model.Rows.Any())
                         {
                             <tr>
-                                <td colspan="7" style="text-align:left; font-weight:600;">No Data Found !</td>
+                                <td colspan="6" style="text-align:left; font-weight:600;">No Data Found !</td>
                             </tr>
                         }
                         else
@@ -95,7 +90,6 @@
                                     <td>@r.Computers</td>
                                     <td>@r.Workshops</td>
                                     <td>@r.Laboratories</td>
-                                    <td>@r.PersonalComputers</td>
                                     <td style="white-space:nowrap; text-align:center;">
                                         <div class="icon-actions">
                                             <button type="button"
@@ -106,7 +100,6 @@
                                                     data-computers="@r.Computers"
                                                     data-workshops="@r.Workshops"
                                                     data-laboratories="@r.Laboratories"
-                                                    data-personal-computers="@r.PersonalComputers"
                                                     title="Edit"
                                                     aria-label="Edit">
                                                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
