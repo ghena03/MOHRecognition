@@ -66,8 +66,6 @@ public class AcademicInfoDto
     public int? StaffAssociateProfessorPartTimeCount { get; set; }
     public int? StaffAssistantProfessorFullTimeCount { get; set; }
     public int? StaffAssistantProfessorPartTimeCount { get; set; }
-    public int? StaffLabAssistantFullTimeCount { get; set; }
-    public int? StaffLabAssistantPartTimeCount { get; set; }
     public int? StaffResearcherFullTimeCount { get; set; }
     public int? StaffResearcherPartTimeCount { get; set; }
     public int? StaffTeacherFullTimeCount { get; set; }
@@ -96,11 +94,6 @@ public class AcademicInfoDto
     public string AssistantProfessorFullTimeExcelFileName { get; set; } = "";
     public string AssistantProfessorPartTimeExcelFile { get; set; } = "";
     public string AssistantProfessorPartTimeExcelFileName { get; set; } = "";
-
-    public string LabAssistantFullTimeExcelFile { get; set; } = "";
-    public string LabAssistantFullTimeExcelFileName { get; set; } = "";
-    public string LabAssistantPartTimeExcelFile { get; set; } = "";
-    public string LabAssistantPartTimeExcelFileName { get; set; } = "";
 
     public string ResearcherFullTimeExcelFile { get; set; } = "";
     public string ResearcherFullTimeExcelFileName { get; set; } = "";
@@ -136,7 +129,6 @@ public class AcademicInfoDto
     public int? StaffProfessor { get; set; }
     public int? StaffAssociateProfessor { get; set; }
     public int? StaffAssistantProfessor { get; set; }
-    public int? StaffLabAssistant { get; set; }
     public int? StaffResearcher { get; set; }
     public int? StaffTeacher { get; set; }
     public int? StaffAssistantTeacher { get; set; }
@@ -174,10 +166,6 @@ public class AcademicInfoDto
     public bool SystemCreditHours { get; set; }
     public bool SystemECTS { get; set; }
 
-    // Allowable Semester Hours Allowed to Students
-    public int? MinHours { get; set; }
-    public int? MaxHours { get; set; }
-
     // Research Activities By Faculty
     public int? ResearchItemsScopus { get; set; }
     public int? ResearchItemsOtherSearchEngines { get; set; }
@@ -189,24 +177,5 @@ public class AcademicInfoDto
     public string EnforceClassAttendance { get; set; } = ""; // Yes/No/Choose
     public string MentionExceptions { get; set; } = "";
 
-    // Part-time / correspondence students allowed to transfer (dropdown) + elaborate (text)
-    public string PartTimeStudentsAllowedToTransfer { get; set; } = ""; // Yes/No/Choose
-    public string TransferElaborateRequirements { get; set; } = "";
 
-    // Distance learning students admissible + can join graduate programs (dropdown)
-    public string DistanceLearningStudentsAdmissible { get; set; } = ""; // Yes/No/Choose
-
-    // Max number of credits/transfers counted toward graduation (3 fields)
-    public string MaxTransferHours { get; set; } = "";
-    public string MaxTransferYears { get; set; } = "";
-    public string MaxTransferSemesters { get; set; } = "";
-
-    // Accept intermediate degree students (2-year diplomas) toward higher degree (dropdown)
-    public string AcceptIntermediateDegreeStudents { get; set; } = ""; // Yes/No/Choose
-
-    // Matriculation/qualifying exam required for diploma/community college transfers (dropdown)
-    public string MatriculationExamRequiredForTransfers { get; set; } = ""; // Yes/No/Choose
-
-    // Percentage of transfer credits allowed
-    public string PercentageTransferCreditsAllowed { get; set; } = "";
 }

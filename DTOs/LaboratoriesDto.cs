@@ -34,5 +34,4 @@ public class LaboratoryRowDto
     public int? Computers { get; set; }
     public int? Workshops { get; set; }
     public int? Laboratories { get; set; }
-    public int? PersonalComputers { get; set; }
 }
