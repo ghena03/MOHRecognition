@@ -1,0 +1,64 @@
+﻿@{
+    ViewData["Title"] = "Create Meeting";
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-left">
+        <img src="~/images/mohelogo.png" class="logo" />
+        <div class="header-text">
+            <h1>Create meeting</h1>
+        </div>
+    </div>
+
+    <a class="back-btn" href="@Url.Action("Requests", "Home")">← Back</a>
+</div>
+<div class="main-container">
+
+    <!-- TITLE -->
+    <div class="page-head">
+        <h2>Schedule Meeting</h2>
+    </div>
+
+    <!-- FORM CARD -->
+    <div class="details-card">
+
+        <form method="post" asp-action="CreateMeeting">
+
+            <div class="details-grid">
+
+                <!-- SESSION -->
+                <div>
+                    <label>Session Number</label>
+                    <input type="text" name="SessionNumber" value="1" readonly class="mini-select" />
+                </div>
+
+                <!-- DATE -->
+                <div>
+                    <label>Date</label>
+                    <input type="date" name="MeetingDate" class="mini-select" required />
+                </div>
+
+                <!-- NOTES (FULL WIDTH) -->
+                <div style="grid-column: span 2;">
+                    <label>Notes</label>
+                    <textarea name="Notes" class="mini-select" rows="4" style="width:100%;"></textarea>
+                </div>
+
+            </div>
+
+            <!-- BUTTON -->
+            <div style="margin-top:20px;">
+                <button type="submit" class="mini-save-btn">
+                    Save Meeting
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>

@@ -3960,9 +3960,34 @@ namespace MOHRecognition.Controllers
             return View("~/Views/Admin/Requests.cshtml", requests);
         }
 
+        private static List<MeetingDto> meetings = new List<MeetingDto>();
+
+        // GET
         public IActionResult Meetings()
         {
-            return View("~/Views/Admin/Meetings.cshtml");
+            return View("~/Views/Admin/Meetings.cshtml", meetings);
+
+        }
+
+        // GET (open form)
+        public IActionResult CreateMeeting()
+        {
+            return View("~/Views/Admin/CreateMeeting.cshtml");
+
+        }
+
+        // POST (save)
+        [HttpPost]
+        public IActionResult CreateMeeting(MeetingDto model)
+        {
+            if (model == null)
+                return RedirectToAction("Meetings");
+
+            model.SessionNumber = meetings.Count + 1;
+
+            meetings.Add(model);
+
+            return RedirectToAction("Meetings");
         }
         public IActionResult AdminRequestDetails(int id)
         {

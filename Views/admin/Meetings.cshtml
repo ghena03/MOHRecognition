@@ -1,15 +1,12 @@
-﻿@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
+﻿@using MOHRecognition.DTOs
+@model List<MeetingDto>
+
 @{
     ViewData["Title"] = "Meetings";
     Layout = null;
 }
 
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
-</head>
+<link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
 
 <!-- HEADER -->
 <div class="header">
@@ -51,15 +48,26 @@
             </thead>
 
             <tbody>
-                <!-- Temporary data -->
-                <tr>
-                    <td>1</td>
-                    <td>2026-05-01</td>
-                    <td>Discussion about universities</td>
-                    <td>
-                        <a href="#" class="action-btn">View</a>
-                    </td>
-                </tr>
+                @if (Model != null && Model.Count > 0)
+                {
+                    foreach (var m in Model)
+                    {
+                        <tr>
+                            <td>@m.SessionNumber</td>
+                            <td>@m.MeetingDate.ToString("yyyy-MM-dd")</td>
+                            <td>@m.Notes</td>
+                            <td>
+                                <a href="#" class="action-btn">View</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="empty">No meetings yet</td>
+                    </tr>
+                }
             </tbody>
 
         </table>
