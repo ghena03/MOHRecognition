@@ -3939,8 +3939,10 @@ namespace MOHRecognition.Controllers
         // GET (open form)
         public IActionResult CreateMeeting()
         {
-            return View("~/Views/Admin/CreateMeeting.cshtml");
+            var requests = _recognitionRequestService.GetAll();
+            ViewBag.AvailableRequests = requests;
 
+            return View("~/Views/Admin/CreateMeeting.cshtml"); 
         }
 
         // POST (save)

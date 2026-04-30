@@ -1,4 +1,5 @@
-﻿@{
+﻿@using MOHRecognition.Services
+@{
     ViewData["Title"] = "Create Meeting";
     Layout = null;
 }
@@ -27,7 +28,24 @@
     <div class="details-card">
 
         <form method="post" asp-action="CreateMeeting">
+            <div>
+                <h4>Select related requests (universities)</h4>
 
+                @{
+                    var requests = ViewBag.AvailableRequests as IEnumerable<RecognitionRequestRecord>
+                    ?? Enumerable.Empty<RecognitionRequestRecord>();
+                }
+
+                @foreach (var req in requests)
+                {
+                    <div>
+                        <label>
+                            <input type="checkbox" name="RequestIds" value="@req.Id" />
+                            @req.UniversityName
+                        </label>
+                    </div>
+                }
+            </div>
             <div class="details-grid">
 
                 <!-- SESSION -->

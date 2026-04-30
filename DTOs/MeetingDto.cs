@@ -9,5 +9,8 @@
         public DateTime MeetingDate { get; set; }
 
         public string? Notes { get; set; }
+
+        // Added: store selected recognition request IDs (links to RecognitionRequestRecord.Id)
+        public List<int> RequestIds { get; set; } = new List<int>();
     }
 }
