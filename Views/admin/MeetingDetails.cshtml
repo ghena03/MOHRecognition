@@ -1,0 +1,46 @@
+﻿@using MOHRecognition.DTOs
+@model MeetingDto
+
+@{
+    ViewData["Title"] = "Meeting Details";
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
+
+<div class="main-container">
+
+    <div class="page-head">
+        <h2>Meeting Details</h2>
+    </div>
+
+    <div class="details-card">
+
+        <div class="details-grid">
+
+            <div>
+                <strong>Session #:</strong>
+                <p>@Model.SessionNumber</p>
+            </div>
+
+            <div>
+                <strong>Date:</strong>
+                <p>@Model.MeetingDate.ToString("yyyy-MM-dd")</p>
+            </div>
+
+            <div style="grid-column: span 2;">
+                <strong>Notes:</strong>
+                <p>@Model.Notes</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div style="margin-top:20px;">
+        <a asp-controller="Home" asp-action="Meetings" class="action-btn">
+            Back
+        </a>
+    </div>
+
+</div>

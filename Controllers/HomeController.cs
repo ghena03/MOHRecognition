@@ -3990,6 +3990,15 @@ namespace MOHRecognition.Controllers
 
             return RedirectToAction("Meetings");
         }
+        public IActionResult MeetingDetails(int id)
+        {
+            var meeting = meetings.FirstOrDefault(m => m.SessionNumber == id);
+
+            if (meeting == null)
+                return RedirectToAction("Meetings");
+
+            return View("~/Views/Admin/MeetingDetails.cshtml", meeting);
+        }
         public IActionResult AdminRequestDetails(int id)
         {
             var request = _recognitionRequestService.GetById(id);

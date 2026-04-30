@@ -57,7 +57,9 @@
                             <td>@m.MeetingDate.ToString("yyyy-MM-dd")</td>
                             <td>@m.Notes</td>
                             <td>
-                                <a href="#" class="action-btn">View</a>
+                                <a asp-controller="Home" asp-action="MeetingDetails" asp-route-id="@m.SessionNumber" class="action-btn">
+                                    View
+                                </a>
                             </td>
                         </tr>
                     }
