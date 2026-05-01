@@ -30,6 +30,10 @@
     }
 
     function showError(msg) {
+        if (window.showAppToast) {
+            window.showAppToast(msg, "error");
+            return;
+        }
         const sec = document.getElementById("sec-hours") || getContainer();
         if (!sec) return;
         const b = ensureBanner(sec);

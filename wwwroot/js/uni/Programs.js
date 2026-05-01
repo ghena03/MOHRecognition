@@ -29,6 +29,10 @@
     }
 
     function showError(msg) {
+        if (window.showAppToast) {
+            window.showAppToast(msg, "error");
+            return;
+        }
         const b = ensureBanner();
         b.style.display = "flex";
         b.classList.remove("ok");

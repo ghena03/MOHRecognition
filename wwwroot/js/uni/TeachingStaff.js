@@ -16,6 +16,10 @@
     }
 
     function showBanner(message, type) {
+        if (window.showAppToast) {
+            window.showAppToast(message, type === "ok" ? "success" : "error");
+            return;
+        }
         const banner = document.getElementById("tsExcelBanner");
         if (!banner) return;
 

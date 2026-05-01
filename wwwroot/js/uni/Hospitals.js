@@ -16,6 +16,10 @@
     }
 
     function showBanner(message, isError) {
+        if (window.showAppToast) {
+            window.showAppToast(message, isError ? "error" : "success");
+            return;
+        }
         const banner = document.getElementById("hospBanner");
         if (!banner) return;
 

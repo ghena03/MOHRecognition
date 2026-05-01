@@ -17,6 +17,10 @@
     }
 
     function showError(sectionEl, text) {
+        if (window.showAppToast) {
+            window.showAppToast(text, "error");
+            return;
+        }
         let b = sectionEl.querySelector("#admissionBanner");
         if (!b) {
             b = document.createElement("div");

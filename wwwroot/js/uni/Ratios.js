@@ -27,6 +27,10 @@
     }
 
     function showBanner(sec, type, text) {
+        if (window.showAppToast) {
+            window.showAppToast(text, type === "ok" ? "success" : "error");
+            return;
+        }
         let b = sec.querySelector("#ratiosBanner");
         if (!b) {
             b = document.createElement("div");
@@ -35,14 +39,14 @@
             b.style.marginTop = "12px";
             b.innerHTML = `<span class="dot"></span><span class="txt"></span><button type="button" class="x">×</button>`;
 
-            const bd = sec.querySelector(".card-bd") || sec;
-            bd.insertBefore(b, bd.firstChild);
+            const host = sec.querySelector(".card-bd") || sec;
+            host.insertBefore(b, host.firstChild);
 
             b.querySelector(".x").addEventListener("click", () => (b.style.display = "none"));
         }
 
         b.style.display = "flex";
-        b.classList.remove("warn", "ok");
+        b.classList.remove("ok", "warn");
         b.classList.add(type === "ok" ? "ok" : "warn");
         b.querySelector(".txt").textContent = text;
     }

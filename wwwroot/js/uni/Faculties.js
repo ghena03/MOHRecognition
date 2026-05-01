@@ -8,6 +8,10 @@
     function sec() { return document.getElementById(sectionId); }
 
     function showBanner(type, msg) {
+        if (window.showAppToast) {
+            window.showAppToast(msg, type === "ok" ? "success" : "error");
+            return;
+        }
         const s = sec();
         if (!s) return;
         const b = s.querySelector("#facBanner");

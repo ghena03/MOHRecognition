@@ -32,6 +32,10 @@
     }
 
     function showError(msg) {
+        if (window.showAppToast) {
+            window.showAppToast(msg, "error");
+            return;
+        }
         const sec = document.getElementById("sec-students") || getContainer();
         if (!sec) return;
         const b = ensureBanner(sec);

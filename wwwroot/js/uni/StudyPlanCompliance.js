@@ -22,6 +22,10 @@
     }
 
     function showError(msg) {
+        if (window.showAppToast) {
+            window.showAppToast(msg, "error");
+            return;
+        }
         const sec = document.getElementById("sec-studyplan") || getContainer();
         if (!sec) return;
         const b = ensureBanner(sec);

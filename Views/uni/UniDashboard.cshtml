@@ -931,7 +931,7 @@
 
                         <div class="field" style="margin-bottom:12px;">
                             <label>Selected College Categories</label>
-                            <div class="degree-options" style="margin-top:6px;">
+                            <div class="degree-options" id="selectedCollegeCategories" style="margin-top:6px;">
                                 @if (collegeCategories.Any())
                                 {
                                     foreach (var cat in collegeCategories)
@@ -1089,6 +1089,8 @@
 
             </form>
 
+            <div id="uniToastHost" class="uni-toast-host" role="status" aria-live="polite"></div>
+
             <footer class="foot">© Ministry of Higher Education</footer>
         </main>
     </div>
@@ -1140,6 +1142,30 @@
             container.style.minHeight = "";
           }
         }
+    </script>
+
+    <script>
+        (function () {
+            window.showAppToast = function (message, type) {
+                let host = document.getElementById("uniToastHost");
+                if (!host) {
+                    host = document.createElement("div");
+                    host.id = "uniToastHost";
+                    host.className = "uni-toast-host";
+                    document.body.appendChild(host);
+                }
+
+                const toast = document.createElement("div");
+                toast.className = "uni-toast" + (type === "error" ? " is-error" : " is-success");
+                toast.textContent = message;
+                host.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.add("fade-out");
+                    setTimeout(() => toast.remove(), 220);
+                }, 2200);
+            };
+        })();
     </script>
 
     <script>
@@ -1200,9 +1226,9 @@
                     if (!durationRes.ok || !admissionRes.ok) {
                         throw new Error("Save failed");
                     }
-                    alert("Saved successfully.");
+                    window.showAppToast?.("Saved successfully.", "success");
                 } catch {
-                    alert("Save failed. Please try again.");
+                    window.showAppToast?.("Save failed. Please try again.", "error");
                 } finally {
                     btn.disabled = false;
                 }

@@ -8,6 +8,10 @@
     }
 
     function showBanner(sectionEl, type, text) {
+        if (window.showAppToast) {
+            window.showAppToast(text, type === "ok" ? "success" : "error");
+            return;
+        }
         // type: "ok" | "warn"
         let banner = qs("#durationBanner", sectionEl);
 

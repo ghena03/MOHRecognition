@@ -156,6 +156,43 @@ html {
         text-decoration: underline;
     }
 
+    /* ================= TOAST POPUP ================= */
+    .uni-toast-host {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+    }
+
+    .uni-toast {
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(22, 163, 74, 0.25);
+        background: #f0fdf4;
+        color: #166534;
+        box-shadow: 0 16px 38px rgba(2, 8, 23, 0.18);
+        font-weight: 800;
+        font-size: 14px;
+        min-width: 320px;
+        max-width: 520px;
+        text-align: center;
+        pointer-events: auto;
+        transition: all 0.2s ease;
+    }
+
+    .uni-toast.is-error {
+        border-color: rgba(185, 28, 28, 0.25);
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    .uni-toast.fade-out {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
 /* Sidebar user */
 .side-user {
     display: flex;

@@ -37,41 +37,10 @@
     }
 
     function showToast(text, isError) {
-        let host = document.getElementById("uniToastHost");
-        if (!host) {
-            host = document.createElement("div");
-            host.id = "uniToastHost";
-            host.style.position = "fixed";
-            host.style.inset = "0";
-            host.style.zIndex = "9999";
-            host.style.display = "grid";
-            host.style.placeItems = "center";
-            host.style.pointerEvents = "none";
-            document.body.appendChild(host);
+        if (window.showAppToast) {
+            window.showAppToast(text, isError ? "error" : "success");
+            return;
         }
-
-        const toast = document.createElement("div");
-        toast.style.padding = "14px 16px";
-        toast.style.borderRadius = "12px";
-        toast.style.border = isError ? "1px solid rgba(185, 28, 28, .25)" : "1px solid rgba(22, 163, 74, .25)";
-        toast.style.background = isError ? "#fef2f2" : "#f0fdf4";
-        toast.style.color = isError ? "#991b1b" : "#166534";
-        toast.style.boxShadow = "0 16px 38px rgba(2,8,23,.18)";
-        toast.style.fontWeight = "800";
-        toast.style.fontSize = "14px";
-        toast.style.minWidth = "320px";
-        toast.style.maxWidth = "520px";
-        toast.style.textAlign = "center";
-        toast.style.pointerEvents = "auto";
-        toast.textContent = text;
-        host.appendChild(toast);
-
-        setTimeout(() => {
-            toast.style.opacity = "0";
-            toast.style.transform = "translateY(-6px)";
-            toast.style.transition = "all .2s ease";
-            setTimeout(() => toast.remove(), 220);
-        }, 2200);
     }
 
     function wireLanguageOfInstructionOther(sec) {
