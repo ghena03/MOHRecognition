@@ -3933,41 +3933,50 @@ namespace MOHRecognition.Controllers
 
         private static List<MeetingDto> meetings = new List<MeetingDto>();
 
-        // GET
+        // ===================== MEETINGS LIST =====================
         public IActionResult Meetings()
         {
             return View("~/Views/Admin/Meetings.cshtml", meetings);
-
         }
 
-        // GET (open form)
+        // ===================== CREATE (GET) =====================
         public IActionResult CreateMeeting()
         {
             var requests = _recognitionRequestService.GetAll();
             ViewBag.AvailableRequests = requests;
 
-            return View("~/Views/Admin/CreateMeeting.cshtml"); 
+            return View("~/Views/Admin/CreateMeeting.cshtml");
         }
 
-        // POST (save)
+        // ===================== CREATE (POST) =====================
         [HttpPost]
         public IActionResult CreateMeeting(MeetingDto model)
         {
-            if (model == null)
-                return RedirectToAction("Meetings");
-
+            model.Id = meetings.Count + 1;
             model.SessionNumber = meetings.Count + 1;
+
+            model.RequestIds ??= new List<int>();
 
             meetings.Add(model);
 
             return RedirectToAction("Meetings");
         }
+
+        // ===================== DETAILS =====================
         public IActionResult MeetingDetails(int id)
         {
-            var meeting = meetings.FirstOrDefault(m => m.SessionNumber == id);
+            var meeting = meetings.FirstOrDefault(m => m.Id == id);
 
             if (meeting == null)
                 return RedirectToAction("Meetings");
+
+            var allRequests = _recognitionRequestService.GetAll();
+
+            var linked = allRequests
+                .Where(r => meeting.RequestIds.Contains(r.Id))
+                .ToList();
+
+            ViewBag.LinkedRequests = linked;
 
             return View("~/Views/Admin/MeetingDetails.cshtml", meeting);
         }

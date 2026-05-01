@@ -336,7 +336,19 @@ td {
         background: #a52a2a;
     }
 
-/* Optional: make header row cleaner */
+
 .details-card > div:first-child {
     margin-bottom: 15px;
+}
+
+.meeting-list {
+    display: grid;
+    gap: 15px;
+}
+
+.meeting-item {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 5px solid #8b1e1e;
 }

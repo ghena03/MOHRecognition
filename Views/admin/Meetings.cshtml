@@ -57,7 +57,7 @@
                             <td>@m.MeetingDate.ToString("yyyy-MM-dd")</td>
                             <td>@m.Notes</td>
                             <td>
-                                <a asp-controller="Home" asp-action="MeetingDetails" asp-route-id="@m.SessionNumber" class="action-btn">
+                                <a href="/Home/MeetingDetails?id=@m.Id" class="action-btn">
                                     View
                                 </a>
                             </td>
@@ -67,11 +67,10 @@
                 else
                 {
                     <tr>
-                        <td colspan="4" class="empty">No meetings yet</td>
+                        <td colspan="4">No meetings yet</td>
                     </tr>
                 }
             </tbody>
-
         </table>
     </div>
 

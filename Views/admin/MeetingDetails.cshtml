@@ -1,4 +1,5 @@
 ﻿@using MOHRecognition.DTOs
+@using MOHRecognition.Services
 @model MeetingDto
 
 @{
@@ -8,28 +9,43 @@
 
 <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
 
+<!-- HEADER -->
+<div class="header">
+    <div class="header-left">
+        <img src="~/images/mohelogo.png" class="logo" />
+        <div class="divider"></div>
+
+        <div class="title-box">
+            <h1>Meeting Details</h1>
+            <p>Discussion session overview</p>
+        </div>
+    </div>
+</div>
+
 <div class="main-container">
 
+    <!-- TITLE -->
     <div class="page-head">
-        <h2>Meeting Details</h2>
+        <h2>Meeting Information</h2>
     </div>
 
+    <!-- DETAILS CARD -->
     <div class="details-card">
 
         <div class="details-grid">
 
             <div>
-                <strong>Session #:</strong>
+                <strong>Session #</strong>
                 <p>@Model.SessionNumber</p>
             </div>
 
             <div>
-                <strong>Date:</strong>
+                <strong>Date</strong>
                 <p>@Model.MeetingDate.ToString("yyyy-MM-dd")</p>
             </div>
 
             <div style="grid-column: span 2;">
-                <strong>Notes:</strong>
+                <strong>Notes</strong>
                 <p>@Model.Notes</p>
             </div>
 
@@ -37,9 +53,45 @@
 
     </div>
 
-    <div style="margin-top:20px;">
-        <a asp-controller="Home" asp-action="Meetings" class="action-btn">
-            Back
+    <!-- UNIVERSITIES -->
+    <div class="page-head" style="margin-top:30px;">
+        <h2>Universities Discussed</h2>
+    </div>
+
+    @{
+        var linked = ViewBag.LinkedRequests as IEnumerable<RecognitionRequestRecord>
+        ?? Enumerable.Empty<RecognitionRequestRecord>();
+    }
+
+    @if (!linked.Any())
+    {
+        <div class="details-card">
+            <p>No universities selected</p>
+        </div>
+    }
+    else
+    {
+        <div class="cards-grid">
+
+            @foreach (var r in linked)
+            {
+                <div class="info-card">
+
+                    <h3>@r.UniversityName</h3>
+
+                    <p><strong>Country:</strong> @r.Country</p>
+                    <p><strong>Status:</strong> @r.Status</p>
+
+                </div>
+            }
+
+        </div>
+    }
+
+    <!-- BACK BUTTON -->
+    <div style="margin-top:30px;">
+        <a href="/Home/Meetings" class="action-btn">
+            ← Back to Meetings
         </a>
     </div>
 

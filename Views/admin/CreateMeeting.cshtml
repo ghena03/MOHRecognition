@@ -27,8 +27,10 @@
     <!-- FORM CARD -->
     <div class="details-card">
 
-        <form method="post" asp-action="CreateMeeting">
-            <div>
+        <form method="post" action="/Home/CreateMeeting">
+
+            <!-- SELECT REQUESTS -->
+            <div style="margin-bottom:20px;">
                 <h4>Select related requests (universities)</h4>
 
                 @{
@@ -38,7 +40,7 @@
 
                 @foreach (var req in requests)
                 {
-                    <div>
+                    <div style="margin-bottom:5px;">
                         <label>
                             <input type="checkbox" name="RequestIds" value="@req.Id" />
                             @req.UniversityName
@@ -46,6 +48,7 @@
                     </div>
                 }
             </div>
+
             <div class="details-grid">
 
                 <!-- SESSION -->
@@ -60,7 +63,7 @@
                     <input type="date" name="MeetingDate" class="mini-select" required />
                 </div>
 
-                <!-- NOTES (FULL WIDTH) -->
+                <!-- NOTES -->
                 <div style="grid-column: span 2;">
                     <label>Notes</label>
                     <textarea name="Notes" class="mini-select" rows="4" style="width:100%;"></textarea>
@@ -68,7 +71,6 @@
 
             </div>
 
-            <!-- BUTTON -->
             <div style="margin-top:20px;">
                 <button type="submit" class="mini-save-btn">
                     Save Meeting
