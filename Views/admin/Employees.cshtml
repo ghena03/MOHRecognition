@@ -1,0 +1,61 @@
+﻿@using MOHRecognition.DTOs
+@model List<EmployeeDto>
+
+@{
+    ViewData["Title"] = "Employees";
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
+<!-- HEADER -->
+<div class="header">
+    <div class="header-left">
+        <img src="~/images/mohelogo.png" class="logo" />
+
+        <div class="title-box">
+            <h1>Employees</h1>
+            <p>Manage recognition members</p>
+        </div>
+    </div>
+</div>
+<div class="main-container">
+
+    <!-- TITLE -->
+    <div class="page-head">
+        <h2>Employees Management</h2>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-box">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Count > 0)
+                {
+                    foreach (var emp in Model)
+                    {
+                        <tr>
+                            <td>@emp.Id</td>
+                            <td>@emp.Name</td>
+                            <td>@emp.Email</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="3" class="empty">No employees found</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>

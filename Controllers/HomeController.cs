@@ -15,7 +15,18 @@ namespace MOHRecognition.Controllers
         private readonly IRecognitionRequestService _recognitionRequestService;
         private Dictionary<string, List<string>>? _citiesCache;
 
+        private static List<EmployeeDto> employees = new List<EmployeeDto>
+{
+    new EmployeeDto { Id = 1, Name = "Minister of Higher Education", Email = "minister@mohe.gov.jo" },
+    new EmployeeDto { Id = 2, Name = "Director of Recognition", Email = "director.recognition@mohe.gov.jo" },
 
+    new EmployeeDto { Id = 3, Name = "Ahmad Al-Khalil", Email = "ahmad.khalil@mohe.gov.jo" },
+    new EmployeeDto { Id = 4, Name = "Sara Haddad", Email = "sara.haddad@mohe.gov.jo" },
+    new EmployeeDto { Id = 5, Name = "Omar Nasser", Email = "omar.nasser@mohe.gov.jo" },
+    new EmployeeDto { Id = 6, Name = "Lina Qasem", Email = "lina.qasem@mohe.gov.jo" },
+    new EmployeeDto { Id = 7, Name = "Yousef Saleh", Email = "yousef.saleh@mohe.gov.jo" },
+    new EmployeeDto { Id = 8, Name = "Rana Majed", Email = "rana.majed@mohe.gov.jo" }
+};
         // Load cities from JSON file
         private Dictionary<string, List<string>> GetCitiesDictionary()
         {
@@ -3401,6 +3412,11 @@ namespace MOHRecognition.Controllers
             _recognitionRequestService.AssignMember(id, assignedMember ?? "Unassigned");
 
             return Redirect("/Home/AdminDashboard#assignments");
+        }
+
+        public IActionResult Employees()
+        {
+            return View("~/Views/Admin/Employees.cshtml", employees);
         }
 
         [HttpGet]
