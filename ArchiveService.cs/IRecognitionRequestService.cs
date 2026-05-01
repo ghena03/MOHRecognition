@@ -24,7 +24,7 @@ namespace MOHRecognition.Services
             string libraryAssessmentNote);
         bool SaveAdmissionStudyDurationReview(int id, AdmissionStudyDurationReviewDto review);
         bool SaveGlobalRankings(int id, GlobalRankingsDto rankings);
-        bool SaveBasicInfoAssessment(int id, string decision, string reason);
+        bool SaveBasicInfoAssessment(int id, string decision, string reason, string accreditationStatus, string accreditationNote);
     }
 
     public class RecognitionRequestRecord
@@ -112,5 +112,9 @@ namespace MOHRecognition.Services
         public string BasicInfoAssessmentDecision { get; set; } = string.Empty;
 
         public string BasicInfoAssessmentReason { get; set; } = string.Empty;
+
+        public string AccreditationStatus { get; set; } = string.Empty;
+
+        public string AccreditationNote { get; set; } = string.Empty;
     }
 }

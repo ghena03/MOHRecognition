@@ -1227,7 +1227,7 @@
                         throw new Error("Save failed");
                     }
                     window.showAppToast?.("Saved successfully.", "success");
-                } catch {
+                } catch (err) {
                     window.showAppToast?.("Save failed. Please try again.", "error");
                 } finally {
                     btn.disabled = false;

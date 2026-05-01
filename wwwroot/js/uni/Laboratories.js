@@ -316,46 +316,45 @@
     }
 
     function bindSectionEvents() {
-        const addBtn = document.getElementById("lab_addBtn");
-        const cancelBtn = document.getElementById("lab_cancelBtn");
-        const form = document.getElementById("labEditorForm");
-        const table = document.getElementById("labRowsTable");
+        const c = getContainer();
+        if (!c || c.dataset.labsEventsBound === "1") return;
 
-        if (addBtn) {
-            addBtn.onclick = async function () {
-                await addOrUpdateLaboratory();
-            };
-        }
+        c.dataset.labsEventsBound = "1";
 
-        if (cancelBtn) {
-            cancelBtn.onclick = function () {
-                cancelEdit();
-            };
-        }
-
-        if (form) {
-            form.onkeydown = async function (e) {
-                if (e.key !== "Enter") return;
-                if (e.target && e.target.tagName === "SELECT") return;
+        c.addEventListener("click", async function (e) {
+            const addBtn = e.target.closest("#lab_addBtn");
+            if (addBtn) {
                 e.preventDefault();
                 await addOrUpdateLaboratory();
-            };
-        }
+                return;
+            }
 
-        if (table) {
-            table.onclick = async function (e) {
-                const actionBtn = e.target.closest("[data-lab-action]");
-                if (!actionBtn) return;
+            const cancelBtn = e.target.closest("#lab_cancelBtn");
+            if (cancelBtn) {
+                e.preventDefault();
+                cancelEdit();
+                return;
+            }
 
-                const action = actionBtn.dataset.labAction;
+            const actionBtn = e.target.closest("[data-lab-action]");
+            if (!actionBtn) return;
 
-                if (action === "edit") {
-                    startEditFromButton(actionBtn);
-                } else if (action === "delete") {
-                    await deleteLaboratory(actionBtn.dataset.id || "");
-                }
-            };
-        }
+            const action = actionBtn.dataset.labAction;
+
+            if (action === "edit") {
+                startEditFromButton(actionBtn);
+            } else if (action === "delete") {
+                await deleteLaboratory(actionBtn.dataset.id || "");
+            }
+        });
+
+        c.addEventListener("keydown", async function (e) {
+            if (e.key !== "Enter") return;
+            if (e.target && e.target.tagName === "SELECT") return;
+            if (e.target && e.target.closest("#lab_addBtn, #lab_cancelBtn")) return;
+            e.preventDefault();
+            await addOrUpdateLaboratory();
+        });
     }
 
     window.LabAdd = async function () {

@@ -16,6 +16,12 @@
         return await res.text(); // we expect partial HTML back
     }
 
+    function showSuccess(text) {
+        if (window.showAppToast) {
+            window.showAppToast(text, "success");
+        }
+    }
+
     function showError(sectionEl, text) {
         if (window.showAppToast) {
             window.showAppToast(text, "error");
@@ -88,8 +94,7 @@
 
                     const html = await postForm(url, { degree, requirement });
                     container.innerHTML = html;
-
-                    // keep user on same section
+                    showSuccess("Requirement added successfully.");
                     location.hash = "#sec-admission";
                     return;
                 }
@@ -107,8 +112,7 @@
 
                     const html = await postForm(url, { degree, id });
                     container.innerHTML = html;
-
-                    // keep user on same section
+                    showSuccess("Requirement deleted successfully.");
                     location.hash = "#sec-admission";
                     return;
                 }

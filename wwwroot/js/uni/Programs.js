@@ -28,6 +28,10 @@
         return b;
     }
 
+    function showSuccess(msg) {
+        if (window.showAppToast) window.showAppToast(msg, "success");
+    }
+
     function showError(msg) {
         if (window.showAppToast) {
             window.showAppToast(msg, "error");
@@ -175,7 +179,7 @@
 
                 const html = await post(url, { id });
                 container.innerHTML = html;
-
+                showSuccess("Program deleted successfully.");
                 await refreshDependents();
             }).catch(err => showError(err.message || "Delete failed."));
             return;
@@ -212,7 +216,7 @@
 
                 const html = await post(url, payload);
                 container.innerHTML = html;
-
+                showSuccess("Program added successfully.");
                 await refreshDependents();
             }).catch(err => showError(err.message || "Add failed."));
             return;
@@ -231,7 +235,7 @@
 
                 const html = await post(url, { id, ...payload });
                 container.innerHTML = html;
-
+                showSuccess("Program updated successfully.");
                 await refreshDependents();
             }).catch(err => showError(err.message || "Update failed."));
             return;

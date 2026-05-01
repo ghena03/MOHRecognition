@@ -1,150 +1,368 @@
 @import url("./DetailsBasicInfo.css");
 
+/* ── Toasts ───────────────────────────────────────────────────────────────── */
 .infra-saved {
-    border: 1px solid rgba(21, 128, 61, 0.25);
-    background: rgba(21, 128, 61, 0.08);
+    border: 1px solid rgba(21,128,61,.25);
+    background: rgba(21,128,61,.08);
     color: #14532d;
     border-radius: 12px;
-    padding: 10px 12px;
+    padding: 10px 14px;
     font-weight: 800;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
-
 .infra-error {
-    border: 1px solid rgba(153, 27, 27, 0.25);
-    background: rgba(153, 27, 27, 0.08);
+    border: 1px solid rgba(153,27,27,.25);
+    background: rgba(153,27,27,.08);
     color: #7f1d1d;
     border-radius: 12px;
-    padding: 10px 12px;
+    padding: 10px 14px;
     font-weight: 800;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
-.decision-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+/* ── Point card ──────────────────────────────────────────────────────────── */
+.fa-point-card {
+    margin-bottom: 0;
+}
+
+.fa-point-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.fa-point-num {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #7a2d2a;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+}
+
+.fa-point-title-wrap {
+    flex: 1;
+    min-width: 0;
+}
+.fa-point-title-wrap h2 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.fa-point-title-wrap p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* ── Mode badge (Manual / Automatic) ─────────────────────────────────────── */
+.fa-mode-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .3px;
+}
+.fa-mode-badge.manual {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+.fa-mode-badge.auto {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+/* ── Compliance badge ─────────────────────────────────────────────────────── */
+.fa-compliance-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+.fa-compliance-badge.compliant {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+}
+.fa-compliance-badge.needs-review {
+    background: #fff7ed;
+    color: #9a3412;
+    border-color: #fdba74;
+}
+.fa-compliance-badge.not-compliant {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+.fa-compliance-badge.not-assessed {
+    background: #f1f5f9;
+    color: #64748b;
+    border-color: #cbd5e1;
+}
+.fa-compliance-badge.missing {
+    background: #f8fafc;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+}
+.fa-compliance-badge-lg {
+    font-size: 13px;
+    padding: 7px 16px;
+}
+
+/* ── Point body ──────────────────────────────────────────────────────────── */
+.fa-point-body {
+    display: flex;
+    flex-direction: column;
     gap: 14px;
 }
 
-.decision-card {
-    position: relative;
-    display: grid;
-    gap: 8px;
-    border: 1px solid #e8e1d8;
-    border-radius: 14px;
-    background: #fff;
-    padding: 14px;
+/* ── Point 1: status row ─────────────────────────────────────────────────── */
+.fa-status-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.fa-field-status {
+    flex: 1;
+    min-width: 220px;
+    max-width: 320px;
+    margin: 0 !important;
+}
+.fa-status-select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
     cursor: pointer;
-    transition: .2s ease;
-}
-
-.decision-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(17,24,39,.08);
-}
-
-.decision-card input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.decision-check {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    color: #fff;
-    font-size: 20px;
-    opacity: 0;
-    transform: scale(.92);
-    transition: .2s ease;
-}
-
-.decision-card strong {
-    font-size: 15px;
+    background: #fff;
     color: #1f2937;
 }
-
-.decision-card small {
-    color: #4b5563;
-    font-weight: 600;
-    line-height: 1.45;
+.fa-status-select:focus {
+    border-color: #d6b6b4;
+    box-shadow: 0 0 0 3px rgba(122,45,42,.08);
+}
+.fa-live-badge-wrap {
+    padding-top: 22px;
 }
 
-.decision-pill {
-    justify-self: start;
-    border-radius: 999px;
-    padding: 6px 10px;
-    border: 1px solid #d1d5db;
-    font-size: 12px;
-    font-weight: 900;
+/* ── Metric row (Points 2 & 3) ───────────────────────────────────────────── */
+.fa-metric-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.fa-metric-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.fa-metric-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #94a3b8;
+}
+.fa-metric-value {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+}
+.fa-metric-value.green   { color: #16a34a; }
+.fa-metric-value.orange  { color: #d97706; }
+.fa-metric-value.red     { color: #dc2626; }
+.fa-metric-value.neutral { color: #475569; }
+
+/* ── Explanation text ───────────────────────────────────────────────────── */
+.fa-explanation {
+    font-size: 13px;
     color: #475569;
     background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    line-height: 1.55;
+}
+.fa-explanation i {
+    flex-shrink: 0;
+    color: #94a3b8;
+    margin-top: 1px;
 }
 
-.decision-card.accepted {
-    border-color: #bbf7d0;
-    background: #f0fdf4;
+/* ── Tags (college categories) ───────────────────────────────────────────── */
+.fa-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.fa-tag {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
 }
 
-.decision-card.accepted .decision-pill {
-    color: #166534;
-    border-color: #86efac;
+/* ── Breakdown row (Point 3) ─────────────────────────────────────────────── */
+.fa-breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #475569;
+}
+.fa-sep {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* ── Environment grid (Point 4) ──────────────────────────────────────────── */
+.fa-env-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 12px;
+}
+.fa-env-mini {
+    border: 1px solid #e8e1d8;
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: #fafaf9;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.fa-env-mini-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+}
+.fa-env-mini-head i {
+    color: #7a2d2a;
+    font-size: 15px;
+}
+
+.fa-env-overall {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-top: 4px;
+}
+.fa-env-overall-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    flex: 1;
+}
+
+/* ── Final card ──────────────────────────────────────────────────────────── */
+.fa-final-card {
+    border: 2px solid #e8e1d8;
+}
+
+.fa-final-suggestion {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.fa-suggestion-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #94a3b8;
+}
+
+/* ── Suggestion badge ────────────────────────────────────────────────────── */
+.fa-suggestion-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 800;
+    border: 2px solid transparent;
+    width: fit-content;
+}
+.fa-suggestion-badge.approve {
     background: #dcfce7;
+    color: #14532d;
+    border-color: #86efac;
 }
-
-.decision-card.modified {
-    border-color: #fde68a;
-    background: #fffbeb;
+.fa-suggestion-badge.conditional {
+    background: #fff7ed;
+    color: #7c2d12;
+    border-color: #fdba74;
 }
-
-.decision-card.modified .decision-pill {
-    color: #92400e;
-    border-color: #fcd34d;
-    background: #fef3c7;
-}
-
-.decision-card.rejected {
-    border-color: #fecaca;
-    background: #fef2f2;
-}
-
-.decision-card.rejected .decision-pill {
-    color: #991b1b;
-    border-color: #fca5a5;
+.fa-suggestion-badge.reject {
     background: #fee2e2;
+    color: #7f1d1d;
+    border-color: #fca5a5;
 }
 
-.decision-card.is-selected {
-    border-width: 2px;
-    box-shadow: 0 0 0 3px rgba(122,45,42,.18);
-    transform: translateY(-1px);
+.fa-suggestion-note {
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.55;
 }
 
-.decision-card.accepted.is-selected {
-    border-color: #16a34a;
-    box-shadow: 0 0 0 3px rgba(22, 163, 74, .22);
+/* ── Required indicator ──────────────────────────────────────────────────── */
+.fa-required {
+    color: #dc2626;
+    font-size: 14px;
 }
 
-.decision-card.modified.is-selected {
-    border-color: #d97706;
-    box-shadow: 0 0 0 3px rgba(217, 119, 6, .22);
+/* ── Save row ────────────────────────────────────────────────────────────── */
+.fa-save-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
 }
 
-.decision-card.rejected.is-selected {
-    border-color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, .22);
-}
-
-.decision-card.is-selected .decision-check {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.decision-card.is-selected strong {
-    text-decoration: underline;
-}
-
+/* ── Note textarea ───────────────────────────────────────────────────────── */
 .doc-notes {
     width: 100%;
     min-height: 120px;
@@ -153,16 +371,25 @@
     padding: 12px 14px;
     resize: vertical;
     font-family: inherit;
+    font-size: 14px;
     outline: none;
+    box-sizing: border-box;
 }
-
 .doc-notes:focus {
     border-color: #d6b6b4;
     box-shadow: 0 0 0 4px rgba(122,45,42,.08);
 }
 
-@media (max-width: 1100px) {
-    .decision-grid {
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+    .fa-env-grid {
         grid-template-columns: 1fr;
+    }
+    .fa-metric-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .fa-point-header {
+        flex-wrap: wrap;
     }
 }

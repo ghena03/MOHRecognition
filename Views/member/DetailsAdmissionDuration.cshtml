@@ -210,22 +210,10 @@
                     <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsStatistics", "Home", new { id = requestId })">Previous</a>
                 </div>
                 <div class="rd-actions-right">
-                    <button id="btnAdmissionSaved" class="rm-btn rm-btn-primary" type="button"><i class="bi bi-save"></i> Save</button>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAcademicInfo", "Home", new { id = requestId })">Next</a>
                 </div>
             </section>
         </main>
     </div>
-
-    <script>
-        (function () {
-            const btn = document.getElementById("btnAdmissionSaved");
-            if (!btn) return;
-
-            btn.addEventListener("click", function () {
-                alert("Saved!!");
-            });
-        })();
-    </script>
 </body>
 </html>

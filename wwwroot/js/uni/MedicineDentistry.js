@@ -164,6 +164,23 @@
             return el ? el.value.trim() : "";
         }
 
+        const requiredIds = [
+            "med_fullTimeProfessor", "med_fullTimeAssociateProfessor", "med_fullTimeAssistantProfessor",
+            "med_fullTimeLecturerPhd", "med_fullTimeLecturerMsc", "med_fullTimeAssistantLecturerMsc",
+            "med_fullTimeAssistantLecturerPsc", "med_fullTimePractitionerPsc", "med_fullTimePractitionerMsc",
+            "den_fullTimeProfessor", "den_fullTimeAssociateProfessor", "den_fullTimeAssistantProfessor",
+            "den_fullTimeLecturerPhd", "den_fullTimeLecturerMsc", "den_fullTimeAssistantLecturerMsc",
+            "den_fullTimeAssistantLecturerPsc", "den_fullTimePractitionerPsc", "den_fullTimePractitionerMsc"
+        ];
+        for (const id of requiredIds) {
+            if (v(id) === "") {
+                showError("All fields are required. Please fill in every row for both Medicine and Dentistry.");
+                document.getElementById(id)?.focus();
+                unlock();
+                return;
+            }
+        }
+
         const payload = new URLSearchParams();
         payload.append("med_fullTimeProfessor", v("med_fullTimeProfessor"));
         payload.append("med_fullTimeAssociateProfessor", v("med_fullTimeAssociateProfessor"));
@@ -202,6 +219,7 @@
             render(html);
             window.scrollTo(0, y);
             enforceNumbersOnly();
+            if (window.showAppToast) window.showAppToast("Saved successfully.", "success");
         } catch (e) {
             showError(e.message || "Error");
         } finally {

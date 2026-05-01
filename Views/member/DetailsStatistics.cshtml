@@ -172,7 +172,7 @@
         new
         {
             Key = "Researcher",
-            Title = "Assistant Lecturer (PhD Holders)",
+            Title = "Assistant Lecturer (BSc Holders)",
             FullTimeCount = A.StaffResearcherFullTimeCount ?? 0,
             PartTimeCount = A.StaffResearcherPartTimeCount ?? 0,
             FullTimeFile = A.ResearcherFullTimeExcelFileName,
@@ -521,8 +521,8 @@
                     <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsBasicInfo", "Home", new { id = requestId })">Previous</a>
                 </div>
                 <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAdmissionDuration", "Home", new { id = requestId })">Next</a>
                     <button class="rm-btn rm-btn-primary" type="button"><i class="bi bi-save"></i> Save</button>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAdmissionDuration", "Home", new { id = requestId })">Next</a>
                 </div>
             </section>
         </main>

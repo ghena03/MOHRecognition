@@ -118,7 +118,7 @@ namespace MOHRecognition.Services
             }
         }
 
-        public bool SaveBasicInfoAssessment(int id, string decision, string reason)
+        public bool SaveBasicInfoAssessment(int id, string decision, string reason, string accreditationStatus, string accreditationNote)
         {
             lock (_lock)
             {
@@ -127,6 +127,8 @@ namespace MOHRecognition.Services
 
                 req.BasicInfoAssessmentDecision = (decision ?? string.Empty).Trim();
                 req.BasicInfoAssessmentReason = (reason ?? string.Empty).Trim();
+                req.AccreditationStatus = (accreditationStatus ?? string.Empty).Trim();
+                req.AccreditationNote = (accreditationNote ?? string.Empty).Trim();
                 return true;
             }
         }

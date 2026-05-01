@@ -3862,7 +3862,7 @@ namespace MOHRecognition.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult SaveRecommendationDecision(int id, string decision, string reason)
+        public IActionResult SaveRecommendationDecision(int id, string accreditationStatus, string accreditationNote, string decision, string reason)
         {
             var request = _recognitionRequestService.GetById(id);
             if (!IsCurrentRecognitionMemberOwner(request))
@@ -3871,32 +3871,36 @@ namespace MOHRecognition.Controllers
                 return RedirectToAction("ElectronicRequests");
             }
 
-            var normalizedDecision = (decision ?? string.Empty).Trim();
-            var isValidDecision =
-                string.Equals(normalizedDecision, "Recognition", StringComparison.Ordinal) ||
-                string.Equals(normalizedDecision, "Recognition with Modifications", StringComparison.Ordinal) ||
-                string.Equals(normalizedDecision, "No Recognition", StringComparison.Ordinal);
-
-            if (!isValidDecision)
+            var normalizedAccreditation = (accreditationStatus ?? string.Empty).Trim();
+            var validStatuses = new[] { "Compliant", "Needs Review", "Not Compliant" };
+            if (!validStatuses.Contains(normalizedAccreditation))
             {
-                TempData["RecommendationError"] = "Please select a valid final decision.";
+                TempData["RecommendationError"] = "Please select a valid accreditation status for Point 1.";
                 return RedirectToAction("DetailsRecommendation", new { id });
             }
 
             if (string.IsNullOrWhiteSpace(reason))
             {
-                TempData["RecommendationError"] = "Please provide a professional justification note.";
+                TempData["RecommendationError"] = "Please provide a final justification note.";
                 return RedirectToAction("DetailsRecommendation", new { id });
             }
 
-            var ok = _recognitionRequestService.SaveBasicInfoAssessment(id, normalizedDecision, (reason ?? string.Empty).Trim());
+            var normalizedDecision = (decision ?? string.Empty).Trim();
+            var validDecisions = new[] { "Approve", "Conditional Approval", "Reject / Committee Review" };
+            if (!validDecisions.Contains(normalizedDecision))
+                normalizedDecision = "Conditional Approval";
+
+            var ok = _recognitionRequestService.SaveBasicInfoAssessment(
+                id, normalizedDecision, (reason ?? string.Empty).Trim(),
+                normalizedAccreditation, (accreditationNote ?? string.Empty).Trim());
+
             if (!ok)
             {
                 TempData["RecommendationError"] = "Unable to save recommendation decision.";
             }
             else
             {
-                TempData["RecommendationSaved"] = "Final recommendation decision saved successfully.";
+                TempData["RecommendationSaved"] = "Final assessment decision saved successfully.";
             }
 
             return RedirectToAction("DetailsRecommendation", new { id });
