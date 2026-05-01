@@ -3418,6 +3418,15 @@ namespace MOHRecognition.Controllers
         {
             return View("~/Views/Admin/Employees.cshtml", employees);
         }
+        public IActionResult Decisions()
+        {
+            return View("~/Views/Admin/Decisions.cshtml");
+        }
+
+        public IActionResult DecisionDetails(int id)
+        {
+            return View("~/Views/Admin/DecisionDetails.cshtml");
+        }
 
         [HttpGet]
         public IActionResult RecognitionMemberDashboard()

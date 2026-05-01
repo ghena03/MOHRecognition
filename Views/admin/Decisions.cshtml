@@ -1,0 +1,63 @@
+﻿@{
+    ViewData["Title"] = "Decisions";
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-left">
+        <img src="~/images/mohelogo.png" class="logo" />
+
+        <div class="title-box">
+            <h1>Decisions</h1>
+            <p>Final results of meeting discussions</p>
+        </div>
+    </div>
+</div>
+
+<div class="main-container">
+
+    <!-- TITLE -->
+    <div class="page-head">
+        <h2>Decisions Overview</h2>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-box">
+        <table>
+            <thead>
+                <tr>
+                    <th>University</th>
+                    <th>Final Decision</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <!-- Dummy Data -->
+                <tr>
+                    <td>University of Jordan</td>
+                    <td><span class="status approved">Approved</span></td>
+                    <td>
+                        <a href="/Home/DecisionDetails/1" class="action-btn">
+                            View Details
+                        </a>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>MIT</td>
+                    <td><span class="status rejected">Rejected</span></td>
+                    <td>
+                        <a href="/Home/DecisionDetails/2" class="action-btn">
+                            View Details
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
