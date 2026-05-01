@@ -1,0 +1,71 @@
+﻿@using MOHRecognition.DTOs
+@model List<MeetingDto>
+
+@{
+    ViewData["Title"] = "Meetings";
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-left">
+        <img src="~/images/mohelogo.png" class="logo" />
+        <div class="divider"></div>
+
+        <div class="title-box">
+            <h1>Meetings</h1>
+            <p>View all discussion sessions</p>
+        </div>
+    </div>
+</div>
+
+<div class="main-container">
+
+    <!-- TITLE -->
+    <div class="page-head">
+        <h2>Meetings List</h2>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-box">
+        <table>
+            <thead>
+                <tr>
+                    <th>Session #</th>
+                    <th>Date</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Count > 0)
+                {
+                    foreach (var m in Model)
+                    {
+                        <tr>
+                            <td>@m.SessionNumber</td>
+                            <td>@m.MeetingDate.ToString("yyyy-MM-dd")</td>
+                            <td>@m.Notes</td>
+                            <td>
+                                <a href="/Home/MeetingDetails?id=@m.Id" class="action-btn">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="empty">No meetings available</td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+    </div>
+
+</div>

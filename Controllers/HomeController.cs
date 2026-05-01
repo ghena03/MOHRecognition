@@ -3980,6 +3980,10 @@ namespace MOHRecognition.Controllers
 
             return View("~/Views/Admin/MeetingDetails.cshtml", meeting);
         }
+        public IActionResult MemberMeetings()
+        {
+            return View("~/Views/Member/MemberMeetings.cshtml", meetings);
+        }
         public IActionResult AdminRequestDetails(int id)
         {
             var request = _recognitionRequestService.GetById(id);
