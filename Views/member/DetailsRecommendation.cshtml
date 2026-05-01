@@ -5,13 +5,13 @@
     var requestId = Model?.Id ?? 0;
     var inst = Model?.UniversityName ?? "—";
 
-    // ── Saved values ────────────────────────────────────────────────────────
+    // ── Saved values ─────────────────────────────────────────────────────────
     var savedAccreditationStatus = Model?.AccreditationStatus ?? string.Empty;
     var savedAccreditationNote   = Model?.AccreditationNote   ?? string.Empty;
     var savedFinalJustification  = Model?.BasicInfoAssessmentReason ?? string.Empty;
     var savedDecision            = Model?.BasicInfoAssessmentDecision ?? string.Empty;
 
-    // ── Academic Info calculations (mirrored from DetailsStatistics) ─────────
+    // ── Academic Info calculations ────────────────────────────────────────────
     var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
     var hasFacultyData = Model?.AcademicInfo != null;
 
@@ -23,7 +23,6 @@
     var assistantTeacherFT   = A.StaffAssistantTeacherFullTimeCount   ?? 0;
     var othersFT             = A.StaffOthersFullTimeCount             ?? 0;
 
-    // Doctorate holders %
     var totalPhdHolders          = professorFT + associateProfessorFT + assistantProfessorFT + teacherFT;
     var fullTimeFacultyDoctorate = professorFT + associateProfessorFT + assistantProfessorFT +
                                    teacherFT + assistantTeacherFT + othersFT + researcherFT;
@@ -32,10 +31,9 @@
     var doctorateColorStatus = fullTimeFacultyDoctorate > 0
         ? (doctorateHoldersPercentage >= 50m ? "green" : "red") : "";
 
-    // Students to faculty ratio
-    var allowedMscSupport  = Math.Ceiling(0.20m * totalPhdHolders);
-    var actualMscSupport   = assistantTeacherFT + othersFT;
-    var mscSupportUsed     = Math.Min(allowedMscSupport, actualMscSupport);
+    var allowedMscSupport    = Math.Ceiling(0.20m * totalPhdHolders);
+    var actualMscSupport     = assistantTeacherFT + othersFT;
+    var mscSupportUsed       = Math.Min(allowedMscSupport, actualMscSupport);
     var totalFacultyForRatio = totalPhdHolders + (0.10m * totalPhdHolders) + mscSupportUsed;
     var totalStudents        = A.TotalStudentPopulation ?? 0;
     var ratioValue           = A.StudentsToFacultyRatio ?? 0m;
@@ -55,15 +53,15 @@
     var ratioColorStatus = "";
     if (ratioValue >= 1m && avgRatio > 0m)
     {
-        if (ratioValue <= avgRatio)      ratioColorStatus = "green";
-        else if (ratioValue <= orangeLimit) ratioColorStatus = "orange";
-        else                             ratioColorStatus = "red";
+        if      (ratioValue <= avgRatio)         ratioColorStatus = "green";
+        else if (ratioValue <= orangeLimit)      ratioColorStatus = "orange";
+        else                                     ratioColorStatus = "red";
     }
 
-    // ── Map to compliance labels ─────────────────────────────────────────────
+    // ── Compliance helpers ───────────────────────────────────────────────────
     static string RatioCompliance(string s) => s switch {
         "green"  => "Compliant",
-        "orange" => "Needs Review",
+        "orange" => "Compliant",
         "red"    => "Not Compliant",
         _        => "missing"
     };
@@ -88,41 +86,47 @@
     };
     static string DisplayLabel(string s) => s == "missing" ? "Missing Data" : s;
 
-    var ratioCompliance    = hasFacultyData ? RatioCompliance(ratioColorStatus)    : "missing";
-    var docCompliance      = hasFacultyData ? DoctorateCompliance(doctorateColorStatus) : "missing";
+    var ratioCompliance = hasFacultyData ? RatioCompliance(ratioColorStatus)        : "missing";
+    var docCompliance   = hasFacultyData ? DoctorateCompliance(doctorateColorStatus) : "missing";
 
     // ── Environment assessments ──────────────────────────────────────────────
     static string EnvMap(string? v) => (v ?? "").Trim() switch {
-        "Meets Standards"  => "Compliant",
-        "Needs Improvement"=> "Needs Review",
-        _                  => "Not Assessed"
+        "Meets Standards"   => "Compliant",
+        "Needs Improvement" => "Needs Review",
+        _                   => "Not Assessed"
     };
 
-    var envColleges    = EnvMap(Model?.FacultiesAssessment);
-    var envHospitals   = EnvMap(Model?.HospitalsAssessment);
-    var envHospEnv     = EnvMap(Model?.HospitalEnvironmentAssessment);
-    var envLibrary     = EnvMap(Model?.LibraryAssessment);
+    var envColleges  = EnvMap(Model?.FacultiesAssessment);
+    var envHospitals = EnvMap(Model?.HospitalsAssessment);
+    var envHospEnv   = EnvMap(Model?.LaboratoriesFacilitiesAssessment);
+    var envLibrary   = EnvMap(Model?.LibraryAssessment);
 
     var envAll = new[] { envColleges, envHospitals, envHospEnv, envLibrary };
     string envOverall;
-    if      (envAll.Any(s => s == "Not Compliant"))                 envOverall = "Not Compliant";
-    else if (envAll.Any(s => s == "Needs Review"))                  envOverall = "Needs Review";
-    else if (envAll.All(s => s == "Compliant"))                     envOverall = "Compliant";
-    else                                                             envOverall = "Not Assessed";
+    if      (envAll.Any(s => s == "Not Compliant")) envOverall = "Not Compliant";
+    else if (envAll.Any(s => s == "Needs Review"))  envOverall = "Needs Review";
+    else if (envAll.All(s => s == "Compliant"))     envOverall = "Compliant";
+    else                                             envOverall = "Not Assessed";
 
-    // ── Auto-suggested final recommendation ─────────────────────────────────
+    // ── Auto-suggested recommendation ────────────────────────────────────────
     var p1 = string.IsNullOrWhiteSpace(savedAccreditationStatus) ? "Not Assessed" : savedAccreditationStatus;
     var allPoints = new[] { p1, ratioCompliance, docCompliance, envOverall };
+    var compliantPoints = allPoints.Count(p => p == "Compliant");
+    var reviewPoints = allPoints.Count(p => p == "Needs Review" || p == "Not Assessed" || p == "missing");
+    var nonCompliantPoints = allPoints.Count(p => p == "Not Compliant");
     string autoSuggestion;
-    if      (allPoints.Any(p => p == "Not Compliant"))              autoSuggestion = "Reject / Committee Review";
+    if      (allPoints.Any(p => p == "Not Compliant"))
+                                                         autoSuggestion = "Reject / Committee Review";
     else if (allPoints.Any(p => p == "Needs Review" || p == "Not Assessed" || p == "missing"))
-                                                                    autoSuggestion = "Conditional Approval";
-    else                                                            autoSuggestion = "Approve";
+                                                         autoSuggestion = "Conditional Approval";
+    else                                                 autoSuggestion = "Approve";
+
+    var initialDecision = !string.IsNullOrWhiteSpace(savedDecision) ? savedDecision : autoSuggestion;
 
     string SuggestionClass(string s) => s switch {
-        "Approve"                    => "approve",
-        "Conditional Approval"       => "conditional",
-        _                            => "reject"
+        "Approve"              => "approve",
+        "Conditional Approval" => "conditional",
+        _                      => "reject"
     };
     string SuggestionIcon(string s) => s switch {
         "Approve"              => "bi-check2-circle",
@@ -130,10 +134,9 @@
         _                      => "bi-x-octagon-fill"
     };
 
-    // ratio display text
     var ratioDisplay = ratioValue > 0 ? $"1:{ratioValue:0}" : "—";
     string RatioExplanation(string c) => c switch {
-        "Compliant"     => $"The ratio of {ratioDisplay} is within the accepted benchmark for the selected college category.",
+        "Compliant"     => $"The ratio of {ratioDisplay} is within the accepted benchmark range (including the 25% tolerance band) for the selected college category.",
         "Needs Review"  => $"The ratio of {ratioDisplay} exceeds the benchmark but remains within the 25% tolerance band.",
         "Not Compliant" => $"The ratio of {ratioDisplay} exceeds the allowed 25% tolerance — capacity review is required.",
         _               => "Insufficient data to calculate the students-to-faculty ratio."
@@ -143,6 +146,8 @@
         "Not Compliant" => $"Only {doctorateHoldersPercentage:0}% of full-time faculty hold a doctorate — below the 50% minimum requirement.",
         _               => "Insufficient data to calculate the doctorate holders percentage."
     };
+
+    var docProgressWidth = (int)Math.Min(doctorateHoldersPercentage, 100m);
 }
 
 <!doctype html>
@@ -184,6 +189,7 @@
         </aside>
 
         <main class="rm-main">
+
             <section class="rm-card rd-head">
                 <div>
                     <h1>Final Assessment</h1>
@@ -198,254 +204,317 @@
 
             @if (TempData["RecommendationSaved"] != null)
             {
-                <div class="infra-saved">@TempData["RecommendationSaved"]</div>
+                <div class="infra-saved"><i class="bi bi-check-circle-fill"></i> @TempData["RecommendationSaved"]</div>
             }
             @if (TempData["RecommendationError"] != null)
             {
-                <div class="infra-error">@TempData["RecommendationError"]</div>
+                <div class="infra-error"><i class="bi bi-exclamation-circle-fill"></i> @TempData["RecommendationError"]</div>
             }
 
             <form asp-controller="Home" asp-action="SaveRecommendationDecision" method="post" id="finalAssessmentForm">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@requestId" />
-                <input type="hidden" name="decision" id="hiddenDecision" value="@autoSuggestion" />
+                <input type="hidden" name="decision" id="hiddenDecision" value="@initialDecision" />
 
-                {{!-- ── Point 1: Accreditation & Recognition ──────────────────────── --}}
-                <section class="rm-card rd-card fa-point-card">
-                    <div class="fa-point-header">
-                        <div class="fa-point-num">1</div>
-                        <div class="fa-point-title-wrap">
-                            <h2><i class="bi bi-award"></i> Accreditation &amp; Recognition</h2>
-                            <p>Manual evaluation — select the compliance status and provide an assessment note.</p>
-                        </div>
-                        <span class="fa-mode-badge manual"><i class="bi bi-pencil-square"></i> Manual</span>
-                    </div>
-
-                    <div class="fa-point-body">
-                        <div class="fa-status-row">
-                            <div class="rd-field fa-field-status">
-                                <label for="accreditationStatus"><strong>Compliance Status</strong></label>
-                                <select id="accreditationStatus" name="accreditationStatus" class="fa-status-select" required>
-                                    <option value="">Select status…</option>
-                                    @if (savedAccreditationStatus == "Compliant")
-                                    {
-                                        <option value="Compliant" selected>Compliant</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="Compliant">Compliant</option>
-                                    }
-
-                                    @if (savedAccreditationStatus == "Needs Review")
-                                    {
-                                        <option value="Needs Review" selected>Needs Review</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="Needs Review">Needs Review</option>
-                                    }
-
-                                    @if (savedAccreditationStatus == "Not Compliant")
-                                    {
-                                        <option value="Not Compliant" selected>Not Compliant</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="Not Compliant">Not Compliant</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="fa-live-badge-wrap">
-                                <span id="p1Badge" class="fa-compliance-badge @CssClass(p1)">
+                <div class="fa-scorecard">
+                    <div class="fa-sc-eyebrow"><i class="bi bi-layout-three-columns" style="margin-right:5px;"></i>Assessment Overview</div>
+                    <div class="fa-sc-grid">
+                        <div class="fa-sc-cell">
+                            <div class="fa-sc-step">1</div>
+                            <div class="fa-sc-info">
+                                <div class="fa-sc-name">Accreditation</div>
+                                <span id="p1ScBadge" class="fa-compliance-badge @CssClass(p1)">
                                     <i class="bi @CssIcon(p1)"></i> @DisplayLabel(p1)
                                 </span>
                             </div>
                         </div>
-
-                        <div class="rd-field" style="margin-top:12px;">
-                            <label for="accreditationNote"><strong>Assessment Note</strong></label>
-                            <textarea id="accreditationNote"
-                                      name="accreditationNote"
-                                      class="doc-notes"
-                                      placeholder="Describe your evaluation of the institution's accreditation and recognition status…">@savedAccreditationNote</textarea>
-                        </div>
-                    </div>
-                </section>
-
-                {{!-- ── Point 2: Students to Faculty Ratio ────────────────────────── --}}
-                <section class="rm-card rd-card fa-point-card">
-                    <div class="fa-point-header">
-                        <div class="fa-point-num">2</div>
-                        <div class="fa-point-title-wrap">
-                            <h2><i class="bi bi-person-lines-fill"></i> Students to Faculty Ratio</h2>
-                            <p>Automatically calculated from submitted Academic Info data.</p>
-                        </div>
-                        <span class="fa-mode-badge auto"><i class="bi bi-cpu"></i> Automatic</span>
-                    </div>
-
-                    <div class="fa-point-body">
-                        <div class="fa-metric-row">
-                            <div class="fa-metric-block">
-                                <div class="fa-metric-label">Calculated Ratio</div>
-                                <div class="fa-metric-value @(ratioColorStatus)">@ratioDisplay</div>
-                            </div>
-                            <div class="fa-metric-block">
-                                <div class="fa-metric-label">Compliance Status</div>
+                        <div class="fa-sc-cell">
+                            <div class="fa-sc-step">2</div>
+                            <div class="fa-sc-info">
+                                <div class="fa-sc-name">Faculty Ratio</div>
                                 <span class="fa-compliance-badge @CssClass(ratioCompliance)">
                                     <i class="bi @CssIcon(ratioCompliance)"></i> @DisplayLabel(ratioCompliance)
                                 </span>
                             </div>
-                            @if (avgRatio > 0)
-                            {
-                                <div class="fa-metric-block">
-                                    <div class="fa-metric-label">Benchmark</div>
-                                    <div class="fa-metric-value neutral">1:@avgRatio.ToString("0")</div>
-                                </div>
-                            }
                         </div>
-                        <div class="fa-explanation">
-                            <i class="bi bi-info-circle"></i> @RatioExplanation(ratioCompliance)
-                        </div>
-                        @if (selectedCategories.Any())
-                        {
-                            <div class="fa-tags">
-                                @foreach (var cat in selectedCategories)
-                                {
-                                    <span class="fa-tag">@cat</span>
-                                }
-                            </div>
-                        }
-                    </div>
-                </section>
-
-                {{!-- ── Point 3: Doctorate Holders % ──────────────────────────────── --}}
-                <section class="rm-card rd-card fa-point-card">
-                    <div class="fa-point-header">
-                        <div class="fa-point-num">3</div>
-                        <div class="fa-point-title-wrap">
-                            <h2><i class="bi bi-mortarboard"></i> Doctorate Holders Percentage</h2>
-                            <p>Automatically calculated from submitted Academic Info data.</p>
-                        </div>
-                        <span class="fa-mode-badge auto"><i class="bi bi-cpu"></i> Automatic</span>
-                    </div>
-
-                    <div class="fa-point-body">
-                        <div class="fa-metric-row">
-                            <div class="fa-metric-block">
-                                <div class="fa-metric-label">Doctorate Holders</div>
-                                <div class="fa-metric-value @(doctorateColorStatus)">@doctorateHoldersPercentage.ToString("0")%</div>
-                            </div>
-                            <div class="fa-metric-block">
-                                <div class="fa-metric-label">Compliance Status</div>
+                        <div class="fa-sc-cell">
+                            <div class="fa-sc-step">3</div>
+                            <div class="fa-sc-info">
+                                <div class="fa-sc-name">Doctorate %</div>
                                 <span class="fa-compliance-badge @CssClass(docCompliance)">
                                     <i class="bi @CssIcon(docCompliance)"></i> @DisplayLabel(docCompliance)
                                 </span>
                             </div>
-                            <div class="fa-metric-block">
-                                <div class="fa-metric-label">Minimum Required</div>
-                                <div class="fa-metric-value neutral">50%</div>
+                        </div>
+                        <div class="fa-sc-cell">
+                            <div class="fa-sc-step">4</div>
+                            <div class="fa-sc-info">
+                                <div class="fa-sc-name">Environment</div>
+                                <span class="fa-compliance-badge @CssClass(envOverall)">
+                                    <i class="bi @CssIcon(envOverall)"></i> @DisplayLabel(envOverall)
+                                </span>
                             </div>
                         </div>
-                        <div class="fa-explanation">
-                            <i class="bi bi-info-circle"></i> @DocExplanation(docCompliance)
-                        </div>
-                        @if (hasFacultyData)
-                        {
-                            <div class="fa-breakdown-row">
-                                <span><b>@totalPhdHolders</b> PhD holders</span>
-                                <span class="fa-sep">out of</span>
-                                <span><b>@fullTimeFacultyDoctorate</b> full-time faculty</span>
+                    </div>
+                </div>
+
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd">
+                        <div class="rd-card-hd-row">
+                            <div>
+                                <h2><i class="bi bi-award"></i> 1. Accreditation &amp; Recognition</h2>
+                                <p>Manual evaluation — select the compliance status and provide an assessment note.</p>
                             </div>
-                        }
-                    </div>
-                </section>
-
-                {{!-- ── Point 4: Environment Assessment ──────────────────────────── --}}
-                <section class="rm-card rd-card fa-point-card">
-                    <div class="fa-point-header">
-                        <div class="fa-point-num">4</div>
-                        <div class="fa-point-title-wrap">
-                            <h2><i class="bi bi-building-check"></i> Environment Assessment</h2>
-                            <p>Summarised from the Environment Assessment Summary page.</p>
+                            <span class="fa-mode-badge"><i class="bi bi-pencil-square"></i> Manual</span>
                         </div>
-                        <span class="fa-mode-badge auto"><i class="bi bi-cpu"></i> Automatic</span>
                     </div>
 
-                    <div class="fa-point-body">
-                        <div class="fa-env-grid">
-                            @{
-                                var envItems = new[]
-                                {
-                                    (Title: "Colleges Environment",        Status: envColleges,  Icon: "bi-building"),
-                                    (Title: "Hospitals Assessment",        Status: envHospitals, Icon: "bi-hospital"),
-                                    (Title: "Hospital Environment",        Status: envHospEnv,   Icon: "bi-activity"),
-                                    (Title: "Library Assessment",          Status: envLibrary,   Icon: "bi-book")
-                                };
-                            }
-                            @foreach (var item in envItems)
-                            {
-                                <div class="fa-env-mini">
-                                    <div class="fa-env-mini-head">
-                                        <i class="bi @item.Icon"></i>
-                                        <span>@item.Title</span>
-                                    </div>
-                                    <span class="fa-compliance-badge @CssClass(item.Status)">
-                                        <i class="bi @CssIcon(item.Status)"></i> @item.Status
-                                    </span>
-                                </div>
-                            }
+                    <div class="fa-select-row">
+                        <div class="fa-select-field">
+                            <label for="accreditationStatus">Compliance Status</label>
+                            <select id="accreditationStatus" name="accreditationStatus" class="fa-select" required>
+                                <option value="">Select status…</option>
+                                @if (savedAccreditationStatus == "Compliant")     { <option value="Compliant" selected>Compliant</option> }
+                                else                                               { <option value="Compliant">Compliant</option> }
+                                @if (savedAccreditationStatus == "Needs Review")  { <option value="Needs Review" selected>Needs Review</option> }
+                                else                                               { <option value="Needs Review">Needs Review</option> }
+                                @if (savedAccreditationStatus == "Not Compliant") { <option value="Not Compliant" selected>Not Compliant</option> }
+                                else                                               { <option value="Not Compliant">Not Compliant</option> }
+                            </select>
                         </div>
-
-                        <div class="fa-env-overall">
-                            <span class="fa-env-overall-label">Overall Environment Status</span>
-                            <span class="fa-compliance-badge fa-compliance-badge-lg @CssClass(envOverall)">
-                                <i class="bi @CssIcon(envOverall)"></i> @envOverall
+                        <div class="fa-live-badge-wrap">
+                            <span id="p1Badge" class="fa-compliance-badge @CssClass(p1)">
+                                <i class="bi @CssIcon(p1)"></i> @DisplayLabel(p1)
                             </span>
                         </div>
                     </div>
+
+                    <label class="fa-note-label" for="accreditationNote">Assessment Note</label>
+                    <textarea id="accreditationNote" name="accreditationNote" class="doc-notes"
+                              placeholder="Describe your evaluation of the institution's accreditation and recognition status…">@savedAccreditationNote</textarea>
                 </section>
 
-                {{!-- ── Final Recommendation ──────────────────────────────────────── --}}
-                <section class="rm-card rd-card fa-final-card">
-                    <div class="fa-point-header">
-                        <div class="fa-point-title-wrap">
-                            <h2><i class="bi bi-clipboard2-check"></i> Final Recommendation</h2>
-                            <p>System-generated suggestion based on all 4 assessment points. Review and provide your final justification.</p>
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd">
+                        <div class="rd-card-hd-row">
+                            <div>
+                                <h2><i class="bi bi-person-lines-fill"></i> 2. Students to Faculty Ratio</h2>
+                                <p>Automatically calculated from submitted Academic Info data.</p>
+                            </div>
+                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
                         </div>
                     </div>
 
-                    <div class="fa-final-suggestion" id="suggestionBanner">
-                        <div class="fa-suggestion-label">Auto-Suggested Recommendation</div>
-                        <span id="suggestionBadge" class="fa-suggestion-badge @SuggestionClass(autoSuggestion)">
-                            <i class="bi @SuggestionIcon(autoSuggestion)" id="suggestionIcon"></i>
-                            <span id="suggestionText">@autoSuggestion</span>
+                    <div class="fa-metrics" style="margin-bottom:16px;">
+                        <div class="fa-metric-tile primary">
+                            <div class="fa-metric-lbl">Calculated Ratio</div>
+                            <div class="fa-metric-val @(ratioColorStatus)">@ratioDisplay</div>
+                        </div>
+                        <div class="fa-metric-tile">
+                            <div class="fa-metric-lbl">Compliance Status</div>
+                            <span class="fa-compliance-badge @CssClass(ratioCompliance)" style="margin-top:4px;">
+                                <i class="bi @CssIcon(ratioCompliance)"></i> @DisplayLabel(ratioCompliance)
+                            </span>
+                        </div>
+                        @if (avgRatio > 0)
+                        {
+                            <div class="fa-metric-tile">
+                                <div class="fa-metric-lbl">Benchmark</div>
+                                <div class="fa-metric-val neutral">1:@avgRatio.ToString("0")</div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="fa-note" style="margin-bottom:12px;">
+                        <i class="bi bi-info-circle"></i>
+                        <span>@RatioExplanation(ratioCompliance)</span>
+                    </div>
+
+                    @if (selectedCategories.Any())
+                    {
+                        <div class="fa-tags">
+                            @foreach (var cat in selectedCategories)
+                            {
+                                <span class="fa-tag">@cat</span>
+                            }
+                        </div>
+                    }
+                </section>
+
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd">
+                        <div class="rd-card-hd-row">
+                            <div>
+                                <h2><i class="bi bi-mortarboard"></i> 3. Doctorate Holders Percentage</h2>
+                                <p>Automatically calculated from submitted Academic Info data.</p>
+                            </div>
+                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                        </div>
+                    </div>
+
+                    <div class="fa-metrics" style="margin-bottom:16px;">
+                        <div class="fa-metric-tile primary">
+                            <div class="fa-metric-lbl">Doctorate Holders</div>
+                            <div class="fa-metric-val @(doctorateColorStatus)">@doctorateHoldersPercentage.ToString("0")%</div>
+                            @if (hasFacultyData)
+                            {
+                                <div class="fa-progress-wrap">
+                                    <div class="fa-progress-labels">
+                                        <span>0%</span><span>Minimum: 50%</span><span>100%</span>
+                                    </div>
+                                    <div class="fa-progress-track">
+                                        <div class="fa-progress-fill @doctorateColorStatus" style="width:@docProgressWidth%"></div>
+                                        <div class="fa-progress-marker"></div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="fa-metric-tile">
+                            <div class="fa-metric-lbl">Compliance Status</div>
+                            <span class="fa-compliance-badge @CssClass(docCompliance)" style="margin-top:4px;">
+                                <i class="bi @CssIcon(docCompliance)"></i> @DisplayLabel(docCompliance)
+                            </span>
+                        </div>
+                        <div class="fa-metric-tile">
+                            <div class="fa-metric-lbl">Minimum Required</div>
+                            <div class="fa-metric-val neutral">50%</div>
+                        </div>
+                    </div>
+
+                    <div class="fa-note" style="margin-bottom:12px;">
+                        <i class="bi bi-info-circle"></i>
+                        <span>@DocExplanation(docCompliance)</span>
+                    </div>
+
+                    @if (hasFacultyData)
+                    {
+                        <div class="fa-breakdown">
+                            <i class="bi bi-people-fill" style="color:#7a2d2a;"></i>
+                            <span><b>@totalPhdHolders</b> PhD holders</span>
+                            <span class="fa-breakdown-sep">out of</span>
+                            <span><b>@fullTimeFacultyDoctorate</b> full-time faculty</span>
+                        </div>
+                    }
+                </section>
+
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd">
+                        <div class="rd-card-hd-row">
+                            <div>
+                                <h2><i class="bi bi-building-check"></i> 4. Environment Assessment</h2>
+                                <p>Summarised from the Environment Assessment Summary page.</p>
+                            </div>
+                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                        </div>
+                    </div>
+
+                    @{
+                        var envItems = new[]
+                        {
+                            (Title: "Colleges Environment", Status: envColleges,  Icon: "bi-building"),
+                            (Title: "Hospitals Assessment", Status: envHospitals, Icon: "bi-hospital"),
+                            (Title: "Laboratories Facilities", Status: envHospEnv,   Icon: "bi-eyedropper"),
+                            (Title: "Library Assessment",   Status: envLibrary,   Icon: "bi-book")
+                        };
+                    }
+                    <div class="fa-env-grid" style="margin-bottom:12px;">
+                        @foreach (var item in envItems)
+                        {
+                            <div class="fa-env-item">
+                                <div class="fa-env-item-head">
+                                    <i class="bi @item.Icon"></i>
+                                    <span>@item.Title</span>
+                                </div>
+                                <span class="fa-compliance-badge @CssClass(item.Status)">
+                                    <i class="bi @CssIcon(item.Status)"></i> @item.Status
+                                </span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="fa-env-overall">
+                        <span class="fa-env-overall-lbl">Overall Environment Status</span>
+                        <span class="fa-compliance-badge fa-compliance-badge-lg @CssClass(envOverall)">
+                            <i class="bi @CssIcon(envOverall)"></i> @envOverall
                         </span>
-                        <div class="fa-suggestion-note" id="suggestionNote">
-                            @if (autoSuggestion == "Approve")
-                            {
-                                <span>All four assessment points meet the required standards. The institution qualifies for recognition.</span>
-                            }
-                            else if (autoSuggestion == "Conditional Approval")
-                            {
-                                <span>One or more assessment points require review. Conditional recognition may be granted pending corrective measures.</span>
-                            }
-                            else
-                            {
-                                <span>One or more assessment points are non-compliant. The request should be referred to the committee for further review.</span>
-                            }
+                    </div>
+                </section>
+
+                <section class="rm-card rd-card fa-final-card">
+                    <div class="rd-card-hd">
+                        <div class="rd-card-hd-row">
+                            <div class="fa-final-head">
+                                <h2><i class="bi bi-clipboard2-check"></i> Final Recommendation</h2>
+                                <p>System-generated suggestion based on all 4 assessment points. Review and provide your justification.</p>
+                                <div class="fa-final-kpis">
+                                    <span class="fa-final-kpi ok"><i class="bi bi-check-circle-fill"></i> Compliant: @compliantPoints</span>
+                                    <span class="fa-final-kpi warn"><i class="bi bi-exclamation-circle-fill"></i> Review Needed: @reviewPoints</span>
+                                    <span class="fa-final-kpi bad"><i class="bi bi-x-circle-fill"></i> Non-Compliant: @nonCompliantPoints</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="rd-field" style="margin-top:16px;">
-                        <label for="reason"><strong>Final Justification Note</strong> <span class="fa-required">*</span></label>
-                        <textarea id="reason"
-                                  name="reason"
-                                  class="doc-notes"
-                                  placeholder="Provide your professional justification for the final recommendation…"
-                                  required>@savedFinalJustification</textarea>
+                    <div class="fa-suggestion-banner @SuggestionClass(autoSuggestion)" id="suggestionBanner">
+                        <div class="fa-banner-icon" id="suggestionIconWrap">
+                            <i class="bi @SuggestionIcon(autoSuggestion)" id="suggestionIcon"></i>
+                        </div>
+                        <div class="fa-banner-body">
+                            <div class="fa-banner-eyebrow">System Suggestion</div>
+                            <div class="fa-suggestion-badge" id="suggestionBadge">
+                                <span id="suggestionText">@autoSuggestion</span>
+                            </div>
+                            <div class="fa-banner-note" id="suggestionNote">
+                                @if (autoSuggestion == "Approve")
+                                {
+                                    <span>All four assessment points meet required standards. The institution qualifies for recognition.</span>
+                                }
+                                else if (autoSuggestion == "Conditional Approval")
+                                {
+                                    <span>One or more assessment points require review. Conditional recognition may be granted pending corrective measures.</span>
+                                }
+                                else
+                                {
+                                    <span>One or more assessment points are non-compliant. The request should be referred to the committee for further review.</span>
+                                }
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="fa-decision-wrap">
+                        <div class="fa-decision-label">
+                            <i class="bi bi-person-check-fill"></i>
+                            Your Final Decision <span class="fa-required">*</span>
+                        </div>
+                        <div class="fa-decision-grid">
+                            <button type="button" class="fa-dec-btn approve @(initialDecision == "Approve" ? "selected" : "")" data-value="Approve">
+                                <i class="bi bi-check2-circle"></i>
+                                <span>Approve</span>
+                                <small>Institution meets all requirements</small>
+                            </button>
+                            <button type="button" class="fa-dec-btn conditional @(initialDecision == "Conditional Approval" ? "selected" : "")" data-value="Conditional Approval">
+                                <i class="bi bi-arrow-repeat"></i>
+                                <span>Conditional Approval</span>
+                                <small>Pending corrective measures</small>
+                            </button>
+                            <button type="button" class="fa-dec-btn reject @(initialDecision == "Reject / Committee Review" ? "selected" : "")" data-value="Reject / Committee Review">
+                                <i class="bi bi-x-octagon-fill"></i>
+                                <span>Reject / Committee Review</span>
+                                <small>Refer to committee for further review</small>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="fa-justify-label" for="reason">
+                        <i class="bi bi-chat-square-text"></i>
+                        Final Justification Note <span class="fa-required">*</span>
+                    </div>
+                    <textarea id="reason" name="reason" class="doc-notes"
+                              placeholder="Provide your professional justification for the final recommendation…"
+                              required>@savedFinalJustification</textarea>
 
                     <div class="fa-save-row">
+                        <span class="fa-save-hint"><i class="bi bi-lock-fill"></i> Your decision will be recorded once saved.</span>
                         <button class="rm-btn rm-btn-primary" type="submit">
                             <i class="bi bi-check2-circle"></i> Save Decision
                         </button>
@@ -456,70 +525,92 @@
 
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsInfrastructure", "Home", new { id = requestId })">Previous</a>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsInfrastructure", "Home", new { id = requestId })">
+                        <i class="bi bi-arrow-left"></i> Previous
+                    </a>
                 </div>
                 <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("ElectronicRequests", "Home")">Exit</a>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("ElectronicRequests", "Home")">
+                        <i class="bi bi-x-lg"></i> Exit
+                    </a>
                 </div>
             </section>
+
         </main>
     </div>
 
     <script>
         (function () {
-            // Point 1 live badge update
-            const sel = document.getElementById("accreditationStatus");
-            const p1Badge = document.getElementById("p1Badge");
+            const sel            = document.getElementById("accreditationStatus");
+            const p1Badge        = document.getElementById("p1Badge");
+            const p1ScBadge      = document.getElementById("p1ScBadge");
             const hiddenDecision = document.getElementById("hiddenDecision");
 
             const BADGE_MAP = {
-                "Compliant":     { cls: "compliant",    icon: "bi-check-circle-fill",        text: "Compliant" },
-                "Needs Review":  { cls: "needs-review",  icon: "bi-exclamation-circle-fill",   text: "Needs Review" },
-                "Not Compliant": { cls: "not-compliant", icon: "bi-x-circle-fill",             text: "Not Compliant" },
-                "":              { cls: "not-assessed",  icon: "bi-dash-circle",               text: "Not Assessed" }
+                "Compliant":     { cls: "compliant",     icon: "bi-check-circle-fill",      text: "Compliant" },
+                "Needs Review":  { cls: "needs-review",  icon: "bi-exclamation-circle-fill", text: "Needs Review" },
+                "Not Compliant": { cls: "not-compliant", icon: "bi-x-circle-fill",           text: "Not Compliant" },
+                "":              { cls: "not-assessed",  icon: "bi-dash-circle",             text: "Not Assessed" }
             };
 
-            // Point 2 & 3 & 4 compliance classes read from DOM
             const p2Class = "@CssClass(ratioCompliance)";
             const p3Class = "@CssClass(docCompliance)";
             const p4Class = "@CssClass(envOverall)";
 
             const SUGGESTION_MAP = {
-                "Approve":                  { cls: "approve",     icon: "bi-check2-circle",      text: "Approve",                  note: "All four assessment points meet the required standards. The institution qualifies for recognition." },
-                "Conditional Approval":     { cls: "conditional", icon: "bi-arrow-repeat",       text: "Conditional Approval",     note: "One or more assessment points require review. Conditional recognition may be granted pending corrective measures." },
-                "Reject / Committee Review":{ cls: "reject",      icon: "bi-x-octagon-fill",     text: "Reject / Committee Review",note: "One or more assessment points are non-compliant. The request should be referred to the committee for further review." }
+                "Approve":                   { cls: "approve",     icon: "bi-check2-circle",  text: "Approve",                   note: "All four assessment points meet the required standards. The institution qualifies for recognition." },
+                "Conditional Approval":      { cls: "conditional", icon: "bi-arrow-repeat",   text: "Conditional Approval",      note: "One or more assessment points require review. Conditional recognition may be granted pending corrective measures." },
+                "Reject / Committee Review": { cls: "reject",      icon: "bi-x-octagon-fill", text: "Reject / Committee Review", note: "One or more assessment points are non-compliant. The request should be referred to the committee for further review." }
             };
 
             function computeSuggestion(p1Cls) {
                 const all = [p1Cls, p2Class, p3Class, p4Class];
-                if (all.some(c => c === "not-compliant")) return "Reject / Committee Review";
+                if (all.some(c => c === "not-compliant"))                                           return "Reject / Committee Review";
                 if (all.some(c => c === "needs-review" || c === "not-assessed" || c === "missing")) return "Conditional Approval";
                 return "Approve";
             }
 
+            function setBadge(el, info) {
+                el.className = "fa-compliance-badge " + info.cls;
+                el.innerHTML = `<i class="bi ${info.icon}"></i> ${info.text}`;
+            }
+
             function updateP1(value) {
                 const info = BADGE_MAP[value] || BADGE_MAP[""];
-                p1Badge.className = "fa-compliance-badge " + info.cls;
-                p1Badge.innerHTML = `<i class="bi ${info.icon}"></i> ${info.text}`;
+                if (p1Badge)   setBadge(p1Badge,   info);
+                if (p1ScBadge) setBadge(p1ScBadge, info);
                 return info.cls;
             }
 
             function updateSuggestion(p1Cls) {
-                const key = computeSuggestion(p1Cls);
-                const s = SUGGESTION_MAP[key];
-                const badge = document.getElementById("suggestionBadge");
+                const key    = computeSuggestion(p1Cls);
+                const s      = SUGGESTION_MAP[key];
+                const badge  = document.getElementById("suggestionBadge");
                 const noteEl = document.getElementById("suggestionNote");
+                const banner = document.getElementById("suggestionBanner");
+                const iconEl = document.getElementById("suggestionIcon");
+
                 badge.className = "fa-suggestion-badge " + s.cls;
                 badge.querySelector("#suggestionText").textContent = s.text;
-                badge.querySelector("#suggestionIcon").className = "bi " + s.icon;
-                noteEl.querySelector("span").textContent = s.note;
-                hiddenDecision.value = key;
+                if (iconEl) iconEl.className = "bi " + s.icon;
+                noteEl.querySelector("span").textContent           = s.note;
+                if (banner) banner.className = "fa-suggestion-banner " + s.cls;
+                // Does not override the doctor's explicit decision choice
             }
+
+            // Doctor decision buttons
+            const decBtns = document.querySelectorAll(".fa-dec-btn");
+            decBtns.forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    decBtns.forEach(function (b) { b.classList.remove("selected"); });
+                    this.classList.add("selected");
+                    hiddenDecision.value = this.getAttribute("data-value");
+                });
+            });
 
             if (sel) {
                 sel.addEventListener("change", function () {
-                    const p1Cls = updateP1(this.value);
-                    updateSuggestion(p1Cls);
+                    updateSuggestion(updateP1(this.value));
                 });
             }
         })();

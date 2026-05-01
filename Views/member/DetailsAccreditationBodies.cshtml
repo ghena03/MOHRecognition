@@ -2,33 +2,52 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Accreditation Bodies";
+
     var requestId = ViewBag.RequestId ?? Model?.Id ?? 0;
     var inst = ViewBag.InstitutionName ?? Model?.UniversityName ?? "—";
+
     var accreditationRows = Model?.AccreditationBodies ?? new List<DTOs.AccreditationBodyRowDto>();
     var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
     var rankings = Model?.GlobalRankings ?? new DTOs.GlobalRankingsDto();
 }
+
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"]</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
     <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/DetailsAcademicInfo.css" asp-append-version="true" />
 </head>
+
 <body class="rm-page">
     <header class="rm-header">
-        <div class="rm-brandbar"></div><div class="rm-top">
+        <div class="rm-brandbar"></div>
+
+        <div class="rm-top">
             <div class="rm-top-inner">
-                <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
+                <div class="rm-brand">
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+                </div>
+
                 <div class="rm-user">
-                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>Recognition Member</b></span></div>
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                    <div class="rm-userpill">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Welcome, <b>Recognition Member</b></span>
+                    </div>
+
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Logout
+                    </a>
                 </div>
             </div>
         </div>
@@ -36,11 +55,28 @@
 
     <div class="rm-shell">
         <aside class="rm-sidebar">
-            <div class="rm-side-title">Navigation</div><nav class="rm-nav">
-                <a class="rm-navitem" href="@Url.Action("RecognitionMemberDashboard", "Home")"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
-                <a class="rm-navitem active" href="@Url.Action("ElectronicRequests", "Home")"><i class="bi bi-send-check"></i><span>My Assigned Requests</span></a>
-                <a class="rm-navitem" href="@Url.Action("Archive", "Home")"><i class="bi bi-inboxes"></i><span>Requests Archive</span></a>
-                <a class="rm-navitem danger" href="@Url.Action("Logout", "Home")"><i class="bi bi-power"></i><span>Sign Out</span></a>
+            <div class="rm-side-title">Navigation</div>
+
+            <nav class="rm-nav">
+                <a class="rm-navitem" href="@Url.Action("RecognitionMemberDashboard", "Home")">
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a class="rm-navitem active" href="@Url.Action("ElectronicRequests", "Home")">
+                    <i class="bi bi-send-check"></i>
+                    <span>My Assigned Requests</span>
+                </a>
+
+                <a class="rm-navitem" href="@Url.Action("Archive", "Home")">
+                    <i class="bi bi-inboxes"></i>
+                    <span>Requests Archive</span>
+                </a>
+
+                <a class="rm-navitem danger" href="@Url.Action("Logout", "Home")">
+                    <i class="bi bi-power"></i>
+                    <span>Sign Out</span>
+                </a>
             </nav>
         </aside>
 
@@ -51,9 +87,17 @@
                     <p class="rd-inst">Institution: <b>@inst</b></p>
                     <p>Step 5 of 7 — Accreditation Bodies.</p>
                 </div>
+
                 <div class="rd-meta">
-                    <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
-                    <div class="meta-pill"><span>Step</span><b>5 / 7</b></div>
+                    <div class="meta-pill">
+                        <span>Request ID</span>
+                        <b>#@requestId</b>
+                    </div>
+
+                    <div class="meta-pill">
+                        <span>Step</span>
+                        <b>5 / 7</b>
+                    </div>
                 </div>
             </section>
 
@@ -65,32 +109,65 @@
 
                 @if (accreditationRows.Any())
                 {
-                    <div class="rd-tablewrap">
-                        <table class="rd-table">
+                    <div class="clean-table-wrap">
+                        <table class="clean-review-table table-accreditation">
                             <thead>
                                 <tr>
                                     <th style="width:90px;">#</th>
                                     <th>Accreditation Body</th>
-                                    <th>Type</th>
+                                    <th>Accreditation Type</th>
                                     <th>Uploaded PDF</th>
+                                    <th style="width:220px;">Actions</th>
                                 </tr>
                             </thead>
+
                             <tbody>
                                 @for (var i = 0; i < accreditationRows.Count; i++)
                                 {
                                     var row = accreditationRows[i];
+
                                     <tr>
-                                        <td>@(i + 1)</td>
-                                        <td>@row.AccreditationBodyName</td>
-                                        <td>@row.AccreditationType</td>
+                                        <td class="cell-index">@(i + 1)</td>
+
+                                        <td class="cell-subject">
+                                            @(string.IsNullOrWhiteSpace(row.AccreditationBodyName)
+                                                ? "—"
+                                                : row.AccreditationBodyName)
+                                        </td>
+
                                         <td>
+                                            @(string.IsNullOrWhiteSpace(row.AccreditationType)
+                                                ? "—"
+                                                : row.AccreditationType)
+                                        </td>
+
+                                        <td class="file-cell">
+                                            @(string.IsNullOrWhiteSpace(row.PdfOriginalFileName)
+                                                ? "—"
+                                                : row.PdfOriginalFileName)
+                                        </td>
+
+                                        <td class="cell-actions">
                                             @if (!string.IsNullOrWhiteSpace(row.PdfFileUrl))
                                             {
-                                                <a href="@row.PdfFileUrl" target="_blank">@row.PdfOriginalFileName</a>
+                                                <div class="table-actions">
+                                                    <a class="rm-mini"
+                                                       href="@row.PdfFileUrl"
+                                                       target="_blank"
+                                                       rel="noopener">
+                                                        Open
+                                                    </a>
+
+                                                    <a class="rm-mini"
+                                                       href="@row.PdfFileUrl"
+                                                       download="@row.PdfOriginalFileName">
+                                                        Download
+                                                    </a>
+                                                </div>
                                             }
                                             else
                                             {
-                                                <span>N/A</span>
+                                                <span>—</span>
                                             }
                                         </td>
                                     </tr>
@@ -102,8 +179,15 @@
                 else
                 {
                     <div class="rd-grid2">
-                        <div class="rd-field"><label>Accreditation Bodies</label><input type="text" value="@A.AccreditationBodies" readonly /></div>
-                        <div class="rd-field"><label>Accreditation Type</label><input type="text" value="@A.AccreditationBodiesType" readonly /></div>
+                        <div class="rd-field">
+                            <label>Accreditation Bodies</label>
+                            <input type="text" value="@A.AccreditationBodies" readonly />
+                        </div>
+
+                        <div class="rd-field">
+                            <label>Accreditation Type</label>
+                            <input type="text" value="@A.AccreditationBodiesType" readonly />
+                        </div>
                     </div>
                 }
             </section>
@@ -111,6 +195,7 @@
             <section id="sec-research-global-rankings" class="rm-card rd-card">
                 <div class="rd-card-hd">
                     <h2>Research & Global Rankings</h2>
+                    <p>University ranking information submitted or reviewed for the request.</p>
                 </div>
 
                 @if (TempData["RankingsSaved"] != null)
@@ -125,54 +210,117 @@
 
                 <form asp-controller="Home" asp-action="SaveGlobalRankings" method="post">
                     @Html.AntiForgeryToken()
+
                     <input type="hidden" name="id" value="@requestId" />
 
                     <div class="rank-stack">
                         <div class="rd-field">
                             <label>Academic Ranking of World Universities (ARWU)</label>
+
                             <div class="rank-input">
-                                <input type="text" name="arwuValue" value="@rankings.ArwuValue" placeholder="Enter ranking" data-rank-input="arwu" />
-                                <label class="na-toggle"><input type="checkbox" name="arwuIsNa" value="true" @(rankings.ArwuIsNa ? "checked" : null) data-rank-na="arwu" /> N/A</label>
+                                <input type="text"
+                                       name="arwuValue"
+                                       value="@rankings.ArwuValue"
+                                       placeholder="Enter ranking"
+                                       data-rank-input="arwu" />
+
+                                <label class="na-toggle">
+                                    <input type="checkbox"
+                                           name="arwuIsNa"
+                                           value="true"
+                                           @(rankings.ArwuIsNa ? "checked" : null)
+                                           data-rank-na="arwu" />
+                                    N/A
+                                </label>
                             </div>
                         </div>
 
                         <div class="rd-field">
                             <label>QS - World University Ranking</label>
+
                             <div class="rank-input">
-                                <input type="text" name="qsValue" value="@rankings.QsValue" placeholder="Enter ranking" data-rank-input="qs" />
-                                <label class="na-toggle"><input type="checkbox" name="qsIsNa" value="true" @(rankings.QsIsNa ? "checked" : null) data-rank-na="qs" /> N/A</label>
+                                <input type="text"
+                                       name="qsValue"
+                                       value="@rankings.QsValue"
+                                       placeholder="Enter ranking"
+                                       data-rank-input="qs" />
+
+                                <label class="na-toggle">
+                                    <input type="checkbox"
+                                           name="qsIsNa"
+                                           value="true"
+                                           @(rankings.QsIsNa ? "checked" : null)
+                                           data-rank-na="qs" />
+                                    N/A
+                                </label>
                             </div>
                         </div>
 
                         <div class="rd-field">
                             <label>THE - World University Ranking (Times)</label>
+
                             <div class="rank-input">
-                                <input type="text" name="theValue" value="@rankings.TheValue" placeholder="Enter ranking" data-rank-input="the" />
-                                <label class="na-toggle"><input type="checkbox" name="theIsNa" value="true" @(rankings.TheIsNa ? "checked" : null) data-rank-na="the" /> N/A</label>
+                                <input type="text"
+                                       name="theValue"
+                                       value="@rankings.TheValue"
+                                       placeholder="Enter ranking"
+                                       data-rank-input="the" />
+
+                                <label class="na-toggle">
+                                    <input type="checkbox"
+                                           name="theIsNa"
+                                           value="true"
+                                           @(rankings.TheIsNa ? "checked" : null)
+                                           data-rank-na="the" />
+                                    N/A
+                                </label>
                             </div>
                         </div>
 
                         <div class="rd-field">
                             <label>Scopus Ranking</label>
+
                             <div class="rank-input">
-                                <input type="text" name="scopusValue" value="@rankings.ScopusValue" placeholder="Enter ranking" data-rank-input="scopus" />
-                                <label class="na-toggle"><input type="checkbox" name="scopusIsNa" value="true" @(rankings.ScopusIsNa ? "checked" : null) data-rank-na="scopus" /> N/A</label>
+                                <input type="text"
+                                       name="scopusValue"
+                                       value="@rankings.ScopusValue"
+                                       placeholder="Enter ranking"
+                                       data-rank-input="scopus" />
+
+                                <label class="na-toggle">
+                                    <input type="checkbox"
+                                           name="scopusIsNa"
+                                           value="true"
+                                           @(rankings.ScopusIsNa ? "checked" : null)
+                                           data-rank-na="scopus" />
+                                    N/A
+                                </label>
                             </div>
                         </div>
                     </div>
 
                     <div style="display:flex; justify-content:flex-end; margin-top:14px;">
-                        <button class="rm-btn rm-btn-primary" type="submit"><i class="bi bi-save"></i> Save</button>
+                        <button class="rm-btn rm-btn-primary" type="submit">
+                            <i class="bi bi-save"></i>
+                            Save
+                        </button>
                     </div>
                 </form>
             </section>
 
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAcademicInfo", "Home", new { id = requestId })">Previous</a>
+                    <a class="rm-btn rm-btn-light"
+                       href="@Url.Action("DetailsAcademicInfo", "Home", new { id = requestId })">
+                        Previous
+                    </a>
                 </div>
+
                 <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsInfrastructure", "Home", new { id = requestId })">Next</a>
+                    <a class="rm-btn rm-btn-light"
+                       href="@Url.Action("DetailsInfrastructure", "Home", new { id = requestId })">
+                        Next
+                    </a>
                 </div>
             </section>
         </main>
@@ -185,16 +333,19 @@
             function syncPair(key) {
                 const input = document.querySelector(`[data-rank-input="${key}"]`);
                 const check = document.querySelector(`[data-rank-na="${key}"]`);
+
                 if (!input || !check) return;
 
                 input.disabled = check.checked;
+
                 if (check.checked) {
                     input.value = "";
                 }
             }
 
-            pairs.forEach((key) => {
+            pairs.forEach(function (key) {
                 const check = document.querySelector(`[data-rank-na="${key}"]`);
+
                 if (!check) return;
 
                 check.addEventListener("change", function () {

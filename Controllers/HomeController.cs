@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 namespace MOHRecognition.Controllers 
 {
+   
     public class HomeController : Controller
     {
         private readonly IWebHostEnvironment _env;
@@ -3154,14 +3155,15 @@ namespace MOHRecognition.Controllers
                 ? new AcademicInfoDto()
                 : (JsonSerializer.Deserialize<AcademicInfoDto>(academicJson) ?? new AcademicInfoDto());
 
-            var submittedFaculties = LoadFaculties().Rows
-                .Select(f => new FacultyRowDto
-                {
-                    Id = f.Id,
-                    FacultyName = f.FacultyName,
-                    StudentsCount = f.StudentsCount
-                })
-                .ToList();
+           var submittedFaculties = LoadFaculties().Rows
+    .Select(f => new FacultyRowDto
+    {
+        Id = f.Id,
+        FacultyName = f.FacultyName,
+        CollegeType = f.CollegeType,
+        StudentsCount = f.StudentsCount
+    })
+    .ToList();
 
             var submittedAccreditationBodies = LoadAccreditationBodies().Rows
                 .Select(a => new AccreditationBodyRowDto
@@ -3839,10 +3841,15 @@ namespace MOHRecognition.Controllers
             string hospitalsAssessmentNote,
             string hospitalEnvironmentAssessmentNote,
             string laboratoriesFacilitiesAssessmentNote,
-            string libraryAssessmentNote)
+            string libraryAssessmentNote,
+            string? nextAction = null)
         {
             var request = _recognitionRequestService.GetById(id);
-            if (!IsCurrentRecognitionMemberOwner(request))
+            if (request == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var currentRoleInfra = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRoleInfra, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
             {
                 TempData["ArchiveError"] = "You can only update notes for requests assigned to you.";
                 return RedirectToAction("ElectronicRequests");
@@ -3876,12 +3883,13 @@ namespace MOHRecognition.Controllers
             if (!ok)
             {
                 TempData["InfraSaveError"] = "Unable to save infrastructure assessments.";
-            }
-            else
-            {
-                TempData["InfraSaved"] = "Infrastructure assessments saved successfully.";
+                return RedirectToAction("DetailsInfrastructure", new { id });
             }
 
+            if (string.Equals(nextAction, "continue", StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("DetailsRecommendation", new { id });
+
+            TempData["InfraSaved"] = "Infrastructure assessments saved successfully.";
             return RedirectToAction("DetailsInfrastructure", new { id });
         }
 
@@ -3890,7 +3898,11 @@ namespace MOHRecognition.Controllers
         public IActionResult SaveRecommendationDecision(int id, string accreditationStatus, string accreditationNote, string decision, string reason)
         {
             var request = _recognitionRequestService.GetById(id);
-            if (!IsCurrentRecognitionMemberOwner(request))
+            if (request == null)
+                return RedirectToAction("ElectronicRequests");
+
+            var currentRoleRec = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (string.Equals(currentRoleRec, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
             {
                 TempData["ArchiveError"] = "You can only update decisions for requests assigned to you.";
                 return RedirectToAction("ElectronicRequests");

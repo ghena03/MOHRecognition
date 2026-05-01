@@ -505,4 +505,117 @@
 .doctors-metrics {
     margin-top: 12px;
     margin-bottom: 2px;
+} 
+.clean-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #e5ddd3;
+    border-radius: 12px;
+    background: #fff;
+    padding: 0;
+}
+
+.clean-review-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.clean-review-table thead th {
+    background: #f8f7f5;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid #e5ddd3;
+}
+
+.clean-review-table tbody td {
+    background: #fff;
+    color: #1f2937;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 14px;
+    line-height: 1.4;
+    vertical-align: middle;
+    border-bottom: 1px solid #e5ddd3;
+    overflow-wrap: anywhere;
+}
+
+.clean-review-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.clean-review-table tbody tr:hover td {
+    background: #fcfcfb;
+}
+
+.clean-review-table .cell-index {
+    width: 90px;
+    text-align: center;
+    font-weight: 700;
+    color: #475569;
+}
+
+.clean-review-table .cell-subject {
+    font-weight: 700;
+}
+
+.clean-review-table .file-cell {
+    color: #334155;
+    font-weight: 600;
+}
+
+.file-cell {
+    word-break: break-word;
+}
+
+.table-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.table-actions .rm-mini {
+    min-width: 88px;
+    justify-content: center;
+}
+
+.clean-review-table .cell-actions {
+    white-space: nowrap;
+}
+
+.table-attachments th:nth-child(1) { width: 72px !important; }
+.table-attachments th:nth-child(2) { width: 44%; }
+.table-attachments th:nth-child(3) { width: 36%; }
+.table-attachments th:nth-child(4) { width: 180px !important; }
+
+.table-accreditation th:nth-child(1) { width: 72px !important; }
+.table-accreditation th:nth-child(2) { width: 28%; }
+.table-accreditation th:nth-child(3) { width: 18%; }
+.table-accreditation th:nth-child(4) { width: 34%; }
+.table-accreditation th:nth-child(5) { width: 180px !important; }
+
+/* optional: make section content a little cleaner */
+.rd-card .clean-table-wrap {
+    margin-top: 8px;
+}
+
+@media (max-width: 992px) {
+    .clean-review-table thead th {
+        font-size: 13px;
+        padding: 10px 12px;
+    }
+
+    .clean-review-table tbody td {
+        font-size: 13px;
+        padding: 10px 12px;
+    }
+
+    .table-actions {
+        flex-wrap: wrap;
+    }
 }

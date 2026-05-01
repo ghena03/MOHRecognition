@@ -223,11 +223,9 @@
                     <div class="infra-error">@TempData["InfraSaveError"]</div>
                 }
 
-                <form asp-controller="Home" asp-action="SaveInfrastructureNotes" method="post">
+                <form asp-controller="Home" asp-action="SaveInfrastructureNotes" method="post" id="infraForm">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@requestId" />
-                    <input type="hidden" name="laboratoriesFacilitiesAssessment" value="" />
-                    <input type="hidden" name="laboratoriesFacilitiesAssessmentNote" value="" />
 
                     <div class="infra-assessment-grid">
                         <div class="assess-box">
@@ -281,24 +279,24 @@
                         <div class="assess-box">
                             <div class="assess-head">
                                 <div>
-                                    <div class="assess-title">Hospital Environment Assessment</div>
-                                    <div class="assess-sub">Evaluate whether the hospital environment is suitable for training and academic purposes.</div>
+                                    <div class="assess-title">Laboratories Facilities Assessment</div>
+                                    <div class="assess-sub">Evaluate whether laboratories and facilities meet the required academic standards.</div>
                                 </div>
-                                <span id="hospitalEnvironmentAssessmentBadge" class="assess-status @StatusClass(hospitalEnvironmentAssessment)">@StatusText(hospitalEnvironmentAssessment)</span>
+                                <span id="laboratoriesFacilitiesAssessmentBadge" class="assess-status @StatusClass(laboratoriesFacilitiesAssessment)">@StatusText(laboratoriesFacilitiesAssessment)</span>
                             </div>
 
                             <div class="rd-field">
-                                <label for="hospitalEnvironmentAssessment">Status</label>
-                                <select id="hospitalEnvironmentAssessment" name="hospitalEnvironmentAssessment" data-assessment-select="hospitalEnvironmentAssessmentBadge" data-note-wrap="hospitalEnvironmentAssessmentNoteWrap" data-note-input="hospitalEnvironmentAssessmentNote">
+                                <label for="laboratoriesFacilitiesAssessment">Status</label>
+                                <select id="laboratoriesFacilitiesAssessment" name="laboratoriesFacilitiesAssessment" data-assessment-select="laboratoriesFacilitiesAssessmentBadge" data-note-wrap="laboratoriesFacilitiesAssessmentNoteWrap" data-note-input="laboratoriesFacilitiesAssessmentNote">
                                     <option value="">Select status</option>
-                                    <option value="Meets Standards" selected="@(hospitalEnvironmentAssessment == "Meets Standards" ? "selected" : null)">Meets Standards</option>
-                                    <option value="Needs Improvement" selected="@(hospitalEnvironmentAssessment == "Needs Improvement" ? "selected" : null)">Needs Improvement</option>
+                                    <option value="Meets Standards" selected="@(laboratoriesFacilitiesAssessment == "Meets Standards" ? "selected" : null)">Meets Standards</option>
+                                    <option value="Needs Improvement" selected="@(laboratoriesFacilitiesAssessment == "Needs Improvement" ? "selected" : null)">Needs Improvement</option>
                                 </select>
                             </div>
 
-                            <div id="hospitalEnvironmentAssessmentNoteWrap" class="rd-field infra-note-wrap">
-                                <label for="hospitalEnvironmentAssessmentNote">Improvement Note</label>
-                                <textarea id="hospitalEnvironmentAssessmentNote" name="hospitalEnvironmentAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement...">@hospitalEnvironmentAssessmentNote</textarea>
+                            <div id="laboratoriesFacilitiesAssessmentNoteWrap" class="rd-field infra-note-wrap">
+                                <label for="laboratoriesFacilitiesAssessmentNote">Improvement Note</label>
+                                <textarea id="laboratoriesFacilitiesAssessmentNote" name="laboratoriesFacilitiesAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement...">@laboratoriesFacilitiesAssessmentNote</textarea>
                             </div>
                         </div>
 
@@ -389,6 +387,8 @@
                 s.addEventListener("change", () => updateAssessment(s));
                 updateAssessment(s);
             });
+
+
         })();
     </script>
 </body>
