@@ -194,8 +194,12 @@
         }
 
         try {
-            await uploadFilesForSubject(url, subject, files);
-            await loadPartial(true, "Files uploaded successfully.", false);
+            const html = await uploadFilesForSubject(url, subject, files);
+            render(html);
+            wireDropZones();
+            wireSnapshotAutoSave();
+            updateProgressAndSubmitState();
+            showBanner("Files uploaded successfully.", false);
         } catch (err) {
             console.error(err);
             showBanner(err.message || "An unexpected error happened while uploading.", true);
@@ -282,17 +286,20 @@
     };
 
     async function uploadFilesForSubject(url, subject, files) {
+        let lastHtml = "";
         for (const file of files) {
             const formData = new FormData();
             formData.append("file", file);
             formData.append("subject", subject);
 
             const res = await fetch(url, { method: "POST", body: formData });
+            const text = await res.text();
             if (!res.ok) {
-                const errText = await res.text();
-                throw new Error(errText || "Upload failed.");
+                throw new Error(text || "Upload failed.");
             }
+            lastHtml = text;
         }
+        return lastHtml;
     }
 
     window.PictureDelete = async function (id) {

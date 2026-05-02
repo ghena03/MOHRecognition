@@ -3443,7 +3443,13 @@ namespace MOHRecognition.Controllers
         }
 
         [HttpGet]
-        public IActionResult RecognitionMemberDashboard()
+        public IActionResult RecognitionMemberDashboard(
+            int? sessionNo,
+            int? year,
+            string? search,
+            string? status,
+            string? country,
+            string? sort)
         {
             var currentMember = GetCurrentRecognitionMember();
             var assignedToCurrentMember = _recognitionRequestService
@@ -3451,14 +3457,178 @@ namespace MOHRecognition.Controllers
                 .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
-            ViewBag.TotalRequests = assignedToCurrentMember.Count;
-            ViewBag.PendingCount = assignedToCurrentMember.Count(x => x.Status == "Pending" || x.Status == "Assigned");
-            ViewBag.ApprovedCount = assignedToCurrentMember.Count(x => x.Status == "Approved");
-            ViewBag.RejectedCount = assignedToCurrentMember.Count(x => x.Status == "Rejected");
-            ViewBag.MissingDocsCount = assignedToCurrentMember.Count(x => x.Status == "Missing Docs");
+            var allItems = assignedToCurrentMember
+                .Select(MapDashboardItem)
+                .ToList();
 
-            return View("~/Views/member/RecognitionMemberDashboard.cshtml", assignedToCurrentMember);
+            var selectedSession = sessionNo;
+            var selectedYear = year ?? DateTime.Now.Year;
+            var selectedSearch = (search ?? string.Empty).Trim();
+            var selectedStatus = string.IsNullOrWhiteSpace(status) ? "All" : status.Trim();
+            var selectedCountry = string.IsNullOrWhiteSpace(country) ? "All" : country.Trim();
+            var selectedSort = string.IsNullOrWhiteSpace(sort) ? "NewestActivity" : sort.Trim();
+
+            var availableSessions = allItems
+                .Where(x => x.SessionNo.HasValue)
+                .Select(x => x.SessionNo!.Value)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .ToList();
+
+            if (!availableSessions.Any())
+                availableSessions = new List<int> { 1, 2, 3 };
+
+            if (selectedSession == null)
+                selectedSession = availableSessions.FirstOrDefault();
+
+            var availableYears = allItems
+                .Select(x => x.Year)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .ToList();
+
+            if (!availableYears.Any())
+                availableYears = new List<int> { DateTime.Now.Year };
+
+            if (!availableYears.Contains(selectedYear))
+                selectedYear = availableYears.First();
+
+            var scopedItems = allItems
+                .Where(x => x.Year == selectedYear)
+                .Where(x => !selectedSession.HasValue || x.SessionNo == selectedSession)
+                .ToList();
+
+            var availableCountries = scopedItems
+                .Select(x => x.Country)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x)
+                .ToList();
+
+            IEnumerable<RecognitionMemberDashboardApplicationItem> filtered = scopedItems;
+
+            if (!string.IsNullOrWhiteSpace(selectedSearch))
+            {
+                filtered = filtered.Where(x =>
+                    x.ReferenceNo.Contains(selectedSearch, StringComparison.OrdinalIgnoreCase) ||
+                    x.UniversityName.Contains(selectedSearch, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.Equals(selectedStatus, "All", StringComparison.OrdinalIgnoreCase))
+            {
+                filtered = filtered.Where(x =>
+                    string.Equals(x.ReviewStatus, selectedStatus, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.Equals(selectedCountry, "All", StringComparison.OrdinalIgnoreCase))
+            {
+                filtered = filtered.Where(x =>
+                    string.Equals(x.Country, selectedCountry, StringComparison.OrdinalIgnoreCase));
+            }
+
+            filtered = selectedSort switch
+            {
+                "OldestActivity" => filtered.OrderBy(x => x.LastActivityDate).ThenBy(x => x.ReferenceNo),
+                "UniversityAZ" => filtered.OrderBy(x => x.UniversityName).ThenByDescending(x => x.LastActivityDate),
+                _ => filtered.OrderByDescending(x => x.LastActivityDate).ThenBy(x => x.ReferenceNo)
+            };
+
+            var filteredItems = filtered.ToList();
+
+            var model = new RecognitionMemberDashboardViewModel
+            {
+                CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember),
+                SessionNo = selectedSession,
+                Year = selectedYear,
+                Search = selectedSearch,
+                Status = selectedStatus,
+                Country = selectedCountry,
+                Sort = selectedSort,
+                AvailableSessions = availableSessions,
+                AvailableYears = availableYears,
+                AvailableCountries = availableCountries,
+                AssignedReviewsCount = scopedItems.Count,
+                NotReviewedCount = scopedItems.Count(x => x.ReviewStatus == "Not Reviewed"),
+                InProgressCount = scopedItems.Count(x => x.ReviewStatus == "In Progress"),
+                SubmittedRecommendationsCount = scopedItems.Count(x => x.ReviewStatus == "Recommendation Submitted"),
+                Applications = filteredItems,
+                RecentActivities = filteredItems
+                    .Where(x => x.LastActivityDate > DateTime.MinValue)
+                    .OrderByDescending(x => x.LastActivityDate)
+                    .Take(6)
+                    .Select(x => new RecognitionMemberDashboardActivityItem
+                    {
+                        Description = $"{x.ReferenceNo} — {x.UniversityName}: {x.ReviewStatus}",
+                        ActivityDate = x.LastActivityDate
+                    })
+                    .ToList()
+            };
+
+            return View("~/Views/member/RecognitionMemberDashboard.cshtml", model);
+        }
+
+        private static RecognitionMemberDashboardApplicationItem MapDashboardItem(RecognitionRequestRecord request)
+        {
+            var reviewStatus = ResolveReviewStatus(request);
+            var actionLabel = reviewStatus switch
+            {
+                "In Progress" => "Continue",
+                "Returned for Update" => "Comment",
+                "Recommendation Submitted" => "View Recommendation",
+                _ => "Review"
+            };
+
+            return new RecognitionMemberDashboardApplicationItem
+            {
+                Id = request.Id,
+                SessionNo = ResolveSessionNo(request),
+                Year = request.Year > 0 ? request.Year : request.SubmittedAt.Year,
+                ReferenceNo = string.IsNullOrWhiteSpace(request.ReferenceNumber) ? $"REQ-{request.Id}" : request.ReferenceNumber,
+                UniversityName = string.IsNullOrWhiteSpace(request.UniversityName) ? "Unknown University" : request.UniversityName,
+                Country = string.IsNullOrWhiteSpace(request.Country) ? "Unknown" : request.Country,
+                ReviewStatus = reviewStatus,
+                LastActivityDate = request.SubmittedAt,
+                ActionLabel = actionLabel
+            };
+        }
+
+        private static int? ResolveSessionNo(RecognitionRequestRecord request)
+        {
+            if (!string.IsNullOrWhiteSpace(request.ReferenceNumber))
+            {
+                var parts = request.ReferenceNumber.Split('-', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 4 && int.TryParse(parts[2], out var parsedSession) && parsedSession > 0)
+                    return parsedSession;
+            }
+
+            if (request.SubmittedAt != default)
+                return ((request.SubmittedAt.Month - 1) / 4) + 1;
+
+            return null;
+        }
+
+        private static string ResolveReviewStatus(RecognitionRequestRecord request)
+        {
+            var status = (request.Status ?? string.Empty).Trim();
+            var decision = (request.BasicInfoAssessmentDecision ?? string.Empty).Trim();
+
+            if (!string.IsNullOrWhiteSpace(decision))
+                return "Recommendation Submitted";
+
+            if (string.Equals(status, "Returned for Update", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(status, "Requires Admin Review", StringComparison.OrdinalIgnoreCase))
+                return "Returned for Update";
+
+            var hasWorkStarted =
+                !string.IsNullOrWhiteSpace(request.AccreditationStatus) ||
+                !string.IsNullOrWhiteSpace(request.AccreditationNote) ||
+                !string.IsNullOrWhiteSpace(request.BasicInfoAssessmentReason) ||
+                !string.IsNullOrWhiteSpace(request.FacultiesAssessment) ||
+                !string.IsNullOrWhiteSpace(request.HospitalsAssessment) ||
+                !string.IsNullOrWhiteSpace(request.LaboratoriesFacilitiesAssessment) ||
+                !string.IsNullOrWhiteSpace(request.LibraryAssessment);
+
+            return hasWorkStarted ? "In Progress" : "Not Reviewed";
         }
 
         [HttpGet]
