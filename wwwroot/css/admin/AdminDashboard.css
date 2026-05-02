@@ -416,3 +416,159 @@ td {
     font-size: 18px;
     padding: 8px 16px;
 }
+
+/* mini cards */
+.mini-card {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+/* badge */
+.badge-status {
+    display: inline-block;
+    background: #e0f2e9;
+    color: #1b5e20;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+/* final decision box */
+.final-decision-box {
+    background: #f4f4f4;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+/* decision badge */
+.decision-badge {
+    background: #d4edda;
+    color: #155724;
+    padding: 8px 18px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* base */
+.decision-badge {
+    padding: 8px 18px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* approve */
+.decision-approve {
+    background: #d4edda;
+    color: #155724;
+}
+
+/* conditional */
+.decision-conditional {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* reject */
+.decision-reject {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* fallback */
+.decision-default {
+    background: #e2e3e5;
+    color: #333;
+}
+.center-title {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.decision-container {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.decision-note {
+    margin-top: 10px;
+    color: #555;
+}
+
+
+.details-card {
+    padding: 25px;
+}
+
+.mini-card {
+    background: #f7f7f7;
+    padding: 18px;
+    border-radius: 12px;
+}
+
+
+h3 {
+    margin-bottom: 15px;
+}
+/* table */
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+    .modern-table th {
+        text-align: left;
+        padding: 12px;
+        background: #e5ddd5;
+    }
+
+    .modern-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+    }
+
+/* decision badges */
+.badge-approve {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-conditional {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-reject {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.badge-default {
+    background: #eee;
+    color: #333;
+}
+
+/* view button */
+.view-btn {
+    background: #8b1e1e;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+/* note */
+.note-cell {
+    color: #555;
+}
+
+/* title */
+.section-title {
+    margin-bottom: 10px;
+}

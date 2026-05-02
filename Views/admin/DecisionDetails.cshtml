@@ -1,5 +1,7 @@
-﻿@{
-    ViewData["Title"] = "Decision Details";
+﻿@using MOHRecognition.Services
+@model RecognitionRequestRecord
+
+@{
     Layout = null;
 }
 
@@ -8,63 +10,66 @@
 <div class="main-container">
 
     <!-- HEADER -->
-    <div class="page-head">
-        <h2>Decision Details</h2>
-        <p>Final evaluation summary</p>
+    <div class="header">
+        <div class="header-left">
+            <img src="~/images/mohelogo.png" class="logo" />
+            <div class="header-text">
+                <h1>Decision Details</h1>
+                <p>Final evaluation summary</p>
+            </div>
+        </div>
+
+        <a class="back-btn" href="/Home/Decisions">← Back</a>
     </div>
 
-    <!-- MAIN CARD -->
+    <!-- CONTENT -->
     <div class="details-card">
 
-        <h2 class="uni-title">University of Jordan</h2>
+        <h2 class="section-title">@Model.UniversityName</h2>
 
-        <!-- SECTION -->
-        <div class="section">
-            <h3>Accreditation & Recognition</h3>
-            <div class="section-content">
-                <span class="status approved">Approved</span>
-                <p>Meets all accreditation requirements.</p>
-            </div>
+        <!-- Accreditation -->
+        <div class="mini-card">
+            <h4>Accreditation & Recognition</h4>
+
+            <span class="badge-status">
+                @Model.AccreditationStatus
+            </span>
+
+            <p>@Model.AccreditationNote</p>
         </div>
 
-        <!-- SECTION -->
-        <div class="section">
-            <h3>Students to Faculty Ratio</h3>
-            <div class="section-content">
-                <span class="status approved">Acceptable</span>
-            </div>
+        <hr />
+
+        <!-- Final Decision -->
+        <div class="final-decision-box">
+
+            <h3>Final Decision</h3>
+
+            @{
+                var decision = Model.BasicInfoAssessmentDecision;
+                var decisionClass = "decision-default";
+
+                if (decision == "Approve")
+                    decisionClass = "decision-approve";
+                else if (decision == "Conditional Approval")
+                    decisionClass = "decision-conditional";
+                else if (decision == "Reject / Committee Review")
+                    decisionClass = "decision-reject";
+            }
+
+            <span class="decision-badge @decisionClass">
+                @decision
+            </span>
+
+            @if (!string.IsNullOrWhiteSpace(Model.BasicInfoAssessmentReason))
+            {
+                <p class="decision-note">
+                    @Model.BasicInfoAssessmentReason
+                </p>
+            }
+
         </div>
 
-        <!-- SECTION -->
-        <div class="section">
-            <h3>Doctorate Holders</h3>
-            <div class="section-content">
-                <span class="status approved">Above minimum requirement</span>
-            </div>
-        </div>
-
-        <!-- SECTION -->
-        <div class="section">
-            <h3>Environment Assessment</h3>
-            <div class="section-content">
-                <span class="status approved">Good</span>
-            </div>
-        </div>
-
-        <!-- FINAL -->
-        <div class="final-box">
-            <h3>Final Recommendation</h3>
-            <span class="status approved big">Approved</span>
-            <p>Final decision based on all evaluation criteria.</p>
-        </div>
-
-    </div>
-
-    <!-- BACK BUTTON -->
-    <div style="margin-top:20px;">
-        <a href="/Home/Decisions" class="action-btn">
-            ← Back to Decisions
-        </a>
     </div>
 
 </div>

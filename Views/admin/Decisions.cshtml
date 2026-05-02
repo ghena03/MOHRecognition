@@ -1,63 +1,77 @@
-﻿@{
-    ViewData["Title"] = "Decisions";
+﻿@using MOHRecognition.Services
+@model List<RecognitionRequestRecord>
+
+@{
     Layout = null;
 }
 
 <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
 
-<!-- HEADER -->
-<div class="header">
-    <div class="header-left">
-        <img src="~/images/mohelogo.png" class="logo" />
-
-        <div class="title-box">
-            <h1>Decisions</h1>
-            <p>Final results of meeting discussions</p>
-        </div>
-    </div>
-</div>
-
 <div class="main-container">
 
-    <!-- TITLE -->
-    <div class="page-head">
-        <h2>Decisions Overview</h2>
+    <!-- HEADER -->
+   
+    <div class="header">
+        <div class="header-left">
+            <img src="~/images/mohelogo.png" class="logo" />
+
+            <div class="title-box">
+                <h1>Decisions</h1>
+                <p>Final results from recognition members</p>
+            </div>
+        </div>
     </div>
 
-    <!-- TABLE -->
-    <div class="table-box">
-        <table>
+    <!-- CARD -->
+    <div class="details-card">
+
+        <h2 class="section-title">Decisions Overview</h2>
+
+        <table class="modern-table">
             <thead>
                 <tr>
                     <th>University</th>
-                    <th>Final Decision</th>
-                    <th>Action</th>
+                    <th>Decision</th>
+                    <th>Notes</th>
+                    <th></th>
                 </tr>
             </thead>
 
             <tbody>
-                <!-- Dummy Data -->
-                <tr>
-                    <td>University of Jordan</td>
-                    <td><span class="status approved">Approved</span></td>
-                    <td>
-                        <a href="/Home/DecisionDetails/1" class="action-btn">
-                            View Details
-                        </a>
-                    </td>
-                </tr>
+                @foreach (var r in Model)
+                {
+                    var decisionClass = "badge-default";
 
-                <tr>
-                    <td>MIT</td>
-                    <td><span class="status rejected">Rejected</span></td>
-                    <td>
-                        <a href="/Home/DecisionDetails/2" class="action-btn">
-                            View Details
-                        </a>
-                    </td>
-                </tr>
+                    if (r.BasicInfoAssessmentDecision == "Approve")
+                        decisionClass = "badge-approve";
+                    else if (r.BasicInfoAssessmentDecision == "Conditional Approval")
+                        decisionClass = "badge-conditional";
+                    else if (r.BasicInfoAssessmentDecision == "Reject / Committee Review")
+                        decisionClass = "badge-reject";
+
+                    <tr>
+                        <td>@r.UniversityName</td>
+
+                        <td>
+                            <span class="decision-badge @decisionClass">
+                                @r.BasicInfoAssessmentDecision
+                            </span>
+                        </td>
+
+                        <td class="note-cell">
+                            @r.BasicInfoAssessmentReason
+                        </td>
+
+                        <td>
+                            <a href="/Home/DecisionDetails/@r.Id" class="view-btn">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
+
     </div>
 
 </div>

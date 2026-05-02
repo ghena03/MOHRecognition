@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 namespace MOHRecognition.Controllers  
-//2may
+
 {
    
     public class HomeController : Controller
@@ -3423,12 +3423,23 @@ namespace MOHRecognition.Controllers
         }
         public IActionResult Decisions()
         {
-            return View("~/Views/Admin/Decisions.cshtml");
+            var requests = _recognitionRequestService.GetAll();
+
+            var decisions = requests
+                .Where(r => !string.IsNullOrEmpty(r.BasicInfoAssessmentDecision))
+                .ToList();
+
+            return View("~/Views/Admin/Decisions.cshtml", decisions);
         }
 
         public IActionResult DecisionDetails(int id)
         {
-            return View("~/Views/Admin/DecisionDetails.cshtml");
+            var request = _recognitionRequestService.GetById(id);
+
+            if (request == null)
+                return RedirectToAction("Decisions");
+
+            return View("~/Views/Admin/DecisionDetails.cshtml", request);
         }
 
         [HttpGet]
@@ -4031,6 +4042,8 @@ namespace MOHRecognition.Controllers
 
             return View("~/Views/Admin/AdminRequestDetails.cshtml", request);
         }
+
+        
         private string GetCurrentRecognitionMember()
         {
             var raw = HttpContext.Session.GetString("CurrentRecognitionMember") ?? "";
