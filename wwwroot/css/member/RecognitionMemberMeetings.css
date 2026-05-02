@@ -1,0 +1,42 @@
+.rmm-tablewrap {
+    background: white;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+.rmm-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.rmm-table th {
+    background: #f0ebe5;
+    text-align: left;
+    padding: 14px;
+    color: #4b5563;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.rmm-table td {
+    padding: 14px;
+    border-top: 1px solid #eee;
+    font-size: 13px;
+    color: #1f2937;
+}
+
+.rmm-table tbody tr td[colspan] {
+    text-align: left;
+}
+
+.action-btn {
+    background: #8b1e1e;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+}

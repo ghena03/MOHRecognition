@@ -23,6 +23,7 @@ namespace MOHRecognition.Models
 
         public List<RecognitionMemberDashboardApplicationItem> Applications { get; set; } = new();
         public List<RecognitionMemberDashboardActivityItem> RecentActivities { get; set; } = new();
+        public List<RecognitionMemberDashboardMeetingItem> Meetings { get; set; } = new();
     }
 
     public class RecognitionMemberDashboardApplicationItem
@@ -42,5 +43,13 @@ namespace MOHRecognition.Models
     {
         public string Description { get; set; } = string.Empty;
         public DateTime ActivityDate { get; set; }
+    }
+
+    public class RecognitionMemberDashboardMeetingItem
+    {
+        public int Id { get; set; }
+        public int SessionNo { get; set; }
+        public DateTime MeetingDate { get; set; }
+        public string Notes { get; set; } = string.Empty;
     }
 }

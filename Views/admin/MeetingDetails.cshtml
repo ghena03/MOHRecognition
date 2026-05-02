@@ -35,6 +35,11 @@
         <div class="details-grid">
 
             <div>
+                <strong>Meeting Title</strong>
+                <p>@(string.IsNullOrWhiteSpace(Model.MeetingTitle) ? "—" : Model.MeetingTitle)</p>
+            </div>
+
+            <div>
                 <strong>Session #</strong>
                 <p>@Model.SessionNumber</p>
             </div>
@@ -44,53 +49,28 @@
                 <p>@Model.MeetingDate.ToString("yyyy-MM-dd")</p>
             </div>
 
+            <div>
+                <strong>Time</strong>
+                <p>@(string.IsNullOrWhiteSpace(Model.MeetingTime) ? "—" : Model.MeetingTime)</p>
+            </div>
+
+            <div>
+                <strong>Location / Platform</strong>
+                <p>@(string.IsNullOrWhiteSpace(Model.LocationOrPlatform) ? "—" : Model.LocationOrPlatform)</p>
+            </div>
+
             <div style="grid-column: span 2;">
                 <strong>Notes</strong>
-                <p>@Model.Notes</p>
+                <p>@(string.IsNullOrWhiteSpace(Model.Notes) ? "—" : Model.Notes)</p>
             </div>
 
         </div>
 
     </div>
 
-    <!-- UNIVERSITIES -->
-    <div class="page-head" style="margin-top:30px;">
-        <h2>Universities Discussed</h2>
-    </div>
-
-    @{
-        var linked = ViewBag.LinkedRequests as IEnumerable<RecognitionRequestRecord>
-        ?? Enumerable.Empty<RecognitionRequestRecord>();
-    }
-
-    @if (!linked.Any())
-    {
-        <div class="details-card">
-            <p>No universities selected</p>
-        </div>
-    }
-    else
-    {
-        <div class="cards-grid">
-
-            @foreach (var r in linked)
-            {
-                <div class="info-card">
-
-                    <h3>@r.UniversityName</h3>
-
-                    <p><strong>Country:</strong> @r.Country</p>
-                    <p><strong>Status:</strong> @r.Status</p>
-
-                </div>
-            }
-
-        </div>
-    }
-
     <!-- BACK BUTTON -->
     <div style="margin-top: 20px;">
-        <a href="/Home/MemberMeetings" class="action-btn">
+        <a href="@((ViewBag.BackToMember as bool? ?? false) ? "/Home/RecognitionMemberMeetings" : "/Home/Meetings")" class="action-btn">
             ← Back to Meetings
         </a>
     </div>

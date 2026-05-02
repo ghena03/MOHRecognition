@@ -50,17 +50,31 @@
             </div>
 
             <div class="details-grid">
+                <div style="grid-column: span 2;">
+                    <label>Meeting Title</label>
+                    <input type="text" name="MeetingTitle" class="mini-select" placeholder="Committee review meeting" required />
+                </div>
 
                 <!-- SESSION -->
                 <div>
                     <label>Session Number</label>
-                    <input type="text" name="SessionNumber" value="1" readonly class="mini-select" />
+                    <input type="text" name="SessionNumber" value="@(ViewBag.NextSessionNumber ?? 1)" readonly class="mini-select" />
                 </div>
 
                 <!-- DATE -->
                 <div>
                     <label>Date</label>
                     <input type="date" name="MeetingDate" class="mini-select" required />
+                </div>
+
+                <div>
+                    <label>Time</label>
+                    <input type="time" name="MeetingTime" class="mini-select" />
+                </div>
+
+                <div>
+                    <label>Location / Platform</label>
+                    <input type="text" name="LocationOrPlatform" class="mini-select" placeholder="MOHE Hall / Zoom / Teams" />
                 </div>
 
                 <!-- NOTES -->

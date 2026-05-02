@@ -42,7 +42,8 @@
                 <tr>
                     <th>Session #</th>
                     <th>Date</th>
-                    <th>Notes</th>
+                    <th>Time</th>
+                    <th>Location / Platform</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -55,7 +56,8 @@
                         <tr>
                             <td>@m.SessionNumber</td>
                             <td>@m.MeetingDate.ToString("yyyy-MM-dd")</td>
-                            <td>@m.Notes</td>
+                            <td>@(string.IsNullOrWhiteSpace(m.MeetingTime) ? "—" : m.MeetingTime)</td>
+                            <td>@(string.IsNullOrWhiteSpace(m.LocationOrPlatform) ? "—" : m.LocationOrPlatform)</td>
                             <td>
                                 <a href="/Home/MeetingDetails?id=@m.Id" class="action-btn">
                                     View
@@ -66,10 +68,10 @@
                 }
                 else
                 {
-                    <tr>
-                        <td colspan="4">No meetings yet</td>
-                    </tr>
-                }
+                <tr>
+                    <td colspan="5">No meetings yet</td>
+                </tr>
+            }
             </tbody>
         </table>
     </div>

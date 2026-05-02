@@ -3561,6 +3561,16 @@ namespace MOHRecognition.Controllers
                         Description = $"{x.ReferenceNo} — {x.UniversityName}: {x.ReviewStatus}",
                         ActivityDate = x.LastActivityDate
                     })
+                    .ToList(),
+                Meetings = meetings
+                    .OrderBy(m => m.MeetingDate)
+                    .Select(m => new RecognitionMemberDashboardMeetingItem
+                    {
+                        Id = m.Id,
+                        SessionNo = m.SessionNumber,
+                        MeetingDate = m.MeetingDate,
+                        Notes = m.Notes ?? string.Empty
+                    })
                     .ToList()
             };
 
@@ -4163,6 +4173,7 @@ namespace MOHRecognition.Controllers
         {
             var requests = _recognitionRequestService.GetAll();
             ViewBag.AvailableRequests = requests;
+            ViewBag.NextSessionNumber = meetings.Count + 1;
 
             return View("~/Views/Admin/CreateMeeting.cshtml");
         }
@@ -4174,6 +4185,11 @@ namespace MOHRecognition.Controllers
             model.Id = meetings.Count + 1;
             model.SessionNumber = meetings.Count + 1;
 
+            model.MeetingTitle = (model.MeetingTitle ?? string.Empty).Trim();
+            model.MeetingTime = (model.MeetingTime ?? string.Empty).Trim();
+            model.LocationOrPlatform = (model.LocationOrPlatform ?? string.Empty).Trim();
+            model.Status = NormalizeMeetingStatus(model.Status);
+
             model.RequestIds ??= new List<int>();
 
             meetings.Add(model);
@@ -4182,12 +4198,20 @@ namespace MOHRecognition.Controllers
         }
 
         // ===================== DETAILS =====================
-        public IActionResult MeetingDetails(int id)
+        public IActionResult MeetingDetails(int id, string? from)
         {
+            var role = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            var isRecognitionMember = string.Equals(role, "recognition", StringComparison.OrdinalIgnoreCase)
+                                      || string.Equals(from, "member", StringComparison.OrdinalIgnoreCase);
+
             var meeting = meetings.FirstOrDefault(m => m.Id == id);
 
             if (meeting == null)
+            {
+                if (isRecognitionMember)
+                    return RedirectToAction("RecognitionMemberMeetings");
                 return RedirectToAction("Meetings");
+            }
 
             var allRequests = _recognitionRequestService.GetAll();
 
@@ -4196,6 +4220,7 @@ namespace MOHRecognition.Controllers
                 .ToList();
 
             ViewBag.LinkedRequests = linked;
+            ViewBag.BackToMember = isRecognitionMember;
 
             return View("~/Views/Admin/MeetingDetails.cshtml", meeting);
         }
@@ -4203,6 +4228,54 @@ namespace MOHRecognition.Controllers
         {
             return View("~/Views/Member/MemberMeetings.cshtml", meetings);
         }
+
+        [HttpGet]
+        public IActionResult RecognitionMemberMeetings(int? sessionNo, int? year)
+        {
+            var currentMember = GetCurrentRecognitionMember();
+            var assignedRequestIds = _recognitionRequestService
+                .GetAll()
+                .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
+                .Select(x => x.Id)
+                .ToHashSet();
+
+            var selectedSession = sessionNo;
+            var selectedYear = year;
+
+            var memberMeetings = meetings
+                .Where(m =>
+                    !(m.RequestIds?.Any() ?? false) || // general admin meetings (no request linking yet)
+                    m.RequestIds.Any(id => assignedRequestIds.Contains(id))) // assigned to member through requests
+                .Where(m => !selectedSession.HasValue || m.SessionNumber == selectedSession.Value)
+                .Where(m => !selectedYear.HasValue || m.MeetingDate.Year == selectedYear.Value)
+                .OrderBy(m => m.MeetingDate)
+                .ThenBy(m => m.SessionNumber)
+                .ToList();
+
+            var model = new RecognitionMemberMeetingsViewModel
+            {
+                CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember),
+                SessionNo = selectedSession,
+                Year = selectedYear,
+                Meetings = memberMeetings
+            };
+
+            return View("~/Views/member/RecognitionMemberMeetings.cshtml", model);
+        }
+
+        private static string NormalizeMeetingStatus(string? value)
+        {
+            var status = (value ?? string.Empty).Trim();
+            return status switch
+            {
+                "Scheduled" => "Scheduled",
+                "Completed" => "Completed",
+                "Cancelled" => "Cancelled",
+                "Pending Confirmation" => "Pending Confirmation",
+                _ => "Scheduled"
+            };
+        }
+
         public IActionResult AdminRequestDetails(int id)
         {
             var request = _recognitionRequestService.GetById(id);
