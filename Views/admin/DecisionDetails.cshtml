@@ -81,7 +81,10 @@
                             </td>
 
                             <td>
-                                <a href="/Home/DecisionDetails/@r.Id" class="view-btn">
+                                <a asp-controller="Home"
+                                   asp-action="DecisionDetails"
+                                   asp-route-id="@r.Id"
+                                   class="view-btn">
                                     View
                                 </a>
                             </td>

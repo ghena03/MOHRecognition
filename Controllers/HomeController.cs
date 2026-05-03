@@ -3441,7 +3441,8 @@ namespace MOHRecognition.Controllers
             if (request == null)
                 return RedirectToAction("Decisions");
 
-            return View("~/Views/Admin/DecisionDetails.cshtml", request);
+            var list = new List<RecognitionRequestRecord> { request };
+            return View("~/Views/Admin/DecisionDetails.cshtml", list);
         }
 
         [HttpGet]
