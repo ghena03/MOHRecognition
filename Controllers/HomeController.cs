@@ -103,14 +103,16 @@ namespace MOHRecognition.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult StaffLogIn(StaffLogInDto model, string role = "admin")
+        public IActionResult StaffLogIn(StaffLogInDto model, string GeneratedCaptcha, string role = "admin")
         {
             ViewBag.Role = role;
 
             if (!ModelState.IsValid)
                 return View("~/Views/Home/StaffLogIn.cshtml", model);
 
-            if (model.Captcha != "817694")
+            if (string.IsNullOrWhiteSpace(model.Captcha) ||
+                string.IsNullOrWhiteSpace(GeneratedCaptcha) ||
+                model.Captcha.ToUpper() != GeneratedCaptcha.ToUpper())
             {
                 ModelState.AddModelError("", "Captcha is incorrect.");
                 return View("~/Views/Home/StaffLogIn.cshtml", model);
@@ -124,7 +126,7 @@ namespace MOHRecognition.Controllers
 
                 if (string.IsNullOrWhiteSpace(memberId))
                 {
-                    ModelState.AddModelError("", "Use one of the test recognition member emails: member1@mohe.local, member2@mohe.local, member3@mohe.local");
+                    ModelState.AddModelError("", "Invalid member email.");
                     return View("~/Views/Home/StaffLogIn.cshtml", model);
                 }
 

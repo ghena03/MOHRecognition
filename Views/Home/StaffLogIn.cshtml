@@ -1,4 +1,10 @@
 ﻿@model DTOs.StaffLogInDto
+@if (TempData["Error"] != null)
+{
+    <div class="error">
+        @TempData["Error"]
+    </div>
+}
 @{
     Layout = null;
 
@@ -11,8 +17,9 @@
     var emailPlaceholder = role == "recognition" ? "Member Email" : "Admin Email";
 }
 
+
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <title>@title</title>
@@ -20,10 +27,6 @@
 
     <link rel="stylesheet" href="~/css/StaffLogIn.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
 </head>
 
 <body>
@@ -36,7 +39,7 @@
 
         <div class="card">
             <div class="sign">
-                <img src="@Url.Content("~/images/SIGN.jpg")" alt="MOHE">
+                <img src="@Url.Content("~/images/SIGN.jpg")" />
             </div>
 
             <div class="panel">
@@ -50,24 +53,29 @@
                 <form asp-controller="Home" asp-action="StaffLogIn" method="post">
                     @Html.AntiForgeryToken()
 
-                    <!-- keep the role -->
                     <input type="hidden" name="role" value="@role" />
 
+                    <!-- 🔥 مهم -->
+                    <input type="hidden" name="GeneratedCaptcha" id="generatedCaptcha" />
+
+                    <!-- EMAIL -->
                     <div class="row">
                         <span class="icon"><i class="fa-solid fa-envelope"></i></span>
                         <input asp-for="Email" type="email" placeholder="@emailPlaceholder" />
                     </div>
                     <span class="field-error" asp-validation-for="Email"></span>
 
+                    <!-- PASSWORD -->
                     <div class="row pass-row">
                         <span class="icon"><i class="fa-solid fa-lock"></i></span>
                         <input asp-for="Password" type="password" id="loginPassword" placeholder="Password" />
-                        <button type="button" class="pass-toggle" id="toggleLoginPassword" aria-label="Show password">
+                        <button type="button" class="pass-toggle" id="toggleLoginPassword">
                             <i class="fa-regular fa-eye"></i>
                         </button>
                     </div>
                     <span class="field-error" asp-validation-for="Password"></span>
 
+                    <!-- LANGUAGE -->
                     <div class="row">
                         <span class="icon">☷</span>
                         <select asp-for="Language">
@@ -76,18 +84,23 @@
                         </select>
                     </div>
 
+                    <!-- CAPTCHA -->
                     <div class="captcha">
-                        <div class="captcha-img">817694</div>
-                        <button type="button" class="refresh">⟳</button>
+                        <canvas id="captchaCanvas" width="200" height="50"></canvas>
+
+                        <button type="button" class="refresh" id="refreshCaptcha">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
                     </div>
 
                     <div class="hint">✓ Enter the code above</div>
 
                     <div class="row">
-                        <input asp-for="Captcha" type="text" placeholder="Enter the code above" />
+                        <input asp-for="Captcha" id="captchaInput" type="text" placeholder="Enter the code above" />
                     </div>
                     <span class="field-error" asp-validation-for="Captcha"></span>
 
+                    <!-- REMEMBER -->
                     <div class="remember-row">
                         <label class="remember">
                             <input asp-for="RememberMe" type="checkbox" />
@@ -97,12 +110,12 @@
 
                     <button class="login" type="submit">Login</button>
 
-                    <!-- (We'll fix it in Step 2 to keep role when going to forgot/reset) -->
                     <div class="links">
-                        <a asp-controller="Home" asp-action="ForgetPassword" asp-route-role="@role"><b>Forgot Password</b></a>
+                        <a asp-controller="Home" asp-action="ForgetPassword" asp-route-role="@role">
+                            Forgot Password
+                        </a>
                     </div>
 
-                    <!-- (We’ll replace this with the shared SignUp in Step 3) -->
                     <div class="links">
                         <a href="#">Create New Account</a>
                     </div>
@@ -112,23 +125,82 @@
 
     </div>
 
+    <!-- PASSWORD TOGGLE -->
     <script>
-        (function () {
-            const passwordInput = document.getElementById("loginPassword");
-            const toggleButton = document.getElementById("toggleLoginPassword");
+        const passwordInput = document.getElementById("loginPassword");
+        const toggleButton = document.getElementById("toggleLoginPassword");
 
-            if (!passwordInput || !toggleButton) return;
+        toggleButton.addEventListener("click", function () {
+            const isHidden = passwordInput.type === "password";
+            passwordInput.type = isHidden ? "text" : "password";
 
-            toggleButton.addEventListener("click", function () {
-                const isHidden = passwordInput.type === "password";
-                passwordInput.type = isHidden ? "text" : "password";
-
-                const icon = toggleButton.querySelector("i");
-                if (icon) {
-                    icon.className = isHidden ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
-                }
-            });
-        })();
+            toggleButton.innerHTML = isHidden
+                ? '<i class="fa-regular fa-eye-slash"></i>'
+                : '<i class="fa-regular fa-eye"></i>';
+        });
     </script>
+
+    <!-- CAPTCHA SCRIPT -->
+    <script>
+        let generatedCaptcha = "";
+
+        function randomText(length) {
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            let result = "";
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function drawCaptcha() {
+            const canvas = document.getElementById("captchaCanvas");
+            const ctx = canvas.getContext("2d");
+
+            generatedCaptcha = randomText(6);
+
+            document.getElementById("generatedCaptcha").value = generatedCaptcha;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.font = "28px Arial";
+            ctx.fillStyle = "#7a2d2a";
+
+            for (let i = 0; i < generatedCaptcha.length; i++) {
+                const x = 20 + i * 25;
+                const y = 30 + Math.random() * 5;
+                const angle = (Math.random() - 0.5) * 0.5;
+
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.fillText(generatedCaptcha[i], 0, 0);
+                ctx.restore();
+            }
+
+            // noise lines
+            for (let i = 0; i < 5; i++) {
+                ctx.strokeStyle = "rgba(0,0,0,0.2)";
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * 200, Math.random() * 50);
+                ctx.lineTo(Math.random() * 200, Math.random() * 50);
+                ctx.stroke();
+            }
+
+            // dots
+            for (let i = 0; i < 30; i++) {
+                ctx.fillStyle = "rgba(0,0,0,0.2)";
+                ctx.beginPath();
+                ctx.arc(Math.random() * 200, Math.random() * 50, 1, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            drawCaptcha();
+            document.getElementById("refreshCaptcha").addEventListener("click", drawCaptcha);
+        });
+    </script>
+
 </body>
 </html>

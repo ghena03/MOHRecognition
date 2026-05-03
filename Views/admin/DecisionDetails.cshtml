@@ -1,74 +1,95 @@
 ﻿@using MOHRecognition.Services
-@model RecognitionRequestRecord
+@model List<RecognitionRequestRecord>
 
 @{
     Layout = null;
 }
 
 <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
 <div class="main-container">
+
+    <!-- 🔴 RED TOP LINE -->
+    <div class="top-bar"></div>
 
     <!-- HEADER -->
     <div class="header">
         <div class="header-left">
-            <img src="~/images/mohelogo.png" class="logo" />
-            <div class="header-text">
-                <h1>Decision Details</h1>
-                <p>Final evaluation summary</p>
+            <img src="/images/mohelogo.png" class="logo" />
+
+            <div class="divider"></div>
+
+            <div class="title-box">
+                <h1>Decisions</h1>
+                <p>Final results from recognition members</p>
             </div>
         </div>
-
-        <a class="back-btn" href="/Home/Decisions">← Back</a>
-    </div>
-
-    <!-- CONTENT -->
+    </div> <!-- ✅ مهم جداً -->
+    <!-- CARD -->
     <div class="details-card">
 
-        <h2 class="section-title">@Model.UniversityName</h2>
-
-        <!-- Accreditation -->
-        <div class="mini-card">
-            <h4>Accreditation & Recognition</h4>
-
-            <span class="badge-status">
-                @Model.AccreditationStatus
-            </span>
-
-            <p>@Model.AccreditationNote</p>
+        <div class="card-header">
+            <h2>Decisions Overview</h2>
+            <span class="count">@Model.Count Results</span>
         </div>
 
-        <hr />
+        @if (!Model.Any())
+        {
+            <div class="empty-state">
+                <i class="fa-regular fa-folder-open"></i>
+                <p>No decisions available yet</p>
+            </div>
+        }
+        else
+        {
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>University</th>
+                        <th>Decision</th>
+                        <th>Notes</th>
+                        <th></th>
+                    </tr>
+                </thead>
 
-        <!-- Final Decision -->
-        <div class="final-decision-box">
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        var decisionClass = "badge-default";
 
-            <h3>Final Decision</h3>
+                        if (r.BasicInfoAssessmentDecision == "Approve")
+                            decisionClass = "badge-approve";
+                        else if (r.BasicInfoAssessmentDecision == "Conditional Approval")
+                            decisionClass = "badge-conditional";
+                        else if (r.BasicInfoAssessmentDecision == "Reject / Committee Review")
+                            decisionClass = "badge-reject";
 
-            @{
-                var decision = Model.BasicInfoAssessmentDecision;
-                var decisionClass = "decision-default";
+                        <tr>
+                            <td class="uni-name">@r.UniversityName</td>
 
-                if (decision == "Approve")
-                    decisionClass = "decision-approve";
-                else if (decision == "Conditional Approval")
-                    decisionClass = "decision-conditional";
-                else if (decision == "Reject / Committee Review")
-                    decisionClass = "decision-reject";
-            }
+                            <td>
+                                <span class="decision-badge @decisionClass">
+                                    @r.BasicInfoAssessmentDecision
+                                </span>
+                            </td>
 
-            <span class="decision-badge @decisionClass">
-                @decision
-            </span>
+                            <td class="note-cell">
+                                @(string.IsNullOrEmpty(r.BasicInfoAssessmentReason)
+                                                        ? "-"
+                                                        : r.BasicInfoAssessmentReason)
+                            </td>
 
-            @if (!string.IsNullOrWhiteSpace(Model.BasicInfoAssessmentReason))
-            {
-                <p class="decision-note">
-                    @Model.BasicInfoAssessmentReason
-                </p>
-            }
-
-        </div>
+                            <td>
+                                <a href="/Home/DecisionDetails/@r.Id" class="view-btn">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
 
     </div>
 

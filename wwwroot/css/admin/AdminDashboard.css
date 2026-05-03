@@ -82,9 +82,10 @@ body {
 /* ================= MAIN ================= */
 
 .main-container {
-    max-width: 1200px;
+    width: 100%;
+    max-width: 1400px;
     margin: auto;
-    padding: 30px;
+    padding: 30px 20px;
 }
 
 /* ================= ACTION BUTTONS ================= */
@@ -519,17 +520,24 @@ h3 {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
     .modern-table th {
-        text-align: left;
-        padding: 12px;
-        background: #e5ddd5;
+        background: #f8fafc;
+        color: #374151;
+        font-weight: 600;
+        border-bottom: 2px solid #eee;
+    }
+    .modern-table tbody tr:hover {
+        background: #fdf7f7;
     }
 
     .modern-table td {
         padding: 12px;
         border-bottom: 1px solid #eee;
+        color: #444;
     }
 
 /* decision badges */
@@ -571,4 +579,38 @@ h3 {
 /* title */
 .section-title {
     margin-bottom: 10px;
+}
+
+.header {
+    margin-bottom: 30px;
+}
+
+.details-card {
+    background: white;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+/*  REMOVE ALL SPACING */
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+
+
+/*  HEADER FULL WIDTH */
+.header {
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+}
+
+/*  CARD FULL WIDTH */
+.details-card {
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+}
+.decisions-page {
+    padding: 0;
 }

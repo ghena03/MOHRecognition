@@ -1,4 +1,4 @@
-@model MOHRecognition.Models.RecognitionMemberDashboardViewModel
+﻿@model MOHRecognition.Models.RecognitionMemberDashboardViewModel
 @{
     Layout = null;
     ViewData["Title"] = "Academic Recognition Review Workspace";
@@ -19,25 +19,42 @@
 </head>
 
 <body class="rm-page">
-    <header class="rm-header">
-        <div class="rm-brandbar"></div>
-        <div class="rm-top">
-            <div class="rm-top-inner">
-                <div class="rm-brand">
-                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
-                </div>
-                <div class="rm-user">
-                    <div class="rm-userpill">
-                        <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>@Model.CurrentRecognitionMember</b></span>
-                    </div>
-                    <a class="rm-btn rm-btn-ghost" href="@Url.Action("Logout", "Home")">
-                        <i class="bi bi-box-arrow-right"></i> Logout
-                    </a>
-                </div>
+    <!-- 🔴 RED TOP LINE -->
+    <div class="top-bar"></div>
+
+    <!-- HEADER -->
+    <div class="header">
+
+        <div class="header-left">
+            <img src="/images/mohelogo.png" class="logo" />
+
+            <div class="divider"></div>
+
+            <div class="title-box">
+                <h1>Recognition Member Dashboard</h1>
+                <p>Review applications, manage recommendations, and track progress</p>
             </div>
         </div>
-    </header>
+
+        <div class="header-right">
+            <div class="user-pill">
+                <i class="bi bi-person-circle"></i>
+                Welcome, <b>@Model.CurrentRecognitionMember</b>
+            </div>
+
+            <a class="logout-btn" href="@Url.Action("Logout", "Home")">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
+
+    </div>
+
+
+
+  
+
+
+
 
     <div class="rm-shell">
         <aside class="rm-sidebar">
