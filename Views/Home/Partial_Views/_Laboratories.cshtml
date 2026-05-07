@@ -27,11 +27,11 @@
                         <label>College <span class="req">*</span></label>
                         <select id="lab_facultyId">
                             <option value="">--Choose--</option>
-                            @if (Model?.Faculties != null)
+                            @if (Model?.AvailableCollegeCategories != null)
                             {
-                                foreach (var fac in Model.Faculties)
+                                foreach (var cat in Model.AvailableCollegeCategories)
                                 {
-                                    <option value="@fac.Id">@fac.FacultyName</option>
+                                    <option value="@cat">@cat</option>
                                 }
                             }
                         </select>
@@ -39,17 +39,17 @@
 
                     <div class="field">
                         <label>Computers <span class="req">*</span></label>
-                        <input id="lab_computers" type="number" min="0" step="1" inputmode="numeric" />
+                        <input id="lab_computers" type="text" inputmode="numeric" />
                     </div>
 
                     <div class="field">
                         <label>Workshops <span class="req">*</span></label>
-                        <input id="lab_workshops" type="number" min="0" step="1" inputmode="numeric" />
+                        <input id="lab_workshops" type="text" inputmode="numeric" />
                     </div>
 
                     <div class="field">
                         <label>Laboratories <span class="req">*</span></label>
-                        <input id="lab_laboratories" type="number" min="0" step="1" inputmode="numeric" />
+                        <input id="lab_laboratories" type="text" inputmode="numeric" />
                     </div>
 
                 </div>

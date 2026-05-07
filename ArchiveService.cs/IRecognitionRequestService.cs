@@ -88,6 +88,7 @@ namespace MOHRecognition.Services
         public LaboratoriesDto Laboratories { get; set; } = new();
 
         public InfrastructureDto Infrastructure { get; set; } = new();
+        public HospitalsDto Hospitals { get; set; } = new();
 
         public string FacultiesAssessment { get; set; } = string.Empty;
 

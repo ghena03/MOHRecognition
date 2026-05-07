@@ -7,6 +7,7 @@ namespace DTOs;
 public class LaboratoriesDto
 {
     public List<FacultyRowDto> Faculties { get; set; } = new();
+    public List<string> AvailableCollegeCategories { get; set; } = new();
     public List<LaboratoryRowDto> Rows { get; set; } = new();
     public int? TotalLaboratoriesCount { get; set; }
     public int? TotalFacilitiesCount { get; set; }

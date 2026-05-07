@@ -14,11 +14,6 @@
             <!-- Row 1 -->
             <div class="prg-grid-4">
                 <div class="prg-cell">
-                    <label>Program <span class="req">*</span></label>
-                    <input id="prg_program" class="prg-control" type="text" />
-                </div>
-
-                <div class="prg-cell">
                     <label>College <span class="req">*</span></label>
                     <select id="prg_faculty" class="prg-control">
                         <option value="">--Choose--</option>
@@ -34,6 +29,11 @@
                             }
                         }
                     </select>
+                </div>
+
+                <div class="prg-cell">
+                    <label>Program <span class="req">*</span></label>
+                    <input id="prg_program" class="prg-control" type="text" />
                 </div>
 
                 <div class="prg-cell">
@@ -56,12 +56,7 @@
             </div>
 
             <!-- Row 2 -->
-            <div class="prg-grid-4">
-                <div class="prg-cell">
-                    <label>Credit Hours <span class="req">*</span></label>
-                    <input id="prg_credits" class="prg-control" type="number" min="0" />
-                </div>
-
+            <div class="prg-grid-3">
                 <div class="prg-cell">
                     <label>Educational System <span class="req">*</span></label>
                     <select id="prg_system" class="prg-control">
@@ -76,31 +71,13 @@
                 </div>
 
                 <div class="prg-cell">
-                    <label>Language <span class="req">*</span></label>
-                    <input id="prg_lang" class="prg-control" type="text" />
-                </div>
-
-                <div class="prg-cell">
                     <label>Accreditation Date <span class="req">*</span></label>
                     <input id="prg_acc" class="prg-control" type="date" />
-                </div>
-            </div>
-
-            <!-- Row 3 -->
-            <div class="prg-grid-3">
-                <div class="prg-cell">
-                    <label>Creation Date <span class="req">*</span></label>
-                    <input id="prg_create" class="prg-control" type="date" />
                 </div>
 
                 <div class="prg-cell">
                     <label>Graduation date of last regiment <span class="req">*</span></label>
                     <input id="prg_gradlast" class="prg-control" type="date" />
-                </div>
-
-                <div class="prg-cell">
-                    <label>Graduates total for the last 3 years <span class="req">*</span></label>
-                    <input id="prg_grad3" class="prg-control" type="number" min="0" />
                 </div>
             </div>
         </div>
@@ -117,17 +94,13 @@
                 <thead>
                     <tr>
                         <th style="width:60px;">#</th>
-                        <th>Program</th>
                         <th>College</th>
+                        <th>Program</th>
                         <th>Degree Awarded</th>
                         <th>Number of Years</th>
-                        <th>Credit Hours</th>
                         <th>Educational System</th>
-                        <th>Language</th>
                         <th>Accreditation Date</th>
-                        <th>Creation Date</th>
                         <th>Graduation date of last regiment</th>
-                        <th>Graduates total for the last 3 years</th>
                         <th style="width:170px;">Action</th>
                     </tr>
                 </thead>
@@ -136,7 +109,7 @@
                     @if (Model?.Rows == null || Model.Rows.Count == 0)
                     {
                         <tr>
-                            <td colspan="13" class="prg-empty">No Data Found !</td>
+                            <td colspan="9" class="prg-empty">No Data Found !</td>
                         </tr>
                     }
                     else
@@ -146,17 +119,13 @@
                         {
                             <tr>
                                 <td class="prg-num">@i</td>
-                                <td>@r.Program</td>
                                 <td>@r.FacultyName</td>
+                                <td>@r.Program</td>
                                 <td>@r.DegreeAwarded</td>
                                 <td>@r.NumberOfYears</td>
-                                <td>@r.CreditHours</td>
                                 <td>@r.EducationalSystem</td>
-                                <td>@r.Language</td>
                                 <td>@(r.AccreditationDate?.ToString("dd/MM/yyyy") ?? "")</td>
-                                <td>@(r.CreationDate?.ToString("dd/MM/yyyy") ?? "")</td>
                                 <td>@(r.GraduationDateOfLastRegiment?.ToString("dd/MM/yyyy") ?? "")</td>
-                                <td>@r.GraduatesTotalLast3Years</td>
 
                                 <td style="text-align:center;">
                                     <div class="prg-actions">
@@ -169,13 +138,9 @@
                                                 data-facultyid="@r.FacultyId"
                                                 data-degree="@r.DegreeAwarded"
                                                 data-years="@r.NumberOfYears"
-                                                data-credits="@r.CreditHours"
                                                 data-system="@r.EducationalSystem"
-                                                data-lang="@r.Language"
                                                 data-acc="@(r.AccreditationDate?.ToString("yyyy-MM-dd") ?? "")"
-                                                data-create="@(r.CreationDate?.ToString("yyyy-MM-dd") ?? "")"
                                                 data-gradlast="@(r.GraduationDateOfLastRegiment?.ToString("yyyy-MM-dd") ?? "")"
-                                                data-grad3="@r.GraduatesTotalLast3Years"
                                                 title="Edit"
                                                 aria-label="Edit">
                                             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">

@@ -782,5 +782,46 @@
                 highlightFieldFromServerMessage(sec, msg);
             }
         });
+
+        // College category info icon tooltips
+        const catTooltip = document.getElementById("cat-tooltip-popup");
+        if (catTooltip) {
+            function showCatTooltip(wrap) {
+                const label = wrap.dataset.catLabel || '';
+                const programs = wrap.dataset.catPrograms || '';
+                catTooltip.innerHTML = '';
+                const head = document.createElement('div');
+                head.className = 'cat-tt-head';
+                head.textContent = label;
+                const body = document.createElement('div');
+                body.className = 'cat-tt-body';
+                body.textContent = 'Includes faculties & programs such as: ' + programs;
+                catTooltip.appendChild(head);
+                catTooltip.appendChild(body);
+                catTooltip.style.display = 'block';
+                const rect = wrap.getBoundingClientRect();
+                const tw = catTooltip.offsetWidth;
+                const th = catTooltip.offsetHeight;
+                let left = rect.left + rect.width / 2 - tw / 2;
+                let top = rect.top - th - 10;
+                left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+                if (top < 8) top = rect.bottom + 10;
+                catTooltip.style.left = left + 'px';
+                catTooltip.style.top = top + 'px';
+            }
+
+            function hideCatTooltip() {
+                catTooltip.style.display = 'none';
+            }
+
+            sec.querySelectorAll('.cat-info-btn').forEach(wrap => {
+                wrap.addEventListener('mouseenter', function () { showCatTooltip(this); });
+                wrap.addEventListener('mouseleave', hideCatTooltip);
+                wrap.addEventListener('focus', function () { showCatTooltip(this); });
+                wrap.addEventListener('blur', hideCatTooltip);
+            });
+
+            window.addEventListener('scroll', hideCatTooltip, true);
+        }
     });
 })();

@@ -360,27 +360,72 @@
                         <!-- College Categories -->
                         <div class="subhead">College Categories <span class="req">*</span></div>
                         <div class="card" style="padding:16px; border:1px solid #e5e7eb; border-radius:12px; margin-top:10px;">
-                            <div class="degree-options" style="margin-top:0;">
+                            <div class="degree-options college-cat-options" style="margin-top:0;">
                                 <label class="degree-pill">
                                     <input type="checkbox" data-group="college-categories" value="Scientific" />
-                                    <span>Scientific Colleges</span>
+                                    <span>
+                                        Scientific Colleges
+                                        <button type="button" class="cat-info-btn"
+                                                onclick="event.stopPropagation();"
+                                                aria-label="Info: Scientific Colleges"
+                                                data-cat-label="Scientific Colleges"
+                                                data-cat-programs="Engineering, Science, Information Technology / Computer Science, Agriculture, Architecture, Mathematics, Physics, Chemistry, Biology, and Environmental Science.">
+                                            <svg class="cat-info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" focusable="false">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </span>
                                 </label>
                                 <label class="degree-pill">
                                     <input type="checkbox" data-group="college-categories" value="Humanities" />
-                                    <span>Humanities Colleges</span>
+                                    <span>
+                                        Humanities Colleges
+                                        <button type="button" class="cat-info-btn"
+                                                onclick="event.stopPropagation();"
+                                                aria-label="Info: Humanities Colleges"
+                                                data-cat-label="Humanities Colleges"
+                                                data-cat-programs="Arts, Languages, Literature, Education, Law, Business, Economics, Administrative Sciences, Media, Journalism, Political Science, and Social Sciences.">
+                                            <svg class="cat-info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" focusable="false">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </span>
                                 </label>
                                 <label class="degree-pill">
                                     <input type="checkbox" data-group="college-categories" value="Medical" />
-                                    <span>Medical Colleges</span>
+                                    <span>
+                                        Medical Colleges
+                                        <button type="button" class="cat-info-btn"
+                                                onclick="event.stopPropagation();"
+                                                aria-label="Info: Medical Colleges"
+                                                data-cat-label="Medical Colleges"
+                                                data-cat-programs="Medicine, Dentistry, Nursing, Pharmacy, Allied Medical Sciences, Rehabilitation Sciences, Public Health, and Veterinary Medicine.">
+                                            <svg class="cat-info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" focusable="false">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </span>
                                 </label>
                                 <label class="degree-pill">
                                     <input type="checkbox" data-group="college-categories" value="Applied" />
-                                    <span>Applied Colleges</span>
+                                    <span>
+                                        Applied Colleges
+                                        <button type="button" class="cat-info-btn"
+                                                onclick="event.stopPropagation();"
+                                                aria-label="Info: Applied Colleges"
+                                                data-cat-label="Applied Colleges"
+                                                data-cat-programs="Applied Sciences, Applied Engineering, Vocational / Technical Colleges, Hospitality, Design, Applied Arts, Practical Training Programs, and Technology-based diploma programs.">
+                                            <svg class="cat-info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" focusable="false">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </span>
                                 </label>
                             </div>
                             <input type="hidden" name="CollegeCategoriesCsv" id="CollegeCategoriesCsv" value="@A.CollegeCategoriesCsv" />
                             <input type="hidden" name="StudentsToFacultyRatio" id="StudentsToFacultyRatio" value="@(A.StudentsToFacultyRatio?.ToString() ?? "")" />
                         </div>
+                        <div id="cat-tooltip-popup" role="tooltip" aria-hidden="true"></div>
 
                         <!-- Student population -->
                         <div class="subhead">Overall Student Population of Applying Institution <span class="req">*</span></div>
@@ -989,11 +1034,12 @@
                     <section id="sec-hosp" class="card">
                         <div id="hospitalsContainer"
                              data-load-url="@Url.Action("HospitalsPartial", "Home")"
-                             data-add-url="@Url.Action("AddHospital", "Home")"
-                             data-update-url="@Url.Action("UpdateHospital", "Home")"
-                             data-delete-url="@Url.Action("DeleteHospital", "Home")"
-                             data-save-contracts-url="@Url.Action("SaveHospitalContracts", "Home")"
-                             data-delete-contract-url="@Url.Action("DeleteHospitalContract", "Home")">
+                             data-facility-add-url="@Url.Action("AddHospital", "Home")"
+                             data-facility-update-url="@Url.Action("UpdateHospital", "Home")"
+                             data-facility-delete-url="@Url.Action("DeleteHospital", "Home")"
+                             data-capacity-save-url="@Url.Action("SaveHospitalCapacity", "Home")"
+                             data-docs-save-url="@Url.Action("SaveHospitalDocuments", "Home")"
+                             data-docs-delete-url="@Url.Action("DeleteHospitalDocument", "Home")">
                         </div>
                     </section>
                     <!-- ---------------------- INFASTRUCTURE------------------ -->
@@ -1274,4 +1320,3 @@
  
 
    
-

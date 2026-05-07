@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 namespace MOHRecognition.Controllers  
-    //ghena .
+    //kameliaaaa9 .
 {
    
     public class HomeController : Controller
@@ -1604,32 +1604,23 @@ namespace MOHRecognition.Controllers
             string facultyId,
             string degreeAwarded,
             int numberOfYears,
-            int creditHours,
             string educationalSystem,
-            string language,
             DateTime? accreditationDate,
-            DateTime? creationDate,
-            DateTime? graduationDateOfLastRegiment,
-            int graduatesTotalLast3Years
+            DateTime? graduationDateOfLastRegiment
         )
         {
             program = (program ?? "").Trim();
             facultyId = (facultyId ?? "").Trim();
             degreeAwarded = (degreeAwarded ?? "").Trim();
             educationalSystem = (educationalSystem ?? "").Trim();
-            language = (language ?? "").Trim();
 
             if (string.IsNullOrWhiteSpace(program)) return BadRequest("Program is required");
             if (string.IsNullOrWhiteSpace(facultyId)) return BadRequest("Faculty is required");
             if (string.IsNullOrWhiteSpace(degreeAwarded)) return BadRequest("Degree Awarded is required");
             if (numberOfYears <= 0) return BadRequest("Number of Years is required");
-            if (creditHours <= 0) return BadRequest("Credit Hours is required");
             if (string.IsNullOrWhiteSpace(educationalSystem)) return BadRequest("Educational System is required");
-            if (string.IsNullOrWhiteSpace(language)) return BadRequest("Language is required");
             if (accreditationDate == null) return BadRequest("Accreditation Date is required");
-            if (creationDate == null) return BadRequest("Creation Date is required");
             if (graduationDateOfLastRegiment == null) return BadRequest("Graduation date of last regiment is required");
-            if (graduatesTotalLast3Years < 0) return BadRequest("Graduates total for the last 3 years is required");
 
             var faculties = LoadFaculties()?.Rows ?? new List<FacultyRowDto>();
             var selected = faculties.FirstOrDefault(f => f.Id == facultyId);
@@ -1646,14 +1637,10 @@ namespace MOHRecognition.Controllers
 
                 DegreeAwarded = degreeAwarded,
                 NumberOfYears = numberOfYears,
-                CreditHours = creditHours,
                 EducationalSystem = educationalSystem,
-                Language = language,
 
                 AccreditationDate = accreditationDate,
-                CreationDate = creationDate,
-                GraduationDateOfLastRegiment = graduationDateOfLastRegiment,
-                GraduatesTotalLast3Years = graduatesTotalLast3Years
+                GraduationDateOfLastRegiment = graduationDateOfLastRegiment
             };
 
             current.Rows.Add(row);
@@ -1669,13 +1656,9 @@ namespace MOHRecognition.Controllers
             string facultyId,
             string degreeAwarded,
             int numberOfYears,
-            int creditHours,
             string educationalSystem,
-            string language,
             DateTime? accreditationDate,
-            DateTime? creationDate,
-            DateTime? graduationDateOfLastRegiment,
-            int graduatesTotalLast3Years
+            DateTime? graduationDateOfLastRegiment
         )
         {
             id = (id ?? "").Trim();
@@ -1683,9 +1666,15 @@ namespace MOHRecognition.Controllers
             facultyId = (facultyId ?? "").Trim();
             degreeAwarded = (degreeAwarded ?? "").Trim();
             educationalSystem = (educationalSystem ?? "").Trim();
-            language = (language ?? "").Trim();
 
             if (string.IsNullOrWhiteSpace(id)) return BadRequest("Invalid row");
+            if (string.IsNullOrWhiteSpace(program)) return BadRequest("Program is required");
+            if (string.IsNullOrWhiteSpace(facultyId)) return BadRequest("Faculty is required");
+            if (string.IsNullOrWhiteSpace(degreeAwarded)) return BadRequest("Degree Awarded is required");
+            if (numberOfYears <= 0) return BadRequest("Number of Years is required");
+            if (string.IsNullOrWhiteSpace(educationalSystem)) return BadRequest("Educational System is required");
+            if (accreditationDate == null) return BadRequest("Accreditation Date is required");
+            if (graduationDateOfLastRegiment == null) return BadRequest("Graduation date of last regiment is required");
 
             var faculties = LoadFaculties()?.Rows ?? new List<FacultyRowDto>();
             var selected = faculties.FirstOrDefault(f => f.Id == facultyId);
@@ -1707,14 +1696,10 @@ namespace MOHRecognition.Controllers
 
             row.DegreeAwarded = degreeAwarded;
             row.NumberOfYears = numberOfYears;
-            row.CreditHours = creditHours;
             row.EducationalSystem = educationalSystem;
-            row.Language = language;
 
             row.AccreditationDate = accreditationDate;
-            row.CreationDate = creationDate;
             row.GraduationDateOfLastRegiment = graduationDateOfLastRegiment;
-            row.GraduatesTotalLast3Years = graduatesTotalLast3Years;
 
             SavePrograms(current);
 
@@ -2203,17 +2188,25 @@ namespace MOHRecognition.Controllers
                 return new HospitalsDto
                 {
                     Rows = new List<HospitalRowDto>(),
+                    Facilities = new List<HospitalFacilityDto>(),
+                    Fields = new List<HospitalFieldDto>(),
+                    Documents = new List<HospitalFileDto>(),
                     Specializations = new List<string>(),
                     HospitalContracts = new List<HospitalFileDto>()
                 };
             }
 
-            return JsonSerializer.Deserialize<HospitalsDto>(json) ?? new HospitalsDto
+            var model = JsonSerializer.Deserialize<HospitalsDto>(json) ?? new HospitalsDto
             {
                 Rows = new List<HospitalRowDto>(),
+                Facilities = new List<HospitalFacilityDto>(),
+                Fields = new List<HospitalFieldDto>(),
+                Documents = new List<HospitalFileDto>(),
                 Specializations = new List<string>(),
                 HospitalContracts = new List<HospitalFileDto>()
             };
+
+            return NormalizeHospitalsData(model);
         }
 
         private void SaveHospitalsData(HospitalsDto model)
@@ -2223,21 +2216,55 @@ namespace MOHRecognition.Controllers
                 model = new HospitalsDto
                 {
                     Rows = new List<HospitalRowDto>(),
+                    Facilities = new List<HospitalFacilityDto>(),
+                    Fields = new List<HospitalFieldDto>(),
+                    Documents = new List<HospitalFileDto>(),
                     Specializations = new List<string>()
                 };
             }
 
-            if (model.Rows == null)
-                model.Rows = new List<HospitalRowDto>();
-
-            if (model.Specializations == null)
-                model.Specializations = new List<string>();
-
-            if (model.HospitalContracts == null)
-                model.HospitalContracts = new List<HospitalFileDto>();
+            model = NormalizeHospitalsData(model);
 
             var json = JsonSerializer.Serialize(model);
             HttpContext.Session.SetString(HOSPITALS_KEY, json);
+        }
+
+        private HospitalsDto NormalizeHospitalsData(HospitalsDto model)
+        {
+            model ??= new HospitalsDto();
+
+            model.Rows ??= new List<HospitalRowDto>();
+            model.Facilities ??= new List<HospitalFacilityDto>();
+            model.Fields ??= new List<HospitalFieldDto>();
+            model.Documents ??= new List<HospitalFileDto>();
+            model.Specializations ??= new List<string>();
+            model.HospitalContracts ??= new List<HospitalFileDto>();
+
+            if (!model.Facilities.Any() && model.Rows.Any())
+            {
+                model.Facilities = model.Rows.Select(r => new HospitalFacilityDto
+                {
+                    Id = string.IsNullOrWhiteSpace(r.Id) ? Guid.NewGuid().ToString() : r.Id,
+                    Specialization = r.Specialization ?? "",
+                    Name = r.Name ?? "",
+                    Major = r.Major ?? "",
+                    BedCapacity = r.BedCapacity,
+                    DentalChairCapacity = r.DentalChairCapacity
+                }).ToList();
+            }
+
+            if (!model.Documents.Any() && model.HospitalContracts.Any())
+            {
+                model.Documents = model.HospitalContracts.Select(f => new HospitalFileDto
+                {
+                    OriginalFileName = f.OriginalFileName,
+                    StoredFileName = f.StoredFileName,
+                    FileUrl = f.FileUrl,
+                    DocumentType = "University-Hospital Agreement"
+                }).ToList();
+            }
+
+            return model;
         }
 
         private List<string> GetHospitalSpecializations()
@@ -2271,7 +2298,9 @@ namespace MOHRecognition.Controllers
         {
             var model = GetHospitalsData();
 
-            model.Rows ??= new List<HospitalRowDto>();
+            model.Facilities ??= new List<HospitalFacilityDto>();
+            model.Fields ??= new List<HospitalFieldDto>();
+            model.Documents ??= new List<HospitalFileDto>();
             model.Specializations = GetHospitalSpecializations();
 
             return PartialView("Partial_Views/_Hospitals", model);
@@ -2286,70 +2315,122 @@ namespace MOHRecognition.Controllers
             return folder;
         }
 
-        public class HospitalUploadRequest
+        public class HospitalFacilityRequest
         {
             public string Id { get; set; } = "";
             public string Specialization { get; set; } = "";
             public string Name { get; set; } = "";
             public string Major { get; set; } = "";
+            public string BedCapacity { get; set; } = "";
+            public string DentalChairCapacity { get; set; } = "";
+        }
+
+        public class HospitalCapacityRequest
+        {
+            public string Specialization { get; set; } = "";
+            public string Capacity { get; set; } = "";
+        }
+
+        public class HospitalFieldRequest
+        {
+            public string Id { get; set; } = "";
+            public string Specialization { get; set; } = "";
+            public string FieldName { get; set; } = "";
+            public string RelatedFacilityId { get; set; } = "";
+        }
+
+        public class HospitalDocumentsUploadRequest
+        {
+            public List<IFormFile>? AgreementDocuments { get; set; }
+            public List<IFormFile>? AccreditationDocuments { get; set; }
+        }
+
+        public class HospFileDeleteReq
+        {
+            public string RowId { get; set; } = "";
+            public string StoredFileName { get; set; } = "";
+        }
+
+        private static readonly string[] _hospAllowedExts =
+            { ".pdf", ".jpg", ".jpeg", ".png", ".webp", ".doc", ".docx" };
+
+        [HttpPost]
+        public IActionResult SaveHospitalCapacity([FromForm] HospitalCapacityRequest req)
+        {
+            if (req == null || string.IsNullOrWhiteSpace(req.Specialization))
+                return Json(new { success = false, message = "Please select specialization." });
+
+            if (!int.TryParse(req.Capacity, out var cap) || cap < 0)
+                return Json(new { success = false, message = "Please enter a valid capacity." });
+
+            var model = GetHospitalsData();
+            var isMed = req.Specialization.Contains("medicine", StringComparison.OrdinalIgnoreCase);
+            var isDent = req.Specialization.Contains("dent", StringComparison.OrdinalIgnoreCase);
+
+            if (isMed)
+                model.MedicineCapacity = cap;
+            else if (isDent)
+                model.DentistryCapacity = cap;
+            else
+                return Json(new { success = false, message = "Capacity is only supported for Medicine or Dentistry." });
+
+            SaveHospitalsData(model);
+            return Json(new { success = true, message = "Capacity saved successfully." });
         }
 
         [HttpPost]
-        public IActionResult AddHospital([FromForm] HospitalUploadRequest row)
+        public async Task<IActionResult> AddHospital([FromForm] HospitalFacilityRequest row)
         {
             if (row == null)
                 return Json(new { success = false, message = "Invalid data." });
 
             if (string.IsNullOrWhiteSpace(row.Specialization) ||
                 string.IsNullOrWhiteSpace(row.Name))
-            {
                 return Json(new { success = false, message = "Please fill all required fields." });
-            }
 
             var model = GetHospitalsData();
-            model.Rows ??= new List<HospitalRowDto>();
+            model.Facilities ??= new List<HospitalFacilityDto>();
 
-            var newRow = new HospitalRowDto
+            var newRow = new HospitalFacilityDto
             {
                 Id = Guid.NewGuid().ToString(),
                 Specialization = row.Specialization.Trim(),
                 Name = row.Name.Trim(),
-                Major = (row.Major ?? string.Empty).Trim()
+                Major = (row.Major ?? "").Trim(),
+                BedCapacity = null,
+                DentalChairCapacity = null
             };
 
-            model.Rows.Add(newRow);
+            model.Facilities.Add(newRow);
             SaveHospitalsData(model);
-
-            return Json(new { success = true, message = "Hospital row added successfully." });
+            return Json(new { success = true, message = "Hospital added successfully." });
         }
 
         [HttpPost]
-        public IActionResult UpdateHospital([FromForm] HospitalUploadRequest row)
+        public async Task<IActionResult> UpdateHospital([FromForm] HospitalFacilityRequest row)
         {
             if (row == null || string.IsNullOrWhiteSpace(row.Id))
                 return Json(new { success = false, message = "Invalid data." });
 
             if (string.IsNullOrWhiteSpace(row.Specialization) ||
                 string.IsNullOrWhiteSpace(row.Name))
-            {
                 return Json(new { success = false, message = "Please fill all required fields." });
-            }
 
             var model = GetHospitalsData();
-            model.Rows ??= new List<HospitalRowDto>();
+            model.Facilities ??= new List<HospitalFacilityDto>();
 
-            var existing = model.Rows.FirstOrDefault(x => x.Id == row.Id);
-
+            var existing = model.Facilities.FirstOrDefault(x => x.Id == row.Id);
             if (existing == null)
                 return Json(new { success = false, message = "Row not found." });
 
             existing.Specialization = row.Specialization.Trim();
             existing.Name = row.Name.Trim();
-            existing.Major = (row.Major ?? string.Empty).Trim();
+            existing.Major = (row.Major ?? "").Trim();
+            existing.BedCapacity = null;
+            existing.DentalChairCapacity = null;
 
             SaveHospitalsData(model);
-
-            return Json(new { success = true, message = "Hospital row updated successfully." });
+            return Json(new { success = true, message = "Hospital updated successfully." });
         }
 
         [HttpPost]
@@ -2359,17 +2440,208 @@ namespace MOHRecognition.Controllers
                 return Json(new { success = false, message = "Invalid id." });
 
             var model = GetHospitalsData();
-            model.Rows ??= new List<HospitalRowDto>();
+            model.Facilities ??= new List<HospitalFacilityDto>();
 
-            var existing = model.Rows.FirstOrDefault(x => x.Id == id);
+            var existing = model.Facilities.FirstOrDefault(x => x.Id == id);
 
             if (existing == null)
                 return Json(new { success = false, message = "Row not found." });
 
-            model.Rows.Remove(existing);
+            model.Facilities.Remove(existing);
+
+            if (model.Fields != null)
+            {
+                foreach (var field in model.Fields)
+                {
+                    if (string.Equals(field.RelatedFacilityId, id, StringComparison.OrdinalIgnoreCase))
+                        field.RelatedFacilityId = "";
+                }
+            }
             SaveHospitalsData(model);
 
             return Json(new { success = true, message = "Hospital row deleted successfully." });
+        }
+
+        [HttpPost]
+        public IActionResult AddHospitalField([FromForm] HospitalFieldRequest row)
+        {
+            if (row == null)
+                return Json(new { success = false, message = "Invalid data." });
+
+            row.Specialization = (row.Specialization ?? "").Trim();
+            row.FieldName = (row.FieldName ?? "").Trim();
+            row.RelatedFacilityId = (row.RelatedFacilityId ?? "").Trim();
+
+            if (string.IsNullOrWhiteSpace(row.Specialization) || string.IsNullOrWhiteSpace(row.FieldName))
+                return Json(new { success = false, message = "Please fill all required fields." });
+
+            var model = GetHospitalsData();
+            model.Fields ??= new List<HospitalFieldDto>();
+            model.Facilities ??= new List<HospitalFacilityDto>();
+
+            if (!string.IsNullOrWhiteSpace(row.RelatedFacilityId) &&
+                !model.Facilities.Any(f => f.Id == row.RelatedFacilityId))
+            {
+                return Json(new { success = false, message = "Related hospital not found." });
+            }
+
+            model.Fields.Add(new HospitalFieldDto
+            {
+                Id = Guid.NewGuid().ToString(),
+                Specialization = row.Specialization,
+                FieldName = row.FieldName,
+                RelatedFacilityId = row.RelatedFacilityId
+            });
+
+            SaveHospitalsData(model);
+            return Json(new { success = true, message = "Clinical field added successfully." });
+        }
+
+        [HttpPost]
+        public IActionResult UpdateHospitalField([FromForm] HospitalFieldRequest row)
+        {
+            if (row == null || string.IsNullOrWhiteSpace(row.Id))
+                return Json(new { success = false, message = "Invalid data." });
+
+            row.Specialization = (row.Specialization ?? "").Trim();
+            row.FieldName = (row.FieldName ?? "").Trim();
+            row.RelatedFacilityId = (row.RelatedFacilityId ?? "").Trim();
+
+            if (string.IsNullOrWhiteSpace(row.Specialization) || string.IsNullOrWhiteSpace(row.FieldName))
+                return Json(new { success = false, message = "Please fill all required fields." });
+
+            var model = GetHospitalsData();
+            model.Fields ??= new List<HospitalFieldDto>();
+            model.Facilities ??= new List<HospitalFacilityDto>();
+
+            var existing = model.Fields.FirstOrDefault(x => x.Id == row.Id);
+            if (existing == null)
+                return Json(new { success = false, message = "Row not found." });
+
+            if (!string.IsNullOrWhiteSpace(row.RelatedFacilityId) &&
+                !model.Facilities.Any(f => f.Id == row.RelatedFacilityId))
+            {
+                return Json(new { success = false, message = "Related hospital not found." });
+            }
+
+            existing.Specialization = row.Specialization;
+            existing.FieldName = row.FieldName;
+            existing.RelatedFacilityId = row.RelatedFacilityId;
+
+            SaveHospitalsData(model);
+            return Json(new { success = true, message = "Clinical field updated successfully." });
+        }
+
+        [HttpPost]
+        public IActionResult DeleteHospitalField([FromBody] string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return Json(new { success = false, message = "Invalid id." });
+
+            var model = GetHospitalsData();
+            model.Fields ??= new List<HospitalFieldDto>();
+
+            var existing = model.Fields.FirstOrDefault(x => x.Id == id);
+            if (existing == null)
+                return Json(new { success = false, message = "Row not found." });
+
+            model.Fields.Remove(existing);
+            SaveHospitalsData(model);
+
+            return Json(new { success = true, message = "Clinical field deleted successfully." });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveHospitalDocuments([FromForm] HospitalDocumentsUploadRequest req)
+        {
+            var agreements = req?.AgreementDocuments ?? new List<IFormFile>();
+            var accreditations = req?.AccreditationDocuments ?? new List<IFormFile>();
+
+            if (!agreements.Any() && !accreditations.Any())
+                return Json(new { success = false, message = "Please choose one or more files." });
+
+            var uploadsFolder = EnsureHospitalUploadsFolder();
+
+            var model = GetHospitalsData();
+            model.Documents ??= new List<HospitalFileDto>();
+
+            var hasAgreement = model.Documents.Any(d =>
+                string.Equals(d.DocumentType, "University-Hospital Agreement", StringComparison.OrdinalIgnoreCase));
+            if (!agreements.Any() && !hasAgreement)
+                return Json(new { success = false, message = "Please upload at least one agreement document." });
+
+            foreach (var file in agreements.Where(f => f != null && f.Length > 0))
+            {
+                var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+                if (!_hospAllowedExts.Contains(ext)) continue;
+
+                var stored = $"{Guid.NewGuid()}{ext}";
+                var path = Path.Combine(uploadsFolder, stored);
+
+                using (var stream = new FileStream(path, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                model.Documents.Add(new HospitalFileDto
+                {
+                    OriginalFileName = Path.GetFileName(file.FileName),
+                    StoredFileName = stored,
+                    FileUrl = $"/uploads/hospitals/{stored}",
+                    DocumentType = "University-Hospital Agreement"
+                });
+            }
+
+            foreach (var file in accreditations.Where(f => f != null && f.Length > 0))
+            {
+                var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+                if (!_hospAllowedExts.Contains(ext)) continue;
+
+                var stored = $"{Guid.NewGuid()}{ext}";
+                var path = Path.Combine(uploadsFolder, stored);
+
+                using (var stream = new FileStream(path, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                model.Documents.Add(new HospitalFileDto
+                {
+                    OriginalFileName = Path.GetFileName(file.FileName),
+                    StoredFileName = stored,
+                    FileUrl = $"/uploads/hospitals/{stored}",
+                    DocumentType = "Hospital Accreditation"
+                });
+            }
+
+            SaveHospitalsData(model);
+            return Json(new { success = true, message = "Hospital documents uploaded successfully." });
+        }
+
+        [HttpPost]
+        public IActionResult DeleteHospitalDocument([FromBody] string storedFileName)
+        {
+            if (string.IsNullOrWhiteSpace(storedFileName))
+                return Json(new { success = false, message = "Invalid file." });
+
+            var model = GetHospitalsData();
+            model.Documents ??= new List<HospitalFileDto>();
+
+            var row = model.Documents.FirstOrDefault(x =>
+                string.Equals(x.StoredFileName, storedFileName, StringComparison.OrdinalIgnoreCase));
+
+            if (row == null)
+                return Json(new { success = false, message = "File not found." });
+
+            var uploadsFolder = EnsureHospitalUploadsFolder();
+            var path = Path.Combine(uploadsFolder, row.StoredFileName);
+            if (System.IO.File.Exists(path))
+                System.IO.File.Delete(path);
+
+            model.Documents.Remove(row);
+            SaveHospitalsData(model);
+
+            return Json(new { success = true, message = "File removed successfully." });
         }
 
         [HttpPost]
@@ -2383,6 +2655,7 @@ namespace MOHRecognition.Controllers
 
             var model = GetHospitalsData();
             model.HospitalContracts ??= new List<HospitalFileDto>();
+            model.Documents ??= new List<HospitalFileDto>();
 
             foreach (var file in files.Where(f => f != null && f.Length > 0))
             {
@@ -2397,12 +2670,16 @@ namespace MOHRecognition.Controllers
                     await file.CopyToAsync(stream);
                 }
 
-                model.HospitalContracts.Add(new HospitalFileDto
+                var dto = new HospitalFileDto
                 {
                     OriginalFileName = Path.GetFileName(file.FileName),
                     StoredFileName = stored,
-                    FileUrl = $"/uploads/hospitals/{stored}"
-                });
+                    FileUrl = $"/uploads/hospitals/{stored}",
+                    DocumentType = "University-Hospital Agreement"
+                };
+
+                model.HospitalContracts.Add(dto);
+                model.Documents.Add(dto);
             }
 
             SaveHospitalsData(model);
@@ -2417,6 +2694,7 @@ namespace MOHRecognition.Controllers
 
             var model = GetHospitalsData();
             model.HospitalContracts ??= new List<HospitalFileDto>();
+            model.Documents ??= new List<HospitalFileDto>();
 
             var row = model.HospitalContracts.FirstOrDefault(x =>
                 string.Equals(x.StoredFileName, storedFileName, StringComparison.OrdinalIgnoreCase));
@@ -2430,6 +2708,9 @@ namespace MOHRecognition.Controllers
                 System.IO.File.Delete(path);
 
             model.HospitalContracts.Remove(row);
+            var docRow = model.Documents.FirstOrDefault(x =>
+                string.Equals(x.StoredFileName, storedFileName, StringComparison.OrdinalIgnoreCase));
+            if (docRow != null) model.Documents.Remove(docRow);
             SaveHospitalsData(model);
 
             return Json(new { success = true, message = "File removed successfully." });
@@ -2700,6 +2981,7 @@ namespace MOHRecognition.Controllers
         {
             var fac = LoadFaculties();
             dto.Faculties = fac?.Rows ?? new List<FacultyRowDto>();
+            dto.AvailableCollegeCategories = GetCollegeCategoriesFromSession();
             return dto;
         }
         [HttpGet]
@@ -2837,11 +3119,9 @@ namespace MOHRecognition.Controllers
                 return BadRequest("Please fill all required fields.");
             }
 
-            var faculties = LoadFaculties()?.Rows ?? new List<FacultyRowDto>();
-            var faculty = faculties.FirstOrDefault(f => f.Id == dto.FacultyId);
-
-            if (faculty == null)
-                return BadRequest("Selected faculty was not found.");
+            var allowedCategories = GetCollegeCategoriesFromSession();
+            if (!allowedCategories.Contains(dto.FacultyId))
+                return BadRequest("Selected college category was not found.");
 
             var model = LoadLaboratoriesData();
             var rows = model.Rows;
@@ -2851,23 +3131,22 @@ namespace MOHRecognition.Controllers
             if (existing == null)
             {
                 dto.Id = string.IsNullOrWhiteSpace(dto.Id) ? Guid.NewGuid().ToString() : dto.Id;
-                dto.FacultyName = faculty.FacultyName;
+                dto.FacultyName = dto.FacultyId;
                 rows.Add(dto);
             }
             else
             {
                 existing.FacultyId = dto.FacultyId;
-                existing.FacultyName = faculty.FacultyName;
+                existing.FacultyName = dto.FacultyId;
                 existing.Computers = dto.Computers;
                 existing.Workshops = dto.Workshops;
                 existing.Laboratories = dto.Laboratories;
             }
 
             model.Rows = rows;
-            model.Faculties = faculties;
             SaveLaboratoriesData(model);
 
-            return PartialView("Partial_Views/_Laboratories", model);
+            return PartialView("Partial_Views/_Laboratories", AttachFacultiesToLaboratories(model));
         }
 
         [HttpPost]
@@ -2885,10 +3164,9 @@ namespace MOHRecognition.Controllers
 
             rows.Remove(target);
             model.Rows = rows;
-            model.Faculties = LoadFaculties()?.Rows ?? new List<FacultyRowDto>();
             SaveLaboratoriesData(model);
 
-            return PartialView("Partial_Views/_Laboratories", model);
+            return PartialView("Partial_Views/_Laboratories", AttachFacultiesToLaboratories(model));
         }
 
         // ================== Library(section ) ==================
@@ -2953,15 +3231,22 @@ namespace MOHRecognition.Controllers
         private AttachmentDto BuildHospitalContractsAttachments()
         {
             var hospitals = GetHospitalsData();
+            hospitals.Documents ??= new List<HospitalFileDto>();
             hospitals.HospitalContracts ??= new List<HospitalFileDto>();
+
+            var docs = hospitals.Documents.Any()
+                ? hospitals.Documents
+                : hospitals.HospitalContracts;
 
             var dto = new AttachmentDto
             {
                 RequiredFiles = new List<string>(),
-                Rows = hospitals.HospitalContracts.Select(x => new AttachmentRowDto
+                Rows = docs.Select(x => new AttachmentRowDto
                 {
                     Id = Guid.NewGuid().ToString("N"),
-                    Subject = "Hospital Training Contracts and Supporting Documents",
+                    Subject = string.IsNullOrWhiteSpace(x.DocumentType)
+                        ? "Hospital Training Documents"
+                        : x.DocumentType,
                     FileName = x.OriginalFileName,
                     StoredFileName = x.StoredFileName,
                     FileUrl = x.FileUrl,
@@ -3189,13 +3474,9 @@ namespace MOHRecognition.Controllers
                     FacultyName = p.FacultyName,
                     DegreeAwarded = p.DegreeAwarded,
                     NumberOfYears = p.NumberOfYears,
-                    CreditHours = p.CreditHours,
                     EducationalSystem = p.EducationalSystem,
-                    Language = p.Language,
                     AccreditationDate = p.AccreditationDate,
-                    CreationDate = p.CreationDate,
-                    GraduationDateOfLastRegiment = p.GraduationDateOfLastRegiment,
-                    GraduatesTotalLast3Years = p.GraduatesTotalLast3Years
+                    GraduationDateOfLastRegiment = p.GraduationDateOfLastRegiment
                 })
                 .ToList();
 
@@ -3246,7 +3527,8 @@ namespace MOHRecognition.Controllers
                 Attachments = BuildHospitalContractsAttachments(),
                 Pictures = LoadPictures(),
                 Laboratories = LoadLaboratoriesData(),
-                Infrastructure = LoadInfrastructure()
+                Infrastructure = LoadInfrastructure(),
+                Hospitals = GetHospitalsData()
             };
 
             var saved = _recognitionRequestService.Add(request);

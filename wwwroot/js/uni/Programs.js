@@ -59,8 +59,7 @@
     function clearAllInvalid() {
         const ids = [
             "prg_program", "prg_faculty", "prg_degree", "prg_years",
-            "prg_credits", "prg_system", "prg_lang", "prg_acc",
-            "prg_create", "prg_gradlast", "prg_grad3"
+            "prg_system", "prg_acc", "prg_gradlast"
         ];
         ids.forEach(id => markInvalid(id, false));
     }
@@ -115,21 +114,11 @@
         if (!v("prg_faculty")) return fail("College is required", "prg_faculty");
         if (!v("prg_degree")) return fail("Degree Awarded is required", "prg_degree");
         if (!v("prg_system")) return fail("Educational System is required", "prg_system");
-        if (!v("prg_lang")) return fail("Language is required", "prg_lang");
 
         const years = Number(v("prg_years"));
         if (!years || years <= 0) return fail("Number of Years is required", "prg_years");
 
-        const credits = Number(v("prg_credits"));
-        if (!credits || credits <= 0) return fail("Credit Hours is required", "prg_credits");
-
-        const grads3 = Number(v("prg_grad3"));
-        if (v("prg_grad3") === "" || isNaN(grads3) || grads3 < 0) {
-            return fail("Graduates total for the last 3 years is required", "prg_grad3");
-        }
-
         if (!v("prg_acc")) return fail("Accreditation Date is required", "prg_acc");
-        if (!v("prg_create")) return fail("Creation Date is required", "prg_create");
         if (!v("prg_gradlast")) return fail("Graduation date of last regiment is required", "prg_gradlast");
 
         return null;
@@ -157,13 +146,9 @@
             $("prg_faculty").value = editBtn.getAttribute("data-facultyid") || "";
             $("prg_degree").value = editBtn.getAttribute("data-degree") || "";
             $("prg_years").value = editBtn.getAttribute("data-years") || "";
-            $("prg_credits").value = editBtn.getAttribute("data-credits") || "";
             $("prg_system").value = editBtn.getAttribute("data-system") || "";
-            $("prg_lang").value = editBtn.getAttribute("data-lang") || "";
             $("prg_acc").value = editBtn.getAttribute("data-acc") || "";
-            $("prg_create").value = editBtn.getAttribute("data-create") || "";
             $("prg_gradlast").value = editBtn.getAttribute("data-gradlast") || "";
-            $("prg_grad3").value = editBtn.getAttribute("data-grad3") || "";
             switchToUpdate(id);
             return;
         }
@@ -200,13 +185,9 @@
             facultyId: v("prg_faculty"),
             degreeAwarded: v("prg_degree"),
             numberOfYears: v("prg_years"),
-            creditHours: v("prg_credits"),
             educationalSystem: v("prg_system"),
-            language: v("prg_lang"),
             accreditationDate: v("prg_acc"),
-            creationDate: v("prg_create"),
             graduationDateOfLastRegiment: v("prg_gradlast"),
-            graduatesTotalLast3Years: v("prg_grad3"),
         };
 
         if (addBtn) {

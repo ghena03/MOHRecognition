@@ -1,4 +1,4 @@
-﻿(function () {
+ (function () {
     const containerId = "hospitalsContainer";
 
     function getContainer() {
@@ -31,21 +31,10 @@
         banner.style.display = "flex";
     }
 
-    function clearForm() {
-        const editId = document.getElementById("hosp_editId");
-        const specialization = document.getElementById("hosp_specialization");
-        const name = document.getElementById("hosp_name");
-        const major = document.getElementById("hosp_major");
-        const addBtn = document.getElementById("hosp_addBtn");
-        const cancelBtn = document.getElementById("hosp_cancelBtn");
-
-        if (editId) editId.value = "";
-        if (specialization) specialization.value = "";
-        if (name) name.value = "";
-        if (major) major.value = "";
-
-        if (addBtn) addBtn.textContent = "Add";
-        if (cancelBtn) cancelBtn.style.display = "none";
+    function isNonNegativeInteger(value) {
+        if (value === "") return false;
+        const n = Number(value);
+        return Number.isInteger(n) && n >= 0;
     }
 
     function lockHeight(el) {
@@ -73,36 +62,113 @@
                 showBanner(message, isError);
             }
 
-            if (keepScroll) {
-                window.scrollTo(0, y);
-            }
+            if (window.HospCapacityToggleLabel) window.HospCapacityToggleLabel();
+            if (keepScroll) window.scrollTo(0, y);
         } finally {
             unlock();
         }
     }
 
-    window.HospAdd = async function () {
-        const editIdEl = document.getElementById("hosp_editId");
-        const specializationEl = document.getElementById("hosp_specialization");
-        const nameEl = document.getElementById("hosp_name");
-        const majorEl = document.getElementById("hosp_major");
+    function clearFacilityForm() {
+        const editId = document.getElementById("hosp_fac_editId");
+        const specialization = document.getElementById("hosp_fac_specialization");
+        const name = document.getElementById("hosp_fac_name");
+        const major = document.getElementById("hosp_fac_major");
+        const addBtn = document.getElementById("hosp_fac_addBtn");
+        const cancelBtn = document.getElementById("hosp_fac_cancelBtn");
+        const formTitle = document.getElementById("hosp_fac_formTitle");
 
-        const editId = editIdEl ? editIdEl.value.trim() : "";
-        const specialization = specializationEl ? specializationEl.value.trim() : "";
-        const name = nameEl ? nameEl.value.trim() : "";
-        const major = majorEl ? majorEl.value.trim() : "";
+        if (editId) editId.value = "";
+        if (specialization) specialization.value = "";
+        if (name) name.value = "";
+        if (major) major.value = "";
+
+        if (addBtn) addBtn.textContent = "Add Facility";
+        if (cancelBtn) cancelBtn.style.display = "none";
+        if (formTitle) formTitle.textContent = "Add Facility";
+    }
+
+    window.HospCapacityToggleLabel = function () {
+        const specializationEl = document.getElementById("hosp_cap_specialization");
+        const label = document.getElementById("hosp_cap_label");
+        const hint = document.getElementById("hosp_cap_hint");
+        const input = document.getElementById("hosp_cap_value");
+        const medSaved = document.getElementById("hosp_saved_med_capacity")?.value || "";
+        const dentSaved = document.getElementById("hosp_saved_dent_capacity")?.value || "";
+
+        const specialization = (specializationEl?.value || "").trim();
+        const isMed = /medicine/i.test(specialization);
+        const isDent = /dent/i.test(specialization);
+
+        if (label) {
+            if (isMed) label.innerHTML = 'Total Bed Capacity <span class="req">*</span>';
+            else if (isDent) label.innerHTML = 'Total Dental Chair Capacity <span class="req">*</span>';
+            else label.innerHTML = 'Capacity <span class="req">*</span>';
+        }
+
+        if (hint) {
+            hint.textContent = isMed
+                ? "One value for all Medicine rows."
+                : isDent
+                    ? "One value for all Dentistry rows."
+                    : "Select specialization first.";
+        }
+
+        if (input) {
+            input.placeholder = isMed ? "e.g. 250" : isDent ? "e.g. 40" : "Enter capacity";
+            input.value = isMed ? medSaved : isDent ? dentSaved : "";
+        }
+    };
+
+    window.HospSaveCapacity = async function () {
+        const specialization = (document.getElementById("hosp_cap_specialization")?.value || "").trim();
+        const capacity = (document.getElementById("hosp_cap_value")?.value || "").trim();
+
+        if (!specialization) {
+            showBanner("Please select specialization.", true);
+            return;
+        }
+        if (!isNonNegativeInteger(capacity)) {
+            showBanner("Please enter a valid capacity.", true);
+            return;
+        }
+
+        const url = getUrl("data-capacity-save-url");
+        if (!url) {
+            showBanner("Capacity save URL is missing.", true);
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("Specialization", specialization);
+        formData.append("Capacity", capacity);
+
+        try {
+            const res = await fetch(url, { method: "POST", body: formData });
+            const data = await res.json();
+            if (data.success) {
+                await loadPartial(true, data.message, false, true);
+                location.hash = "#sec-hosp";
+            } else {
+                showBanner(data.message || "Could not save capacity.", true);
+            }
+        } catch {
+            showBanner("An error occurred while saving capacity.", true);
+        }
+    };
+
+    window.HospFacilityAdd = async function () {
+        const editId = (document.getElementById("hosp_fac_editId")?.value || "").trim();
+        const specialization = (document.getElementById("hosp_fac_specialization")?.value || "").trim();
+        const name = (document.getElementById("hosp_fac_name")?.value || "").trim();
+        const major = (document.getElementById("hosp_fac_major")?.value || "").trim();
 
         if (!specialization || !name) {
             showBanner("Please fill all required fields.", true);
             return;
         }
 
-        const isEdit = !!editId;
-
-        const url = isEdit
-            ? getUrl("data-update-url")
-            : getUrl("data-add-url");
-
+        const url = editId ? getUrl("data-facility-update-url") : getUrl("data-facility-add-url");
         if (!url) {
             showBanner("Request URL is missing.", true);
             return;
@@ -115,63 +181,99 @@
         formData.append("Major", major);
 
         try {
-            const res = await fetch(url, {
-                method: "POST",
-                body: formData
-            });
-
+            const res = await fetch(url, { method: "POST", body: formData });
             const data = await res.json();
-
             if (data.success) {
                 await loadPartial(true, data.message, false, true);
                 location.hash = "#sec-hosp";
             } else {
                 showBanner(data.message || "Something went wrong.", true);
             }
-        } catch (e) {
+        } catch {
             showBanner("An error occurred while saving hospital data.", true);
         }
     };
 
-    window.HospStartEdit = function (id) {
-        const editId = document.getElementById("hosp_editId");
-        const specialization = document.getElementById("hosp_specialization");
-        const name = document.getElementById("hosp_name");
-        const major = document.getElementById("hosp_major");
-        const addBtn = document.getElementById("hosp_addBtn");
-        const cancelBtn = document.getElementById("hosp_cancelBtn");
+    window.HospFacilityStartEdit = function (id) {
+        const editId = document.getElementById("hosp_fac_editId");
+        const specialization = document.getElementById("hosp_fac_specialization");
+        const name = document.getElementById("hosp_fac_name");
+        const major = document.getElementById("hosp_fac_major");
+        const addBtn = document.getElementById("hosp_fac_addBtn");
+        const cancelBtn = document.getElementById("hosp_fac_cancelBtn");
+        const formTitle = document.getElementById("hosp_fac_formTitle");
 
-        const rowSpecialization = document.getElementById("hosp_row_specialization_" + id);
-        const rowName = document.getElementById("hosp_row_name_" + id);
-        const rowMajor = document.getElementById("hosp_row_major_" + id);
+        const rowSpec = document.getElementById("hosp_fac_row_spec_" + id);
+        const rowName = document.getElementById("hosp_fac_row_name_" + id);
+        const rowMajor = document.getElementById("hosp_fac_row_major_" + id);
 
         if (editId) editId.value = id;
-        if (specialization && rowSpecialization) specialization.value = rowSpecialization.value;
+        if (specialization && rowSpec) specialization.value = rowSpec.value;
         if (name && rowName) name.value = rowName.value;
         if (major && rowMajor) major.value = rowMajor.value;
 
-        if (addBtn) addBtn.textContent = "Update";
+        if (addBtn) addBtn.textContent = "Update Facility";
         if (cancelBtn) cancelBtn.style.display = "inline-block";
-
+        if (formTitle) formTitle.textContent = "Update Facility";
         location.hash = "#sec-hosp";
     };
 
-    window.HospSaveContracts = async function () {
-        const input = document.getElementById("hosp_contracts_global");
-        const files = Array.from(input?.files || []);
-        if (!files.length) {
-            showBanner("Please choose one or more contracts/supporting files.", true);
+    window.HospFacilityCancelEdit = function () {
+        clearFacilityForm();
+    };
+
+    window.HospFacilityDelete = async function (id) {
+        if (!confirm("Are you sure you want to delete this facility?")) return;
+
+        const url = getUrl("data-facility-delete-url");
+        if (!url) return;
+
+        try {
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(id)
+            });
+            const data = await res.json();
+            if (data.success) {
+                await loadPartial(true, data.message, false, true);
+                location.hash = "#sec-hosp";
+            } else {
+                showBanner(data.message || "Delete failed.", true);
+            }
+        } catch {
+            showBanner("An error occurred while deleting facility data.", true);
+        }
+    };
+
+    window.HospSaveDocuments = async function () {
+        const agreementsInput = document.getElementById("hosp_docs_agreements");
+        const accreditationInput = document.getElementById("hosp_docs_accreditation");
+        const hasAgreementEl = document.getElementById("hosp_docs_hasAgreement");
+
+        const agreements = Array.from(agreementsInput?.files || []);
+        const accreditations = Array.from(accreditationInput?.files || []);
+        const hasAgreement = hasAgreementEl ? hasAgreementEl.value === "1" : false;
+
+        if (!agreements.length && !hasAgreement) {
+            showBanner("Please upload at least one agreement document.", true);
             return;
         }
 
-        const url = getUrl("data-save-contracts-url");
+        if (!agreements.length && !accreditations.length) {
+            showBanner("Please choose one or more documents to upload.", true);
+            return;
+        }
+
+        const url = getUrl("data-docs-save-url");
         if (!url) {
-            showBanner("Contracts upload URL is missing.", true);
+            showBanner("Documents upload URL is missing.", true);
             return;
         }
 
         const formData = new FormData();
-        files.forEach(f => formData.append("files", f));
+        agreements.forEach(f => formData.append("AgreementDocuments", f));
+        accreditations.forEach(f => formData.append("AccreditationDocuments", f));
 
         try {
             const res = await fetch(url, { method: "POST", body: formData });
@@ -183,14 +285,14 @@
                 showBanner(data.message || "Upload failed.", true);
             }
         } catch {
-            showBanner("An error occurred while uploading contracts.", true);
+            showBanner("An error occurred while uploading documents.", true);
         }
     };
 
-    window.HospDeleteContract = async function (storedFileName) {
-        const url = getUrl("data-delete-contract-url");
+    window.HospDeleteDocument = async function (storedFileName) {
+        const url = getUrl("data-docs-delete-url");
         if (!url) {
-            showBanner("Contracts delete URL is missing.", true);
+            showBanner("Documents delete URL is missing.", true);
             return;
         }
 
@@ -208,37 +310,7 @@
                 showBanner(data.message || "Delete failed.", true);
             }
         } catch {
-            showBanner("An error occurred while deleting contract file.", true);
-        }
-    };
-
-    window.HospCancelEdit = function () {
-        clearForm();
-    };
-
-    window.HospDelete = async function (id) {
-        if (!confirm("Are you sure you want to delete this row?")) return;
-
-        const url = getUrl("data-delete-url");
-        if (!url) return;
-
-        try {
-            const res = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(id)
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                await loadPartial(true, data.message, false, true);
-                location.hash = "#sec-hosp";
-            } else {
-                showBanner(data.message || "Delete failed.", true);
-            }
-        } catch (e) {
-            showBanner("An error occurred while deleting hospital data.", true);
+            showBanner("An error occurred while deleting the document.", true);
         }
     };
 
@@ -248,17 +320,11 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         if (!getContainer()) return;
-
         setTimeout(async () => {
             await loadPartial(false, "", false, false);
-
             if (window.location.hash === "#sec-hosp") {
                 const sec = document.getElementById("sec-hosp");
-                if (sec) {
-                    setTimeout(() => {
-                        sec.scrollIntoView({ behavior: "auto", block: "start" });
-                    }, 50);
-                }
+                if (sec) setTimeout(() => sec.scrollIntoView({ behavior: "auto", block: "start" }), 50);
             }
         }, 150);
     });

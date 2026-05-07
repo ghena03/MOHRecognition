@@ -16,6 +16,9 @@
     var programs = Model?.Programs ?? new List<DTOs.ProgramRowDto>();
     var attachments = Model?.Attachments?.Rows ?? new List<DTOs.AttachmentRowDto>();
     var medDen = Model?.MedicineDentistry ?? new DTOs.MedicineDentistryDto();
+    var hospitals = Model?.Hospitals ?? new DTOs.HospitalsDto();
+    var hospitalFacilities = hospitals.Facilities ?? new List<DTOs.HospitalFacilityDto>();
+    var hospitalDocuments = hospitals.Documents ?? new List<DTOs.HospitalFileDto>();
 
     int NV(int? v) => v ?? 0;
 
@@ -24,7 +27,7 @@
         var totalPlanHours = r.UniversityRequirementsHours + r.FacultyRequirementsHours + r.SpecializationRequirementsHours;
         var p = programs.FirstOrDefault(x => x.Id == r.ProgramId);
         var hasProgram = p != null;
-        var creditMatch = !hasProgram || p!.CreditHours <= 0 || totalPlanHours == p.CreditHours;
+        var creditMatch = !hasProgram || totalPlanHours > 0;
         var uniValid = r.UniversityRequirementsHours >= 21 && r.UniversityRequirementsHours <= 27;
         var facValid = totalPlanHours > 0 && r.FacultyRequirementsHours <= Math.Floor(totalPlanHours * 0.15m);
         var specValid = totalPlanHours > 0 && r.SpecializationRequirementsHours >= Math.Ceiling(totalPlanHours * 0.60m);
@@ -128,51 +131,142 @@
 
             <section id="sec-hospitals" class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2><i class="bi bi-hospital"></i> Hospitals Section — Training Contracts & Supporting Documents</h2>
-                    <p>Hospital training agreements and supporting files submitted by the university.</p>
+                    <h2><i class="bi bi-hospital"></i> Hospitals</h2>
+                    <p>Submitted hospital data and supporting documents.</p>
                 </div>
-@if (attachments.Any())
-{
-    var ordered = attachments.OrderByDescending(x => x.UploadedAt).ToList();
+                <div class="rd-card-hd" style="margin-top:10px;">
+                    <h2 style="font-size:18px;"><i class="bi bi-building"></i> University Submitted Hospital Data</h2>
+                </div>
+                <div class="clean-table-wrap" style="margin-bottom:12px;">
+                    <table class="clean-review-table">
+                        <thead>
+                            <tr>
+                                <th>Medicine Capacity</th>
+                                <th>Dentistry Capacity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@(hospitals.MedicineCapacity.HasValue ? $"Beds: {hospitals.MedicineCapacity.Value}" : "—")</td>
+                                <td>@(hospitals.DentistryCapacity.HasValue ? $"Dental Chairs: {hospitals.DentistryCapacity.Value}" : "—")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="clean-table-wrap">
+                    <table class="clean-review-table">
+                        <thead>
+                            <tr>
+                                <th style="width:72px;">#</th>
+                                <th>Specialization</th>
+                                <th>Name</th>
+                                <th>Major</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (hospitalFacilities.Any())
+                            {
+                                for (var i = 0; i < hospitalFacilities.Count; i++)
+                                {
+                                    var row = hospitalFacilities[i];
+                                    <tr>
+                                        <td class="cell-index">@(i + 1)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(row.Specialization) ? "—" : row.Specialization)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(row.Name) ? "—" : row.Name)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(row.Major) ? "—" : row.Major)</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4">No hospital data submitted.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
 
-    <div class="clean-table-wrap">
-        <table class="clean-review-table table-attachments">
-            <thead>
-                <tr>
-                    <th style="width:90px;">#</th>
-                    <th>Subject</th>
-                    <th>File</th>
-                    <th style="width:220px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (var i = 0; i < ordered.Count; i++)
+                <div class="rd-card-hd" style="margin-top:14px;">
+                    <h2 style="font-size:18px;"><i class="bi bi-file-earmark-text"></i> Hospital Documents</h2>
+                </div>
+                @if (hospitalDocuments.Any())
                 {
-                    var f = ordered[i];
-                    <tr>
-                        <td class="cell-index">@(i + 1)</td>
-                        <td class="cell-subject">@(string.IsNullOrWhiteSpace(f.Subject) ? "—" : f.Subject)</td>
-                        <td class="file-cell">@f.FileName</td>
-                        <td class="cell-actions">
-                            <div class="table-actions">
-                                <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">Open</a>
-                                <a class="rm-mini" href="@f.FileUrl" download="@f.FileName">Download</a>
-                            </div>
-                        </td>
-                    </tr>
+                    var orderedDocs = hospitalDocuments
+                        .Where(x => !string.IsNullOrWhiteSpace(x.FileUrl))
+                        .OrderBy(x => x.DocumentType)
+                        .ThenBy(x => x.OriginalFileName)
+                        .ToList();
+
+                    <div class="clean-table-wrap">
+                        <table class="clean-review-table table-attachments">
+                            <thead>
+                                <tr>
+                                    <th style="width:72px;">#</th>
+                                    <th>Document Type</th>
+                                    <th>File</th>
+                                    <th style="width:180px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (var i = 0; i < orderedDocs.Count; i++)
+                                {
+                                    var f = orderedDocs[i];
+                                    <tr>
+                                        <td class="cell-index">@(i + 1)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(f.DocumentType) ? "Hospital Document" : f.DocumentType)</td>
+                                        <td class="file-cell">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
+                                        <td class="cell-actions">
+                                            <div class="table-actions">
+                                                <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">Open</a>
+                                                <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 }
-            </tbody>
-        </table>
-    </div>
-}
-else
-{
-    <div class="rd-field">
-        <input type="text" value="No hospital training/supporting documents were uploaded." readonly />
-    </div>
-}
-                        
-            
+                else if (attachments.Any())
+                {
+                    var ordered = attachments.OrderByDescending(x => x.UploadedAt).ToList();
+                    <div class="clean-table-wrap">
+                        <table class="clean-review-table table-attachments">
+                            <thead>
+                                <tr>
+                                    <th style="width:72px;">#</th>
+                                    <th>Subject</th>
+                                    <th>File</th>
+                                    <th style="width:180px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (var i = 0; i < ordered.Count; i++)
+                                {
+                                    var f = ordered[i];
+                                    <tr>
+                                        <td class="cell-index">@(i + 1)</td>
+                                        <td class="cell-subject">@(string.IsNullOrWhiteSpace(f.Subject) ? "—" : f.Subject)</td>
+                                        <td class="file-cell">@f.FileName</td>
+                                        <td class="cell-actions">
+                                            <div class="table-actions">
+                                                <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">Open</a>
+                                                <a class="rm-mini" href="@f.FileUrl" download="@f.FileName">Download</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="rd-field">
+                        <input type="text" value="No hospital documents were submitted." readonly />
+                    </div>
+                }
             </section>
 
             <section id="sec-doctors-colleges" class="rm-card rd-card doctors-review-section">

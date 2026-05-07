@@ -12,11 +12,7 @@ public class ProgramRowDto
     public string FacultyName { get; set; } = "";
     public string DegreeAwarded { get; set; } = "";
     public int NumberOfYears { get; set; }
-    public int CreditHours { get; set; }
     public string EducationalSystem { get; set; } = "";
-    public string Language { get; set; } = "";
     public DateTime? AccreditationDate { get; set; }
-    public DateTime? CreationDate { get; set; }
     public DateTime? GraduationDateOfLastRegiment { get; set; }
-    public int GraduatesTotalLast3Years { get; set; }
 }

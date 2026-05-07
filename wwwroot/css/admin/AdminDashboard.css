@@ -235,6 +235,65 @@ td {
     font-size: 13px;
 }
 
+/* Meetings table theme (match university section style) */
+.table-box-theme2 {
+    background: #fff;
+    border: 1px solid #d9d2c8;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: none;
+}
+
+.meeting-theme-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+}
+
+.meeting-theme-table thead th {
+    background: #e8e1d7;
+    color: #1f2937;
+    font-size: 18px;
+    font-weight: 800;
+    padding: 18px 20px;
+    border-bottom: 1px solid #cfd5df;
+    border-right: 1px solid #cfd5df;
+}
+
+.meeting-theme-table thead th:last-child {
+    border-right: none;
+}
+
+.meeting-theme-table tbody td {
+    background: #fff;
+    color: #1f2937;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 18px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+.meeting-theme-table tbody td:last-child {
+    border-right: none;
+}
+
+.meeting-theme-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.meeting-theme-table .meeting-empty {
+    background: #f8f8f8;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #535353;
+    border-right: none !important;
+    padding: 22px;
+}
+
 /* HEADER */
 .admin-header {
     display: flex;
@@ -613,4 +672,47 @@ html, body {
 }
 .decisions-page {
     padding: 0;
+}
+
+/* Unified table theme */
+:is(table, .modern-table) {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+:is(table, .modern-table) thead th {
+    background: #faf7f2 !important;
+    color: #111827 !important;
+    font-weight: 900 !important;
+    font-size: 16px !important;
+    padding: 14px 12px !important;
+    border-bottom: 1px solid #cfd8dc !important;
+    border-right: 1px solid #cfd8dc !important;
+    text-align: left !important;
+    line-height: 1.2;
+}
+
+:is(table, .modern-table) thead th:last-child {
+    border-right: none !important;
+}
+
+:is(table, .modern-table) tbody td {
+    background: #faf7f2 !important;
+    color: #111827 !important;
+    font-size: 15px !important;
+    font-weight: 600;
+    padding: 14px 12px !important;
+    border-top: none !important;
+    border-bottom: 1px solid #d9e0e6 !important;
+    border-right: 1px solid #d9e0e6 !important;
+    vertical-align: middle;
+}
+
+:is(table, .modern-table) tbody td:last-child {
+    border-right: none !important;
+}
+
+:is(table, .modern-table) tbody tr:last-child td {
+    border-bottom: none !important;
 }

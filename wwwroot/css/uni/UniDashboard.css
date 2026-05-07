@@ -754,6 +754,117 @@ html {
     }
 }
 
+/* =============== Unified Table Theme (Project-wide style target) =============== */
+:is(
+    .tbl,
+    .fac-table,
+    .prg-table,
+    .duration-table,
+    .hosp-tbl,
+    .accb-table,
+    .attach-table,
+    .medden-table,
+    .lib-table,
+    .uni-table
+) {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+}
+
+:is(
+    .tbl,
+    .fac-table,
+    .prg-table,
+    .duration-table,
+    .hosp-tbl,
+    .accb-table,
+    .attach-table,
+    .medden-table,
+    .lib-table,
+    .uni-table
+) thead th {
+    background: #faf7f2 !important;
+    color: #111827 !important;
+    font-weight: 900 !important;
+    font-size: 16px !important;
+    padding: 14px 12px !important;
+    border-bottom: 1px solid #cfd8dc !important;
+    border-right: 1px solid #cfd8dc !important;
+    text-align: left !important;
+    white-space: normal;
+    line-height: 1.2;
+}
+
+:is(
+    .tbl,
+    .fac-table,
+    .prg-table,
+    .duration-table,
+    .hosp-tbl,
+    .accb-table,
+    .attach-table,
+    .medden-table,
+    .lib-table,
+    .uni-table
+) thead th:last-child {
+    border-right: none !important;
+}
+
+:is(
+    .tbl,
+    .fac-table,
+    .prg-table,
+    .duration-table,
+    .hosp-tbl,
+    .accb-table,
+    .attach-table,
+    .medden-table,
+    .lib-table,
+    .uni-table
+) tbody td {
+    background: #faf7f2 !important;
+    color: #111827 !important;
+    font-size: 15px !important;
+    font-weight: 600;
+    padding: 14px 12px !important;
+    border-bottom: 1px solid #d9e0e6 !important;
+    border-right: 1px solid #d9e0e6 !important;
+    vertical-align: middle;
+    word-break: break-word;
+}
+
+:is(
+    .tbl,
+    .fac-table,
+    .prg-table,
+    .duration-table,
+    .hosp-tbl,
+    .accb-table,
+    .attach-table,
+    .medden-table,
+    .lib-table,
+    .uni-table
+) tbody td:last-child {
+    border-right: none !important;
+}
+
+:is(
+    .tbl,
+    .fac-table,
+    .prg-table,
+    .duration-table,
+    .hosp-tbl,
+    .accb-table,
+    .attach-table,
+    .medden-table,
+    .lib-table,
+    .uni-table
+) tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
 .fac-table-scroll {
     overflow-x: auto;
 }
@@ -761,17 +872,18 @@ html {
 .fac-table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed;
+    table-layout: auto;
 }
 
     .fac-table thead th {
-        background: #f4eadc;
-        color: #111827;
+        background: #faf7f2;
+        color: #000;
         font-weight: 900;
         padding: 12px 10px;
         border-bottom: 1px solid #cfd8dc;
         border-right: 1px solid #cfd8dc;
         text-align: left;
+        white-space: normal;
     }
 
         .fac-table thead th:last-child {
@@ -779,11 +891,12 @@ html {
         }
 
     .fac-table tbody td {
-        background: #faf7f2;
-        border-top: 1px solid #cfd8dc;
-        border-right: 1px solid #cfd8dc;
+        background: rgb(250, 247, 242);
+        border-top: 1px solid rgb(207, 216, 220);
+        border-right: 1px solid rgb(207, 216, 220);
         padding: 12px 10px;
         vertical-align: middle;
+        word-break: break-word;
     }
 
         .fac-table tbody td:last-child {
@@ -805,10 +918,13 @@ html {
 }
 
 .fac-empty {
-    text-align: center;
-    font-weight: 800;
-    opacity: 0.75;
-    background: #fff;
+    text-align: left;
+    color: #000;
+    font-weight: 700;
+    opacity: 1;
+    background: transparent;
+    white-space: nowrap;
+    word-break: normal;
     padding-left: 18px;
     padding-right: 18px;
     box-sizing: border-box;
@@ -1560,6 +1676,98 @@ html {
             content: "✓";
             font-weight: 900;
         }
+
+/* ================= COLLEGE CATEGORY INFO BUTTON ================= */
+.college-cat-options {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.college-cat-options .degree-pill span {
+    position: relative;
+    padding-right: 36px;
+}
+
+.cat-info-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0, 0, 0, 0.14);
+    background: transparent;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    outline: none;
+    transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+    .cat-info-btn:hover {
+        border-color: rgba(214, 69, 69, 0.45);
+        color: rgba(214, 69, 69, 0.72);
+    }
+
+    .cat-info-btn:focus-visible {
+        border-color: rgba(214, 69, 69, 0.45);
+        color: rgba(214, 69, 69, 0.72);
+        box-shadow: 0 0 0 3px rgba(214, 69, 69, 0.15);
+    }
+
+    .cat-info-btn .cat-info-icon {
+        width: 13px;
+        height: 13px;
+        display: block;
+        pointer-events: none;
+        flex-shrink: 0;
+    }
+
+@media (max-width: 900px) {
+    .college-cat-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .college-cat-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+#cat-tooltip-popup {
+    display: none;
+    position: fixed;
+    z-index: 99999;
+    width: 260px;
+    max-width: calc(100vw - 20px);
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06);
+    padding: 12px 14px;
+    pointer-events: none;
+}
+
+    #cat-tooltip-popup .cat-tt-head {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: rgba(214, 69, 69, 0.85);
+        margin-bottom: 5px;
+    }
+
+    #cat-tooltip-popup .cat-tt-body {
+        font-size: 12px;
+        line-height: 1.6;
+        color: #374151;
+        font-weight: 400;
+    }
 
 /* ================= ACTION BUTTONS ================= */
 .fac-editbtn,
@@ -3003,6 +3211,140 @@ html {
     text-align: left;
     color: #5d6472;
     font-weight: 700;
+    background: #fff !important;
+}
+
+/* ================= HOSPITALS (REFRESHED) ================= */
+#hospitalsContainer .hosp-main-card {
+    border: 1px solid #e7ddd1;
+    border-radius: 16px;
+    background: #fff;
+    padding: 16px;
+    box-shadow: 0 8px 20px rgba(122, 27, 27, 0.06);
+}
+
+#hospitalsContainer .hosp-main-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: #7b2030;
+}
+
+#hospitalsContainer .hosp-main-sub {
+    margin-top: 4px;
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#hospitalsContainer .hosp-subsection {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #efe5d7;
+}
+
+#hospitalsContainer .hosp-subsection:first-of-type {
+    margin-top: 8px;
+    padding-top: 0;
+    border-top: 0;
+}
+
+#hospitalsContainer .hosp-subsection-title {
+    font-size: 16px;
+    font-weight: 900;
+    color: #7b2030;
+}
+
+#hospitalsContainer .hosp-subsection-sub {
+    margin-top: 4px;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+#hospitalsContainer .hosp-form-card {
+    margin-top: 12px;
+    border: 1px solid #efe5d7;
+    border-radius: 12px;
+    background: #fff;
+    padding: 14px;
+}
+
+#hospitalsContainer .hosp-form-card + .hosp-form-card {
+    margin-top: 10px;
+}
+
+#hospitalsContainer .hosp-form-eyebrow {
+    font-size: 13px;
+    font-weight: 800;
+    color: #8a1e32;
+    letter-spacing: 0.2px;
+}
+
+#hospitalsContainer .hosp-btn-row {
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+#hospitalsContainer .hosp-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#hospitalsContainer #hosp_cap_med_text,
+#hospitalsContainer #hosp_cap_dent_text {
+    color: #7b2030;
+    font-weight: 900;
+}
+
+#hospitalsContainer .hosp-action-btn {
+    border: 1px solid #e7ddd1;
+    background: #fff;
+    color: #7b2030;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+#hospitalsContainer .hosp-action-btn.danger {
+    color: #9b1c1c;
+    background: #fff5f5;
+    border-color: #f1d6d6;
+}
+
+#hospitalsContainer .hosp-docs-area {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid #efe5d7;
+    border-radius: 12px;
+    background: #fff;
+}
+
+#hospitalsContainer .hosp-docs-actions {
+    margin-top: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: flex-start;
+    padding-left: 2px;
+}
+
+#hospitalsContainer .hosp-docs-link {
+    color: #7b2030;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+#hospitalsContainer .hosp-docs-del {
+    border: 1px solid #e6d6d0;
+    background: #fff5f5;
+    color: #9b1c1c;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 8px;
 }
 
 /* ================= LIBRARY (MODERN) ================= */
@@ -3420,6 +3762,7 @@ html {
         grid-template-columns: 1fr;
     }
 }
+<<<<<<< HEAD
 /*================================================================*/
 .required {
     color: #a61c2c;
@@ -3805,3 +4148,5 @@ html {
         grid-template-columns: 1fr;
     }
 }
+=======
+>>>>>>> 49a219a (lastkamelia)
