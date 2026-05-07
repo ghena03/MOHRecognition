@@ -1,5 +1,5 @@
 ﻿@using MOHRecognition.Services
-@model List<RecognitionRequestRecord>
+@model RecognitionRequestRecord
 
 @{
     Layout = null;
@@ -21,78 +21,40 @@
             <div class="divider"></div>
 
             <div class="title-box">
-                <h1>Decisions</h1>
-                <p>Final results from recognition members</p>
+                <h1>Decision Details</h1>
+                <p>Recognition request full information</p>
             </div>
         </div>
-    </div> <!-- ✅ مهم جداً -->
+    </div>
+
     <!-- CARD -->
     <div class="details-card">
 
-        <div class="card-header">
-            <h2>Decisions Overview</h2>
-            <span class="count">@Model.Count Results</span>
-        </div>
+        <h2 class="section-title">Basic Information</h2>
 
-        @if (!Model.Any())
-        {
-            <div class="empty-state">
-                <i class="fa-regular fa-folder-open"></i>
-                <p>No decisions available yet</p>
+        <div class="info-grid">
+
+            <div class="info-box">
+                <label>University</label>
+                <p>@Model.UniversityName</p>
             </div>
-        }
-        else
-        {
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>University</th>
-                        <th>Decision</th>
-                        <th>Notes</th>
-                        <th></th>
-                    </tr>
-                </thead>
 
-                <tbody>
-                    @foreach (var r in Model)
-                    {
-                        var decisionClass = "badge-default";
+            <div class="info-box">
+                <label>Request ID</label>
+                <p>#@Model.Id</p>
+            </div>
 
-                        if (r.BasicInfoAssessmentDecision == "Approve")
-                            decisionClass = "badge-approve";
-                        else if (r.BasicInfoAssessmentDecision == "Conditional Approval")
-                            decisionClass = "badge-conditional";
-                        else if (r.BasicInfoAssessmentDecision == "Reject / Committee Review")
-                            decisionClass = "badge-reject";
+            <div class="info-box">
+                <label>Final Decision</label>
+                <p>@Model.BasicInfoAssessmentDecision</p>
+            </div>
 
-                        <tr>
-                            <td class="uni-name">@r.UniversityName</td>
+            <div class="info-box">
+                <label>Decision Notes</label>
+                <p>@(string.IsNullOrEmpty(Model.BasicInfoAssessmentReason) ? "-" : Model.BasicInfoAssessmentReason)</p>
+            </div>
 
-                            <td>
-                                <span class="decision-badge @decisionClass">
-                                    @r.BasicInfoAssessmentDecision
-                                </span>
-                            </td>
-
-                            <td class="note-cell">
-                                @(string.IsNullOrEmpty(r.BasicInfoAssessmentReason)
-                                                        ? "-"
-                                                        : r.BasicInfoAssessmentReason)
-                            </td>
-
-                            <td>
-                                <a asp-controller="Home"
-                                   asp-action="DecisionDetails"
-                                   asp-route-id="@r.Id"
-                                   class="view-btn">
-                                    View
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
+        </div>
 
     </div>
 

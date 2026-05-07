@@ -4265,6 +4265,24 @@ namespace MOHRecognition.Controllers
 
             return View("~/Views/member/RecognitionMemberMeetings.cshtml", model);
         }
+        
+        public IActionResult UniPostgraduateInstructions()
+        {
+            return View("~/Views/uni/UniPostgraduateEntry.cshtml");
+        }
+        [HttpPost]
+        public IActionResult SavePostgraduatePrograms(
+    bool HasMaster,
+    bool HasPhD,
+    bool HasDiploma,
+    IFormFile MasterFile,
+    IFormFile PhDFile,
+    IFormFile DiplomaFile)
+        {
+            // TODO: read according the degree
+
+            return RedirectToAction("UniPostgraduateInstructions");
+        }
 
         private static string NormalizeMeetingStatus(string? value)
         {

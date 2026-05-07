@@ -1,0 +1,342 @@
+﻿@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Postgraduate Instructions</title>
+
+    <link rel="stylesheet" href="~/css/uni/UniDashboard.css" asp-append-version="true" />
+</head>
+
+<body class="submitapp-page ltr">
+
+    <!-- HEADER -->
+    <header class="top-header en">
+        <div class="hdr-grid">
+
+            <div></div>
+
+            <nav class="hdr-nav">
+                <a class="hdr-link" href="@Url.Action("UniDashboard", "Home")">← Back</a>
+                <a class="hdr-link" href="https://www.mohe.gov.jo/" target="_blank">Ministry Website</a>
+            </nav>
+
+            <div class="hdr-logo">
+                <img class="rm-logo" src="~/images/mohelogo.png" />
+            </div>
+
+        </div>
+
+        <div class="brand-bar"></div>
+    </header>
+
+    <div class="layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <a class="side-item" href="#sec-rules">Instructions</a>
+            <a class="side-item" href="#sec-postgrad-programs">Postgraduate Programs</a>
+            <a class="side-item" href="#sec-students">Number of students</a>
+
+            <div class="side-footer">
+                <a class="logout" href="@Url.Action("Logout", "Home")">Logout</a>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="content">
+
+            <!-- WELCOME -->
+            <section class="welcome">
+                <div class="welcome-card">
+                    <div class="welcome-icon">📘</div>
+
+                    <h1 class="welcome-title">Postgraduate Recognition Instructions</h1>
+
+                    <p class="welcome-text">
+                        To apply for postgraduate recognition (Master / PhD), the institution must meet all the following requirements.
+                    </p>
+                </div>
+            </section>
+
+            <!-- RULES -->
+            <section id="sec-rules" class="card">
+                <div class="card-hd">
+                    <h2>Requirements</h2>
+                </div>
+
+                <div class="card-bd">
+
+                    <div class="field">
+                        <p>1. The institution must be officially recognized to grant a Bachelor's degree.</p>
+                    </div>
+
+                    <div class="field">
+                        <p>2. The ratio of academic staff to students must comply with internationally accredited standards.</p>
+                    </div>
+
+                    <div class="field">
+                        <p>3. A sufficient percentage of Professors and Associate Professors must be available.</p>
+                    </div>
+
+                    <div class="field">
+                        <p>4. There must be sufficient published research in databases like Scopus or Web of Science.</p>
+                    </div>
+
+                    <div class="actions" style="justify-content:center; margin-top:20px;">
+                        <a href="@Url.Action("UniPostgraduateDashboard", "Home")" class="btn-primary">
+                            Continue to Application
+                        </a>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- FORM -->
+            <form method="post" asp-action="SavePostgraduatePrograms" enctype="multipart/form-data">
+                <!-- programs -->
+                <section id="sec-postgrad-programs" class="card">
+
+                    <div class="card-hd">
+                        <h2>Postgraduate Programs</h2>
+                        <p>Select degree first, then upload programs file.</p>
+                    </div>
+
+                    <div class="card-bd">
+
+                        <!-- STEP 1 -->
+                        <div class="subhead">1) Select Degree</div>
+
+                        <div class="degree-options">
+
+                            <label class="degree-pill">
+                                <input type="checkbox" id="chkMaster" hidden />
+                                <span>Master</span>
+                            </label>
+
+                            <label class="degree-pill">
+                                <input type="checkbox" id="chkPhD" hidden />
+                                <span>PhD</span>
+                            </label>
+
+                            <label class="degree-pill">
+                                <input type="checkbox" id="chkDiploma" hidden />
+                                <span>Higher Diploma</span>
+                            </label>
+
+                        </div>
+
+                        <!-- STEP 2 -->
+                        <div class="subhead" style="margin-top:20px;">2) Upload Programs</div>
+
+                        <div class="program-grid">
+
+                            <!-- MASTER -->
+                            <div id="masterCard" class="upload-card" style="display:none;">
+                                <h3>Master Programs</h3>
+                                <p class="hint">Accepted format: Excel (.xlsx)</p>
+
+                                <div class="drop-zone">
+
+                                    <p class="drop-text">Upload Excel file</p>
+
+                                    <label class="upload-btn">
+                                        Choose File
+                                        <input type="file" name="MasterFile" hidden />
+                                    </label>
+
+                                    <span class="file-name">No file selected</span>
+
+                                </div>
+                            </div>
+
+                            <!-- PHD -->
+                            <div id="phdCard" class="upload-card" style="display:none;">
+                                <h3>PhD Programs</h3>
+                                <p class="hint">Accepted format: Excel (.xlsx)</p>
+                                <div class="drop-zone">
+
+                                    <p class="drop-text">Upload Excel file</p>
+
+                                    <label class="upload-btn">
+                                        Choose File
+                                        <input type="file" name="PhDFile" hidden />
+                                    </label>
+
+                                    <span class="file-name">No file selected</span>
+
+                                </div>
+                               
+                            </div>
+
+                            <!-- DIPLOMA -->
+                            <div id="diplomaCard" class="upload-card" style="display:none;">
+                                <h3>Higher Diploma Programs</h3>
+                                <p class="hint">Accepted format: Excel (.xlsx)</p>
+                                <div class="drop-zone">
+
+                                    <p class="drop-text">Upload Excel file</p>
+
+                                    <label class="upload-btn">
+                                        Choose File
+                                        <input type="file" name="DiplomaFile" hidden />
+                                    </label>
+
+                                    <span class="file-name">No file selected</span>
+
+                                </div>
+                                
+                            </div>
+
+                        </div>
+
+                        <!-- SAVE -->
+                        <div class="actions" style="margin-top:25px;">
+                            <button class="btn-primary">Upload & Save</button>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- students -->
+                <section id="sec-students" class="card">
+
+                    <div class="card-hd">
+                        <h2>Number of Students</h2>
+                        <p>Enter the number of enrolled students for each selected degree.</p>
+                    </div>
+
+                    <div class="card-bd">
+
+                        <!-- MASTER -->
+                        <div id="masterStudents" class="student-row" style="display:none;">
+                            <label>Master Students</label>
+                            <input type="number" name="MasterStudents" placeholder="e.g. 120" />
+                        </div>
+
+                        <!-- PHD -->
+                        <div id="phdStudents" class="student-row" style="display:none;">
+                            <label>PhD Students</label>
+                            <input type="number" name="PhDStudents" placeholder="e.g. 40" />
+                        </div>
+
+                        <!-- DIPLOMA -->
+                        <div id="diplomaStudents" class="student-row" style="display:none;">
+                            <label>Higher Diploma Students</label>
+                            <input type="number" name="DiplomaStudents" placeholder="e.g. 60" />
+                        </div>
+                        <!-- SAVE -->
+                        <div class="actions" style="margin-top:25px;">
+                            <button class="btn-primary">Save</button>
+                        </div>
+                    </div>
+
+                </section>
+
+
+                <!-- Academic Staff                -->
+                <section id="sec-faculty" class="card">
+
+                    <div class="card-hd">
+                        <h2>Academic Staff</h2>
+                        <p>Enter the number of full-time academic staff for each degree.</p>
+                    </div>
+
+                    <div class="card-bd">
+
+                       <!-- ================= MASTER ================= -->
+<div id="masterFaculty" class="faculty-box" style="display:none;">
+
+    <h3>Master Programs</h3>
+
+    <div class="faculty-row">
+        <label>Professor</label>
+        <input type="number" placeholder="e.g. 5" required />
+    </div>
+
+    <div class="faculty-row">
+        <label>Associate Professor</label>
+        <input type="number" placeholder="e.g. 8" required />
+    </div>
+
+    <div class="faculty-row">
+        <label>Assistant Professor</label>
+        <input type="number" placeholder="e.g. 12" required />
+    </div>
+
+    <button class="btn-save">Save Master</button>
+
+</div>
+
+
+<!-- ================= PHD ================= -->
+<div id="phdFaculty" class="faculty-box" style="display:none;">
+
+    <h3>PhD Programs</h3>
+
+    <div class="faculty-row">
+        <label>Professor</label>
+        <input type="number" placeholder="e.g. 3" required />
+    </div>
+
+    <div class="faculty-row">
+        <label>Associate Professor</label>
+        <input type="number" placeholder="e.g. 6" required />
+    </div>
+
+    <div class="faculty-row">
+        <label>Assistant Professor</label>
+        <input type="number" placeholder="e.g. 10" required />
+    </div>
+
+    <button class="btn-save">Save PhD</button>
+
+</div>
+
+
+<!-- ================= DIPLOMA ================= -->
+<div id="diplomaFaculty" class="faculty-box" style="display:none;">
+
+    <h3>Higher Diploma Programs</h3>
+
+    <div class="faculty-row">
+        <label>Professor</label>
+        <input type="number" placeholder="e.g. 2" required />
+    </div>
+
+    <div class="faculty-row">
+        <label>Associate Professor</label>
+        <input type="number" placeholder="e.g. 4" required />
+    </div>
+
+    <div class="faculty-row">
+        <label>Assistant Professor</label>
+        <input type="number" placeholder="e.g. 7" required />
+    </div>
+
+    <button class="btn-save">Save Diploma</button>
+
+</div>
+
+
+
+                        
+
+                    </div>
+
+                </section>
+            </form>
+
+            <footer class="foot">© Ministry of Higher Education</footer>
+
+        </main>
+    </div>
+
+    <script src="~/js/uni/PostgraduatePrograms.js" asp-append-version="true"></script>
+
+</body>
+</html>
