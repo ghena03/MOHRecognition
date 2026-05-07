@@ -1,105 +1,89 @@
-﻿// ===============================
-// Postgraduate Page Script (FINAL CLEAN)
-// ===============================
+﻿document.addEventListener("DOMContentLoaded", function () {
 
-document.addEventListener("DOMContentLoaded", function () {
-
-    // ===============================
-    // CHECKBOXES
-    // ===============================
     const master = document.getElementById("chkMaster");
     const phd = document.getElementById("chkPhD");
     const diploma = document.getElementById("chkDiploma");
 
-    // ===============================
-    // PROGRAM CARDS
-    // ===============================
-    const masterCard = document.getElementById("masterCard");
-    const phdCard = document.getElementById("phdCard");
-    const diplomaCard = document.getElementById("diplomaCard");
-
-    // ===============================
-    // STUDENTS INPUTS
-    // ===============================
-    const masterStudents = document.getElementById("masterStudents");
-    const phdStudents = document.getElementById("phdStudents");
-    const diplomaStudents = document.getElementById("diplomaStudents");
-
-    // ===============================
-    // FACULTY SECTIONS
-    // ===============================
-    const masterFaculty = document.getElementById("masterFaculty");
-    const phdFaculty = document.getElementById("phdFaculty");
-    const diplomaFaculty = document.getElementById("diplomaFaculty");
-
-    // ===============================
-    // TOGGLE FUNCTION (ALL IN ONE)
-    // ===============================
-    function toggleSection(checkbox, card, students, faculty) {
-        if (!checkbox) return;
-
-        checkbox.addEventListener("change", function () {
+    function toggle(el, card, students, faculty) {
+        el.addEventListener("change", function () {
             const show = this.checked;
 
-            // programs
             if (card) card.style.display = show ? "block" : "none";
-
-            // students
-            if (students) students.style.display = show ? "flex" : "none";
-
-            // faculty
+            if (students) students.style.display = show ? "grid" : "none";
             if (faculty) faculty.style.display = show ? "block" : "none";
         });
     }
 
-    // ===============================
-    // APPLY TO ALL DEGREES
-    // ===============================
-    toggleSection(master, masterCard, masterStudents, masterFaculty);
-    toggleSection(phd, phdCard, phdStudents, phdFaculty);
-    toggleSection(diploma, diplomaCard, diplomaStudents, diplomaFaculty);
+    toggle(master,
+        document.getElementById("masterCard"),
+        document.getElementById("masterStudents"),
+        document.getElementById("masterFaculty")
+    );
 
-    // ===============================
-    // FILE NAME DISPLAY
-    // ===============================
-    document.querySelectorAll("input[type='file']").forEach(input => {
-        input.addEventListener("change", function () {
+    toggle(phd,
+        document.getElementById("phdCard"),
+        document.getElementById("phdStudents"),
+        document.getElementById("phdFaculty")
+    );
 
-            const fileName = this.files.length
-                ? this.files[0].name
-                : "No file selected";
+    toggle(diploma,
+        document.getElementById("diplomaCard"),
+        document.getElementById("diplomaStudents"),
+        document.getElementById("diplomaFaculty")
+    );
 
-            const container = this.closest(".upload-card") || this.closest(".drop-zone");
-
-            if (container) {
-                const label = container.querySelector(".file-name");
-                if (label) label.textContent = fileName;
-            }
-        });
-    });
-
-});
-document.querySelectorAll("#sec-faculty form").forEach(form => {
-    form.addEventListener("submit", function (e) {
-
-        if (!form.checkValidity()) {
+    // Validation
+    document.querySelector("form").addEventListener("submit", function (e) {
+        if (!this.checkValidity()) {
             e.preventDefault();
-            alert("Please fill all required fields before saving.");
+            alert("Please fill all required fields");
         }
     });
+
 });
-document.querySelectorAll(".btn-save").forEach(btn => {
-    btn.addEventListener("click", function () {
 
-        const inputs = this.parentElement.querySelectorAll("input");
+// ===== SIDEBAR SCROLL + ACTIVE =====
+const sideLinks = document.querySelectorAll(".side-item");
 
-        for (let input of inputs) {
-            if (!input.value) {
-                alert("Please fill all fields");
-                return;
-            }
+sideLinks.forEach(link => {
+    link.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const targetId = this.getAttribute("href");
+        const target = document.querySelector(targetId);
+
+        if (!target) return;
+
+        const offset = 100; // adjust for header height
+
+        window.scrollTo({
+            top: target.offsetTop - offset,
+            behavior: "smooth"
+        });
+
+        // ACTIVE STATE
+        sideLinks.forEach(l => l.classList.remove("active"));
+        this.classList.add("active");
+    });
+});
+
+// ===== SCROLL DETECTION (AUTO ACTIVE) =====
+window.addEventListener("scroll", () => {
+    let current = "";
+
+    document.querySelectorAll("section").forEach(section => {
+        const sectionTop = section.offsetTop - 120;
+
+        if (window.scrollY >= sectionTop) {
+            current = section.getAttribute("id");
         }
+    });
 
-        alert("Saved successfully ✅");
+    sideLinks.forEach(link => {
+        link.classList.remove("active");
+
+        if (link.getAttribute("href") === "#" + current) {
+            link.classList.add("active");
+        }
     });
 });

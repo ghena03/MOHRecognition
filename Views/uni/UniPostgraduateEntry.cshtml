@@ -38,9 +38,11 @@
 
         <!-- SIDEBAR -->
         <aside class="sidebar">
-            <a class="side-item" href="#sec-rules">Instructions</a>
-            <a class="side-item" href="#sec-postgrad-programs">Postgraduate Programs</a>
+            <a class="side-item" href="#sec-general">Public Info</a>
+            <a class="side-item" href="#sec-programs">Postgraduate Programs</a>
             <a class="side-item" href="#sec-students">Number of students</a>
+            <a class="side-item" href="#sec-faculty">Academic Staff</a>
+            <a class="side-item" href="#sec-user">Applicant Info</a>
 
             <div class="side-footer">
                 <a class="logout" href="@Url.Action("Logout", "Home")">Logout</a>
@@ -63,56 +65,181 @@
                 </div>
             </section>
 
-            <!-- RULES -->
-            <section id="sec-rules" class="card">
+            
+            <!--general info-->
+            <!-- ===================== Public / General Info ===================== -->
+            @{
+                var P = ViewBag.Public as DTOs.PublicInfoDto ?? new DTOs.PublicInfoDto();
+                var languageOfInstruction = (P.LanguageOfInstruction ?? "").Trim();
+                var languageInstructionOptions = new[]
+                {
+                        "English only",
+                        "Arabic only",
+                        "English + Arabic",
+                        "English + Spanish",
+                        "English + French",
+                        "English + Hindi",
+                        "English + Turkish",
+                        "English + German",
+                        "English + Portuguese",
+                        "English + Chinese (Mandarin)",
+                        "English + Russian",
+                        "English + Japanese",
+                        "English + Korean",
+                        "English + Italian",
+                        "English + Urdu",
+                        "English + Bengali",
+                        "English + Persian",
+                        "English + Indonesian",
+                        "English + Malay",
+                        "English + Dutch",
+                        "English + Swahili",
+                        "English + Tamil",
+                        "English + Punjabi",
+                        "English + Vietnamese",
+                        "English + Thai",
+                        "English + Filipino (Tagalog)",
+                        "English + Greek",
+                        "English + Polish",
+                        "English + Ukrainian"
+                        };
+                var isKnownLanguageOption = languageInstructionOptions.Any(opt =>
+                languageOfInstruction.Equals(opt, StringComparison.OrdinalIgnoreCase));
+                var isOtherLanguage = !string.IsNullOrWhiteSpace(languageOfInstruction)
+                && !isKnownLanguageOption
+                && !languageOfInstruction.Equals("Others", StringComparison.OrdinalIgnoreCase);
+                var showOtherLanguageInput = isOtherLanguage || languageOfInstruction.Equals("Others", StringComparison.OrdinalIgnoreCase);
+            }
+
+            <section class="card" id="sec-general">
                 <div class="card-hd">
-                    <h2>Requirements</h2>
+                    <h2>Public Info</h2>
+                    <p>Fields marked with (*) are required.</p>
                 </div>
 
                 <div class="card-bd">
 
-                    <div class="field">
-                        <p>1. The institution must be officially recognized to grant a Bachelor's degree.</p>
+                    <!-- Top basic -->
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Name of Institution <span class="req">*</span></label>
+                            <input name="InstitutionName" value="@P.InstitutionName" />
+                        </div>
+
+                        <div class="field">
+                            <label>Official Entity Possessing Oversight Rights</label>
+                            <select name="OversightRightsEntity">
+                                <option value="">-- Choose --</option>
+                                <option selected="@(P.OversightRightsEntity == "Ministry")">Ministry</option>
+                                <option selected="@(P.OversightRightsEntity == "Accreditation Body")">Accreditation Body</option>
+                                <option selected="@(P.OversightRightsEntity == "Other")">Other</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="field">
-                        <p>2. The ratio of academic staff to students must comply with internationally accredited standards.</p>
+                    <!-- Dates + Oversight -->
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Founding Date <span class="req">*</span></label>
+                            <input name="FoundationDate" type="date" value="@P.FoundationDate" />
+                        </div>
+
+                        <div class="field">
+                            <label>Date of Establishment <span class="req">*</span></label>
+                            <input name="DateOfEstablishment" type="date" value="@P.DateOfEstablishment" />
+                        </div>
+
+                        <div class="field">
+                            <label>Mode of Study <span class="req">*</span></label>
+                            <select name="ModeOfStudy">
+                                <option value="">-- Choose --</option>
+                                <option selected="@(P.ModeOfStudy == "On-campus")">On-campus</option>
+                                <option selected="@(P.ModeOfStudy == "Blended")">Blended</option>
+                                <option selected="@(P.ModeOfStudy == "Online")">Online</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Language of Instruction <span class="req">*</span></label>
+                            <select name="LanguageOfInstruction" id="LanguageOfInstruction">
+                                <option value="">-- Choose --</option>
+                                @foreach (var languageOption in languageInstructionOptions)
+                                {
+                                    <option value="@languageOption" selected="@(languageOfInstruction.Equals(languageOption, StringComparison.OrdinalIgnoreCase))">@languageOption</option>
+                                }
+                                <option value="Others" selected="@showOtherLanguageInput">Others</option>
+                            </select>
+
+                            <div id="LanguageOfInstructionOtherWrap" style="margin-top:10px; display:@(showOtherLanguageInput ? "block" : "none");">
+                                <input type="text" name="LanguageOfInstructionOther" id="LanguageOfInstructionOther" placeholder="Please specify" value="@(isOtherLanguage? languageOfInstruction : "")" />
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Start of Teaching <span class="req">*</span></label>
+                            <input name="StartOfTeaching" type="date" value="@P.StartOfTeaching" />
+                        </div>
+
                     </div>
 
-                    <div class="field">
-                        <p>3. A sufficient percentage of Professors and Associate Professors must be available.</p>
+                    <!-- President info -->
+                    <div class="subhead">Information of President of Institution</div>
+                    <div class="grid-3">
+                        <div class="field">
+                            <label>Name</label>
+                            <input name="PresidentName" value="@P.PresidentName" />
+                        </div>
                     </div>
 
-                    <div class="field">
-                        <p>4. There must be sufficient published research in databases like Scopus or Web of Science.</p>
+                    <!-- Contact info -->
+                    <div class="subhead">Contact Information</div>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Mailing Full Address <span class="req">*</span></label>
+                            <input name="MailingFullAddress" value="@P.MailingFullAddress" />
+                        </div>
+
+                        <div class="field">
+                            <label>Direct Phone Number <span class="req">*</span></label>
+                            <input name="DirectPhoneNumber" value="@P.DirectPhoneNumber" inputmode="tel" />
+                        </div>
+
+                        <div class="field">
+                            <label>Email Address <span class="req">*</span></label>
+                            <input name="EmailAddress" value="@P.EmailAddress" type="email" />
+                        </div>
+
+                        <div class="field">
+                            <label>Institutional Web Address <span class="req">*</span></label>
+                            <input name="InstitutionalWebAddress" value="@P.InstitutionalWebAddress" type="url" placeholder="https://..." />
+                        </div>
+
                     </div>
 
-                    <div class="actions" style="justify-content:center; margin-top:20px;">
-                        <a href="@Url.Action("UniPostgraduateDashboard", "Home")" class="btn-primary">
-                            Continue to Application
-                        </a>
+                    <!-- Save (AJAX - NO RELOAD, NO SCROLL) -->
+                    <div class="actions" style="justify-content:center; margin-top:14px;">
+                        <button type="button"
+                                class="btn-primary"
+                                id="btnSavePublic"
+                                data-save-url="@Url.Action("SavePublicInfo", "Home")">
+                            Save Public Info
+                        </button>
                     </div>
-
                 </div>
             </section>
 
-            <!-- FORM -->
             <form method="post" asp-action="SavePostgraduatePrograms" enctype="multipart/form-data">
-                <!-- programs -->
-                <section id="sec-postgrad-programs" class="card">
+
+                <!-- ================= PROGRAMS ================= -->
+                <section class="card">
 
                     <div class="card-hd">
                         <h2>Postgraduate Programs</h2>
-                        <p>Select degree first, then upload programs file.</p>
                     </div>
 
                     <div class="card-bd">
 
-                        <!-- STEP 1 -->
-                        <div class="subhead">1) Select Degree</div>
-
                         <div class="degree-options">
-
                             <label class="degree-pill">
                                 <input type="checkbox" id="chkMaster" hidden />
                                 <span>Master</span>
@@ -127,208 +254,158 @@
                                 <input type="checkbox" id="chkDiploma" hidden />
                                 <span>Higher Diploma</span>
                             </label>
-
                         </div>
-
-                        <!-- STEP 2 -->
-                        <div class="subhead" style="margin-top:20px;">2) Upload Programs</div>
 
                         <div class="program-grid">
 
-                            <!-- MASTER -->
                             <div id="masterCard" class="upload-card" style="display:none;">
-                                <h3>Master Programs</h3>
-                                <p class="hint">Accepted format: Excel (.xlsx)</p>
-
-                                <div class="drop-zone">
-
-                                    <p class="drop-text">Upload Excel file</p>
-
-                                    <label class="upload-btn">
-                                        Choose File
-                                        <input type="file" name="MasterFile" hidden />
-                                    </label>
-
-                                    <span class="file-name">No file selected</span>
-
-                                </div>
+                                <h3>Master Programs *</h3>
+                                <input type="file" name="MasterFile" required />
                             </div>
 
-                            <!-- PHD -->
                             <div id="phdCard" class="upload-card" style="display:none;">
-                                <h3>PhD Programs</h3>
-                                <p class="hint">Accepted format: Excel (.xlsx)</p>
-                                <div class="drop-zone">
-
-                                    <p class="drop-text">Upload Excel file</p>
-
-                                    <label class="upload-btn">
-                                        Choose File
-                                        <input type="file" name="PhDFile" hidden />
-                                    </label>
-
-                                    <span class="file-name">No file selected</span>
-
-                                </div>
-                               
+                                <h3>PhD Programs *</h3>
+                                <input type="file" name="PhDFile" required />
                             </div>
 
-                            <!-- DIPLOMA -->
                             <div id="diplomaCard" class="upload-card" style="display:none;">
-                                <h3>Higher Diploma Programs</h3>
-                                <p class="hint">Accepted format: Excel (.xlsx)</p>
-                                <div class="drop-zone">
-
-                                    <p class="drop-text">Upload Excel file</p>
-
-                                    <label class="upload-btn">
-                                        Choose File
-                                        <input type="file" name="DiplomaFile" hidden />
-                                    </label>
-
-                                    <span class="file-name">No file selected</span>
-
-                                </div>
-                                
+                                <h3>Higher Diploma Programs *</h3>
+                                <input type="file" name="DiplomaFile" required />
                             </div>
 
-                        </div>
-
-                        <!-- SAVE -->
-                        <div class="actions" style="margin-top:25px;">
-                            <button class="btn-primary">Upload & Save</button>
                         </div>
 
                     </div>
                 </section>
 
-                <!-- students -->
-                <section id="sec-students" class="card">
+                <!-- ================= STUDENTS ================= -->
+                <section class="card">
 
                     <div class="card-hd">
                         <h2>Number of Students</h2>
-                        <p>Enter the number of enrolled students for each selected degree.</p>
                     </div>
 
                     <div class="card-bd">
 
-                        <!-- MASTER -->
                         <div id="masterStudents" class="student-row" style="display:none;">
-                            <label>Master Students</label>
-                            <input type="number" name="MasterStudents" placeholder="e.g. 120" />
+                            <label>Master Students <span class="required">*</span></label>
+                            <input type="number" name="MasterStudents" required />
                         </div>
 
-                        <!-- PHD -->
                         <div id="phdStudents" class="student-row" style="display:none;">
-                            <label>PhD Students</label>
-                            <input type="number" name="PhDStudents" placeholder="e.g. 40" />
+                            <label>PhD Students <span class="required">*</span></label>
+                            <input type="number" name="PhDStudents" required />
                         </div>
 
-                        <!-- DIPLOMA -->
                         <div id="diplomaStudents" class="student-row" style="display:none;">
-                            <label>Higher Diploma Students</label>
-                            <input type="number" name="DiplomaStudents" placeholder="e.g. 60" />
+                            <label>Diploma Students <span class="required">*</span></label>
+                            <input type="number" name="DiplomaStudents" required />
                         </div>
-                        <!-- SAVE -->
-                        <div class="actions" style="margin-top:25px;">
-                            <button class="btn-primary">Save</button>
-                        </div>
+
                     </div>
 
                 </section>
 
-
-                <!-- Academic Staff                -->
-                <section id="sec-faculty" class="card">
+                <!-- ================= FACULTY ================= -->
+                <section class="card">
 
                     <div class="card-hd">
                         <h2>Academic Staff</h2>
-                        <p>Enter the number of full-time academic staff for each degree.</p>
                     </div>
 
                     <div class="card-bd">
 
-                       <!-- ================= MASTER ================= -->
-<div id="masterFaculty" class="faculty-box" style="display:none;">
+                        <div id="masterFaculty" class="faculty-box" style="display:none;">
+                            <h3>Master Programs</h3>
 
-    <h3>Master Programs</h3>
+                            <div class="faculty-row">
+                                <label>Professor <span class="required">*</span></label>
+                                <input type="number" name="MasterProfessor" required />
+                            </div>
 
-    <div class="faculty-row">
-        <label>Professor</label>
-        <input type="number" placeholder="e.g. 5" required />
-    </div>
+                            <div class="faculty-row">
+                                <label>Associate Professor <span class="required">*</span></label>
+                                <input type="number" name="MasterAssociate" required />
+                            </div>
 
-    <div class="faculty-row">
-        <label>Associate Professor</label>
-        <input type="number" placeholder="e.g. 8" required />
-    </div>
+                            <div class="faculty-row">
+                                <label>Assistant Professor <span class="required">*</span></label>
+                                <input type="number" name="MasterAssistant" required />
+                            </div>
+                        </div>
 
-    <div class="faculty-row">
-        <label>Assistant Professor</label>
-        <input type="number" placeholder="e.g. 12" required />
-    </div>
+                        <div id="phdFaculty" class="faculty-box" style="display:none;">
+                            <h3>PhD Programs</h3>
 
-    <button class="btn-save">Save Master</button>
+                            <div class="faculty-row">
+                                <label>Professor *</label>
+                                <input type="number" name="PhDProfessor" required />
+                            </div>
 
-</div>
+                            <div class="faculty-row">
+                                <label>Associate Professor *</label>
+                                <input type="number" name="PhDAssociate" required />
+                            </div>
 
+                            <div class="faculty-row">
+                                <label>Assistant Professor *</label>
+                                <input type="number" name="PhDAssistant" required />
+                            </div>
+                        </div>
 
-<!-- ================= PHD ================= -->
-<div id="phdFaculty" class="faculty-box" style="display:none;">
+                        <div id="diplomaFaculty" class="faculty-box" style="display:none;">
+                            <h3>Diploma Programs</h3>
 
-    <h3>PhD Programs</h3>
+                            <div class="faculty-row">
+                                <label>Professor *</label>
+                                <input type="number" name="DiplomaProfessor" required />
+                            </div>
 
-    <div class="faculty-row">
-        <label>Professor</label>
-        <input type="number" placeholder="e.g. 3" required />
-    </div>
+                            <div class="faculty-row">
+                                <label>Associate Professor *</label>
+                                <input type="number" name="DiplomaAssociate" required />
+                            </div>
 
-    <div class="faculty-row">
-        <label>Associate Professor</label>
-        <input type="number" placeholder="e.g. 6" required />
-    </div>
-
-    <div class="faculty-row">
-        <label>Assistant Professor</label>
-        <input type="number" placeholder="e.g. 10" required />
-    </div>
-
-    <button class="btn-save">Save PhD</button>
-
-</div>
-
-
-<!-- ================= DIPLOMA ================= -->
-<div id="diplomaFaculty" class="faculty-box" style="display:none;">
-
-    <h3>Higher Diploma Programs</h3>
-
-    <div class="faculty-row">
-        <label>Professor</label>
-        <input type="number" placeholder="e.g. 2" required />
-    </div>
-
-    <div class="faculty-row">
-        <label>Associate Professor</label>
-        <input type="number" placeholder="e.g. 4" required />
-    </div>
-
-    <div class="faculty-row">
-        <label>Assistant Professor</label>
-        <input type="number" placeholder="e.g. 7" required />
-    </div>
-
-    <button class="btn-save">Save Diploma</button>
-
-</div>
-
-
-
-                        
+                            <div class="faculty-row">
+                                <label>Assistant Professor *</label>
+                                <input type="number" name="DiplomaAssistant" required />
+                            </div>
+                        </div>
 
                     </div>
 
                 </section>
+
+                <!-- ================= USER INFO ================= -->
+                <section class="card">
+
+                    <div class="card-hd">
+                        <h2>Applicant Information</h2>
+                    </div>
+
+                    <div class="card-bd">
+
+                        <div class="field-row">
+                            <label>Name <span class="required">*</span></label>
+                            <input type="text" name="Name" required />
+                        </div>
+
+                        <div class="field-row">
+                            <label>Email <span class="required">*</span></label>
+                            <input type="email" name="Email" required />
+                        </div>
+
+                        <div class="field-row">
+                            <label>Location <span class="required">*</span></label>
+                            <input type="text" name="Location" required />
+                        </div>
+
+                        <button type="submit" class="btn-primary">Submit Application</button>
+
+                    </div>
+
+                </section>
+
             </form>
 
             <footer class="foot">© Ministry of Higher Education</footer>
