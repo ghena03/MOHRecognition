@@ -62,3 +62,334 @@
         grid-template-columns: 1fr;
     }
 }
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    border: 1px solid transparent;
+}
+
+.status-badge.ok {
+    background: #ecfdf3;
+    color: #166534;
+    border-color: #86efac;
+}
+
+.status-badge.warn {
+    background: #fffbeb;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.status-badge.fail {
+    background: #fef2f2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+.doctors-group-title {
+    margin: 14px 0 8px;
+    font-size: 14px;
+    font-weight: 900;
+    color: #1f2937;
+    letter-spacing: .01em;
+}
+
+.doctors-group-note {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 700;
+}
+
+/* ── Merged read-only staff split table ───────────────────────── */
+
+.sst-ro-table {
+    min-width: 560px;
+}
+
+.sst-ro-cat-col {
+    width: 34%;
+}
+
+.sst-ro-phd-row {
+    background: #fdfbf8;
+}
+
+.sst-ro-cat {
+    font-weight: 800;
+    font-size: 13px;
+    color: #1f2937;
+    vertical-align: middle;
+}
+
+.sst-qual {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.phd-badge {
+    display: inline-block;
+    margin-left: 5px;
+    color: #b45309;
+    font-size: 11px;
+    font-weight: 900;
+    vertical-align: middle;
+}
+
+.sst-ro-cell {
+    vertical-align: top;
+    padding: 0 !important;
+}
+
+.value-stack {
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.value-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.value-row span {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+.value-row b {
+    font-weight: 800;
+    color: #111827;
+    font-size: 14px;
+}
+
+.value-row.pt span {
+    color: #b0a090;
+}
+
+.value-row.pt b {
+    color: #6b7280;
+}
+
+.doctors-ratio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.doctors-ratio-col {
+    border: 1px solid #e7eaf1;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.doctors-ratio-col-head {
+    background: #f6f8fc;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 900;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e7eaf1;
+}
+
+.doctors-ratio-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 12px;
+    border-bottom: 1px solid #f1f3f8;
+    font-size: 13px;
+    gap: 8px;
+}
+
+.doctors-ratio-item:last-child {
+    border-bottom: none;
+}
+
+.doctors-ratio-item span {
+    color: #6b7280;
+    font-weight: 700;
+}
+
+.doctors-ratio-item b {
+    color: #111827;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.doctors-ratio-status-row {
+    background: #fafafa;
+}
+
+/* ── Clinical Staff Ratio section ───────────────────────────────── */
+
+.csr-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 14px;
+}
+
+.csr-col {
+    display: grid;
+    gap: 10px;
+    border: 1px solid #e7eaf1;
+    border-radius: 12px;
+    padding: 14px;
+    background: #fafbfc;
+}
+
+.csr-col-head {
+    font-size: 13px;
+    font-weight: 900;
+    color: #374151;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e7eaf1;
+    margin-bottom: 2px;
+}
+
+.rd-field {
+    display: grid;
+    gap: 6px;
+}
+
+.rd-field label {
+    font-size: 12px;
+    font-weight: 800;
+    color: #374151;
+}
+
+.rd-field input {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-weight: 700;
+    font-size: 13px;
+    background: #fff;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.csr-ratio-field input {
+    transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.csr-ratio-field.green input {
+    border: 2px solid #22c55e;
+    background: #f0fdf4;
+    box-shadow: 0 0 0 3px rgba(34,197,94,.12);
+    color: #166534;
+    font-weight: 800;
+}
+
+.csr-ratio-field.orange input {
+    border: 2px solid #f59e0b;
+    background: #fffbeb;
+    box-shadow: 0 0 0 3px rgba(245,158,11,.12);
+    color: #92400e;
+    font-weight: 800;
+}
+
+.csr-ratio-field.red input {
+    border: 2px solid #ef4444;
+    background: #fef2f2;
+    box-shadow: 0 0 0 3px rgba(239,68,68,.12);
+    color: #991b1b;
+    font-weight: 800;
+}
+
+@media (max-width: 700px) {
+    .csr-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.doctors-sfr-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.doctors-sfr-card {
+    border: 1px solid #e7eaf1;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.doctors-sfr-head {
+    background: #f6f8fc;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 900;
+    padding: 11px 16px;
+    border-bottom: 1px solid #e7eaf1;
+}
+
+.doctors-sfr-body {
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.doctors-sfr-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+.doctors-sfr-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.doctors-sfr-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -.01em;
+}
+
+@media (max-width: 700px) {
+    .doctors-sfr-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.doctors-summary-item--pt {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.doctors-summary-item--pt span {
+    color: #1e40af;
+}
+
+.doctors-summary-item--pt b {
+    color: #1e3a8a;
+}
+
+@media (max-width: 900px) {
+    .doctors-ratio-grid {
+        grid-template-columns: 1fr;
+    }
+}

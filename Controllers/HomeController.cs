@@ -2117,10 +2117,32 @@ namespace MOHRecognition.Controllers
             int? den_fullTimeAssistantLecturerMsc,
             int? den_fullTimeAssistantLecturerPsc,
             int? den_fullTimePractitionerPsc,
-            int? den_fullTimePractitionerMsc
+            int? den_fullTimePractitionerMsc,
+
+            int? med_partTimeClinicalProfessor,
+            int? med_partTimeClinicalAssociateProfessor,
+            int? med_partTimeClinicalAssistantProfessor,
+            int? med_partTimeClinicalLecturerPhd,
+            int? med_partTimeClinicalAssistantLecturerPhd,
+            int? med_partTimeClinicalLecturerMsc,
+            int? med_partTimeClinicalAssistantLecturerMsc,
+            int? med_partTimeClinicalPractitionerPsc,
+            int? med_partTimeClinicalPractitionerMsc,
+
+            int? den_partTimeClinicalProfessor,
+            int? den_partTimeClinicalAssociateProfessor,
+            int? den_partTimeClinicalAssistantProfessor,
+            int? den_partTimeClinicalLecturerPhd,
+            int? den_partTimeClinicalAssistantLecturerPhd,
+            int? den_partTimeClinicalLecturerMsc,
+            int? den_partTimeClinicalAssistantLecturerMsc,
+            int? den_partTimeClinicalPractitionerPsc,
+            int? den_partTimeClinicalPractitionerMsc,
+
+            int? med_totalStudents,
+            int? den_totalStudents
         )
         {
-            // Optional: block negative numbers (professional)
             bool hasNegative =
                 (med_fullTimeProfessor ?? 0) < 0 ||
                 (med_fullTimeAssociateProfessor ?? 0) < 0 ||
@@ -2139,7 +2161,27 @@ namespace MOHRecognition.Controllers
                 (den_fullTimeAssistantLecturerMsc ?? 0) < 0 ||
                 (den_fullTimeAssistantLecturerPsc ?? 0) < 0 ||
                 (den_fullTimePractitionerPsc ?? 0) < 0 ||
-                (den_fullTimePractitionerMsc ?? 0) < 0;
+                (den_fullTimePractitionerMsc ?? 0) < 0 ||
+                (med_partTimeClinicalProfessor ?? 0) < 0 ||
+                (med_partTimeClinicalAssociateProfessor ?? 0) < 0 ||
+                (med_partTimeClinicalAssistantProfessor ?? 0) < 0 ||
+                (med_partTimeClinicalLecturerPhd ?? 0) < 0 ||
+                (med_partTimeClinicalAssistantLecturerPhd ?? 0) < 0 ||
+                (med_partTimeClinicalLecturerMsc ?? 0) < 0 ||
+                (med_partTimeClinicalAssistantLecturerMsc ?? 0) < 0 ||
+                (med_partTimeClinicalPractitionerPsc ?? 0) < 0 ||
+                (med_partTimeClinicalPractitionerMsc ?? 0) < 0 ||
+                (den_partTimeClinicalProfessor ?? 0) < 0 ||
+                (den_partTimeClinicalAssociateProfessor ?? 0) < 0 ||
+                (den_partTimeClinicalAssistantProfessor ?? 0) < 0 ||
+                (den_partTimeClinicalLecturerPhd ?? 0) < 0 ||
+                (den_partTimeClinicalAssistantLecturerPhd ?? 0) < 0 ||
+                (den_partTimeClinicalLecturerMsc ?? 0) < 0 ||
+                (den_partTimeClinicalAssistantLecturerMsc ?? 0) < 0 ||
+                (den_partTimeClinicalPractitionerPsc ?? 0) < 0 ||
+                (den_partTimeClinicalPractitionerMsc ?? 0) < 0 ||
+                (med_totalStudents ?? 0) < 0 ||
+                (den_totalStudents ?? 0) < 0;
 
             if (hasNegative)
                 return BadRequest("All fields must be non-negative numbers.");
@@ -2164,7 +2206,30 @@ namespace MOHRecognition.Controllers
                 Den_FullTimeAssistantLecturerMsc = den_fullTimeAssistantLecturerMsc,
                 Den_FullTimeAssistantLecturerPsc = den_fullTimeAssistantLecturerPsc,
                 Den_FullTimePractitionerPsc = den_fullTimePractitionerPsc,
-                Den_FullTimePractitionerMsc = den_fullTimePractitionerMsc
+                Den_FullTimePractitionerMsc = den_fullTimePractitionerMsc,
+
+                Med_PartTimeClinicalProfessor = med_partTimeClinicalProfessor,
+                Med_PartTimeClinicalAssociateProfessor = med_partTimeClinicalAssociateProfessor,
+                Med_PartTimeClinicalAssistantProfessor = med_partTimeClinicalAssistantProfessor,
+                Med_PartTimeClinicalLecturerPhd = med_partTimeClinicalLecturerPhd,
+                Med_PartTimeClinicalAssistantLecturerPhd = med_partTimeClinicalAssistantLecturerPhd,
+                Med_PartTimeClinicalLecturerMsc = med_partTimeClinicalLecturerMsc,
+                Med_PartTimeClinicalAssistantLecturerMsc = med_partTimeClinicalAssistantLecturerMsc,
+                Med_PartTimeClinicalPractitionerPsc = med_partTimeClinicalPractitionerPsc,
+                Med_PartTimeClinicalPractitionerMsc = med_partTimeClinicalPractitionerMsc,
+
+                Den_PartTimeClinicalProfessor = den_partTimeClinicalProfessor,
+                Den_PartTimeClinicalAssociateProfessor = den_partTimeClinicalAssociateProfessor,
+                Den_PartTimeClinicalAssistantProfessor = den_partTimeClinicalAssistantProfessor,
+                Den_PartTimeClinicalLecturerPhd = den_partTimeClinicalLecturerPhd,
+                Den_PartTimeClinicalAssistantLecturerPhd = den_partTimeClinicalAssistantLecturerPhd,
+                Den_PartTimeClinicalLecturerMsc = den_partTimeClinicalLecturerMsc,
+                Den_PartTimeClinicalAssistantLecturerMsc = den_partTimeClinicalAssistantLecturerMsc,
+                Den_PartTimeClinicalPractitionerPsc = den_partTimeClinicalPractitionerPsc,
+                Den_PartTimeClinicalPractitionerMsc = den_partTimeClinicalPractitionerMsc,
+
+                Med_TotalStudents = med_totalStudents,
+                Den_TotalStudents = den_totalStudents
             };
 
             SaveMedDen(dto);

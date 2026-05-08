@@ -1,5 +1,66 @@
 @import url("./DetailsBasicInfo.css");
 
+/* ── Clinical Capacity college cards ─────────────────────────────────────── */
+.csr-college-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 4px;
+}
+
+.csr-college-card {
+    border: 1px solid #e7eaf1;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.csr-college-head {
+    background: #f6f8fc;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 900;
+    padding: 11px 16px;
+    border-bottom: 1px solid #e7eaf1;
+}
+
+.csr-college-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.csr-college-lbl {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+.csr-college-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.csr-college-val {
+    font-size: 28px;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -.01em;
+}
+
+.csr-college-val.green  { color: #16a34a; }
+.csr-college-val.orange { color: #d97706; }
+.csr-college-val.red    { color: #dc2626; }
+
+@media (max-width: 700px) {
+    .csr-college-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Toasts ──────────────────────────────────────────────────────────────── */
 .infra-saved {
     border: 1px solid #bbf7d0;

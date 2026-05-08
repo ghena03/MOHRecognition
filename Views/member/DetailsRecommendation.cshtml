@@ -89,6 +89,38 @@
     var ratioCompliance = hasFacultyData ? RatioCompliance(ratioColorStatus)        : "missing";
     var docCompliance   = hasFacultyData ? DoctorateCompliance(doctorateColorStatus) : "missing";
 
+    // ── Medicine/Dentistry Clinical Capacity ─────────────────────────────────
+    var medDen = Model?.MedicineDentistry ?? new DTOs.MedicineDentistryDto();
+    static string ClinicalColor(double? r) => r == null ? "" : r <= 16.5 ? "green" : r <= 20.625 ? "orange" : "red";
+    var medClinicalColor = ClinicalColor(medDen.Med_StudentFacultyRatio);
+    var denClinicalColor = ClinicalColor(medDen.Den_StudentFacultyRatio);
+    string clinicalCapCompliance;
+    if (!medDen.Med_StudentFacultyRatio.HasValue && !medDen.Den_StudentFacultyRatio.HasValue)
+    {
+        clinicalCapCompliance = "Needs Review";
+    }
+    else
+    {
+        if (medClinicalColor == "red" || denClinicalColor == "red")
+            clinicalCapCompliance = "Not Compliant";
+        else if (medClinicalColor == "orange" || denClinicalColor == "orange"
+              || string.IsNullOrEmpty(medClinicalColor) || string.IsNullOrEmpty(denClinicalColor))
+            clinicalCapCompliance = "Needs Review";
+        else
+            clinicalCapCompliance = "Compliant";
+    }
+    static string ClinicalRatioFmt(double? r) => r.HasValue ? "1:" + ((int)Math.Floor(r.Value)).ToString() : "—";
+    static string ClinicalBadgeCss(string color) => color switch {
+        "green" => "compliant", "orange" => "needs-review", "red" => "not-compliant", _ => "missing"
+    };
+    static string ClinicalBadgeLabel(string color) => color switch {
+        "green" => "Acceptable", "orange" => "Warning", "red" => "Exceeds Limit", _ => "Missing Data"
+    };
+    static string ClinicalBadgeIcon(string color) => color switch {
+        "green" => "bi-check-circle-fill", "orange" => "bi-exclamation-circle-fill",
+        "red" => "bi-x-circle-fill", _ => "bi-question-circle"
+    };
+
     // ── Environment assessments ──────────────────────────────────────────────
     static string EnvMap(string? v) => (v ?? "").Trim() switch {
         "Meets Standards"   => "Compliant",
@@ -110,7 +142,7 @@
 
     // ── Auto-suggested recommendation ────────────────────────────────────────
     var p1 = string.IsNullOrWhiteSpace(savedAccreditationStatus) ? "Not Assessed" : savedAccreditationStatus;
-    var allPoints = new[] { p1, ratioCompliance, docCompliance, envOverall };
+    var allPoints = new[] { p1, ratioCompliance, docCompliance, clinicalCapCompliance, envOverall };
     var compliantPoints = allPoints.Count(p => p == "Compliant");
     var reviewPoints = allPoints.Count(p => p == "Needs Review" || p == "Not Assessed" || p == "missing");
     var nonCompliantPoints = allPoints.Count(p => p == "Not Compliant");
@@ -248,6 +280,15 @@
                         </div>
                         <div class="fa-sc-cell">
                             <div class="fa-sc-step">4</div>
+                            <div class="fa-sc-info">
+                                <div class="fa-sc-name">Clinical Capacity</div>
+                                <span class="fa-compliance-badge @CssClass(clinicalCapCompliance)">
+                                    <i class="bi @CssIcon(clinicalCapCompliance)"></i> @DisplayLabel(clinicalCapCompliance)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="fa-sc-cell">
+                            <div class="fa-sc-step">5</div>
                             <div class="fa-sc-info">
                                 <div class="fa-sc-name">Environment</div>
                                 <span class="fa-compliance-badge @CssClass(envOverall)">
@@ -401,7 +442,46 @@
                     <div class="rd-card-hd">
                         <div class="rd-card-hd-row">
                             <div>
-                                <h2><i class="bi bi-building-check"></i> 4. Environment Assessment</h2>
+                                <h2><i class="bi bi-hospital"></i> 4. Medicine &amp; Dentistry Clinical Capacity Assessment</h2>
+                                <p>Automatically calculated from submitted Medicine/Dentistry staff data.</p>
+                            </div>
+                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                        </div>
+                    </div>
+
+                    <div class="csr-college-grid">
+                        <div class="csr-college-card">
+                            <div class="csr-college-head">College of Medicine</div>
+                            <div class="csr-college-body">
+                                <span class="csr-college-lbl">Student to Faculty Ratio</span>
+                                <div class="csr-college-result">
+                                    <span class="csr-college-val @medClinicalColor">@ClinicalRatioFmt(medDen.Med_StudentFacultyRatio)</span>
+                                    <span class="fa-compliance-badge @ClinicalBadgeCss(medClinicalColor)">
+                                        <i class="bi @ClinicalBadgeIcon(medClinicalColor)"></i> @ClinicalBadgeLabel(medClinicalColor)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="csr-college-card">
+                            <div class="csr-college-head">College of Dentistry</div>
+                            <div class="csr-college-body">
+                                <span class="csr-college-lbl">Student to Faculty Ratio</span>
+                                <div class="csr-college-result">
+                                    <span class="csr-college-val @denClinicalColor">@ClinicalRatioFmt(medDen.Den_StudentFacultyRatio)</span>
+                                    <span class="fa-compliance-badge @ClinicalBadgeCss(denClinicalColor)">
+                                        <i class="bi @ClinicalBadgeIcon(denClinicalColor)"></i> @ClinicalBadgeLabel(denClinicalColor)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd">
+                        <div class="rd-card-hd-row">
+                            <div>
+                                <h2><i class="bi bi-building-check"></i> 5. Environment Assessment</h2>
                                 <p>Summarised from the Environment Assessment Summary page.</p>
                             </div>
                             <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
@@ -445,7 +525,7 @@
                         <div class="rd-card-hd-row">
                             <div class="fa-final-head">
                                 <h2><i class="bi bi-clipboard2-check"></i> Final Recommendation</h2>
-                                <p>System-generated suggestion based on all 4 assessment points. Review and provide your justification.</p>
+                                <p>System-generated suggestion based on all 5 assessment points. Review and provide your justification.</p>
                                 <div class="fa-final-kpis">
                                     <span class="fa-final-kpi ok"><i class="bi bi-check-circle-fill"></i> Compliant: @compliantPoints</span>
                                     <span class="fa-final-kpi warn"><i class="bi bi-exclamation-circle-fill"></i> Review Needed: @reviewPoints</span>
@@ -467,7 +547,7 @@
                             <div class="fa-banner-note" id="suggestionNote">
                                 @if (autoSuggestion == "Approve")
                                 {
-                                    <span>All four assessment points meet required standards. The institution qualifies for recognition.</span>
+                                    <span>All five assessment points meet required standards. The institution qualifies for recognition.</span>
                                 }
                                 else if (autoSuggestion == "Conditional Approval")
                                 {

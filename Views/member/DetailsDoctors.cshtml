@@ -13,6 +13,10 @@
         .ToList();
 
     string N(int? value) => (value ?? 0).ToString();
+    string ClinicalRatioClass(double? r) => r == null ? "" : r <= 16.5 ? "ok" : r <= 20.625 ? "warn" : "fail";
+    string ClinicalRatioText(double? r) => r == null ? "N/A" : r <= 16.5 ? "Acceptable" : r <= 20.625 ? "Warning" : "Exceeds Limit";
+    string ClinicalRatioColor(double? r) => r == null ? "" : r <= 16.5 ? "green" : r <= 20.625 ? "orange" : "red";
+    string Fmt2(double d) => d.ToString("F2");
 }
 <!doctype html>
 <html lang="en" dir="ltr">
@@ -87,39 +91,172 @@
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
                     <h2>Doctors / Medicine Colleges</h2>
-                    <p>Submitted full-time staff categories for Medicine and Dentistry colleges.</p>
+                    <p>Part-time clinical counts are included in the totals.</p>
                 </div>
 
+                <!-- Merged Staff Table -->
                 <div class="rd-tablewrap">
-                    <table class="rd-table">
+                    <table class="rd-table sst-ro-table">
                         <thead>
                             <tr>
-                                <th>Full-Time Academic Category</th>
+                                <th class="sst-ro-cat-col">Category</th>
                                 <th>College of Medicine</th>
                                 <th>College of Dentistry</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td>Full-Time Professor</td><td>@N(medDen.Med_FullTimeProfessor)</td><td>@N(medDen.Den_FullTimeProfessor)</td></tr>
-                            <tr><td>Full-Time Associate Professor</td><td>@N(medDen.Med_FullTimeAssociateProfessor)</td><td>@N(medDen.Den_FullTimeAssociateProfessor)</td></tr>
-                            <tr><td>Full-Time Assistant Professor</td><td>@N(medDen.Med_FullTimeAssistantProfessor)</td><td>@N(medDen.Den_FullTimeAssistantProfessor)</td></tr>
-                            <tr><td>Full-Time Lecturer (PhD Holders)</td><td>@N(medDen.Med_FullTimeLecturerPhd)</td><td>@N(medDen.Den_FullTimeLecturerPhd)</td></tr>
-                            <tr><td>Full-Time Lecturer (MSc Holders)</td><td>@N(medDen.Med_FullTimeLecturerMsc)</td><td>@N(medDen.Den_FullTimeLecturerMsc)</td></tr>
-                            <tr><td>Full-Time Assistant Lecturer (MSc Holders)</td><td>@N(medDen.Med_FullTimeAssistantLecturerMsc)</td><td>@N(medDen.Den_FullTimeAssistantLecturerMsc)</td></tr>
-                            <tr><td>Full-Time Assistant Lecturer (PhD Holders)</td><td>@N(medDen.Med_FullTimeAssistantLecturerPsc)</td><td>@N(medDen.Den_FullTimeAssistantLecturerPsc)</td></tr>
-                            <tr><td>Full-Time Practitioner (BSc Holders)</td><td>@N(medDen.Med_FullTimePractitionerPsc)</td><td>@N(medDen.Den_FullTimePractitionerPsc)</td></tr>
-                            <tr><td>Full-Time Practitioner (MSc Holders)</td><td>@N(medDen.Med_FullTimePractitionerMsc)</td><td>@N(medDen.Den_FullTimePractitionerMsc)</td></tr>
+
+                            <tr class="sst-ro-total">
+                                <td class="sst-ro-cat">Total Students</td>
+                                <td class="sst-ro-cell">
+                                    <div class="value-stack">
+                                        <div class="value-row"><span>Students</span><b>@N(medDen.Med_TotalStudents)</b></div>
+                                    </div>
+                                </td>
+                                <td class="sst-ro-cell">
+                                    <div class="value-stack">
+                                        <div class="value-row"><span>Students</span><b>@N(medDen.Den_TotalStudents)</b></div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr class="sst-ro-phd-row">
+                                <td class="sst-ro-cat">Professor</td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeProfessor)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Med_PartTimeClinicalProfessor)</b></div></div></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeProfessor)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Den_PartTimeClinicalProfessor)</b></div></div></td>
+                            </tr>
+
+                            <tr class="sst-ro-phd-row">
+                                <td class="sst-ro-cat">Associate Professor</td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeAssociateProfessor)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Med_PartTimeClinicalAssociateProfessor)</b></div></div></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeAssociateProfessor)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Den_PartTimeClinicalAssociateProfessor)</b></div></div></td>
+                            </tr>
+
+                            <tr class="sst-ro-phd-row">
+                                <td class="sst-ro-cat">Assistant Professor</td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeAssistantProfessor)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Med_PartTimeClinicalAssistantProfessor)</b></div></div></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeAssistantProfessor)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Den_PartTimeClinicalAssistantProfessor)</b></div></div></td>
+                            </tr>
+
+                            <tr class="sst-ro-phd-row">
+                                <td class="sst-ro-cat">Lecturer <span class="sst-qual">(PhD)</span></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeLecturerPhd)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Med_PartTimeClinicalLecturerPhd)</b></div></div></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeLecturerPhd)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Den_PartTimeClinicalLecturerPhd)</b></div></div></td>
+                            </tr>
+
+                            <tr>
+                                <td class="sst-ro-cat">Lecturer <span class="sst-qual">(MSc)</span></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeLecturerMsc)</b></div></div></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeLecturerMsc)</b></div></div></td>
+                            </tr>
+
+                            <tr>
+                                <td class="sst-ro-cat">Assistant Lecturer <span class="sst-qual">(MSc)</span></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeAssistantLecturerMsc)</b></div></div></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeAssistantLecturerMsc)</b></div></div></td>
+                            </tr>
+
+                            <tr class="sst-ro-phd-row">
+                                <td class="sst-ro-cat">Assistant Lecturer <span class="sst-qual">(PhD)</span></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeAssistantLecturerPsc)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Med_PartTimeClinicalAssistantLecturerPhd)</b></div></div></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeAssistantLecturerPsc)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Den_PartTimeClinicalAssistantLecturerPhd)</b></div></div></td>
+                            </tr>
+
+                            <tr>
+                                <td class="sst-ro-cat">Practitioner <span class="sst-qual">(BSc)</span></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimePractitionerPsc)</b></div></div></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimePractitionerPsc)</b></div></div></td>
+                            </tr>
+
+                            <tr>
+                                <td class="sst-ro-cat">Practitioner <span class="sst-qual">(MSc)</span></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimePractitionerMsc)</b></div></div></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimePractitionerMsc)</b></div></div></td>
+                            </tr>
+
                         </tbody>
                     </table>
                 </div>
 
+                <!-- Computed Read-Only Summary -->
+                <h3 class="doctors-group-title" style="margin-top:18px;">Computed Read-Only Summary</h3>
+                <p class="doctors-group-note">Totals are automatically calculated for each college.</p>
                 <div class="doctors-summary-grid">
-                    <div class="doctors-summary-item"><span>PhD Holders (Medicine)</span><b>@medDen.Med_PhdHolders</b></div>
-                    <div class="doctors-summary-item"><span>PhD Holders (Dentistry)</span><b>@medDen.Den_PhdHolders</b></div>
-                    <div class="doctors-summary-item"><span>MSc Holders (Medicine)</span><b>@medDen.Med_MscHolders</b></div>
-                    <div class="doctors-summary-item"><span>MSc Holders (Dentistry)</span><b>@medDen.Den_MscHolders</b></div>
-                    <div class="doctors-summary-item"><span>BSc Holders (Medicine)</span><b>@medDen.Med_PscHolders</b></div>
-                    <div class="doctors-summary-item"><span>BSc Holders (Dentistry)</span><b>@medDen.Den_PscHolders</b></div>
+                    <div class="doctors-summary-item">
+                        <span>Full-Time PhD (Medicine)</span>
+                        <b>@medDen.Med_PhdHolders</b>
+                    </div>
+                    <div class="doctors-summary-item">
+                        <span>Full-Time PhD (Dentistry)</span>
+                        <b>@medDen.Den_PhdHolders</b>
+                    </div>
+                    <div class="doctors-summary-item">
+                        <span>Full-Time MSc (Medicine)</span>
+                        <b>@medDen.Med_MscHolders</b>
+                    </div>
+                    <div class="doctors-summary-item">
+                        <span>Full-Time MSc (Dentistry)</span>
+                        <b>@medDen.Den_MscHolders</b>
+                    </div>
+                    <div class="doctors-summary-item">
+                        <span>Full-Time PSc (Medicine)</span>
+                        <b>@medDen.Med_PscHolders</b>
+                    </div>
+                    <div class="doctors-summary-item">
+                        <span>Full-Time PSc (Dentistry)</span>
+                        <b>@medDen.Den_PscHolders</b>
+                    </div>
+                    <div class="doctors-summary-item doctors-summary-item--pt">
+                        <span>Part-Time Total (Medicine)</span>
+                        <b>@medDen.Med_TotalPartTime</b>
+                    </div>
+                    <div class="doctors-summary-item doctors-summary-item--pt">
+                        <span>Part-Time Total (Dentistry)</span>
+                        <b>@medDen.Den_TotalPartTime</b>
+                    </div>
+                </div>
+
+            </section>
+
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>Clinical Staff Ratio</h2>
+                    <p>Computed clinical ratios for Medicine and Dentistry.</p>
+                </div>
+                <div class="csr-grid">
+
+                    <div class="csr-col">
+                        <div class="csr-col-head">College of Medicine</div>
+                        <div class="rd-field">
+                            <label>Full-Time Clinical PhD</label>
+                            <input type="number" value="@medDen.Med_FullTimeClinicalPhD" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Allowed Part-Time Clinical</label>
+                            <input type="text" value="@Fmt2(medDen.Med_AllowedPartTimeClinical)" readonly />
+                        </div>
+                        <div class="rd-field csr-ratio-field @ClinicalRatioColor(medDen.Med_StudentFacultyRatio)">
+                            <label>Student to Faculty Ratio</label>
+                            <input type="text" value="@(medDen.Med_StudentFacultyRatio.HasValue ? "1 : " + ((int)Math.Floor(medDen.Med_StudentFacultyRatio.Value)).ToString() : "—")" readonly />
+                        </div>
+                    </div>
+
+                    <div class="csr-col">
+                        <div class="csr-col-head">College of Dentistry</div>
+                        <div class="rd-field">
+                            <label>Full-Time Clinical PhD</label>
+                            <input type="number" value="@medDen.Den_FullTimeClinicalPhD" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Allowed Part-Time Clinical</label>
+                            <input type="text" value="@Fmt2(medDen.Den_AllowedPartTimeClinical)" readonly />
+                        </div>
+                        <div class="rd-field csr-ratio-field @ClinicalRatioColor(medDen.Den_StudentFacultyRatio)">
+                            <label>Student to Faculty Ratio</label>
+                            <input type="text" value="@(medDen.Den_StudentFacultyRatio.HasValue ? "1 : " + ((int)Math.Floor(medDen.Den_StudentFacultyRatio.Value)).ToString() : "—")" readonly />
+                        </div>
+                    </div>
+
                 </div>
             </section>
 

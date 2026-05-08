@@ -220,6 +220,51 @@
     margin-bottom: 0;
 }
 
+/* ================= DOCTORS REVIEW TABLE ================= */
+.doctors-review-section .sst-ro-table {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e6e1d8;
+    background: #fff;
+}
+
+.doctors-review-section .sst-ro-table thead th {
+    background: #f6efe6;
+    color: #6b1d2c;
+    font-weight: 800;
+    border-bottom: 1px solid #e6e1d8;
+}
+
+.doctors-review-section .sst-ro-table td {
+    border-bottom: 1px solid #f0ebe2;
+}
+
+.doctors-review-section .sst-ro-total {
+    background: #fff7ee;
+}
+
+.doctors-review-section .sst-ro-total .sst-ro-cat {
+    font-weight: 900;
+    color: #7b2030;
+}
+
+.doctors-review-section .value-stack {
+    display: grid;
+    gap: 4px;
+}
+
+.doctors-review-section .value-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+    color: #374151;
+}
+
+.doctors-review-section .value-row b {
+    color: #111827;
+}
+
 .na-toggle {
     display: inline-flex;
     align-items: center;
@@ -505,7 +550,206 @@
 .doctors-metrics {
     margin-top: 12px;
     margin-bottom: 2px;
-} 
+}
+
+.doctors-group-title {
+    margin: 14px 0 8px;
+    font-size: 14px;
+    font-weight: 900;
+    color: #7a2d2a;
+    letter-spacing: .01em;
+}
+
+.doctors-group-note {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 700;
+}
+
+/* ── Merged read-only staff split table ───────────────────────── */
+
+.sst-ro-table {
+    min-width: 560px;
+}
+
+.sst-ro-cat-col {
+    width: 34%;
+}
+
+.sst-ro-phd-row {
+    background: #fffcf8;
+}
+
+.sst-ro-cat {
+    font-weight: 800;
+    font-size: 13px;
+    color: #1f2937;
+    vertical-align: middle;
+}
+
+.sst-qual {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.sst-ro-cell {
+    vertical-align: top;
+    padding: 10px 12px !important;
+}
+
+.value-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.value-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 13px;
+}
+
+.value-row span {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.value-row b {
+    font-weight: 800;
+    color: #111827;
+    font-size: 14px;
+}
+
+.value-row.pt span {
+    color: #c4b5a0;
+}
+
+.value-row.pt b {
+    color: #6b7280;
+}
+
+.doctors-ratio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.doctors-ratio-col {
+    border: 1px solid #eadfd6;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.doctors-ratio-col-head {
+    background: #faf5f1;
+    color: #7a2d2a;
+    font-size: 13px;
+    font-weight: 900;
+    padding: 10px 12px;
+    border-bottom: 1px solid #eadfd6;
+}
+
+.doctors-ratio-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 12px;
+    border-bottom: 1px solid #f1ece6;
+    font-size: 13px;
+    gap: 8px;
+}
+
+.doctors-ratio-item:last-child {
+    border-bottom: none;
+}
+
+.doctors-ratio-item span {
+    color: #6b7280;
+    font-weight: 700;
+}
+
+.doctors-ratio-item b {
+    color: #111827;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.doctors-ratio-status-row {
+    background: #fafafa;
+}
+
+@media (max-width: 900px) {
+    .doctors-ratio-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.doctors-sfr-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.doctors-sfr-card {
+    border: 1px solid #e7eaf1;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.doctors-sfr-head {
+    background: #f6f8fc;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 900;
+    padding: 11px 16px;
+    border-bottom: 1px solid #e7eaf1;
+}
+
+.doctors-sfr-body {
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.doctors-sfr-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+.doctors-sfr-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.doctors-sfr-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -.01em;
+}
+
+@media (max-width: 700px) {
+    .doctors-sfr-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .clean-table-wrap {
     overflow-x: auto;
     border: 1px solid #e5ddd3;

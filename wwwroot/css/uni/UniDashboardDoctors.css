@@ -87,3 +87,235 @@
     justify-content: space-between;
     align-items: center;
 }
+
+/* ── Merged Staff Split Table (submission form) ──────────────── */
+
+.staff-split-table {
+    width: 100%;
+    min-width: 560px;
+    border-collapse: collapse;
+}
+
+.staff-split-table thead th {
+    background: #faf5f1;
+    color: #7a2d2a;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 10px 12px;
+    border-bottom: 2px solid #e5ddd3;
+    text-align: left;
+}
+
+.staff-split-table .sst-cat-col {
+    width: 34%;
+}
+
+.staff-split-table .sst-coll-col {
+    width: 33%;
+}
+
+.staff-split-table tbody tr {
+    border-bottom: 1px solid #f1ece6;
+}
+
+.staff-split-table tbody tr:hover {
+    background: #fffaf7;
+}
+
+.staff-split-table .sst-phd-row {
+    background: #fffcf8;
+}
+
+.staff-split-table .sst-phd-row:hover {
+    background: #fff7ee;
+}
+
+.sst-cat {
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #1f2937;
+    vertical-align: middle;
+}
+
+.sst-qual {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.sst-phd-badge {
+    display: inline-block;
+    margin-left: 5px;
+    color: #b45309;
+    font-size: 11px;
+    font-weight: 900;
+    vertical-align: middle;
+}
+
+.sst-cell {
+    vertical-align: top;
+    padding: 0;
+}
+
+.input-stack {
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.irow-lbl {
+    min-width: 66px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.irow-lbl.ft {
+    color: #374151;
+}
+
+.irow-lbl.pt {
+    color: #9ca3af;
+}
+
+.input-row .num {
+    flex: 1;
+    min-width: 0;
+}
+
+.medden-group-header {
+    margin: 0 0 8px;
+    padding: 8px 12px;
+    background: #faf5f1;
+    border-left: 3px solid #8f2d2d;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 900;
+    color: #7a2d2a;
+}
+
+.medden-group-note {
+    margin: -4px 0 8px;
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 700;
+}
+
+.medden-students-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.medden-students-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.medden-students-item label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+}
+
+.medden-students-input {
+    width: 100%;
+}
+
+.medden-ratio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.medden-ratio-col {
+    border: 1px solid #e5ddd3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.medden-ratio-col-head {
+    background: #faf5f1;
+    color: #7a2d2a;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e5ddd3;
+}
+
+.medden-ratio-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f5f0eb;
+    font-size: 13px;
+    gap: 8px;
+}
+
+.medden-ratio-item:last-child {
+    border-bottom: none;
+}
+
+.medden-ratio-item span {
+    color: #6b7280;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.medden-ratio-item b {
+    color: #111827;
+    font-weight: 800;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.medden-ratio-status-row {
+    background: #fafaf8;
+}
+
+.medden-status-badge {
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    border: 1px solid transparent;
+}
+
+.medden-status-badge.ok {
+    background: #ecfdf3;
+    color: #166534;
+    border-color: #86efac;
+}
+
+.medden-status-badge.warn {
+    background: #fffbeb;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.medden-status-badge.fail {
+    background: #fef2f2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+@media (max-width: 700px) {
+    .medden-students-row,
+    .medden-ratio-grid {
+        grid-template-columns: 1fr;
+    }
+}

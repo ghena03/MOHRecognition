@@ -1025,7 +1025,12 @@
                         <div class="card-bd">
                             <div id="medDenContainer"
                                  data-partial-url="@Url.Action("MedicineDentistryPartial", "Home")"
-                                 data-save-url="@Url.Action("MedicineDentistrySave", "Home")">
+                                 data-save-url="@Url.Action("MedicineDentistrySave", "Home")"
+                                 data-after-save="#sec-hosp">
+                            </div>
+
+                            <div class="medden-actions">
+                                <button type="button" class="btn-primary medden-save-btn" onclick="MedDenSave()">Save</button>
                             </div>
                         </div>
                     </section>

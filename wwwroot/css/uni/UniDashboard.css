@@ -1437,10 +1437,91 @@ html {
 
 .medden-table-wrap {
     margin: 12px 12px 0;
-    border: 1px solid #ece5dc;
+    border: 1px solid #e3e9f1;
     border-radius: 12px;
     overflow: auto;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+    background: #f7f9fc;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.medden-table-wrap .staff-split-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.medden-table-wrap .staff-split-table th,
+.medden-table-wrap .staff-split-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e6edf6;
+    vertical-align: middle;
+    background: #fff;
+}
+
+.medden-table-wrap .staff-split-table thead th {
+    background: linear-gradient(180deg, #eef3f9 0%, #e6edf6 100%);
+    color: #1f2a37;
+    font-weight: 900;
+    text-align: center;
+}
+
+.medden-table-wrap .staff-split-table tbody tr:nth-child(even) td {
+    background: #f9fbff;
+}
+
+.medden-table-wrap .sst-cat-col {
+    width: 260px;
+    text-align: left;
+}
+
+.medden-table-wrap .sst-cat {
+    font-weight: 800;
+    color: #273443;
+}
+
+.medden-table-wrap .sst-total-row td {
+    background: #f1f5fb;
+}
+
+.medden-table-wrap .input-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.medden-table-wrap .input-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    border: 1px solid #e6edf6;
+    background: #f6f9fe;
+}
+
+.medden-table-wrap .irow-lbl {
+    font-size: 12px;
+    font-weight: 800;
+    color: #536070;
+    letter-spacing: .2px;
+}
+
+.medden-table-wrap .num {
+    width: 120px;
+    max-width: 100%;
+    text-align: center;
+    border-radius: 10px;
+    border: 1px solid #d5dde9;
+    padding: 8px 10px;
+    font-weight: 700;
+    background: #fff;
+}
+
+.medden-table-wrap .num:focus {
+    border-color: #9e1b32;
+    box-shadow: 0 0 0 3px rgba(158, 27, 50, 0.12);
 }
 
 .medden-table {
@@ -1537,6 +1618,21 @@ html {
     box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
 }
 
+.medden-summary-item--pt {
+    background: #f5f8ff;
+    border-color: #c7d7f5;
+}
+
+.medden-summary-item--pt .medden-summary-label {
+    color: #3b5fa0;
+}
+
+.medden-summary-item--pt .medden-summary-value {
+    background: linear-gradient(180deg, #eef3fd 0%, #e4ecfb 100%);
+    border-color: #c7d7f5;
+    color: #1e3a6e;
+}
+
 .medden-summary-label {
     font-size: 12px;
     font-weight: 800;
@@ -1583,6 +1679,70 @@ html {
     .medden-summary-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.doctors-ratio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.doctors-ratio-col {
+    border: 1px solid #e7eaf1;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.doctors-ratio-col-head {
+    background: #f6f8fc;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 900;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e7eaf1;
+}
+
+.doctors-ratio-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 12px;
+    border-bottom: 1px solid #f1f3f8;
+    font-size: 13px;
+    gap: 8px;
+}
+
+.doctors-ratio-item:last-child { border-bottom: none; }
+
+.doctors-ratio-item span {
+    color: #6b7280;
+    font-weight: 700;
+}
+
+.doctors-ratio-item b {
+    color: #111827;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.doctors-ratio-status-row { background: #fafafa; }
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    border: 1px solid transparent;
+}
+
+.status-badge.ok  { background: #ecfdf3; color: #166534; border-color: #86efac; }
+.status-badge.warn { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+.status-badge.fail { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+
+@media (max-width: 900px) {
+    .doctors-ratio-grid { grid-template-columns: 1fr; }
 }
 
 /* ================= PHD HOLDERS ================= */
