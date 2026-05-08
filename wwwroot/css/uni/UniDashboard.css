@@ -3465,47 +3465,343 @@ html {
         background: #8e1725;
     }
 
-.side-item {
+
+/* ================= MODERN STUDENTS SECTION ================= */
+
+.modern-hd {
+    padding: 22px 26px;
+}
+
+.students-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.students-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    background: rgba(158, 27, 50, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.students-title-wrap h2 {
+    margin: 0;
+    font-size: 32px;
+    color: #9e1b32;
+    font-weight: 900;
+}
+
+.students-title-wrap p {
+    margin-top: 6px;
+    color: #666;
+    font-size: 14px;
+}
+
+.students-modern-body {
+    padding: 10px 28px 24px;
+}
+
+.student-modern-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 26px 12px;
+    border-bottom: 1px dashed #ddd;
+}
+
+.student-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.student-mini-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    background: #f7eaea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+}
+
+.student-modern-row label {
+    display: block;
+    font-size: 18px;
+    font-weight: 800;
+    color: #111;
+    margin-bottom: 4px;
+}
+
+.student-modern-row small {
+    color: #777;
+    font-size: 13px;
+}
+
+.student-modern-row input {
+    width: 320px;
+    height: 56px;
+    border: 1px solid #e3d6d6;
+    border-radius: 16px;
+    padding: 0 18px;
+    font-size: 16px;
+    font-weight: 700;
+    background: #fff;
     transition: all 0.2s ease;
-    border-left: 4px solid transparent;
 }
 
-    .side-item:hover {
-        background: #faf7f2;
-        padding-left: 18px;
+    .student-modern-row input:focus {
+        outline: none;
+        border-color: #9e1b32;
+        box-shadow: 0 0 0 4px rgba(158, 27, 50, 0.08);
     }
 
-    .side-item.active {
-        background: #9e1b32;
-        color: #fff;
-        border-left: 4px solid #7f1627;
-        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+.student-modern-row:hover {
+    background: #fcfaf8;
+    border-radius: 18px;
+}
+
+@media (max-width: 900px) {
+
+    .student-modern-row {
+        flex-direction: column;
+        align-items: flex-start;
     }
 
-.card {
+        .student-modern-row input {
+            width: 100%;
+        }
+}
+
+/* ================= APPLICANT MODERN ================= */
+
+.modern-applicant-hd {
+    padding: 24px 28px;
+}
+
+.applicant-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.applicant-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 18px;
+    background: rgba(158, 27, 50, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9e1b32;
+    font-size: 28px;
+}
+
+.applicant-title-wrap h2 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 900;
+    color: #9e1b32;
+}
+
+.applicant-title-wrap p {
+    margin-top: 6px;
+    color: #666;
+    font-size: 14px;
+}
+
+.applicant-modern-body {
+    padding: 28px;
+}
+
+.applicant-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+}
+
+.applicant-field {
+    display: flex;
+    flex-direction: column;
+}
+
+    .applicant-field.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .applicant-field label {
+        margin-bottom: 10px;
+        font-size: 15px;
+        font-weight: 800;
+        color: #222;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .applicant-field label i {
+            color: #9e1b32;
+        }
+
+    .applicant-field input {
+        height: 56px;
+        border: 1px solid #e3d6d6;
+        border-radius: 16px;
+        padding: 0 18px;
+        font-size: 15px;
+        background: #fff;
+        transition: all 0.2s ease;
+    }
+
+        .applicant-field input:focus {
+            outline: none;
+            border-color: #9e1b32;
+            box-shadow: 0 0 0 4px rgba(158, 27, 50, 0.08);
+        }
+
+.submit-area {
+    margin-top: 34px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.submit-modern-btn {
+    height: 58px;
+    padding: 0 28px;
+    border: none;
+    border-radius: 18px;
+    background: #9e1b32;
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
     transition: all 0.2s ease;
 }
 
-    .card:hover {
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    .submit-modern-btn:hover {
+        transform: translateY(-2px);
+        background: #861529;
+        box-shadow: 0 10px 24px rgba(158, 27, 50, 0.22);
     }
-.card-bd {
-    padding: 22px;
-}
 
-.field {
-    margin-bottom: 16px;
-}
+@media (max-width: 900px) {
 
-.btn-primary {
+    .applicant-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* ================= MODERN FACULTY ================= */
+
+.faculty-modern-card {
+    background: #fff;
+    border: 1px solid #ece3d9;
+    border-radius: 24px;
+    padding: 24px;
+    margin-top: 20px;
     transition: all 0.2s ease;
 }
 
-    .btn-primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 8px 18px rgba(158, 27, 50, 0.2);
+    .faculty-modern-card:hover {
+        box-shadow: 0 12px 30px rgba(0,0,0,0.05);
     }
 
-section.card {
-    scroll-margin-top: 120px;
+.faculty-modern-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+}
+
+.faculty-head-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.faculty-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 18px;
+    background: rgba(158, 27, 50, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9e1b32;
+    font-size: 28px;
+}
+
+.faculty-modern-head h3 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 900;
+    color: #111;
+}
+
+.faculty-modern-head p {
+    margin-top: 6px;
+    color: #666;
+    font-size: 14px;
+}
+
+.faculty-modern-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.faculty-input-box {
+    background: #faf8f6;
+    border: 1px solid #eee5db;
+    border-radius: 18px;
+    padding: 18px;
+}
+
+    .faculty-input-box label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        font-size: 15px;
+        font-weight: 800;
+        color: #222;
+    }
+
+        .faculty-input-box label i {
+            color: #9e1b32;
+        }
+
+    .faculty-input-box input {
+        width: 100%;
+        height: 54px;
+        border: 1px solid #e3d6d6;
+        border-radius: 14px;
+        padding: 0 16px;
+        font-size: 15px;
+        font-weight: 700;
+        background: white;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+        .faculty-input-box input:focus {
+            outline: none;
+            border-color: #9e1b32;
+            box-shadow: 0 0 0 4px rgba(158, 27, 50, 0.08);
+        }
+
+@media (max-width: 1000px) {
+
+    .faculty-modern-grid {
+        grid-template-columns: 1fr;
+    }
 }
