@@ -23,6 +23,7 @@
 	<ItemGroup>
 	  <Folder Include="PdfReaderTool\" />
 	  <Folder Include="Services\" />
+	  <Folder Include="wwwroot\uploads\postgraduate\" />
 	</ItemGroup>
 
 	<ItemGroup>

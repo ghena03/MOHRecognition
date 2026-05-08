@@ -76,8 +76,6 @@
                 </div>
             </section>
 
-            
-            
             <!-- ===================== Public / General Info ===================== -->
             @{
                 var P = ViewBag.Public as DTOs.PublicInfoDto ?? new DTOs.PublicInfoDto();
@@ -227,7 +225,7 @@
 
                     </div>
 
-                    <!-- Save (AJAX - NO RELOAD, NO SCROLL) -->
+                    <!-- Save -->
                     <div class="actions" style="justify-content:center; margin-top:14px;">
                         <button type="button"
                                 class="btn-primary"
@@ -239,11 +237,13 @@
                 </div>
             </section>
 
-            <form method="post" asp-action="SavePostgraduatePrograms" enctype="multipart/form-data">
+            <form method="post"
+                  asp-controller="Home"
+                  asp-action="SavePostgraduatePrograms"
+                  enctype="multipart/form-data">
 
                 <!-- ================= PROGRAMS ================= -->
                 <section class="card" id="sec-programs">
-                    
 
                     <div class="card-hd">
                         <h2>Postgraduate Programs</h2>
@@ -272,26 +272,30 @@
 
                             <div id="masterCard" class="upload-card" style="display:none;">
                                 <h3>Master Programs *</h3>
-                                <input type="file" name="MasterFile" required />
+                                <input type="file" name="MasterFile" />
                             </div>
 
                             <div id="phdCard" class="upload-card" style="display:none;">
                                 <h3>PhD Programs *</h3>
-                                <input type="file" name="PhDFile" required />
+                                <input type="file" name="PhDFile" />
                             </div>
 
                             <div id="diplomaCard" class="upload-card" style="display:none;">
                                 <h3>Higher Diploma Programs *</h3>
-                                <input type="file" name="DiplomaFile" required />
+                                <input type="file" name="DiplomaFile" />
                             </div>
 
                         </div>
-                        <button type="button"
-                                class="btn-primary"
-                                id="btnSavePublic"
-                                data-save-url="@Url.Action("SavePublicInfo", "Home")">
-                            Save 
-                        </button>
+
+                        <div class="actions" style="justify-content:center; margin-top:20px;">
+                            <button type="button"
+                                    class="btn-primary"
+                                    id="btnSavePrograms"
+                                    data-save-url="@Url.Action("SavePublicInfo", "Home")">
+                                Save
+                            </button>
+                        </div>
+
                     </div>
                 </section>
 
@@ -299,7 +303,6 @@
                 <section class="card" id="sec-students">
 
                     <div class="card-hd modern-hd">
-
                         <div class="students-title-wrap">
                             <div>
                                 <h2>Number of Students</h2>
@@ -307,99 +310,61 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="card-bd students-modern-body">
 
                         <!-- MASTER -->
-                        <div id="masterStudents"
-                             class="student-modern-row"
-                             style="display:none;">
-
+                        <div id="masterStudents" class="student-modern-row" style="display:none;">
                             <div class="student-left">
-
                                 <div class="student-mini-icon">
                                     <i class="fa-solid fa-graduation-cap"></i>
                                 </div>
-
                                 <div>
-                                    <label>
-                                        Master Students
-                                        <span class="required">*</span>
-                                    </label>
-
+                                    <label>Master Students <span class="required">*</span></label>
                                     <small>Total enrolled master students</small>
                                 </div>
-
                             </div>
-
-                            <input type="number"
-                                   name="MasterStudents"
-                                   required />
-
+                            <input type="number" name="MasterStudents" />
                         </div>
 
                         <!-- PHD -->
-                        <div id="phdStudents"
-                             class="student-modern-row"
-                             style="display:none;">
-
+                        <div id="phdStudents" class="student-modern-row" style="display:none;">
                             <div class="student-left">
-
                                 <div class="student-mini-icon">
                                     <i class="fa-solid fa-book-open-reader"></i>
                                 </div>
-
                                 <div>
-                                    <label>
-                                        PhD Students
-                                        <span class="required">*</span>
-                                    </label>
-
+                                    <label>PhD Students <span class="required">*</span></label>
                                     <small>Total enrolled PhD students</small>
                                 </div>
-
                             </div>
-
-                            <input type="number"
-                                   name="PhDStudents"
-                                   required />
-
+                            <input type="number" name="PhDStudents" />
                         </div>
 
                         <!-- DIPLOMA -->
-                        <div id="diplomaStudents"
-                             class="student-modern-row"
-                             style="display:none; border-bottom:none;">
-
+                        <div id="diplomaStudents" class="student-modern-row" style="display:none; border-bottom:none;">
                             <div class="student-left">
-
                                 <div class="student-mini-icon">
                                     <i class="fa-solid fa-scroll"></i>
                                 </div>
-
                                 <div>
-                                    <label>
-                                        Diploma Students
-                                        <span class="required">*</span>
-                                    </label>
-
+                                    <label>Diploma Students <span class="required">*</span></label>
                                     <small>Total enrolled diploma students</small>
                                 </div>
-
                             </div>
-
-                            <input type="number"
-                                   name="DiplomaStudents"
-                                   required />
-
+                            <input type="number" name="DiplomaStudents" />
                         </div>
-                        <button type="button"
-                                class="btn-primary"
-                                id="btnSavePublic"
-                                data-save-url="@Url.Action("SavePublicInfo", "Home")">
-                            Save 
-                        </button>
-                    </div>
 
+                        <div class="actions" style="justify-content:center; margin-top:20px;">
+                            <button type="button"
+                                    class="btn-primary"
+                                    id="btnSaveStudents"
+                                    data-save-url="@Url.Action("SavePublicInfo", "Home")">
+                                Save
+                            </button>
+                        </div>
+
+                    </div>
                 </section>
 
                 <!-- ================= FACULTY ================= -->
@@ -411,307 +376,137 @@
 
                     <div class="card-bd">
 
-                        <div id="masterFaculty"
-                             class="faculty-modern-card"
-                             style="display:none;">
-
+                        <!-- MASTER FACULTY -->
+                        <div id="masterFaculty" class="faculty-modern-card" style="display:none;">
                             <div class="faculty-modern-head">
-
                                 <div class="faculty-head-left">
-
                                     <div>
                                         <h3>Master Programs</h3>
                                         <p>Academic staff assigned to master programs.</p>
                                     </div>
-
                                 </div>
-
                             </div>
-
                             <div class="faculty-modern-grid">
-
-                                <!-- PROFESSOR -->
                                 <div class="faculty-input-box">
-
-                                    <label>
-                                        <i class="fa-solid fa-chalkboard-user"></i>
-                                        Professor
-                                        <span class="required">*</span>
-                                    </label>
-
-                                    <input type="number"
-                                           name="MasterProfessor"
-                                           required />
-
+                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor <span class="required">*</span></label>
+                                    <input type="number" name="MasterProfessor" />
                                 </div>
-
-                                <!-- ASSOCIATE -->
                                 <div class="faculty-input-box">
-
-                                    <label>
-                                        <i class="fa-solid fa-user-graduate"></i>
-                                        Associate Professor
-                                        <span class="required">*</span>
-                                    </label>
-
-                                    <input type="number"
-                                           name="MasterAssociate"
-                                           required />
-
+                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor <span class="required">*</span></label>
+                                    <input type="number" name="MasterAssociate" />
                                 </div>
-
-                                <!-- ASSISTANT -->
                                 <div class="faculty-input-box">
-
-                                    <label>
-                                        <i class="fa-solid fa-book-open-reader"></i>
-                                        Assistant Professor
-                                        <span class="required">*</span>
-                                    </label>
-
-                                    <input type="number"
-                                           name="MasterAssistant"
-                                           required />
-
+                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor <span class="required">*</span></label>
+                                    <input type="number" name="MasterAssistant" />
                                 </div>
-
                             </div>
-
                         </div>
 
-                        <div id="phdFaculty"
-                             class="faculty-modern-card"
-                             style="display:none;">
-
+                        <!-- PHD FACULTY -->
+                        <div id="phdFaculty" class="faculty-modern-card" style="display:none;">
                             <div class="faculty-modern-head">
-
-                                <div class="faculty-head-left">                             
+                                <div class="faculty-head-left">
                                     <div>
                                         <h3>PhD Programs</h3>
                                         <p>Academic staff assigned to PhD programs.</p>
                                     </div>
-
                                 </div>
-
                             </div>
-
                             <div class="faculty-modern-grid">
-
-                                <!-- PROFESSOR -->
                                 <div class="faculty-input-box">
-
-                                    <label>
-                                        <i class="fa-solid fa-chalkboard-user"></i>
-                                        Professor
-                                        <span class="required">*</span>
-                                    </label>
-
-                                    <input type="number"
-                                           name="PhDProfessor"
-                                           required />
-
+                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor <span class="required">*</span></label>
+                                    <input type="number" name="PhDProfessor" />
                                 </div>
-
-                                <!-- ASSOCIATE -->
                                 <div class="faculty-input-box">
-
-                                    <label>
-                                        <i class="fa-solid fa-user-graduate"></i>
-                                        Associate Professor
-                                        <span class="required">*</span>
-                                    </label>
-
-                                    <input type="number"
-                                           name="PhDAssociate"
-                                           required />
-
+                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor <span class="required">*</span></label>
+                                    <input type="number" name="PhDAssociate" />
                                 </div>
-
-                                <!-- ASSISTANT -->
                                 <div class="faculty-input-box">
-
-                                    <label>
-                                        <i class="fa-solid fa-book-open-reader"></i>
-                                        Assistant Professor
-                                        <span class="required">*</span>
-                                    </label>
-
-                                    <input type="number"
-                                           name="PhDAssistant"
-                                           required />
-
+                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor <span class="required">*</span></label>
+                                    <input type="number" name="PhDAssistant" />
                                 </div>
-
                             </div>
-
                         </div>
 
-                        <div id="diplomaFaculty"
-                             class="faculty-modern-card"
-                             style="display:none;">
-
+                        <!-- DIPLOMA FACULTY -->
+                        <div id="diplomaFaculty" class="faculty-modern-card" style="display:none;">
                             <div class="faculty-modern-head">
-
                                 <div class="faculty-head-left">
-
-                                 
-
                                     <div>
                                         <h3>Diploma Programs</h3>
                                         <p>Academic staff assigned to diploma programs.</p>
                                     </div>
-
                                 </div>
-
                             </div>
-
                             <div class="faculty-modern-grid">
-
-                                <!-- PROFESSOR -->
                                 <div class="faculty-input-box">
-
-                                    <label>
-                                        <i class="fa-solid fa-chalkboard-user"></i>
-                                        Professor
-                                        <span class="required">*</span>
-                                    </label>
-
-                                    <input type="number"
-                                           name="DiplomaProfessor"
-                                           required />
-
+                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor <span class="required">*</span></label>
+                                    <input type="number" name="DiplomaProfessor" />
                                 </div>
-
-                                <!-- ASSOCIATE -->
                                 <div class="faculty-input-box">
-
-                                    <label>
-                                        <i class="fa-solid fa-user-graduate"></i>
-                                        Associate Professor
-                                        <span class="required">*</span>
-                                    </label>
-
-                                    <input type="number"
-                                           name="DiplomaAssociate"
-                                           required />
-
+                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor <span class="required">*</span></label>
+                                    <input type="number" name="DiplomaAssociate" />
                                 </div>
-
-                                <!-- ASSISTANT -->
                                 <div class="faculty-input-box">
-
-                                    <label>
-                                        <i class="fa-solid fa-book-open-reader"></i>
-                                        Assistant Professor
-                                        <span class="required">*</span>
-                                    </label>
-
-                                    <input type="number"
-                                           name="DiplomaAssistant"
-                                           required />
-
+                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor <span class="required">*</span></label>
+                                    <input type="number" name="DiplomaAssistant" />
                                 </div>
-
                             </div>
-                            
-
-                                <button type="button"
-                                        class="btn-primary"
-                                        id="btnSavePublic"
-                                        data-save-url="@Url.Action("SavePublicInfo", "Home")">
-                                    Save 
-                                </button>
-                            
                         </div>
 
+                        <!-- ✅ ONE SAVE BUTTON FOR THE ENTIRE SECTION -->
+                        <div class="actions" style="justify-content:center; margin-top:20px;">
+                            <button type="button"
+                                    class="btn-primary"
+                                    id="btnSaveFaculty">
+                                Save
+                            </button>
+                        </div>
+
+                    </div>
                 </section>
 
                 <!-- ================= USER INFO ================= -->
                 <section class="card" id="sec-user">
 
                     <div class="card-hd modern-applicant-hd">
-
                         <div class="applicant-title-wrap">
-
-                            
-
                             <div>
                                 <h2>Applicant Information</h2>
                                 <p>Please enter the official applicant details.</p>
                             </div>
-
                         </div>
-
                     </div>
 
                     <div class="card-bd applicant-modern-body">
 
                         <div class="applicant-grid">
 
-                            <!-- NAME -->
                             <div class="applicant-field">
-
-                                <label>
-                                    <i class="fa-solid fa-user"></i>
-                                    Full Name
-                                    <span class="required">*</span>
-                                </label>
-
-                                <input type="text"
-                                       name="Name"
-                                       placeholder="Enter applicant name"
-                                       required />
-
+                                <label><i class="fa-solid fa-user"></i> Full Name <span class="required">*</span></label>
+                                <input type="text" name="Name" placeholder="Enter applicant name" />
                             </div>
 
-                            <!-- EMAIL -->
                             <div class="applicant-field">
-
-                                <label>
-                                    <i class="fa-solid fa-envelope"></i>
-                                    Email Address
-                                    <span class="required">*</span>
-                                </label>
-
-                                <input type="email"
-                                       name="Email"
-                                       placeholder="example@email.com"
-                                       required />
-
+                                <label><i class="fa-solid fa-envelope"></i> Email Address <span class="required">*</span></label>
+                                <input type="email" name="Email" placeholder="example@email.com" />
                             </div>
 
-                            <!-- LOCATION -->
                             <div class="applicant-field full-width">
-
-                                <label>
-                                    <i class="fa-solid fa-location-dot"></i>
-                                    Location
-                                    <span class="required">*</span>
-                                </label>
-
-                                <input type="text"
-                                       name="Location"
-                                       placeholder="Country / City"
-                                       required />
-
+                                <label><i class="fa-solid fa-location-dot"></i> Location <span class="required">*</span></label>
+                                <input type="text" name="Location" placeholder="Country / City" />
                             </div>
 
                         </div>
 
                         <div class="submit-area">
-
                             <button type="submit" class="submit-modern-btn">
-
                                 <i class="fa-solid fa-paper-plane"></i>
-
                                 Submit Application
-
                             </button>
-
                         </div>
 
                     </div>
-
                 </section>
 
             </form>
@@ -721,6 +516,10 @@
         </main>
     </div>
 
+    <!-- SWEET ALERT -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- EXTERNAL JS -->
     <script src="~/js/uni/PostgraduatePrograms.js" asp-append-version="true"></script>
 
 </body>
