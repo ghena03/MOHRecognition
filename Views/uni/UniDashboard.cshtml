@@ -1278,6 +1278,7 @@
                         throw new Error("Save failed");
                     }
                     window.showAppToast?.("Saved successfully.", "success");
+                    window.scrollToNextSection("sec-admission-duration");
                 } catch (err) {
                     window.showAppToast?.("Save failed. Please try again.", "error");
                 } finally {
@@ -1309,6 +1310,9 @@
     <script src="~/js/uni/Pictures.js" asp-append-version="true"></script>
     <script src="~/js/uni/AccreditationBodies.js" asp-append-version="true"></script>
     <script src="~/js/uni/SubmitApplication.js" asp-append-version="true"></script>
+
+    <!-- DEV TEST TOOL — REMOVE BEFORE FINAL DELIVERY -->
+    <script src="~/js/uni/DevTestTool.js" asp-append-version="true"></script>
 
 </body>
 </html>

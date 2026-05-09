@@ -1,0 +1,297 @@
+@using MOHRecognition.DTOs
+@model List<MeetingDto>
+
+@{
+    ViewData["Title"] = "إدارة الجلسات";
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>إدارة الجلسات</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f3f0eb;
+            color: #1a1a1a;
+            min-height: 100vh;
+        }
+
+        .ministry-bar {
+            background: #5a0e1b;
+            color: rgba(255,255,255,.68);
+            font-size: 11.5px; font-weight: 500; letter-spacing: .4px;
+            padding: 6px 48px;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .pg-header {
+            background: #7f1627; color: #fff;
+            padding: 0 48px; height: 66px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 18px rgba(127,22,39,.32);
+        }
+        .hd-left { display: flex; align-items: center; gap: 16px; }
+        .pg-header img { height: 42px; }
+        .hd-sep { width: 1px; height: 34px; background: rgba(255,255,255,.28); margin: 0 6px; }
+        .hd-text h1 { font-size: 17px; font-weight: 700; }
+        .hd-text p  { font-size: 11.5px; opacity: .72; margin-top: 2px; }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(255,255,255,.15); color: #fff;
+            border: 1.5px solid rgba(255,255,255,.35);
+            border-radius: 8px; padding: 8px 18px;
+            font-size: 13px; font-weight: 600;
+            text-decoration: none; transition: background .15s;
+        }
+        .btn-back:hover { background: rgba(255,255,255,.25); }
+
+        /* ── Body ── */
+        .pg-body { max-width: 1080px; margin: 0 auto; padding: 40px 24px 72px; }
+
+        /* ── Table card ── */
+        .tbl-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 24px rgba(0,0,0,.07);
+            overflow: hidden;
+        }
+
+        .tbl-card-top {
+            padding: 22px 32px 18px;
+            border-bottom: 1px solid #f0ebe4;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .tbl-card-top h3 { font-size: 15px; font-weight: 700; color: #333; }
+        .tbl-card-top p  { font-size: 12.5px; color: #aaa; margin-top: 2px; }
+
+        .count-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #f5e8ea; color: #7f1627;
+            border-radius: 20px; padding: 4px 14px;
+            font-size: 12px; font-weight: 700;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead th {
+            background: #faf7f4;
+            color: #7f1627;
+            font-size: 11px; font-weight: 700;
+            letter-spacing: .8px; text-transform: uppercase;
+            padding: 14px 28px; text-align: left;
+            border-bottom: 2px solid #ecddd5; white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f5f0eb;
+            cursor: pointer;
+            transition: background .12s;
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #fdf8f5; }
+
+        tbody td { padding: 20px 28px; vertical-align: middle; }
+
+        .cell-num { font-size: 24px; font-weight: 900; color: #7f1627; letter-spacing: -1px; line-height: 1; }
+        .cell-year { font-size: 15px; font-weight: 700; color: #444; }
+        .cell-date { font-size: 14px; font-weight: 600; color: #333; }
+
+        .sbadge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .sdot { width: 7px; height: 7px; border-radius: 50%; }
+        .sb-open      { background: #e8f5ea; color: #1a7a34; } .sb-open      .sdot { background: #1a7a34; }
+        .sb-scheduled { background: #e8f0fe; color: #1a56db; } .sb-scheduled .sdot { background: #1a56db; }
+        .sb-closed    { background: #f0f0f0; color: #777; }    .sb-closed    .sdot { background: #aaa; }
+        .sb-other     { background: #fff3cd; color: #856404; } .sb-other     .sdot { background: #856404; }
+
+        /* Progress mini bar */
+        .prog-wrap { min-width: 120px; }
+        .prog-nums { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 5px; }
+        .prog-nums span { font-size: 11px; color: #bbb; font-weight: 500; margin-left: 4px; }
+        .prog-track { height: 5px; background: #f0ebe4; border-radius: 10px; overflow: hidden; }
+        .prog-fill  { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #7f1627, #b03050); }
+        .prog-fill.full { background: linear-gradient(90deg, #1a7a34, #2da84e); }
+
+        /* Open button */
+        .open-btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: #7f1627; color: #fff;
+            border-radius: 8px; padding: 9px 18px;
+            font-size: 13px; font-weight: 700;
+            text-decoration: none; transition: background .15s; white-space: nowrap;
+        }
+        .open-btn:hover { background: #6a1020; }
+        .open-btn.closed { background: #aaa; }
+        .open-btn.closed:hover { background: #999; }
+
+        /* Empty state */
+        .empty-state { padding: 80px 32px; text-align: center; }
+        .empty-state i  { font-size: 56px; color: #d4bec4; display: block; margin-bottom: 18px; }
+        .empty-state h3 { font-size: 17px; font-weight: 700; color: #666; margin-bottom: 10px; }
+        .empty-state p  { font-size: 13.5px; color: #aaa; max-width: 360px; margin: 0 auto 24px; line-height: 1.7; }
+        .empty-state a  {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #7f1627; color: #fff;
+            border-radius: 9px; padding: 12px 24px;
+            font-size: 14px; font-weight: 700; text-decoration: none; transition: background .15s;
+        }
+        .empty-state a:hover { background: #6a1020; }
+    </style>
+</head>
+<body>
+
+    <div class="ministry-bar">
+        <i class="bi bi-bank2"></i>
+        Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan
+    </div>
+
+    <div class="pg-header">
+        <div class="hd-left">
+            <img src="/images/mohelogo.png" alt="Logo" />
+            <div class="hd-sep"></div>
+            <div class="hd-text">
+                <h1>إدارة الجلسات</h1>
+                <p>Session Management — Committee Working Area</p>
+            </div>
+        </div>
+        <a href="/Home/AdminDashboard" class="btn-back">
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="pg-body">
+
+        <div class="tbl-card">
+            <div class="tbl-card-top">
+                <div>
+                    <h3>Committee Meetings</h3>
+                    <p>Click any row to open the meeting — review universities, doctors' recommendations, and enter final decisions</p>
+                </div>
+                @if (Model != null && Model.Count > 0)
+                {
+                    <span class="count-pill">
+                        <i class="bi bi-calendar3"></i>
+                        @Model.Count @(Model.Count == 1 ? "meeting" : "meetings")
+                    </span>
+                }
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Year</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Universities</th>
+                        <th>Decisions</th>
+                        <th style="text-align:right; padding-right:32px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Count > 0)
+                    {
+                        foreach (var m in Model)
+                        {
+                            int linked  = 0;
+                            int decided = 0;
+                            if (ViewBag.SessionInfos != null)
+                            {
+                                foreach (var si in ViewBag.SessionInfos)
+                                {
+                                    var siM = si.Meeting as MeetingDto;
+                                    if (siM != null && siM.Id == m.Id)
+                                    {
+                                        linked  = (int)si.LinkedCount;
+                                        decided = (int)si.DecidedCount;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            int pct = linked > 0 ? decided * 100 / linked : 0;
+                            bool isClosed = m.Status == "Closed";
+                            string sc = m.Status == "Open"      ? "sb-open"
+                                      : m.Status == "Closed"    ? "sb-closed"
+                                      : m.Status == "Scheduled" ? "sb-scheduled"
+                                      : "sb-other";
+
+                            <tr onclick="window.location='/Home/SessionDashboard?id=@m.Id'">
+                                <td><span class="cell-num">#@m.SessionNumber</span></td>
+                                <td><span class="cell-year">@m.MeetingDate.Year</span></td>
+                                <td><span class="cell-date">@m.MeetingDate.ToString("dd MMM yyyy")</span></td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(m.MeetingTime))
+                                    {
+                                        <span style="font-size:13.5px;font-weight:600;color:#555;">@m.MeetingTime</span>
+                                    }
+                                    else { <span style="color:#ccc;">—</span> }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(m.LocationOrPlatform))
+                                    {
+                                        <span style="font-size:13px;color:#555;">@m.LocationOrPlatform</span>
+                                    }
+                                    else { <span style="color:#ccc;">—</span> }
+                                </td>
+                                <td>
+                                    <span class="sbadge @sc"><span class="sdot"></span>@m.Status</span>
+                                </td>
+                                <td>
+                                    <span style="font-size:16px;font-weight:800;color:#333;">@linked</span>
+                                    <span style="font-size:11.5px;color:#bbb;margin-left:4px;">univ.</span>
+                                </td>
+                                <td>
+                                    <div class="prog-wrap">
+                                        <div class="prog-nums">
+                                            @decided / @linked
+                                            <span>decided</span>
+                                        </div>
+                                        @if (linked > 0)
+                                        {
+                                            <div class="prog-track">
+                                                <div class="prog-fill @(pct == 100 ? "full" : "")" style="width:@pct%"></div>
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                                <td style="text-align:right;" onclick="event.stopPropagation()">
+                                    <a class="open-btn @(isClosed ? "closed" : "")"
+                                       href="/Home/SessionDashboard?id=@m.Id">
+                                        @(isClosed ? "View" : "Open") <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <i class="bi bi-calendar2-x"></i>
+                                    <h3>No meetings available</h3>
+                                    <p>No meetings have been scheduled yet. Go to Meetings to create one first.</p>
+                                    <a href="/Home/Meetings">
+                                        <i class="bi bi-calendar-plus"></i> Go to Meetings
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</body>
+</html>

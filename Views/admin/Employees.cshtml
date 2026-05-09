@@ -1,61 +1,573 @@
-﻿@using MOHRecognition.DTOs
+@using MOHRecognition.DTOs
 @model List<EmployeeDto>
 
 @{
-    ViewData["Title"] = "Employees";
+    ViewData["Title"] = "Committee Members";
     Layout = null;
 }
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
-<!-- HEADER -->
-<div class="header">
-    <div class="header-left">
-        <img src="~/images/mohelogo.png" class="logo" />
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f0e8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 48px 24px 64px;
+            color: #1a1a1a;
+        }
 
-        <div class="title-box">
-            <h1>Employees</h1>
-            <p>Manage recognition members</p>
+        .doc-wrap {
+            width: 100%;
+            max-width: 960px;
+            background: #fff;
+            border: 1px solid #d4c9b8;
+            box-shadow: 0 4px 32px rgba(0,0,0,.12);
+            padding: 48px 56px 56px;
+        }
+
+        /* Title */
+        .title-area {
+            position: relative;
+            text-align: center;
+            padding: 12px 0 36px;
+            margin-bottom: 8px;
+        }
+
+        .doc-title {
+            position: relative;
+            font-size: 22px;
+            font-weight: 900;
+            color: #7f1627;
+            letter-spacing: .3px;
+            line-height: 1.5;
+        }
+
+        /* Top action bar */
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #fff;
+            color: #555;
+            border: 1.5px solid #c8bfb0;
+            border-radius: 7px;
+            padding: 9px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: none;
+            transition: border-color .15s, color .15s;
+        }
+
+        .btn-back:hover {
+            border-color: #7f1627;
+            color: #7f1627;
+        }
+
+        .btn-add-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #7f1627;
+            color: #fff;
+            border: none;
+            border-radius: 7px;
+            padding: 9px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .btn-add-toggle:hover {
+            background: #6a1020;
+        }
+
+        /* Table */
+        .tbl-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+            font-size: 14.5px;
+        }
+
+        thead tr th {
+            background: #7f1627;
+            color: #fff;
+            font-weight: 800;
+            font-size: 15px;
+            padding: 14px 20px;
+            text-align: left;
+            border: 1px solid #6a1020;
+            white-space: nowrap;
+        }
+
+        thead tr th:first-child { text-align: center; width: 60px; }
+        thead tr th:nth-child(4) { width: 220px; }
+        thead tr th:last-child { text-align: center; width: 90px; }
+
+        tbody tr:nth-child(odd)  td { background: #fdf8f0; }
+        tbody tr:nth-child(even) td { background: #ffffff; }
+        tbody tr:hover td { background: #f5ede0; }
+
+        tbody tr td {
+            padding: 13px 20px;
+            border: 1px solid #ddd5c8;
+            vertical-align: middle;
+            font-weight: 600;
+            color: #1a1a1a;
+            line-height: 1.5;
+        }
+
+        tbody tr td:first-child {
+            text-align: center;
+            font-weight: 800;
+            color: #7f1627;
+            font-size: 15px;
+            width: 60px;
+        }
+
+        tbody tr td:last-child { text-align: center; width: 90px; }
+
+        .empty-row td {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 32px;
+        }
+
+        .btn-remove {
+            background: none;
+            border: 1.5px solid #c0392b;
+            color: #c0392b;
+            border-radius: 6px;
+            padding: 5px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .15s, color .15s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .btn-remove:hover {
+            background: #c0392b;
+            color: #fff;
+        }
+
+        /* Bottom bar */
+        .bottom-bar {
+            margin-top: 36px;
+            border-top: 2px solid #e8ddd0;
+            padding-top: 24px;
+        }
+
+        /* Add form panel */
+        .add-panel {
+            display: none;
+            margin-bottom: 28px;
+            border-bottom: 2px solid #e8ddd0;
+            padding-bottom: 28px;
+        }
+
+        .add-panel.open { display: block; }
+
+        .add-panel h2 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #7f1627;
+            margin-bottom: 20px;
+        }
+
+        .add-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .add-field-full { grid-column: 1 / -1; }
+
+        .add-field { display: flex; flex-direction: column; gap: 6px; }
+
+        .add-field label { font-size: 13px; font-weight: 700; color: #444; }
+
+        .add-field input {
+            border: 1.5px solid #c8bfb0;
+            border-radius: 7px;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #1a1a1a;
+            background: #fdf8f0;
+            transition: border-color .15s, background .15s;
+        }
+
+        .add-field input:focus {
+            outline: none;
+            border-color: #7f1627;
+            background: #fff;
+        }
+
+        .add-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn-submit {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #7f1627;
+            color: #fff;
+            border: none;
+            border-radius: 7px;
+            padding: 11px 28px;
+            font-size: 14px;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .btn-submit:hover { background: #6a1020; }
+
+        /* ── Confirm Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #fff;
+            border: 1px solid #d4c9b8;
+            border-radius: 12px;
+            box-shadow: 0 8px 40px rgba(0,0,0,.22);
+            padding: 36px 40px 32px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .modal-icon {
+            width: 52px;
+            height: 52px;
+            background: #fde8eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+            font-size: 22px;
+            color: #7f1627;
+        }
+
+        .modal-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .modal-body b {
+            color: #1a1a1a;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-modal-cancel {
+            flex: 1;
+            background: #fff;
+            color: #555;
+            border: 1.5px solid #c8bfb0;
+            border-radius: 7px;
+            padding: 10px 0;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: border-color .15s, color .15s;
+        }
+
+        .btn-modal-cancel:hover {
+            border-color: #7f1627;
+            color: #7f1627;
+        }
+
+        .btn-modal-confirm {
+            flex: 1;
+            background: #7f1627;
+            color: #fff;
+            border: none;
+            border-radius: 7px;
+            padding: 10px 0;
+            font-size: 14px;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .btn-modal-confirm:hover { background: #6a1020; }
+    </style>
+</head>
+<body>
+    <div class="doc-wrap">
+
+        <div class="title-area">
+            <h1 class="doc-title">Members of the Recognition Committee for Non-Jordanian Higher Education Institutions</h1>
         </div>
-    </div>
-</div>
-<div class="main-container">
 
-    <!-- TITLE -->
-    <div class="page-head">
-        <h2>Employees Management</h2>
-    </div>
+        <div class="action-bar">
+            <a class="btn-back" href="@Url.Action("AdminDashboard", "Home")">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
 
-    <!-- TABLE -->
-    <div class="table-box">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @if (Model != null && Model.Count > 0)
-                {
-                    foreach (var emp in Model)
+        <div class="tbl-wrap" id="tbl">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Workplace</th>
+                        <th>Email</th>
+                        <th>Remove</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Count > 0)
                     {
-                        <tr>
-                            <td>@emp.Id</td>
-                            <td>@emp.Name</td>
-                            <td>@emp.Email</td>
+                        foreach (var emp in Model)
+                        {
+                            <tr data-row-id="@emp.Id">
+                                <td>@emp.Id</td>
+                                <td>@emp.Name</td>
+                                <td>@emp.Workplace</td>
+                                <td>@(string.IsNullOrWhiteSpace(emp.Email) ? "—" : emp.Email)</td>
+                                <td>
+                                    <button type="button" class="btn-remove"
+                                            data-id="@emp.Id"
+                                            data-name="@emp.Name"
+                                            onclick="openConfirm(this)">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr class="empty-row">
+                            <td colspan="5">No committee members found.</td>
                         </tr>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="3" class="empty">No employees found</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bottom-bar">
+            <div class="add-panel" id="addPanel">
+                <h2>Add New Member</h2>
+                <form method="post" asp-action="AddEmployee" asp-controller="Home">
+                    @Html.AntiForgeryToken()
+                    <div class="add-grid">
+                        <div class="add-field add-field-full">
+                            <label>Full Name</label>
+                            <input type="text" name="name" placeholder="Enter full name" required />
+                        </div>
+                        <div class="add-field">
+                            <label>Workplace</label>
+                            <input type="text" name="workplace" placeholder="Enter workplace" />
+                        </div>
+                        <div class="add-field">
+                            <label>Email</label>
+                            <input type="email" name="email" placeholder="Enter email address" />
+                        </div>
+                    </div>
+                    <div class="add-footer">
+                        <button type="submit" class="btn-submit">
+                            <i class="bi bi-person-plus"></i> Add Member
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <button class="btn-add-toggle" id="btnToggleAdd" type="button">
+                <i class="bi bi-plus-lg"></i> Add
+            </button>
+        </div>
+
     </div>
 
-</div>
+    <!-- Confirm Remove Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box">
+            <div class="modal-icon">
+                <i class="bi bi-trash3"></i>
+            </div>
+            <div class="modal-title">Remove Member</div>
+            <div class="modal-body">
+                Are you sure you want to remove<br><b id="modalMemberName"></b>?<br>This action cannot be undone.
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" type="button" onclick="closeConfirm()">Cancel</button>
+                <button class="btn-modal-confirm" type="button" onclick="submitRemove()">Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden remove form -->
+    <form id="removeForm" method="post" asp-action="RemoveEmployee" asp-controller="Home" style="display:none;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" id="removeId" name="id" value="" />
+    </form>
+
+    <script>
+        function esc(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // ── Add toggle ──
+        document.getElementById('btnToggleAdd').addEventListener('click', function () {
+            var panel = document.getElementById('addPanel');
+            panel.classList.toggle('open');
+            this.innerHTML = panel.classList.contains('open')
+                ? '<i class="bi bi-dash-lg"></i> Cancel'
+                : '<i class="bi bi-plus-lg"></i> Add';
+        });
+
+        // ── Add Member (AJAX) ──
+        document.querySelector('#addPanel form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var name      = this.elements['name'].value.trim();
+            var workplace = this.elements['workplace'].value.trim();
+            var email     = this.elements['email'].value.trim();
+            if (!name) return;
+
+            var tbody = document.querySelector('tbody');
+
+            // Remove empty-state row if present
+            var emptyRow = tbody.querySelector('.empty-row');
+            if (emptyRow) emptyRow.remove();
+
+            // Compute next display ID
+            var maxId = 0;
+            tbody.querySelectorAll('tr[data-row-id]').forEach(function (r) {
+                maxId = Math.max(maxId, parseInt(r.dataset.rowId) || 0);
+            });
+            var newId = maxId + 1;
+
+            // Insert new row into DOM
+            var tr = document.createElement('tr');
+            tr.dataset.rowId = newId;
+            tr.innerHTML =
+                '<td>' + newId + '</td>' +
+                '<td>' + esc(name) + '</td>' +
+                '<td>' + esc(workplace) + '</td>' +
+                '<td>' + (email ? esc(email) : '—') + '</td>' +
+                '<td><button type="button" class="btn-remove" ' +
+                    'data-id="' + newId + '" ' +
+                    'data-name="' + esc(name) + '" ' +
+                    'onclick="openConfirm(this)">' +
+                    '<i class="bi bi-trash"></i> Remove</button></td>';
+            tbody.appendChild(tr);
+
+            // Fire POST in background (persist to server)
+            fetch(this.action, { method: 'POST', body: new FormData(this) });
+
+            // Reset and close panel
+            this.reset();
+            var panel = document.getElementById('addPanel');
+            panel.classList.remove('open');
+            document.getElementById('btnToggleAdd').innerHTML = '<i class="bi bi-plus-lg"></i> Add';
+        });
+
+        // ── Confirm modal ──
+        function openConfirm(btn) {
+            document.getElementById('removeId').value   = btn.dataset.id;
+            document.getElementById('modalMemberName').textContent = btn.dataset.name;
+            document.getElementById('confirmModal').classList.add('open');
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirmModal').classList.remove('open');
+        }
+
+        // ── Remove Member (AJAX) ──
+        function submitRemove() {
+            var id   = document.getElementById('removeId').value;
+            var form = document.getElementById('removeForm');
+
+            // Remove row from DOM instantly
+            var row = document.querySelector('tr[data-row-id="' + id + '"]');
+            if (row) row.remove();
+
+            // Show empty state if table is now empty
+            var tbody = document.querySelector('tbody');
+            if (!tbody.querySelector('tr')) {
+                var tr = document.createElement('tr');
+                tr.className = 'empty-row';
+                tr.innerHTML = '<td colspan="5">No committee members found.</td>';
+                tbody.appendChild(tr);
+            }
+
+            closeConfirm();
+
+            // Fire POST in background
+            fetch(form.action, { method: 'POST', body: new FormData(form) });
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('confirmModal').addEventListener('click', function (e) {
+            if (e.target === this) closeConfirm();
+        });
+    </script>
+</body>
+</html>

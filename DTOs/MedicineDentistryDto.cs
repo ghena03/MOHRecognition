@@ -9,7 +9,7 @@ public class MedicineDentistryDto
     public int? Med_FullTimeLecturerPhd { get; set; }
     public int? Med_FullTimeLecturerMsc { get; set; }
     public int? Med_FullTimeAssistantLecturerMsc { get; set; }
-    public int? Med_FullTimeAssistantLecturerPsc { get; set; }
+    public int? Med_FullTimeAssistantLecturerPhd { get; set; }
     public int? Med_FullTimePractitionerPsc { get; set; }
     public int? Med_FullTimePractitionerMsc { get; set; }
 
@@ -20,7 +20,7 @@ public class MedicineDentistryDto
     public int? Den_FullTimeLecturerPhd { get; set; }
     public int? Den_FullTimeLecturerMsc { get; set; }
     public int? Den_FullTimeAssistantLecturerMsc { get; set; }
-    public int? Den_FullTimeAssistantLecturerPsc { get; set; }
+    public int? Den_FullTimeAssistantLecturerPhd { get; set; }
     public int? Den_FullTimePractitionerPsc { get; set; }
     public int? Den_FullTimePractitionerMsc { get; set; }
 
@@ -125,11 +125,9 @@ public class MedicineDentistryDto
         (Den_FullTimePractitionerMsc ?? 0);
 
     public int Med_PscHolders =>
-        (Med_FullTimeAssistantLecturerPsc ?? 0) +
         (Med_FullTimePractitionerPsc ?? 0);
 
     public int Den_PscHolders =>
-        (Den_FullTimeAssistantLecturerPsc ?? 0) +
         (Den_FullTimePractitionerPsc ?? 0);
 
     // ── Computed: Full-Time Clinical PhD (Prof + AssocProf + AssistProf + LecPhD + AssistLecPhD) ──
@@ -138,14 +136,14 @@ public class MedicineDentistryDto
         (Med_FullTimeAssociateProfessor ?? 0) +
         (Med_FullTimeAssistantProfessor ?? 0) +
         (Med_FullTimeLecturerPhd ?? 0) +
-        (Med_FullTimeAssistantLecturerPsc ?? 0);
+        (Med_FullTimeAssistantLecturerPhd ?? 0);
 
     public int Den_FullTimeClinicalPhD =>
         (Den_FullTimeProfessor ?? 0) +
         (Den_FullTimeAssociateProfessor ?? 0) +
         (Den_FullTimeAssistantProfessor ?? 0) +
         (Den_FullTimeLecturerPhd ?? 0) +
-        (Den_FullTimeAssistantLecturerPsc ?? 0);
+        (Den_FullTimeAssistantLecturerPhd ?? 0);
 
     // ── Computed: Actual Part-Time Clinical (PhD only) ────────────────────
     public int Med_ActualPartTimeClinical =>
@@ -163,7 +161,12 @@ public class MedicineDentistryDto
         (Den_PartTimeClinicalAssistantLecturerPhd ?? 0);
 
     // ── Computed: Allowed / Counted Part-Time and Ratio ───────────────────
-    private static double ComputeAllowedPartTime(int ftPhD) => ftPhD * 0.5;
+    private static double ComputeAllowedPartTime(int ftPhD)
+    {
+        if (ftPhD < 50)   return ftPhD * 0.25;
+        if (ftPhD <= 100) return (50 * 0.25) + ((ftPhD - 50) * 0.35);
+        return (50 * 0.25) + (50 * 0.35) + ((ftPhD - 100) * 0.50);
+    }
 
     public double Med_AllowedPartTimeClinical => ComputeAllowedPartTime(Med_FullTimeClinicalPhD);
     public double Den_AllowedPartTimeClinical => ComputeAllowedPartTime(Den_FullTimeClinicalPhD);

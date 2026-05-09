@@ -1,98 +1,342 @@
-﻿@using MOHRecognition.Services
+@using MOHRecognition.Services
 @{
-    ViewData["Title"] = "Create Meeting";
+    ViewData["Title"] = "Schedule New Meeting";
     Layout = null;
+
+    var allRequests = ViewBag.AvailableRequests as IEnumerable<RecognitionRequestRecord>
+                      ?? Enumerable.Empty<RecognitionRequestRecord>();
+    int nextNum = ViewBag.NextSessionNumber ?? 1;
+    int preselectedRequestId = ViewBag.PreselectedRequestId ?? 0;
 }
 
-<link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Schedule New Meeting</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f0eb; color: #1a1a1a; min-height: 100vh; }
 
-<!-- HEADER -->
-<div class="header">
-    <div class="header-left">
-        <img src="~/images/mohelogo.png" class="logo" />
-        <div class="header-text">
-            <h1>Create meeting</h1>
+        .ministry-bar { background: #5a0e1b; color: rgba(255,255,255,.68); font-size: 11.5px; font-weight: 500; letter-spacing: .4px; padding: 6px 48px; display: flex; align-items: center; gap: 6px; }
+
+        .pg-header { background: #7f1627; color: #fff; padding: 0 48px; height: 66px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 18px rgba(127,22,39,.32); }
+        .hd-left { display: flex; align-items: center; gap: 16px; }
+        .pg-header img { height: 42px; }
+        .hd-sep { width: 1px; height: 34px; background: rgba(255,255,255,.28); }
+        .hd-text h1 { font-size: 17px; font-weight: 700; }
+        .hd-text p  { font-size: 11.5px; opacity: .72; margin-top: 2px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.35); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; text-decoration: none; transition: background .15s; }
+        .btn-back:hover { background: rgba(255,255,255,.25); }
+
+        .breadcrumb-bar { background: #fff; border-bottom: 1px solid #ece5dd; padding: 0 48px; height: 44px; display: flex; align-items: center; }
+        .bc-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #999; text-decoration: none; }
+        .bc-item:hover { color: #7f1627; }
+        .bc-sep { font-size: 12px; color: #ccc; margin: 0 10px; }
+        .bc-cur { color: #7f1627; font-weight: 700; }
+
+        /* ── Layout ── */
+        .pg-body { max-width: 1200px; margin: 0 auto; padding: 36px 24px 80px; display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
+
+        /* ── Left: Meeting details card ── */
+        .details-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 18px rgba(0,0,0,.07); overflow: hidden; }
+        .card-head { background: linear-gradient(135deg, #7f1627, #a02035); color: #fff; padding: 22px 28px; }
+        .card-head h2 { font-size: 16px; font-weight: 800; }
+        .card-head p  { font-size: 12px; opacity: .75; margin-top: 3px; }
+        .card-body { padding: 28px; display: flex; flex-direction: column; gap: 18px; }
+
+        .form-group label { display: block; font-size: 11.5px; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 7px; }
+        .form-input {
+            width: 100%; padding: 11px 14px; border: 1.5px solid #e8e0d8; border-radius: 9px;
+            font-size: 14px; font-family: inherit; color: #1a1a1a;
+            background: #faf8f5; transition: border-color .15s;
+            outline: none;
+        }
+        .form-input:focus { border-color: #7f1627; background: #fff; }
+        .form-input[readonly] { background: #f5f0eb; color: #bbb; cursor: not-allowed; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+        .btn-save {
+            width: 100%; padding: 14px; background: #7f1627; color: #fff;
+            border: none; border-radius: 10px; font-size: 15px; font-weight: 700;
+            font-family: inherit; cursor: pointer; transition: background .15s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-save:hover { background: #6a1020; }
+
+        .selected-count-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #7f1627; color: #fff;
+            border-radius: 20px; padding: 5px 14px;
+            font-size: 12px; font-weight: 700;
+            margin-top: 6px;
+        }
+
+        /* ── Right: University picker card ── */
+        .picker-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 18px rgba(0,0,0,.07); overflow: hidden; }
+        .picker-head { padding: 20px 28px; border-bottom: 1px solid #f0ebe4; display: flex; align-items: center; justify-content: space-between; }
+        .picker-head h2 { font-size: 16px; font-weight: 800; color: #1a1a1a; }
+        .picker-head-right { display: flex; align-items: center; gap: 10px; }
+
+        .count-badge { background: #fde8ec; color: #7f1627; font-size: 12px; font-weight: 800; padding: 4px 12px; border-radius: 20px; }
+
+        /* Search + filters */
+        .picker-filters { padding: 16px 28px; border-bottom: 1px solid #f0ebe4; display: flex; gap: 10px; align-items: center; }
+        .search-wrap { position: relative; flex: 1; }
+        .search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #bbb; font-size: 14px; }
+        .search-input { width: 100%; padding: 10px 12px 10px 36px; border: 1.5px solid #e8e0d8; border-radius: 9px; font-size: 13.5px; font-family: inherit; background: #faf8f5; outline: none; transition: border-color .15s; }
+        .search-input:focus { border-color: #7f1627; background: #fff; }
+
+        .btn-quick { padding: 9px 16px; border-radius: 8px; border: 1.5px solid #e8e0d8; background: #fff; font-size: 12px; font-weight: 700; color: #666; cursor: pointer; font-family: inherit; transition: background .12s, border-color .12s; white-space: nowrap; }
+        .btn-quick:hover { background: #fde8ec; border-color: #d0a0b0; color: #7f1627; }
+
+        /* University list */
+        .uni-list { max-height: 560px; overflow-y: auto; padding: 16px 28px; display: flex; flex-direction: column; gap: 10px; }
+        .uni-list::-webkit-scrollbar { width: 5px; }
+        .uni-list::-webkit-scrollbar-track { background: #f5f0eb; }
+        .uni-list::-webkit-scrollbar-thumb { background: #d4bec4; border-radius: 10px; }
+
+        .uni-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 18px; border-radius: 12px;
+            border: 2px solid #f0ebe4; background: #faf8f5;
+            cursor: pointer; transition: border-color .15s, background .15s;
+            user-select: none;
+        }
+        .uni-item:hover { border-color: #d4a8b4; background: #fdf6f7; }
+        .uni-item.selected { border-color: #7f1627; background: #fdf0f2; }
+
+        .uni-cb {
+            width: 22px; height: 22px; border-radius: 7px;
+            border: 2px solid #ddd; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; color: transparent;
+            transition: background .15s, border-color .15s;
+        }
+        .uni-item.selected .uni-cb { background: #7f1627; border-color: #7f1627; color: #fff; }
+
+        .uni-info { flex: 1; min-width: 0; }
+        .uni-name { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .uni-meta { display: flex; gap: 12px; flex-wrap: wrap; }
+        .uni-meta-item { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: #aaa; }
+        .uni-meta-item i { font-size: 11px; }
+
+        .status-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+        .sp-pending  { background: #fff3cd; color: #a06800; }
+        .sp-assigned { background: #e8f0fe; color: #1a56db; }
+        .sp-review   { background: #fde8ec; color: #7f1627; }
+        .sp-other    { background: #f0f0f0; color: #777; }
+
+        .empty-picker { text-align: center; padding: 48px 32px; color: #bbb; }
+        .empty-picker i { font-size: 40px; display: block; margin-bottom: 12px; }
+        .empty-picker p { font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <div class="ministry-bar">
+        <i class="bi bi-bank2"></i>
+        Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan
+    </div>
+
+    <div class="pg-header">
+        <div class="hd-left">
+            <img src="/images/mohelogo.png" alt="Logo" />
+            <div class="hd-sep"></div>
+            <div class="hd-text">
+                <h1>Schedule New Meeting</h1>
+                <p>Meeting Preparation</p>
+            </div>
         </div>
+        <a href="/Home/Meetings" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Meetings
+        </a>
     </div>
 
-    <a class="back-btn" href="@Url.Action("Requests", "Home")">← Back</a>
-</div>
-<div class="main-container">
-
-    <!-- TITLE -->
-    <div class="page-head">
-        <h2>Schedule Meeting</h2>
+    <div class="breadcrumb-bar">
+        <a class="bc-item" href="/Home/AdminDashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+        <a class="bc-item" href="/Home/Meetings"><i class="bi bi-calendar3"></i> Meetings</a>
+        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
+        <span class="bc-item bc-cur"><i class="bi bi-calendar-plus"></i> New Meeting</span>
     </div>
 
-    <!-- FORM CARD -->
-    <div class="details-card">
+    <form method="post" action="/Home/CreateMeeting" id="mainForm">
 
-        <form method="post" action="/Home/CreateMeeting">
+        <div class="pg-body">
 
-            <!-- SELECT REQUESTS -->
-            <div style="margin-bottom:20px;">
-                <h4>Select related requests (universities)</h4>
+            <!-- ── Left: Meeting Details ── -->
+            <div class="details-card">
+                <div class="card-head">
+                    <h2><i class="bi bi-calendar3" style="margin-right:6px;"></i>Meeting Details</h2>
+                    <p>Set the schedule information for this meeting</p>
+                </div>
+                <div class="card-body">
 
-                @{
-                    var requests = ViewBag.AvailableRequests as IEnumerable<RecognitionRequestRecord>
-                    ?? Enumerable.Empty<RecognitionRequestRecord>();
-                }
-
-                @foreach (var req in requests)
-                {
-                    <div style="margin-bottom:5px;">
-                        <label>
-                            <input type="checkbox" name="RequestIds" value="@req.Id" />
-                            @req.UniversityName
-                        </label>
+                    <div class="form-group">
+                        <label>Session Number</label>
+                        <input class="form-input" name="SessionNumber" value="@nextNum" readonly />
                     </div>
-                }
+
+                    <div class="form-group">
+                        <label>Meeting Title</label>
+                        <input class="form-input" name="MeetingTitle" placeholder="e.g. Committee Review — Q2 2026" />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date <span style="color:#b91c1c;">*</span></label>
+                            <input class="form-input" type="date" name="MeetingDate" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Time</label>
+                            <input class="form-input" type="time" name="MeetingTime" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Location / Platform</label>
+                        <input class="form-input" name="LocationOrPlatform" placeholder="e.g. MOHE Hall / Zoom / Teams" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select class="form-input" name="Status">
+                            <option value="Scheduled">Scheduled</option>
+                            <option value="Open">Open</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea class="form-input" name="Notes" rows="3" placeholder="Any additional notes..."></textarea>
+                    </div>
+
+                    <div style="border-top:1px solid #f0ebe4;padding-top:16px;">
+                        <div style="font-size:11.5px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Universities Selected</div>
+                        <div class="selected-count-pill">
+                            <i class="bi bi-building"></i>
+                            <span id="selCount">0</span> selected
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-check-lg"></i> Save Meeting
+                    </button>
+
+                </div>
             </div>
 
-            <div class="details-grid">
-                <div style="grid-column: span 2;">
-                    <label>Meeting Title</label>
-                    <input type="text" name="MeetingTitle" class="mini-select" placeholder="Committee review meeting" required />
+            <!-- ── Right: University Picker ── -->
+            <div class="picker-card">
+                <div class="picker-head">
+                    <h2><i class="bi bi-building" style="margin-right:8px;color:#7f1627;"></i>Select Universities</h2>
+                    <div class="picker-head-right">
+                        <span class="count-badge" id="headCount">0 selected</span>
+                    </div>
                 </div>
 
-                <!-- SESSION -->
-                <div>
-                    <label>Session Number</label>
-                    <input type="text" name="SessionNumber" value="@(ViewBag.NextSessionNumber ?? 1)" readonly class="mini-select" />
+                <div class="picker-filters">
+                    <div class="search-wrap">
+                        <i class="bi bi-search"></i>
+                        <input class="search-input" type="text" id="searchBox" placeholder="Search by university name, country or reference..." />
+                    </div>
+                    <button type="button" class="btn-quick" onclick="selectAll()"><i class="bi bi-check-all"></i> All</button>
+                    <button type="button" class="btn-quick" onclick="clearAll()"><i class="bi bi-x-lg"></i> Clear</button>
                 </div>
 
-                <!-- DATE -->
-                <div>
-                    <label>Date</label>
-                    <input type="date" name="MeetingDate" class="mini-select" required />
-                </div>
+                <div class="uni-list" id="uniList">
+                    @{
+                        var reqList = allRequests.ToList();
+                    }
+                    @if (!reqList.Any())
+                    {
+                        <div class="empty-picker">
+                            <i class="bi bi-inbox"></i>
+                            <p>No university requests submitted yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        foreach (var req in reqList)
+                        {
+                            bool isSelected = preselectedRequestId > 0 && preselectedRequestId == req.Id;
 
-                <div>
-                    <label>Time</label>
-                    <input type="time" name="MeetingTime" class="mini-select" />
+                            <div class="uni-item @(isSelected ? "selected" : "")"
+                                 data-name="@req.UniversityName?.ToLower()"
+                                 data-country="@req.Country?.ToLower()"
+                                 data-ref="@req.ReferenceNumber?.ToLower()"
+                                 onclick="toggleItem(this, @req.Id)">
+                                <div class="uni-cb"><i class="bi bi-check"></i></div>
+                                <input type="checkbox" name="RequestIds" value="@req.Id" style="display:none;" @(isSelected ? "checked" : "") />
+                                <div class="uni-info">
+                                    <div class="uni-name">@(string.IsNullOrWhiteSpace(req.UniversityName) ? "Unnamed University" : req.UniversityName)</div>
+                                    <div class="uni-meta">
+                                        @if (!string.IsNullOrWhiteSpace(req.Country))
+                                        {
+                                            <span class="uni-meta-item"><i class="bi bi-geo-alt"></i> @req.Country</span>
+                                        }
+                                        <span class="uni-meta-item"><i class="bi bi-hash"></i> ID: @req.Id</span>
+                                        @if (!string.IsNullOrWhiteSpace(req.ReferenceNumber))
+                                        {
+                                            <span class="uni-meta-item"><i class="bi bi-file-text"></i> @req.ReferenceNumber</span>
+                                        }
+                                    </div>
+                                </div>
+                                <span class="status-pill sp-review">Submitted</span>
+                            </div>
+                        }
+                    }
                 </div>
-
-                <div>
-                    <label>Location / Platform</label>
-                    <input type="text" name="LocationOrPlatform" class="mini-select" placeholder="MOHE Hall / Zoom / Teams" />
-                </div>
-
-                <!-- NOTES -->
-                <div style="grid-column: span 2;">
-                    <label>Notes</label>
-                    <textarea name="Notes" class="mini-select" rows="4" style="width:100%;"></textarea>
-                </div>
-
             </div>
 
-            <div style="margin-top:20px;">
-                <button type="submit" class="mini-save-btn">
-                    Save Meeting
-                </button>
-            </div>
+        </div>
+    </form>
 
-        </form>
+    <script>
+        function updateCount() {
+            var n = document.querySelectorAll('.uni-item.selected').length;
+            document.getElementById('selCount').textContent = n;
+            document.getElementById('headCount').textContent = n + ' selected';
+        }
 
-    </div>
+        function toggleItem(el, id) {
+            el.classList.toggle('selected');
+            el.querySelector('input[type=checkbox]').checked = el.classList.contains('selected');
+            updateCount();
+        }
 
-</div>
+        function selectAll() {
+            document.querySelectorAll('.uni-item:not([style*="display: none"])').forEach(function(el) {
+                el.classList.add('selected');
+                el.querySelector('input[type=checkbox]').checked = true;
+            });
+            updateCount();
+        }
+
+        function clearAll() {
+            document.querySelectorAll('.uni-item').forEach(function(el) {
+                el.classList.remove('selected');
+                el.querySelector('input[type=checkbox]').checked = false;
+            });
+            updateCount();
+        }
+
+        document.getElementById('searchBox').addEventListener('input', function() {
+            var q = this.value.toLowerCase().trim();
+            document.querySelectorAll('.uni-item').forEach(function(el) {
+                var name    = el.dataset.name    || '';
+                var country = el.dataset.country || '';
+                var ref     = el.dataset.ref     || '';
+                var match   = !q || name.includes(q) || country.includes(q) || ref.includes(q);
+                el.style.display = match ? '' : 'none';
+            });
+        });
+
+        updateCount();
+    </script>
+</body>
+</html>

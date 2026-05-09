@@ -1,0 +1,341 @@
+@model MOHRecognition.Services.RecognitionRequestRecord
+@{
+    Layout = null;
+    ViewData["Title"] = "Doctor Assessment Review";
+    var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
+    var pub = Model?.PublicInfo ?? new DTOs.PublicInfoDto();
+    var med = Model?.MedicineDentistry ?? new DTOs.MedicineDentistryDto();
+
+    // Faculty ratio calculation
+    var professorFT          = A.StaffProfessorFullTimeCount ?? 0;
+    var associateProfessorFT = A.StaffAssociateProfessorFullTimeCount ?? 0;
+    var assistantProfessorFT = A.StaffAssistantProfessorFullTimeCount ?? 0;
+    var teacherFT            = A.StaffTeacherFullTimeCount ?? 0;
+    var researcherFT         = A.StaffResearcherFullTimeCount ?? 0;
+    var assistantTeacherFT   = A.StaffAssistantTeacherFullTimeCount ?? 0;
+    var othersFT             = A.StaffOthersFullTimeCount ?? 0;
+    var totalPhdHolders      = professorFT + associateProfessorFT + assistantProfessorFT + teacherFT;
+    var fullTimeFacultyTotal = professorFT + associateProfessorFT + assistantProfessorFT + teacherFT + assistantTeacherFT + othersFT + researcherFT;
+    var docPct               = fullTimeFacultyTotal > 0 ? Math.Floor(((decimal)totalPhdHolders * 100m) / fullTimeFacultyTotal) : 0m;
+    var ratioValue           = A.StudentsToFacultyRatio ?? 0m;
+    var ratioDisplay         = ratioValue > 0 ? $"1:{ratioValue:0}" : "—";
+
+    var selectedCategories = (A.CollegeCategoriesCsv ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries)
+        .Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+    var categoryRatioMap = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+        { ["Scientific"]=20m, ["Humanities"]=35m, ["Medical"]=25m, ["Applied"]=20m };
+    var avgRatio = selectedCategories.Where(k => categoryRatioMap.ContainsKey(k)).Select(k => categoryRatioMap[k]).DefaultIfEmpty(0m).Average();
+
+    string ratioCompliance;
+    if (ratioValue <= 0 || avgRatio <= 0) ratioCompliance = "Not Assessed";
+    else { var tolerance = avgRatio * 1.25m; ratioCompliance = ratioValue <= avgRatio ? "Compliant" : ratioValue <= tolerance ? "Needs Review" : "Not Compliant"; }
+
+    string docCompliance = fullTimeFacultyTotal == 0 ? "Not Assessed" : docPct >= 50m ? "Compliant" : "Not Compliant";
+
+    // Clinical capacity
+    string clinicalCapCompliance;
+    if (!med.Med_StudentFacultyRatio.HasValue && !med.Den_StudentFacultyRatio.HasValue) clinicalCapCompliance = "Needs Review";
+    else {
+        var medColor = !med.Med_StudentFacultyRatio.HasValue ? "" : med.Med_StudentFacultyRatio.Value <= 4 ? "green" : med.Med_StudentFacultyRatio.Value <= 5 ? "orange" : "red";
+        var denColor = !med.Den_StudentFacultyRatio.HasValue ? "" : med.Den_StudentFacultyRatio.Value <= 4 ? "green" : med.Den_StudentFacultyRatio.Value <= 5 ? "orange" : "red";
+        if (medColor == "red" || denColor == "red") clinicalCapCompliance = "Not Compliant";
+        else if (medColor == "orange" || denColor == "orange" || string.IsNullOrEmpty(medColor) || string.IsNullOrEmpty(denColor)) clinicalCapCompliance = "Needs Review";
+        else clinicalCapCompliance = "Compliant";
+    }
+
+    // Environment
+    static string EnvMap(string? v) => (v ?? "").Trim() switch { "Meets Standards" => "Compliant", "Needs Improvement" => "Needs Review", _ => "Not Assessed" };
+    var envAll = new[] { EnvMap(Model?.FacultiesAssessment), EnvMap(Model?.HospitalsAssessment), EnvMap(Model?.LaboratoriesFacilitiesAssessment), EnvMap(Model?.LibraryAssessment) };
+    string envOverall = envAll.Any(s => s == "Not Compliant") ? "Not Compliant" : envAll.Any(s => s == "Needs Review") ? "Needs Review" : envAll.All(s => s == "Compliant") ? "Compliant" : "Not Assessed";
+
+    var p1 = string.IsNullOrWhiteSpace(Model?.AccreditationStatus) ? "Not Assessed" : Model.AccreditationStatus;
+    var allPoints = new[] { p1, ratioCompliance, docCompliance, clinicalCapCompliance, envOverall };
+
+    static string BadgeCss(string s) => s switch { "Compliant" => "badge-compliant", "Needs Review" => "badge-review", "Not Compliant" => "badge-noncompliant", _ => "badge-na" };
+    static string BadgeIcon(string s) => s switch { "Compliant" => "bi-check-circle-fill", "Needs Review" => "bi-exclamation-circle-fill", "Not Compliant" => "bi-x-circle-fill", _ => "bi-dash-circle" };
+
+    var decision = Model?.BasicInfoAssessmentDecision ?? "";
+    static string DecisionCss(string d) => d switch { "Approve" => "dec-approve", "Conditional Approval" => "dec-conditional", _ => "dec-reject" };
+    static string DecisionIcon(string d) => d switch { "Approve" => "bi-check2-circle", "Conditional Approval" => "bi-arrow-repeat", _ => "bi-x-octagon-fill" };
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f0eb; color: #1a1a1a; min-height: 100vh; }
+        .top-bar { background: #5a0e1b; color: rgba(255,255,255,.7); font-size: 11.5px; font-weight: 500; padding: 6px 48px; display: flex; align-items: center; gap: 6px; }
+        .pg-header { background: #7f1627; color: #fff; padding: 0 48px; height: 66px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 18px rgba(127,22,39,.32); }
+        .hd-left { display: flex; align-items: center; gap: 16px; }
+        .pg-header img { height: 42px; }
+        .hd-sep { width: 1px; height: 34px; background: rgba(255,255,255,.28); margin: 0 6px; }
+        .hd-text h1 { font-size: 17px; font-weight: 700; }
+        .hd-text p { font-size: 11.5px; opacity: .72; margin-top: 2px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.35); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; text-decoration: none; transition: background .15s; }
+        .btn-back:hover { background: rgba(255,255,255,.25); }
+        .pg-body { max-width: 1100px; margin: 0 auto; padding: 32px 24px 72px; display: flex; flex-direction: column; gap: 20px; }
+        .card { background: #fff; border-radius: 10px; box-shadow: 0 2px 16px rgba(0,0,0,.07); overflow: hidden; }
+        .card-hd { padding: 16px 24px; border-bottom: 1px solid #f0ece6; display: flex; align-items: center; gap: 10px; }
+        .card-hd h2 { font-size: 15px; font-weight: 800; color: #1a1a1a; }
+        .card-hd .icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .icon-uni { background: #eff6ff; color: #1d4ed8; }
+        .icon-doc { background: #fef3c7; color: #b45309; }
+        .icon-dec { background: #f0fdf4; color: #15803d; }
+        .card-body { padding: 20px 24px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+        .info-item label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
+        .info-item span { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+        .info-item.full { grid-column: 1 / -1; }
+        .score-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+        @@media (max-width: 700px) { .score-grid { grid-template-columns: 1fr 1fr; } }
+        .score-cell { border: 1px solid #f0ece6; border-radius: 8px; padding: 14px; text-align: center; }
+        .score-num { font-size: 22px; font-weight: 900; color: #aaa; margin-bottom: 6px; }
+        .score-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #666; margin-bottom: 10px; }
+        .badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 5px 11px; font-size: 11.5px; font-weight: 800; }
+        .badge-compliant { background: #dcfce7; color: #15803d; }
+        .badge-review { background: #fef9c3; color: #a16207; }
+        .badge-noncompliant { background: #fee2e2; color: #b91c1c; }
+        .badge-na { background: #f3f4f6; color: #6b7280; }
+        .note-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 14px 16px; font-size: 13.5px; color: #444; line-height: 1.65; white-space: pre-wrap; }
+        .note-box.empty { color: #aaa; font-style: italic; }
+        .field-label { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; margin-top: 16px; }
+        .field-label:first-child { margin-top: 0; }
+        .dec-badge { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 8px 18px; font-size: 14px; font-weight: 800; }
+        .dec-approve { background: #dcfce7; color: #15803d; }
+        .dec-conditional { background: #fef9c3; color: #a16207; }
+        .dec-reject { background: #fee2e2; color: #b91c1c; }
+        .dec-na { background: #f3f4f6; color: #6b7280; }
+        .env-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+        .env-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8f9fa; border-radius: 6px; font-size: 13px; }
+        .env-label { font-weight: 600; color: #444; }
+        .env-note { font-size: 12px; color: #888; margin-top: 3px; }
+        .section-divider { height: 1px; background: #f0ece6; margin: 16px 0; }
+    </style>
+</head>
+<body>
+    <div class="top-bar"><i class="bi bi-bank2"></i> Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan</div>
+    <div class="pg-header">
+        <div class="hd-left">
+            <img src="/images/mohelogo.png" alt="Logo" />
+            <div class="hd-sep"></div>
+            <div class="hd-text">
+                <h1>Doctor Assessment Review</h1>
+                <p>Read-only view — University data &amp; doctor's recommendation</p>
+            </div>
+        </div>
+        <a href="/Home/SubmittedUniversities" class="btn-back"><i class="bi bi-arrow-left"></i> Back to Submitted Universities</a>
+    </div>
+
+    <main class="pg-body">
+
+        <!-- ── University Info ── -->
+        <div class="card">
+            <div class="card-hd">
+                <div class="icon icon-uni"><i class="bi bi-building"></i></div>
+                <h2>University Information</h2>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>University Name</label>
+                        <span>@(string.IsNullOrWhiteSpace(Model?.UniversityName) ? "—" : Model.UniversityName)</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Country</label>
+                        <span>@(string.IsNullOrWhiteSpace(Model?.Country) ? "—" : Model.Country)</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Request ID</label>
+                        <span>#@(Model?.Id)</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Reference Number</label>
+                        <span>@(string.IsNullOrWhiteSpace(Model?.ReferenceNumber) ? "—" : Model.ReferenceNumber)</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Submitted Date</label>
+                        <span>@(Model?.SubmittedAt.ToString("dd MMM yyyy") ?? "—")</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Applicant Name</label>
+                        <span>@(string.IsNullOrWhiteSpace(Model?.ApplicantName) ? "—" : Model.ApplicantName)</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(pub.InstitutionName))
+                    {
+                        <div class="info-item">
+                            <label>Institution Name</label>
+                            <span>@pub.InstitutionName</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(pub.City))
+                    {
+                        <div class="info-item">
+                            <label>City</label>
+                            <span>@pub.City</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(pub.ModeOfStudy))
+                    {
+                        <div class="info-item">
+                            <label>Mode of Study</label>
+                            <span>@pub.ModeOfStudy</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(pub.LanguageOfInstruction))
+                    {
+                        <div class="info-item">
+                            <label>Language of Instruction</label>
+                            <span>@pub.LanguageOfInstruction</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(pub.FoundationDate))
+                    {
+                        <div class="info-item">
+                            <label>Foundation Date</label>
+                            <span>@pub.FoundationDate</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(pub.OversightRightsEntity))
+                    {
+                        <div class="info-item full">
+                            <label>Oversight / Rights Entity</label>
+                            <span>@pub.OversightRightsEntity</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Doctor's Assessment ── -->
+        <div class="card">
+            <div class="card-hd">
+                <div class="icon icon-doc"><i class="bi bi-clipboard2-pulse"></i></div>
+                <h2>Doctor's Assessment — 5-Point Compliance</h2>
+            </div>
+            <div class="card-body">
+                <div class="score-grid">
+                    <div class="score-cell">
+                        <div class="score-num">1</div>
+                        <div class="score-name">Accreditation</div>
+                        <span class="badge @BadgeCss(p1)"><i class="bi @BadgeIcon(p1)"></i> @p1</span>
+                    </div>
+                    <div class="score-cell">
+                        <div class="score-num">2</div>
+                        <div class="score-name">Faculty Ratio</div>
+                        <span class="badge @BadgeCss(ratioCompliance)"><i class="bi @BadgeIcon(ratioCompliance)"></i> @ratioCompliance</span>
+                        @if (ratioValue > 0) { <div style="font-size:11px;color:#888;margin-top:6px;">@ratioDisplay</div> }
+                    </div>
+                    <div class="score-cell">
+                        <div class="score-num">3</div>
+                        <div class="score-name">Doctorate %</div>
+                        <span class="badge @BadgeCss(docCompliance)"><i class="bi @BadgeIcon(docCompliance)"></i> @docCompliance</span>
+                        @if (fullTimeFacultyTotal > 0) { <div style="font-size:11px;color:#888;margin-top:6px;">@($"{docPct:0}")%</div> }
+                    </div>
+                    <div class="score-cell">
+                        <div class="score-num">4</div>
+                        <div class="score-name">Clinical Capacity</div>
+                        <span class="badge @BadgeCss(clinicalCapCompliance)"><i class="bi @BadgeIcon(clinicalCapCompliance)"></i> @clinicalCapCompliance</span>
+                    </div>
+                    <div class="score-cell">
+                        <div class="score-num">5</div>
+                        <div class="score-name">Environment</div>
+                        <span class="badge @BadgeCss(envOverall)"><i class="bi @BadgeIcon(envOverall)"></i> @envOverall</span>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model?.AccreditationNote))
+                {
+                    <div class="section-divider"></div>
+                    <div class="field-label">Accreditation Assessment Note (Point 1)</div>
+                    <div class="note-box">@Model.AccreditationNote</div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model?.FacultiesAssessment) || !string.IsNullOrWhiteSpace(Model?.HospitalsAssessment))
+                {
+                    <div class="section-divider"></div>
+                    <div class="field-label">Environment Assessment Details</div>
+                    <div class="env-grid">
+                        @if (!string.IsNullOrWhiteSpace(Model?.FacultiesAssessment))
+                        {
+                            <div class="env-row">
+                                <div>
+                                    <div class="env-label">Colleges / Faculties</div>
+                                    @if (!string.IsNullOrWhiteSpace(Model?.FacultiesAssessmentNote)) { <div class="env-note">@Model.FacultiesAssessmentNote</div> }
+                                </div>
+                                <span class="badge @BadgeCss(EnvMap(Model?.FacultiesAssessment))">@EnvMap(Model?.FacultiesAssessment)</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model?.HospitalsAssessment))
+                        {
+                            <div class="env-row">
+                                <div>
+                                    <div class="env-label">Hospitals</div>
+                                    @if (!string.IsNullOrWhiteSpace(Model?.HospitalsAssessmentNote)) { <div class="env-note">@Model.HospitalsAssessmentNote</div> }
+                                </div>
+                                <span class="badge @BadgeCss(EnvMap(Model?.HospitalsAssessment))">@EnvMap(Model?.HospitalsAssessment)</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model?.LaboratoriesFacilitiesAssessment))
+                        {
+                            <div class="env-row">
+                                <div>
+                                    <div class="env-label">Laboratories</div>
+                                    @if (!string.IsNullOrWhiteSpace(Model?.LaboratoriesFacilitiesAssessmentNote)) { <div class="env-note">@Model.LaboratoriesFacilitiesAssessmentNote</div> }
+                                </div>
+                                <span class="badge @BadgeCss(EnvMap(Model?.LaboratoriesFacilitiesAssessment))">@EnvMap(Model?.LaboratoriesFacilitiesAssessment)</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model?.LibraryAssessment))
+                        {
+                            <div class="env-row">
+                                <div>
+                                    <div class="env-label">Library</div>
+                                    @if (!string.IsNullOrWhiteSpace(Model?.LibraryAssessmentNote)) { <div class="env-note">@Model.LibraryAssessmentNote</div> }
+                                </div>
+                                <span class="badge @BadgeCss(EnvMap(Model?.LibraryAssessment))">@EnvMap(Model?.LibraryAssessment)</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- ── Doctor's Final Decision ── -->
+        <div class="card">
+            <div class="card-hd">
+                <div class="icon icon-dec"><i class="bi bi-patch-check"></i></div>
+                <h2>Doctor's Final Recommendation</h2>
+            </div>
+            <div class="card-body">
+                <div class="field-label">Final Decision</div>
+                @if (!string.IsNullOrWhiteSpace(decision))
+                {
+                    <span class="dec-badge @DecisionCss(decision)">
+                        <i class="bi @DecisionIcon(decision)"></i> @decision
+                    </span>
+                }
+                else
+                {
+                    <span class="dec-badge dec-na"><i class="bi bi-dash-circle"></i> Not Submitted Yet</span>
+                }
+
+                <div class="field-label">Final Justification Note</div>
+                @if (!string.IsNullOrWhiteSpace(Model?.BasicInfoAssessmentReason))
+                {
+                    <div class="note-box">@Model.BasicInfoAssessmentReason</div>
+                }
+                else
+                {
+                    <div class="note-box empty">No justification note provided.</div>
+                }
+            </div>
+        </div>
+
+    </main>
+</body>
+</html>

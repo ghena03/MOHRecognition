@@ -166,7 +166,7 @@
 
             if (res.ok) {
                 await loadPartial(true, "Infrastructure saved successfully.", false, true);
-                location.hash = "#sec-infra";
+                window.scrollToNextSection("sec-infra");
             } else {
                 const msg = await res.text();
                 showBanner(msg || "Save failed.", true);

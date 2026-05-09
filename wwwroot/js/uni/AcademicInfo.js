@@ -638,18 +638,7 @@
         if (!sec || !btn) return;
 
         const showAcademicBanner = (message, isError) => {
-            const banner = document.getElementById("academicRankUploadBanner");
-            if (!banner) {
-                showToast(message, isError);
-                return;
-            }
-
-            const txt = banner.querySelector(".txt");
-            if (txt) txt.textContent = message;
-
-            banner.classList.remove("ok", "warn");
-            banner.classList.add(isError ? "warn" : "ok");
-            banner.style.display = "flex";
+            showToast(message, isError);
         };
 
         const wireRankFileUploads = () => {
@@ -775,6 +764,7 @@
                 const data = collect("sec-academic");
                 await postForm(url, data);
                 showToast("Academic Info saved successfully.", false);
+                window.scrollToNextSection("sec-academic");
                 updateCollegeCategoriesUI();
             } catch (e) {
                 const msg = e.message || "Save failed.";

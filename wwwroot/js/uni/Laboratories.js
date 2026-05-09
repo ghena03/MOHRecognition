@@ -194,7 +194,6 @@
         if (cancelBtn) cancelBtn.disabled = true;
 
         const c = getContainer();
-        const y = window.scrollY || 0;
         const unlock = c ? lockHeight(c) : () => { };
 
         try {
@@ -215,8 +214,6 @@
                     data.Id ? "Laboratory row updated successfully." : "Laboratory row added successfully.",
                     false
                 );
-                location.hash = "#sec-labs";
-                window.scrollTo(0, y);
             } else {
                 render(html);
                 bindSectionEvents();

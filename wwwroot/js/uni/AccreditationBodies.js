@@ -70,7 +70,6 @@
             }
 
             window.scrollTo(0, y);
-            location.hash = "#sec-accreditation-bodies";
         } finally {
             unlock();
         }
@@ -114,7 +113,6 @@
         const container = getContainer();
         if (!container) return;
 
-        const y = window.scrollY || 0;
         const unlock = lockHeight(container);
 
         try {
@@ -128,8 +126,6 @@
 
             container.innerHTML = text;
             showBanner(isEdit ? "Accreditation body updated successfully." : "Accreditation body added successfully.", false);
-            window.scrollTo(0, y);
-            location.hash = "#sec-accreditation-bodies";
         } catch {
             showBanner("An error occurred while saving accreditation body data.", true);
         } finally {

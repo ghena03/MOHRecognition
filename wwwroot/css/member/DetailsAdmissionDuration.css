@@ -21,6 +21,10 @@
     font-weight: 900;
 }
 
+.adm-card .rd-field + .rd-field {
+    margin-top: 16px;
+}
+
 .adm-file-meta {
     margin-top: 6px;
     font-size: 12px;

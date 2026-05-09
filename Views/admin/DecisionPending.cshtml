@@ -1,0 +1,183 @@
+@using MOHRecognition.DTOs
+@{
+    ViewData["Title"] = "Pending Decisions";
+    Layout = null;
+    var items = ViewBag.Items as List<DecisionItemDto> ?? new List<DecisionItemDto>();
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pending Decisions</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f0eb; color: #1a1a1a; min-height: 100vh; }
+
+        .ministry-bar { background: #5a0e1b; color: rgba(255,255,255,.68); font-size: 11.5px; font-weight: 500; letter-spacing: .4px; padding: 6px 48px; display: flex; align-items: center; gap: 6px; }
+
+        .pg-header { background: #7f1627; color: #fff; padding: 0 48px; height: 66px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 18px rgba(127,22,39,.32); }
+        .hd-left { display: flex; align-items: center; gap: 16px; }
+        .pg-header img { height: 42px; }
+        .hd-sep { width: 1px; height: 34px; background: rgba(255,255,255,.28); margin: 0 6px; }
+        .hd-text h1 { font-size: 17px; font-weight: 700; }
+        .hd-text p  { font-size: 11.5px; opacity: .72; margin-top: 2px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.35); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; text-decoration: none; transition: background .15s; }
+        .btn-back:hover { background: rgba(255,255,255,.25); }
+
+        /* ── Amber accent banner ── */
+        .accent-banner {
+            background: #fff;
+            border-bottom: 3px solid #d97706;
+            padding: 24px 48px;
+            display: flex; align-items: center; gap: 20px;
+        }
+        .accent-icon { width: 56px; height: 56px; border-radius: 16px; background: #fffbeb; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+        .accent-text h2 { font-size: 20px; font-weight: 900; color: #d97706; }
+        .accent-text p  { font-size: 13px; color: #888; margin-top: 3px; }
+        .accent-count { margin-left: auto; background: #fffbeb; color: #d97706; border-radius: 12px; padding: 10px 22px; font-size: 28px; font-weight: 900; border: 2px solid #fde68a; }
+        .accent-count span { font-size: 12px; font-weight: 600; display: block; text-align: center; margin-top: 2px; }
+
+        /* ── Body ── */
+        .pg-body { max-width: 1100px; margin: 0 auto; padding: 36px 24px 72px; }
+
+        .tbl-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 24px rgba(0,0,0,.07); overflow: hidden; }
+        .tbl-card-top { padding: 20px 28px 16px; border-bottom: 1px solid #f0ebe4; display: flex; align-items: center; justify-content: space-between; }
+        .tbl-card-top h3 { font-size: 14px; font-weight: 700; color: #333; }
+        .tbl-card-top p  { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead th { background: #fffdf0; color: #d97706; font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; padding: 13px 24px; text-align: left; border-bottom: 2px solid #fde68a; white-space: nowrap; }
+        tbody tr { border-bottom: 1px solid #f5f0eb; transition: background .1s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #fffdf0; }
+        tbody td { padding: 18px 24px; vertical-align: middle; }
+
+        .uni-name { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+        .uni-sub  { font-size: 12px; color: #aaa; margin-top: 3px; }
+
+        .badge-amber { display: inline-flex; align-items: center; gap: 5px; background: #fffbeb; color: #d97706; border-radius: 20px; padding: 5px 13px; font-size: 12px; font-weight: 700; }
+
+        .btn-review { display: inline-flex; align-items: center; gap: 6px; background: #d97706; color: #fff; border: 1.5px solid #d97706; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; text-decoration: none; transition: background .12s; white-space: nowrap; }
+        .btn-review:hover { background: #b45309; border-color: #b45309; }
+
+        .btn-view { display: inline-flex; align-items: center; gap: 6px; background: #fffbeb; color: #d97706; border: 1.5px solid #fde68a; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; text-decoration: none; transition: background .12s; white-space: nowrap; margin-right: 6px; }
+        .btn-view:hover { background: #fef3c7; }
+
+        .empty-state { padding: 72px 32px; text-align: center; }
+        .empty-state i  { font-size: 52px; color: #fde68a; display: block; margin-bottom: 18px; }
+        .empty-state h3 { font-size: 17px; font-weight: 700; color: #555; margin-bottom: 8px; }
+        .empty-state p  { font-size: 13.5px; color: #aaa; max-width: 380px; margin: 0 auto; line-height: 1.7; }
+    </style>
+</head>
+<body>
+
+    <div class="ministry-bar">
+        <i class="bi bi-bank2"></i>
+        Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan
+    </div>
+
+    <div class="pg-header">
+        <div class="hd-left">
+            <img src="/images/mohelogo.png" alt="Logo" />
+            <div class="hd-sep"></div>
+            <div class="hd-text">
+                <h1>Pending Decisions</h1>
+                <p>Needs more information — awaiting further review</p>
+            </div>
+        </div>
+        <a href="/Home/AdminDashboard" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="accent-banner">
+        <div class="accent-icon"><i class="bi bi-hourglass-split"></i></div>
+        <div class="accent-text">
+            <h2>Needs More Information</h2>
+            <p>Universities flagged by the committee as requiring additional review before a final decision</p>
+        </div>
+        <div class="accent-count">
+            @items.Count
+            <span>universities</span>
+        </div>
+    </div>
+
+    <div class="pg-body">
+        <div class="tbl-card">
+            <div class="tbl-card-top">
+                <div>
+                    <h3>Pending / Needs More Information</h3>
+                    <p>Automatically populated when committee decision = Needs More Information</p>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>University Name</th>
+                        <th>Country</th>
+                        <th>Request ID</th>
+                        <th>Session</th>
+                        <th>Flagged Date</th>
+                        <th>Status</th>
+                        <th style="text-align:right;padding-right:28px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (items.Any())
+                    {
+                        int i = 1;
+                        foreach (var item in items)
+                        {
+                            <tr>
+                                <td style="font-size:14px;font-weight:700;color:#bbb;">@i</td>
+                                <td>
+                                    <div class="uni-name">@(string.IsNullOrWhiteSpace(item.UniversityName) ? "—" : item.UniversityName)</div>
+                                    @if (!string.IsNullOrWhiteSpace(item.ReferenceNumber))
+                                    {
+                                        <div class="uni-sub"><i class="bi bi-file-text" style="font-size:10px;"></i> @item.ReferenceNumber</div>
+                                    }
+                                </td>
+                                <td style="font-size:13px;color:#555;">@(string.IsNullOrWhiteSpace(item.Country) ? "—" : item.Country)</td>
+                                <td style="font-size:13px;font-weight:600;color:#555;">#@item.RequestId</td>
+                                <td>
+                                    <span style="font-size:13px;font-weight:700;color:#1a1a1a;">Meeting #@item.SessionNumber</span>
+                                    <div style="font-size:11px;color:#bbb;margin-top:2px;">@item.MeetingDate.ToString("dd MMM yyyy")</div>
+                                </td>
+                                <td style="font-size:13px;color:#555;">
+                                    @(item.DecisionDate.HasValue ? item.DecisionDate.Value.ToString("dd MMM yyyy") : "—")
+                                </td>
+                                <td><span class="badge-amber"><i class="bi bi-hourglass-split"></i> Needs More Info</span></td>
+                                <td style="text-align:right;">
+                                    <a class="btn-view" href="/Home/MeetingDecision?meetingId=@item.MeetingId&requestId=@item.RequestId">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    <a class="btn-review" href="/Home/MeetingDecision?meetingId=@item.MeetingId&requestId=@item.RequestId">
+                                        <i class="bi bi-pencil-square"></i> Continue Review
+                                    </a>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="bi bi-hourglass"></i>
+                                    <h3>No pending decisions</h3>
+                                    <p>Universities will appear here automatically once the committee marks a case as "Needs More Information" inside إدارة الجلسات.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

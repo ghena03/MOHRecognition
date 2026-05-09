@@ -95,7 +95,7 @@
                     const html = await postForm(url, { degree, requirement });
                     container.innerHTML = html;
                     showSuccess("Requirement added successfully.");
-                    location.hash = "#sec-admission";
+                    window.scrollToNextSection("sec-admission-duration");
                     return;
                 }
 

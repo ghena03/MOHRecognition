@@ -148,7 +148,6 @@
             const data = await res.json();
             if (data.success) {
                 await loadPartial(true, data.message, false, true);
-                location.hash = "#sec-hosp";
             } else {
                 showBanner(data.message || "Could not save capacity.", true);
             }
@@ -185,7 +184,6 @@
             const data = await res.json();
             if (data.success) {
                 await loadPartial(true, data.message, false, true);
-                location.hash = "#sec-hosp";
             } else {
                 showBanner(data.message || "Something went wrong.", true);
             }
@@ -280,7 +278,6 @@
             const data = await res.json();
             if (data.success) {
                 await loadPartial(true, data.message, false, true);
-                location.hash = "#sec-hosp";
             } else {
                 showBanner(data.message || "Upload failed.", true);
             }

@@ -100,6 +100,7 @@
 
             if (res.ok) {
                 showBanner("Library data saved successfully.", false);
+                window.scrollToNextSection("sec-library");
             } else {
                 showBanner(html || "Save failed.", true);
             }

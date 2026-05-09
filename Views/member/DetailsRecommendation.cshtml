@@ -2,8 +2,10 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Final Assessment";
+    ViewData["ActiveNav"] = "requests";
     var requestId = Model?.Id ?? 0;
     var inst = Model?.UniversityName ?? "—";
+    var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
 
     // ── Saved values ─────────────────────────────────────────────────────────
     var savedAccreditationStatus = Model?.AccreditationStatus ?? string.Empty;
@@ -210,15 +212,7 @@
     </header>
 
     <div class="rm-shell">
-        <aside class="rm-sidebar">
-            <div class="rm-side-title">Navigation</div>
-            <nav class="rm-nav">
-                <a class="rm-navitem" href="@Url.Action("RecognitionMemberDashboard", "Home")"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
-                <a class="rm-navitem active" href="@Url.Action("ElectronicRequests", "Home")"><i class="bi bi-send-check"></i><span>My Assigned Requests</span></a>
-                <a class="rm-navitem" href="@Url.Action("Archive", "Home")"><i class="bi bi-inboxes"></i><span>Requests Archive</span></a>
-                <a class="rm-navitem danger" href="@Url.Action("Logout", "Home")"><i class="bi bi-power"></i><span>Sign Out</span></a>
-            </nav>
-        </aside>
+        @await Html.PartialAsync("_MemberSidebar")
 
         <main class="rm-main">
 
@@ -313,7 +307,7 @@
                     <div class="fa-select-row">
                         <div class="fa-select-field">
                             <label for="accreditationStatus">Compliance Status</label>
-                            <select id="accreditationStatus" name="accreditationStatus" class="fa-select" required>
+                            <select id="accreditationStatus" name="accreditationStatus" class="fa-select" @(adminReadOnly ? "disabled" : "required")>
                                 <option value="">Select status…</option>
                                 @if (savedAccreditationStatus == "Compliant")     { <option value="Compliant" selected>Compliant</option> }
                                 else                                               { <option value="Compliant">Compliant</option> }
@@ -332,7 +326,8 @@
 
                     <label class="fa-note-label" for="accreditationNote">Assessment Note</label>
                     <textarea id="accreditationNote" name="accreditationNote" class="doc-notes"
-                              placeholder="Describe your evaluation of the institution's accreditation and recognition status…">@savedAccreditationNote</textarea>
+                              placeholder="Describe your evaluation of the institution's accreditation and recognition status…"
+                              @(adminReadOnly ? "readonly disabled" : "")>@savedAccreditationNote</textarea>
                 </section>
 
                 <section class="rm-card rd-card">
@@ -591,14 +586,17 @@
                     </div>
                     <textarea id="reason" name="reason" class="doc-notes"
                               placeholder="Provide your professional justification for the final recommendation…"
-                              required>@savedFinalJustification</textarea>
+                              @(adminReadOnly ? "readonly disabled" : "required")>@savedFinalJustification</textarea>
 
-                    <div class="fa-save-row">
-                        <span class="fa-save-hint"><i class="bi bi-lock-fill"></i> Your decision will be recorded once saved.</span>
-                        <button class="rm-btn rm-btn-primary" type="submit">
-                            <i class="bi bi-check2-circle"></i> Save Decision
-                        </button>
-                    </div>
+                    @if (!adminReadOnly)
+                    {
+                        <div class="fa-save-row">
+                            <span class="fa-save-hint"><i class="bi bi-lock-fill"></i> Your decision will be recorded once saved.</span>
+                            <button class="rm-btn rm-btn-primary" type="submit">
+                                <i class="bi bi-check2-circle"></i> Save Decision
+                            </button>
+                        </div>
+                    }
                 </section>
 
             </form>
@@ -635,16 +633,17 @@
 
             const p2Class = "@CssClass(ratioCompliance)";
             const p3Class = "@CssClass(docCompliance)";
-            const p4Class = "@CssClass(envOverall)";
+            const p4Class = "@CssClass(clinicalCapCompliance)";
+            const p5Class = "@CssClass(envOverall)";
 
             const SUGGESTION_MAP = {
-                "Approve":                   { cls: "approve",     icon: "bi-check2-circle",  text: "Approve",                   note: "All four assessment points meet the required standards. The institution qualifies for recognition." },
+                "Approve":                   { cls: "approve",     icon: "bi-check2-circle",  text: "Approve",                   note: "All five assessment points meet the required standards. The institution qualifies for recognition." },
                 "Conditional Approval":      { cls: "conditional", icon: "bi-arrow-repeat",   text: "Conditional Approval",      note: "One or more assessment points require review. Conditional recognition may be granted pending corrective measures." },
                 "Reject / Committee Review": { cls: "reject",      icon: "bi-x-octagon-fill", text: "Reject / Committee Review", note: "One or more assessment points are non-compliant. The request should be referred to the committee for further review." }
             };
 
             function computeSuggestion(p1Cls) {
-                const all = [p1Cls, p2Class, p3Class, p4Class];
+                const all = [p1Cls, p2Class, p3Class, p4Class, p5Class];
                 if (all.some(c => c === "not-compliant"))                                           return "Reject / Committee Review";
                 if (all.some(c => c === "needs-review" || c === "not-assessed" || c === "missing")) return "Conditional Approval";
                 return "Approve";

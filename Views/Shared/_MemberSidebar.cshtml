@@ -1,0 +1,24 @@
+@{
+    var active = ViewData["ActiveNav"] as string ?? "";
+}
+<aside class="rm-sidebar">
+    <div class="rm-side-label">Workspace</div>
+    <nav class="rm-nav">
+        <a class="rm-navitem@(active == "dashboard" ? " active" : "")" href="@Url.Action("RecognitionMemberDashboard", "Home")">
+            <i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span>
+        </a>
+        <a class="rm-navitem@(active == "requests" ? " active" : "")" href="@Url.Action("ElectronicRequests", "Home")">
+            <i class="bi bi-journal-check"></i><span>My Assigned Requests</span>
+        </a>
+        <a class="rm-navitem@(active == "archive" ? " active" : "")" href="@Url.Action("Archive", "Home")">
+            <i class="bi bi-inboxes"></i><span>Requests Archive</span>
+        </a>
+        <a class="rm-navitem@(active == "meetings" ? " active" : "")" href="@Url.Action("RecognitionMemberMeetings", "Home")">
+            <i class="bi bi-calendar2-week"></i><span>Meetings</span>
+        </a>
+        <div class="rm-nav-divider"></div>
+        <a class="rm-navitem rm-navitem-danger" href="@Url.Action("Logout", "Home")">
+            <i class="bi bi-power"></i><span>Sign Out</span>
+        </a>
+    </nav>
+</aside>

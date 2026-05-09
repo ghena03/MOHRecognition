@@ -81,6 +81,12 @@
 
     function fmt2(n) { return n.toFixed(2); }
 
+    function computeAllowedPartTime(ftPhd) {
+        if (ftPhd < 50)   return ftPhd * 0.25;
+        if (ftPhd <= 100) return (50 * 0.25) + ((ftPhd - 50) * 0.35);
+        return (50 * 0.25) + (50 * 0.35) + ((ftPhd - 100) * 0.50);
+    }
+
     function applyRatioStatus(badgeId, ratio) {
         const el = document.getElementById(badgeId);
         if (!el) return;
@@ -122,10 +128,8 @@
             asInt("den_fullTimePractitionerMsc");
 
         const medPsc =
-            asInt("med_fullTimeAssistantLecturerPsc") +
             asInt("med_fullTimePractitionerPsc");
         const denPsc =
-            asInt("den_fullTimeAssistantLecturerPsc") +
             asInt("den_fullTimePractitionerPsc");
 
         const medTotalPt =
@@ -159,13 +163,13 @@
         setVal("den_totalPartTime", denTotalPt);
 
         // ── Ratio (only updates elements if on the doctors page) ──
-        const medFtPhd    = medPhd + asInt("med_fullTimeAssistantLecturerPsc");
+        const medFtPhd    = medPhd + asInt("med_fullTimeAssistantLecturerPhd");
         const medActualPt = asInt("med_partTimeClinicalProfessor") +
                             asInt("med_partTimeClinicalAssociateProfessor") +
                             asInt("med_partTimeClinicalAssistantProfessor") +
                             asInt("med_partTimeClinicalLecturerPhd") +
                             asInt("med_partTimeClinicalAssistantLecturerPhd");
-        const medAllowedPt = medFtPhd * 0.5;
+        const medAllowedPt = computeAllowedPartTime(medFtPhd);
         const medCountedPt = Math.min(medActualPt, medAllowedPt);
         const medStaff     = medFtPhd + medCountedPt;
         const medStudents  = asInt("med_totalStudents");
@@ -179,13 +183,13 @@
         setText("med_ratio",         medRatio !== null ? "1 : " + fmt2(medRatio) : "—");
         applyRatioStatus("med_ratioStatus", medRatio);
 
-        const denFtPhd    = denPhd + asInt("den_fullTimeAssistantLecturerPsc");
+        const denFtPhd    = denPhd + asInt("den_fullTimeAssistantLecturerPhd");
         const denActualPt = asInt("den_partTimeClinicalProfessor") +
                             asInt("den_partTimeClinicalAssociateProfessor") +
                             asInt("den_partTimeClinicalAssistantProfessor") +
                             asInt("den_partTimeClinicalLecturerPhd") +
                             asInt("den_partTimeClinicalAssistantLecturerPhd");
-        const denAllowedPt = denFtPhd * 0.5;
+        const denAllowedPt = computeAllowedPartTime(denFtPhd);
         const denCountedPt = Math.min(denActualPt, denAllowedPt);
         const denStaff     = denFtPhd + denCountedPt;
         const denStudents  = asInt("den_totalStudents");
@@ -240,7 +244,6 @@
         const saveUrl = getUrl("data-save-url");
         if (!saveUrl) return;
 
-        const y = window.scrollY || 0;
         const unlock = lockHeight(c);
 
         function v(id) {
@@ -251,10 +254,10 @@
         const requiredIds = [
             "med_fullTimeProfessor", "med_fullTimeAssociateProfessor", "med_fullTimeAssistantProfessor",
             "med_fullTimeLecturerPhd", "med_fullTimeLecturerMsc", "med_fullTimeAssistantLecturerMsc",
-            "med_fullTimeAssistantLecturerPsc", "med_fullTimePractitionerPsc", "med_fullTimePractitionerMsc",
+            "med_fullTimeAssistantLecturerPhd", "med_fullTimePractitionerPsc", "med_fullTimePractitionerMsc",
             "den_fullTimeProfessor", "den_fullTimeAssociateProfessor", "den_fullTimeAssistantProfessor",
             "den_fullTimeLecturerPhd", "den_fullTimeLecturerMsc", "den_fullTimeAssistantLecturerMsc",
-            "den_fullTimeAssistantLecturerPsc", "den_fullTimePractitionerPsc", "den_fullTimePractitionerMsc"
+            "den_fullTimeAssistantLecturerPhd", "den_fullTimePractitionerPsc", "den_fullTimePractitionerMsc"
         ];
         for (const id of requiredIds) {
             if (v(id) === "") {
@@ -274,7 +277,7 @@
         payload.append("med_fullTimeLecturerPhd", v("med_fullTimeLecturerPhd"));
         payload.append("med_fullTimeLecturerMsc", v("med_fullTimeLecturerMsc"));
         payload.append("med_fullTimeAssistantLecturerMsc", v("med_fullTimeAssistantLecturerMsc"));
-        payload.append("med_fullTimeAssistantLecturerPsc", v("med_fullTimeAssistantLecturerPsc"));
+        payload.append("med_fullTimeAssistantLecturerPhd", v("med_fullTimeAssistantLecturerPhd"));
         payload.append("med_fullTimePractitionerPsc", v("med_fullTimePractitionerPsc"));
         payload.append("med_fullTimePractitionerMsc", v("med_fullTimePractitionerMsc"));
 
@@ -284,7 +287,7 @@
         payload.append("den_fullTimeLecturerPhd", v("den_fullTimeLecturerPhd"));
         payload.append("den_fullTimeLecturerMsc", v("den_fullTimeLecturerMsc"));
         payload.append("den_fullTimeAssistantLecturerMsc", v("den_fullTimeAssistantLecturerMsc"));
-        payload.append("den_fullTimeAssistantLecturerPsc", v("den_fullTimeAssistantLecturerPsc"));
+        payload.append("den_fullTimeAssistantLecturerPhd", v("den_fullTimeAssistantLecturerPhd"));
         payload.append("den_fullTimePractitionerPsc", v("den_fullTimePractitionerPsc"));
         payload.append("den_fullTimePractitionerMsc", v("den_fullTimePractitionerMsc"));
 
@@ -330,18 +333,7 @@
             render(html);
             enforceNumbersOnly();
             if (window.showAppToast) window.showAppToast("Saved successfully.", "success");
-
-            const afterSave = getUrl("data-after-save");
-            if (afterSave) {
-                const target = document.querySelector(afterSave);
-                if (target) {
-                    target.scrollIntoView({ behavior: "smooth" });
-                } else {
-                    window.location.hash = afterSave;
-                }
-            } else {
-                window.scrollTo(0, y);
-            }
+            window.scrollToNextSection("sec-med");
         } catch (e) {
             showError(e.message || "Error");
         } finally {

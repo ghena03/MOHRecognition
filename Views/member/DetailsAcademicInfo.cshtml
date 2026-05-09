@@ -3,6 +3,7 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Academic Info";
+    ViewData["ActiveNav"] = "requests";
     var requestId = ViewBag.RequestId ?? Model?.Id ?? 0;
     var inst = ViewBag.InstitutionName ?? Model?.UniversityName ?? "—";
     var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
@@ -111,14 +112,7 @@
     </header>
 
     <div class="rm-shell">
-        <aside class="rm-sidebar">
-            <div class="rm-side-title">Navigation</div><nav class="rm-nav">
-                <a class="rm-navitem" href="@Url.Action("RecognitionMemberDashboard", "Home")"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
-                <a class="rm-navitem active" href="@Url.Action("ElectronicRequests", "Home")"><i class="bi bi-send-check"></i><span>My Assigned Requests</span></a>
-                <a class="rm-navitem" href="@Url.Action("Archive", "Home")"><i class="bi bi-inboxes"></i><span>Requests Archive</span></a>
-                <a class="rm-navitem danger" href="@Url.Action("Logout", "Home")"><i class="bi bi-power"></i><span>Sign Out</span></a>
-            </nav>
-        </aside>
+        @await Html.PartialAsync("_MemberSidebar")
 
         <main class="rm-main">
             <section class="rm-card rd-head">
@@ -348,8 +342,8 @@
 
                             <tr class="sst-ro-phd-row">
                                 <td class="sst-ro-cat">Assistant Lecturer <span class="sst-qual">(PhD)</span></td>
-                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@NV(medDen.Med_FullTimeAssistantLecturerPsc)</b></div><div class="value-row pt"><span>Part-Time</span><b>@NV(medDen.Med_PartTimeClinicalAssistantLecturerPhd)</b></div></div></td>
-                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@NV(medDen.Den_FullTimeAssistantLecturerPsc)</b></div><div class="value-row pt"><span>Part-Time</span><b>@NV(medDen.Den_PartTimeClinicalAssistantLecturerPhd)</b></div></div></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@NV(medDen.Med_FullTimeAssistantLecturerPhd)</b></div><div class="value-row pt"><span>Part-Time</span><b>@NV(medDen.Med_PartTimeClinicalAssistantLecturerPhd)</b></div></div></td>
+                                <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@NV(medDen.Den_FullTimeAssistantLecturerPhd)</b></div><div class="value-row pt"><span>Part-Time</span><b>@NV(medDen.Den_PartTimeClinicalAssistantLecturerPhd)</b></div></div></td>
                             </tr>
 
                             <tr>

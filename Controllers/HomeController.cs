@@ -21,15 +21,15 @@ namespace MOHRecognition.Controllers
 
         private static List<EmployeeDto> employees = new List<EmployeeDto>
 {
-    new EmployeeDto { Id = 1, Name = "Minister of Higher Education", Email = "minister@mohe.gov.jo" },
-    new EmployeeDto { Id = 2, Name = "Director of Recognition", Email = "director.recognition@mohe.gov.jo" },
-
-    new EmployeeDto { Id = 3, Name = "Ahmad Al-Khalil", Email = "ahmad.khalil@mohe.gov.jo" },
-    new EmployeeDto { Id = 4, Name = "Sara Haddad", Email = "sara.haddad@mohe.gov.jo" },
-    new EmployeeDto { Id = 5, Name = "Omar Nasser", Email = "omar.nasser@mohe.gov.jo" },
-    new EmployeeDto { Id = 6, Name = "Lina Qasem", Email = "lina.qasem@mohe.gov.jo" },
-    new EmployeeDto { Id = 7, Name = "Yousef Saleh", Email = "yousef.saleh@mohe.gov.jo" },
-    new EmployeeDto { Id = 8, Name = "Rana Majed", Email = "rana.majed@mohe.gov.jo" }
+    new EmployeeDto { Id = 1,  Name = "H.E. the Minister of Higher Education and Scientific Research, Prof. Azmi Mahafazah",                           Workplace = "Ministry of Higher Education and Scientific Research" },
+    new EmployeeDto { Id = 2,  Name = "Secretary General of the Ministry, Assistant Mr. Shadi Al-Masaadeh",                                             Workplace = "Ministry of Higher Education and Scientific Research" },
+    new EmployeeDto { Id = 3,  Name = "Prof. Suhail Haytham Hadadeen",                                                                                  Workplace = "The University of Jordan"                            },
+    new EmployeeDto { Id = 4,  Name = "Prof. Qasim Ahmad Al-Rdaideh",                                                                                   Workplace = "Yarmouk University"                                  },
+    new EmployeeDto { Id = 5,  Name = "Prof. Khalid Ahmad Draibekeh",                                                                                   Workplace = "The University of Jordan"                            },
+    new EmployeeDto { Id = 6,  Name = "Prof. Suzan Nweisar Hater",                                                                                      Workplace = "The University of Jordan"                            },
+    new EmployeeDto { Id = 8,  Name = "Director of University Recognition and Credit Equivalency / Prof. Aseel Al-Muhaysen",                            Workplace = "Ministry of Higher Education and Scientific Research" },
+    new EmployeeDto { Id = 9,  Name = "Head of Recognition Section / Committee Secretary, Prof. Basel Khudr",                                           Workplace = "Ministry of Higher Education and Scientific Research" },
+    new EmployeeDto { Id = 10, Name = "Deputy Section Head",                                                                                             Workplace = "Ministry of Higher Education and Scientific Research" },
 };
         // Load cities from JSON file
         private Dictionary<string, List<string>> GetCitiesDictionary()
@@ -2107,7 +2107,7 @@ namespace MOHRecognition.Controllers
             int? med_fullTimeLecturerPhd,
             int? med_fullTimeLecturerMsc,
             int? med_fullTimeAssistantLecturerMsc,
-            int? med_fullTimeAssistantLecturerPsc,
+            int? med_fullTimeAssistantLecturerPhd,
             int? med_fullTimePractitionerPsc,
             int? med_fullTimePractitionerMsc,
 
@@ -2117,7 +2117,7 @@ namespace MOHRecognition.Controllers
             int? den_fullTimeLecturerPhd,
             int? den_fullTimeLecturerMsc,
             int? den_fullTimeAssistantLecturerMsc,
-            int? den_fullTimeAssistantLecturerPsc,
+            int? den_fullTimeAssistantLecturerPhd,
             int? den_fullTimePractitionerPsc,
             int? den_fullTimePractitionerMsc,
 
@@ -2152,7 +2152,7 @@ namespace MOHRecognition.Controllers
                 (med_fullTimeLecturerPhd ?? 0) < 0 ||
                 (med_fullTimeLecturerMsc ?? 0) < 0 ||
                 (med_fullTimeAssistantLecturerMsc ?? 0) < 0 ||
-                (med_fullTimeAssistantLecturerPsc ?? 0) < 0 ||
+                (med_fullTimeAssistantLecturerPhd ?? 0) < 0 ||
                 (med_fullTimePractitionerPsc ?? 0) < 0 ||
                 (med_fullTimePractitionerMsc ?? 0) < 0 ||
                 (den_fullTimeProfessor ?? 0) < 0 ||
@@ -2161,7 +2161,7 @@ namespace MOHRecognition.Controllers
                 (den_fullTimeLecturerPhd ?? 0) < 0 ||
                 (den_fullTimeLecturerMsc ?? 0) < 0 ||
                 (den_fullTimeAssistantLecturerMsc ?? 0) < 0 ||
-                (den_fullTimeAssistantLecturerPsc ?? 0) < 0 ||
+                (den_fullTimeAssistantLecturerPhd ?? 0) < 0 ||
                 (den_fullTimePractitionerPsc ?? 0) < 0 ||
                 (den_fullTimePractitionerMsc ?? 0) < 0 ||
                 (med_partTimeClinicalProfessor ?? 0) < 0 ||
@@ -2196,7 +2196,7 @@ namespace MOHRecognition.Controllers
                 Med_FullTimeLecturerPhd = med_fullTimeLecturerPhd,
                 Med_FullTimeLecturerMsc = med_fullTimeLecturerMsc,
                 Med_FullTimeAssistantLecturerMsc = med_fullTimeAssistantLecturerMsc,
-                Med_FullTimeAssistantLecturerPsc = med_fullTimeAssistantLecturerPsc,
+                Med_FullTimeAssistantLecturerPhd = med_fullTimeAssistantLecturerPhd,
                 Med_FullTimePractitionerPsc = med_fullTimePractitionerPsc,
                 Med_FullTimePractitionerMsc = med_fullTimePractitionerMsc,
 
@@ -2206,7 +2206,7 @@ namespace MOHRecognition.Controllers
                 Den_FullTimeLecturerPhd = den_fullTimeLecturerPhd,
                 Den_FullTimeLecturerMsc = den_fullTimeLecturerMsc,
                 Den_FullTimeAssistantLecturerMsc = den_fullTimeAssistantLecturerMsc,
-                Den_FullTimeAssistantLecturerPsc = den_fullTimeAssistantLecturerPsc,
+                Den_FullTimeAssistantLecturerPhd = den_fullTimeAssistantLecturerPhd,
                 Den_FullTimePractitionerPsc = den_fullTimePractitionerPsc,
                 Den_FullTimePractitionerMsc = den_fullTimePractitionerMsc,
 
@@ -3745,6 +3745,13 @@ namespace MOHRecognition.Controllers
         public IActionResult AdminDashboard()
         {
             var model = _recognitionRequestService.GetAll();
+            ViewBag.RecognizedCount    = meetingDecisions.Count(kvp => kvp.Value.Decision == "Recognized");
+            ViewBag.NonRecognizedCount = meetingDecisions.Count(kvp => kvp.Value.Decision == "Not Recognized");
+            ViewBag.PendingCount       = meetingDecisions.Count(kvp => kvp.Value.Decision == "Needs More Information");
+            ViewBag.SubmittedUniversitiesCount = _recognitionRequestService
+                .GetAll()
+                .Count(x => string.Equals(x.Status, "Requires Admin Review", StringComparison.OrdinalIgnoreCase));
+            ViewBag.AllUniversitiesCount = meetingDecisions.Count(kvp => !string.IsNullOrWhiteSpace(kvp.Value.Decision));
             return View("~/Views/admin/AdminDashboard.cshtml", model);
         }
 
@@ -3772,6 +3779,26 @@ namespace MOHRecognition.Controllers
         {
             return View("~/Views/Admin/Employees.cshtml", employees);
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AddEmployee(string name, string workplace, string email)
+        {
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                var nextId = employees.Count > 0 ? employees.Max(e => e.Id) + 1 : 1;
+                employees.Add(new EmployeeDto { Id = nextId, Name = name.Trim(), Workplace = workplace?.Trim() ?? "", Email = email?.Trim() ?? "" });
+            }
+            return Redirect(Url.Action("Employees", "Home") + "#tbl");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult RemoveEmployee(int id)
+        {
+            employees.RemoveAll(e => e.Id == id);
+            return Redirect(Url.Action("Employees", "Home") + "#tbl");
+        }
         public IActionResult Decisions()
         {
             var requests = _recognitionRequestService.GetAll();
@@ -3781,6 +3808,110 @@ namespace MOHRecognition.Controllers
                 .ToList();
 
             return View("~/Views/Admin/Decisions.cshtml", decisions);
+        }
+
+        private List<MOHRecognition.DTOs.DecisionItemDto> GetDecisionItems(string? decisionType = null)
+        {
+            var allRequests = _recognitionRequestService.GetAll();
+            return meetingDecisions
+                .Where(kvp => string.IsNullOrWhiteSpace(decisionType) || kvp.Value.Decision == decisionType)
+                .Select(kvp =>
+                {
+                    var req = allRequests.FirstOrDefault(r => r.Id == kvp.Key.requestId);
+                    var mtg = meetings.FirstOrDefault(m => m.Id == kvp.Key.meetingId);
+                    return new MOHRecognition.DTOs.DecisionItemDto
+                    {
+                        RequestId      = kvp.Key.requestId,
+                        UniversityName = req?.UniversityName ?? "",
+                        Country        = req?.Country ?? "",
+                        ReferenceNumber = req?.ReferenceNumber ?? "",
+                        SessionNumber  = mtg?.SessionNumber ?? 0,
+                        MeetingId      = kvp.Key.meetingId,
+                        MeetingDate    = mtg?.MeetingDate ?? DateTime.MinValue,
+                        Decision       = kvp.Value.Decision,
+                        Notes          = kvp.Value.Notes,
+                        DecisionDate   = kvp.Value.SavedAt
+                    };
+                })
+                .OrderByDescending(x => x.DecisionDate)
+                .ToList();
+        }
+
+        private List<RecognitionRequestRecord> GetSubmittedUniversitiesForMeetings()
+        {
+            return _recognitionRequestService
+                .GetAll()
+                .Where(x => string.Equals(x.Status, "Requires Admin Review", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(x => x.SubmittedToAdminAt ?? x.SubmittedAt)
+                .ToList();
+        }
+
+        public IActionResult CommitteeDecisions(string status = "Recognized")
+        {
+            var statusKey = (status ?? "Recognized").Trim().ToLowerInvariant();
+            var normalizedStatus = statusKey switch
+            {
+                "not recognized" => "Not Recognized",
+                "nonrecognized" => "Not Recognized",
+                "non-recognized" => "Not Recognized",
+                "needs more information" => "Needs More Information",
+                "pending" => "Needs More Information",
+                _ => "Recognized"
+            };
+
+            ViewBag.ActiveStatus = normalizedStatus;
+            ViewBag.Items = GetDecisionItems(normalizedStatus);
+            ViewBag.TotalDecisions = meetingDecisions.Count(kvp => !string.IsNullOrWhiteSpace(kvp.Value.Decision));
+            ViewBag.RecognizedCount = meetingDecisions.Count(kvp => kvp.Value.Decision == "Recognized");
+            ViewBag.NonRecognizedCount = meetingDecisions.Count(kvp => kvp.Value.Decision == "Not Recognized");
+            ViewBag.PendingCount = meetingDecisions.Count(kvp => kvp.Value.Decision == "Needs More Information");
+
+            return View("~/Views/Admin/CommitteeDecisions.cshtml");
+        }
+
+        [HttpGet]
+        public IActionResult SubmittedUniversities()
+        {
+            var submittedItems = GetSubmittedUniversitiesForMeetings();
+            ViewBag.Items = submittedItems;
+            ViewBag.MemberNameMap = submittedItems
+                .Select(x => x.SubmittedToAdminBy)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToDictionary(x => x, x => GetRecognitionMemberDisplayName(x), StringComparer.OrdinalIgnoreCase);
+            return View("~/Views/Admin/SubmittedUniversities.cshtml");
+        }
+
+        [HttpGet]
+        public IActionResult AdminViewRecommendation(int? id)
+        {
+            if (id == null) return RedirectToAction("SubmittedUniversities");
+            var request = _recognitionRequestService.GetById(id.Value);
+            if (request == null) return RedirectToAction("SubmittedUniversities");
+            return View("~/Views/Admin/AdminViewRecommendation.cshtml", request);
+        }
+
+        [HttpGet]
+        public IActionResult AllUniversities()
+        {
+            var items = GetDecisionItems();
+            ViewBag.Items = items;
+            return View("~/Views/Admin/AllUniversities.cshtml");
+        }
+
+        public IActionResult Recognized()
+        {
+            return RedirectToAction("CommitteeDecisions", new { status = "Recognized" });
+        }
+
+        public IActionResult NonRecognized()
+        {
+            return RedirectToAction("CommitteeDecisions", new { status = "Not Recognized" });
+        }
+
+        public IActionResult DecisionPending()
+        {
+            return RedirectToAction("CommitteeDecisions", new { status = "Needs More Information" });
         }
 
         public IActionResult DecisionDetails(int id)
@@ -4369,6 +4500,7 @@ namespace MOHRecognition.Controllers
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
                 return RedirectToAction("ElectronicRequests");
 
+            ViewBag.AdminReadOnly = string.Equals(currentRole, "admin", StringComparison.OrdinalIgnoreCase);
             return View("~/Views/member/DetailsRecommendation.cshtml", request);
         }
 
@@ -4481,6 +4613,8 @@ namespace MOHRecognition.Controllers
             }
             else
             {
+                var assignedMember = request?.AssignedMember ?? HttpContext.Session.GetString("CurrentStaffUsername") ?? "";
+                _recognitionRequestService.RequireAdminReview(id, assignedMember);
                 TempData["RecommendationSaved"] = "Final assessment decision saved successfully.";
             }
 
@@ -4500,7 +4634,7 @@ namespace MOHRecognition.Controllers
                 return RedirectToAction("Archive");
             }
 
-            _recognitionRequestService.RequireAdminReview(id);
+            _recognitionRequestService.RequireAdminReview(id, request?.AssignedMember ?? "");
             TempData["ArchiveSuccess"] = "The request was successfully sent to admin for review.";
 
             return RedirectToAction("Archive");
@@ -4508,11 +4642,15 @@ namespace MOHRecognition.Controllers
 
         public IActionResult Requests()
         {
-            var requests = _recognitionRequestService.GetAll();
+            var requests = _recognitionRequestService.GetAll()
+                .Where(r => !string.Equals(r.Status, "Meeting Closed", StringComparison.OrdinalIgnoreCase))
+                .ToList();
             return View("~/Views/Admin/Requests.cshtml", requests);
         }
 
         private static List<MeetingDto> meetings = new List<MeetingDto>();
+        private static Dictionary<(int meetingId, int requestId), MeetingDecisionDto> meetingDecisions = new();
+        private static Dictionary<(int meetingId, int employeeId), bool> meetingAttendance = new();
 
         // ===================== MEETINGS LIST =====================
         public IActionResult Meetings()
@@ -4521,11 +4659,12 @@ namespace MOHRecognition.Controllers
         }
 
         // ===================== CREATE (GET) =====================
-        public IActionResult CreateMeeting()
+        public IActionResult CreateMeeting(int? preselectRequestId)
         {
-            var requests = _recognitionRequestService.GetAll();
+            var requests = GetSubmittedUniversitiesForMeetings();
             ViewBag.AvailableRequests = requests;
             ViewBag.NextSessionNumber = meetings.Count + 1;
+            ViewBag.PreselectedRequestId = preselectRequestId ?? 0;
 
             return View("~/Views/Admin/CreateMeeting.cshtml");
         }
@@ -4534,6 +4673,15 @@ namespace MOHRecognition.Controllers
         [HttpPost]
         public IActionResult CreateMeeting(MeetingDto model)
         {
+            var allowedSubmittedIds = GetSubmittedUniversitiesForMeetings()
+                .Select(x => x.Id)
+                .ToHashSet();
+
+            var selectedIds = (model.RequestIds ?? new List<int>())
+                .Distinct()
+                .Where(id => allowedSubmittedIds.Contains(id))
+                .ToList();
+
             model.Id = meetings.Count + 1;
             model.SessionNumber = meetings.Count + 1;
 
@@ -4542,11 +4690,195 @@ namespace MOHRecognition.Controllers
             model.LocationOrPlatform = (model.LocationOrPlatform ?? string.Empty).Trim();
             model.Status = NormalizeMeetingStatus(model.Status);
 
-            model.RequestIds ??= new List<int>();
+            model.RequestIds = selectedIds;
 
             meetings.Add(model);
 
             return RedirectToAction("Meetings");
+        }
+
+        // ===================== EDIT MEETING (GET) =====================
+        public IActionResult EditMeeting(int id)
+        {
+            var meeting = meetings.FirstOrDefault(m => m.Id == id);
+            if (meeting == null) return RedirectToAction("Meetings");
+
+            var submitted = GetSubmittedUniversitiesForMeetings();
+            var submittedMap = submitted.ToDictionary(x => x.Id, x => x);
+            var linkedMissing = (meeting.RequestIds ?? new List<int>())
+                .Where(reqId => !submittedMap.ContainsKey(reqId))
+                .Select(reqId => _recognitionRequestService.GetById(reqId))
+                .Where(req => req != null)
+                .Cast<RecognitionRequestRecord>()
+                .ToList();
+
+            var requests = submitted.Concat(linkedMissing).GroupBy(x => x.Id).Select(g => g.First()).ToList();
+            ViewBag.AvailableRequests = requests;
+            return View("~/Views/Admin/EditMeeting.cshtml", meeting);
+        }
+
+        // ===================== EDIT MEETING (POST) =====================
+        [HttpPost]
+        public IActionResult EditMeeting(int id, MeetingDto model)
+        {
+            var meeting = meetings.FirstOrDefault(m => m.Id == id);
+            if (meeting != null)
+            {
+                var allowedSubmittedIds = GetSubmittedUniversitiesForMeetings()
+                    .Select(x => x.Id)
+                    .ToHashSet();
+                var existingIds = (meeting.RequestIds ?? new List<int>()).ToHashSet();
+
+                var selectedIds = (model.RequestIds ?? new List<int>())
+                    .Distinct()
+                    .Where(reqId => allowedSubmittedIds.Contains(reqId) || existingIds.Contains(reqId))
+                    .ToList();
+
+                meeting.MeetingTitle       = (model.MeetingTitle ?? "").Trim();
+                meeting.MeetingDate        = model.MeetingDate;
+                meeting.MeetingTime        = (model.MeetingTime ?? "").Trim();
+                meeting.LocationOrPlatform = (model.LocationOrPlatform ?? "").Trim();
+                meeting.Notes              = (model.Notes ?? "").Trim();
+                meeting.RequestIds         = selectedIds;
+                meeting.Status             = NormalizeMeetingStatus(model.Status);
+            }
+            return RedirectToAction("Meetings");
+        }
+
+        // ===================== DELETE MEETING (POST) =====================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteMeeting(int id)
+        {
+            var meeting = meetings.FirstOrDefault(m => m.Id == id);
+            if (meeting != null)
+            {
+                meetings.Remove(meeting);
+                var keysToRemove = meetingDecisions.Keys.Where(k => k.meetingId == id).ToList();
+                foreach (var key in keysToRemove)
+                    meetingDecisions.Remove(key);
+            }
+            return RedirectToAction("Meetings");
+        }
+
+        // ===================== CLOSE MEETING (POST) =====================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CloseMeeting(int id)
+        {
+            var meeting = meetings.FirstOrDefault(m => m.Id == id);
+            if (meeting != null)
+            {
+                meeting.Status = "Closed";
+                foreach (var requestId in meeting.RequestIds)
+                    _recognitionRequestService.UpdateStatus(requestId, "Meeting Closed");
+            }
+            return RedirectToAction("SessionDashboard", new { id });
+        }
+
+        // ===================== SESSION WORKFLOW HUB (GET) =====================
+        public IActionResult SessionWorkflow()
+        {
+            var allRequests = _recognitionRequestService.GetAll();
+
+            var sessionInfos = meetings.Select(m => new
+            {
+                Meeting      = m,
+                LinkedCount  = allRequests.Count(r => m.RequestIds.Contains(r.Id)),
+                DecidedCount = allRequests.Count(r =>
+                    m.RequestIds.Contains(r.Id) &&
+                    meetingDecisions.TryGetValue((m.Id, r.Id), out var d) &&
+                    !string.IsNullOrWhiteSpace(d?.Decision))
+            }).ToList();
+
+            ViewBag.SessionInfos = sessionInfos;
+            return View("~/Views/Admin/SessionWorkflow.cshtml", meetings);
+        }
+
+        // ===================== SESSION DASHBOARD (GET) =====================
+        public IActionResult SessionDashboard(int id)
+        {
+            var meeting = meetings.FirstOrDefault(m => m.Id == id);
+            if (meeting == null) return RedirectToAction("Meetings");
+
+            var allRequests = _recognitionRequestService.GetAll();
+            var linked = allRequests.Where(r => meeting.RequestIds.Contains(r.Id)).ToList();
+
+            int decidedCount = linked.Count(r =>
+                meetingDecisions.TryGetValue((id, r.Id), out var d) &&
+                !string.IsNullOrWhiteSpace(d?.Decision));
+
+            var attendanceMap = meetingAttendance
+                .Where(kvp => kvp.Key.meetingId == id)
+                .ToDictionary(kvp => kvp.Key.employeeId, kvp => kvp.Value);
+
+            ViewBag.LinkedCount    = linked.Count;
+            ViewBag.DecidedCount   = decidedCount;
+            ViewBag.LinkedRequests = linked;
+            ViewBag.Decisions      = meetingDecisions;
+            ViewBag.Employees      = employees;
+            ViewBag.Attendance     = attendanceMap;
+            return View("~/Views/Admin/SessionDashboard.cshtml", meeting);
+        }
+
+        // ===================== TOGGLE ATTENDANCE (POST) =====================
+        [HttpPost]
+        public IActionResult ToggleAttendance(int meetingId, int employeeId, bool present)
+        {
+            meetingAttendance[(meetingId, employeeId)] = present;
+            return Ok();
+        }
+
+        // ===================== MEETING REQUESTS (GET) =====================
+        public IActionResult MeetingRequests(int meetingId)
+        {
+            var meeting = meetings.FirstOrDefault(m => m.Id == meetingId);
+            if (meeting == null) return RedirectToAction("Meetings");
+
+            var allRequests = _recognitionRequestService.GetAll();
+            var linked = allRequests
+                .Where(r => meeting.RequestIds.Contains(r.Id))
+                .ToList();
+
+            ViewBag.Meeting = meeting;
+            ViewBag.Decisions = meetingDecisions;
+            return View("~/Views/Admin/MeetingRequests.cshtml", linked);
+        }
+
+        // ===================== MEETING DECISION (GET) =====================
+        public IActionResult MeetingDecision(int meetingId, int requestId)
+        {
+            var meeting = meetings.FirstOrDefault(m => m.Id == meetingId);
+            var request = _recognitionRequestService.GetById(requestId);
+            if (meeting == null || request == null) return RedirectToAction("Meetings");
+
+            meetingDecisions.TryGetValue((meetingId, requestId), out var existing);
+
+            ViewBag.Meeting = meeting;
+            ViewBag.Request = request;
+            ViewBag.ExistingDecision = existing;
+            return View("~/Views/Admin/MeetingDecision.cshtml");
+        }
+
+        // ===================== SAVE MEETING DECISION (POST) =====================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SaveMeetingDecision(int meetingId, int requestId, string decision, string notes)
+        {
+            var validDecisions = new[] { "Recognized", "Not Recognized", "Needs More Information" };
+            if (!validDecisions.Contains(decision))
+                decision = "Needs More Information";
+
+            meetingDecisions[(meetingId, requestId)] = new MeetingDecisionDto
+            {
+                MeetingId = meetingId,
+                RequestId = requestId,
+                Decision = decision,
+                Notes = (notes ?? "").Trim(),
+                SavedAt = DateTime.Now
+            };
+
+            return RedirectToAction("SessionDashboard", new { id = meetingId });
         }
 
         // ===================== DETAILS =====================

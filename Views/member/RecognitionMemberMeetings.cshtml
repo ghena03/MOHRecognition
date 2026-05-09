@@ -2,6 +2,7 @@
 @{
     Layout = null;
     ViewData["Title"] = "Assigned Committee Meetings";
+    ViewData["ActiveNav"] = "meetings";
 }
 
 <!doctype html>
@@ -40,30 +41,7 @@
     </header>
 
     <div class="rm-shell">
-        <aside class="rm-sidebar">
-            <div class="rm-side-label">Workspace</div>
-            <nav class="rm-nav">
-                <a class="rm-navitem" href="@Url.Action("RecognitionMemberDashboard", "Home")">
-                    <i class="bi bi-grid-1x2-fill"></i><span>Review Dashboard</span>
-                </a>
-                <a class="rm-navitem" href="@Url.Action("ElectronicRequests", "Home")">
-                    <i class="bi bi-journal-check"></i><span>My Assigned Requests</span>
-                </a>
-                <a class="rm-navitem" href="@Url.Action("Archive", "Home")">
-                    <i class="bi bi-inboxes"></i><span>Requests Archive</span>
-                </a>
-                <a class="rm-navitem" href="@Url.Action("ResetPassword", "Home", new { role = "recognition" })">
-                    <i class="bi bi-person-gear"></i><span>Profile &amp; Security</span>
-                </a>
-                <a class="rm-navitem active" href="@Url.Action("RecognitionMemberMeetings", "Home")">
-                    <i class="bi bi-calendar2-week"></i><span>Meetings</span>
-                </a>
-                <div class="rm-nav-divider"></div>
-                <a class="rm-navitem rm-navitem-danger" href="@Url.Action("Logout", "Home")">
-                    <i class="bi bi-power"></i><span>Sign Out</span>
-                </a>
-            </nav>
-        </aside>
+        @await Html.PartialAsync("_MemberSidebar")
 
         <main class="rm-main">
             <section class="rm-pagehead">

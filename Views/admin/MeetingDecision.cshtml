@@ -1,0 +1,156 @@
+@using MOHRecognition.DTOs
+@using MOHRecognition.Services
+
+@{
+    ViewData["Title"] = "Final Committee Decision";
+    Layout = null;
+
+    var meeting          = (MeetingDto)ViewBag.Meeting;
+    var request          = (RecognitionRequestRecord)ViewBag.Request;
+    var existing         = ViewBag.ExistingDecision as MeetingDecisionDto;
+    int meetingId        = meeting.Id;
+    int requestId        = request.Id;
+
+    string selectedDecision = existing?.Decision ?? "Needs More Information";
+    string existingNotes    = existing?.Notes ?? "";
+}
+
+<link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
+
+<style>
+    body { direction: ltr; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f8f5f0; }
+
+    .md-header {
+        background: #7f1627;
+        color: #fff;
+        padding: 22px 32px 16px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+    .md-header img.logo  { height: 52px; }
+    .md-header .divider  { width: 2px; height: 44px; background: rgba(255,255,255,0.4); margin: 0 10px; }
+    .md-header .title-box h1 { margin: 0; font-size: 1.35em; font-weight: 700; }
+    .md-header .title-box p  { margin: 2px 0 0; font-size: 0.88em; opacity: .85; }
+
+    .md-container { max-width: 820px; margin: 36px auto; padding: 0 20px 40px; }
+
+    .md-page-title { color: #7f1627; font-size: 1.4em; font-weight: 700; margin-bottom: 18px; }
+
+    .md-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+    .md-pill { background: #f5e8ea; color: #7f1627; border: 1px solid #e0b0bb; border-radius: 20px; padding: 5px 16px; font-size: 0.85em; font-weight: 600; }
+
+    .md-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.07); padding: 22px 26px; margin-bottom: 22px; }
+    .md-card-title { font-size: 1em; font-weight: 700; color: #7f1627; margin-bottom: 14px; border-bottom: 2px solid #f5e8ea; padding-bottom: 8px; }
+
+    .rec-block { background: #f9f5f0; border-left: 4px solid #7f1627; padding: 12px 16px; border-radius: 6px; }
+    .rec-label { font-size: 0.82em; color: #888; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+    .rec-value { font-size: 0.97em; color: #333; font-weight: 600; }
+    .rec-reason { font-size: 0.87em; color: #555; margin-top: 6px; font-style: italic; }
+
+    .md-form-group { margin-bottom: 20px; }
+    .md-form-group label { display: block; font-weight: 700; color: #444; margin-bottom: 6px; font-size: 0.92em; }
+    .md-form-group select,
+    .md-form-group textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1.5px solid #d0b0bb;
+        border-radius: 7px;
+        font-size: 0.95em;
+        color: #333;
+        background: #fff;
+        box-sizing: border-box;
+        font-family: inherit;
+    }
+    .md-form-group select:focus,
+    .md-form-group textarea:focus { outline: none; border-color: #7f1627; box-shadow: 0 0 0 2px rgba(127,22,39,.12); }
+
+    .md-btn-row { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+    .md-btn-back { display: inline-block; padding: 10px 26px; border-radius: 7px; font-size: 0.95em; font-weight: 600; text-decoration: none; background: #f0f0f0; color: #333; border: 1.5px solid #ccc; }
+    .md-btn-back:hover { background: #e0e0e0; }
+    .md-btn-save { padding: 10px 32px; border-radius: 7px; font-size: 0.95em; font-weight: 700; border: none; cursor: pointer; background: #7f1627; color: #fff; }
+    .md-btn-save:hover { background: #6a1020; }
+</style>
+
+<!-- HEADER -->
+<div class="md-header">
+    <img src="/images/mohelogo.png" class="logo" />
+    <div class="divider"></div>
+    <div class="title-box">
+        <h1>Final Committee Decision</h1>
+        <p>Record the committee's official decision for this recognition request</p>
+    </div>
+</div>
+
+<div class="md-container">
+
+    <div class="md-page-title">Final Committee Decision</div>
+
+    <!-- INFO PILLS -->
+    <div class="md-pills">
+        <span class="md-pill">Session #@meeting.SessionNumber</span>
+        <span class="md-pill">Year: @meeting.MeetingDate.Year</span>
+        <span class="md-pill">University: @(string.IsNullOrWhiteSpace(request.UniversityName) ? "—" : request.UniversityName)</span>
+        <span class="md-pill">Request ID: @request.Id</span>
+    </div>
+
+    <!-- DOCTOR'S RECOMMENDATION (read-only) -->
+    <div class="md-card">
+        <div class="md-card-title">Doctor's Recommendation</div>
+        @if (string.IsNullOrWhiteSpace(request.BasicInfoAssessmentDecision))
+        {
+            <div class="rec-block">
+                <div class="rec-value" style="color: #888; font-weight: 400;">No recommendation submitted yet.</div>
+            </div>
+        }
+        else
+        {
+            <div class="rec-block">
+                <div class="rec-label">Decision</div>
+                <div class="rec-value">@request.BasicInfoAssessmentDecision</div>
+                @if (!string.IsNullOrWhiteSpace(request.BasicInfoAssessmentReason))
+                {
+                    <div class="rec-reason">@request.BasicInfoAssessmentReason</div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- COMMITTEE DECISION FORM -->
+    <div class="md-card">
+        <div class="md-card-title">Committee Decision</div>
+
+        <form method="post" action="/Home/SaveMeetingDecision">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="meetingId" value="@meetingId" />
+            <input type="hidden" name="requestId" value="@requestId" />
+
+            <div class="md-form-group">
+                <label for="decision">Decision</label>
+                @{
+                    string selRec   = selectedDecision == "Recognized"             ? " selected" : "";
+                    string selNot   = selectedDecision == "Not Recognized"         ? " selected" : "";
+                    string selNeeds = selectedDecision == "Needs More Information" ? " selected" : "";
+                    string selectHtml =
+                        "<select id=\"decision\" name=\"decision\">" +
+                        "<option value=\"Recognized\""            + selRec   + ">Recognized / معترف بها</option>" +
+                        "<option value=\"Not Recognized\""        + selNot   + ">Not Recognized / غير معترف بها</option>" +
+                        "<option value=\"Needs More Information\"" + selNeeds + ">Needs More Information / بحاجة لمعلومات إضافية</option>" +
+                        "</select>";
+                }
+                @Html.Raw(selectHtml)
+            </div>
+
+            <div class="md-form-group">
+                <label for="notes">Committee Notes / Written Recommendation</label>
+                <textarea id="notes" name="notes" rows="8" placeholder="Enter the committee's written decision or notes here...">@existingNotes</textarea>
+            </div>
+
+            <div class="md-btn-row">
+                <a href="/Home/SessionDashboard?id=@meetingId" class="md-btn-back">&#8592; Back to Meeting</a>
+                <button type="submit" class="md-btn-save">Save Decision</button>
+            </div>
+        </form>
+    </div>
+
+</div>

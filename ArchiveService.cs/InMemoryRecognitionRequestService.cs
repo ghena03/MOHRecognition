@@ -49,7 +49,7 @@ namespace MOHRecognition.Services
             }
         }
 
-        public bool RequireAdminReview(int id)
+        public bool RequireAdminReview(int id, string submittedBy)
         {
             lock (_lock)
             {
@@ -57,6 +57,8 @@ namespace MOHRecognition.Services
                 if (req == null) return false;
 
                 req.Status = "Requires Admin Review";
+                req.SubmittedToAdminBy = NormalizeAssignedMember(submittedBy);
+                req.SubmittedToAdminAt = DateTime.Now;
                 return true;
             }
         }
@@ -129,6 +131,17 @@ namespace MOHRecognition.Services
                 req.BasicInfoAssessmentReason = (reason ?? string.Empty).Trim();
                 req.AccreditationStatus = (accreditationStatus ?? string.Empty).Trim();
                 req.AccreditationNote = (accreditationNote ?? string.Empty).Trim();
+                return true;
+            }
+        }
+
+        public bool UpdateStatus(int id, string status)
+        {
+            lock (_lock)
+            {
+                var req = _requests.FirstOrDefault(x => x.Id == id);
+                if (req == null) return false;
+                req.Status = status;
                 return true;
             }
         }

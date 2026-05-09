@@ -3761,6 +3761,17 @@ html {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    align-items: stretch;
+}
+
+#picturesContainer .pic-actions-row .btn-primary,
+#picturesContainer .pic-actions-row .btn-ghost {
+    padding: 12px 22px;
+    font-size: 14px;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #picturesContainer .pic-files-list {

@@ -1,0 +1,279 @@
+@using MOHRecognition.DTOs
+@{
+    ViewData["Title"] = "Committee Decisions";
+    Layout = null;
+
+    var items = ViewBag.Items as List<DecisionItemDto> ?? new List<DecisionItemDto>();
+    string activeStatus = ViewBag.ActiveStatus as string ?? "Recognized";
+    int totalDecisions = Convert.ToInt32(ViewBag.TotalDecisions ?? 0);
+    int recognizedCount = Convert.ToInt32(ViewBag.RecognizedCount ?? 0);
+    int nonRecognizedCount = Convert.ToInt32(ViewBag.NonRecognizedCount ?? 0);
+    int pendingCount = Convert.ToInt32(ViewBag.PendingCount ?? 0);
+
+    bool isRecognized = activeStatus == "Recognized";
+    bool isNonRecognized = activeStatus == "Not Recognized";
+    bool isPending = activeStatus == "Needs More Information";
+
+    string pageAccent = isRecognized ? "green" : isNonRecognized ? "red" : "amber";
+    string activeTitle = isRecognized ? "Recognized" : isNonRecognized ? "Non-Recognized" : "Pending";
+    string activeDescription = isRecognized
+        ? "Universities that received final recognition approval from the committee."
+        : isNonRecognized
+            ? "Universities that received a final non-recognition decision from the committee."
+            : "Universities needing more information before the committee can close the decision.";
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Committee Decisions</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f0eb; color: #1a1a1a; min-height: 100vh; }
+        .ministry-bar { background: #5a0e1b; color: rgba(255,255,255,.68); font-size: 11.5px; font-weight: 500; letter-spacing: .4px; padding: 6px 48px; display: flex; align-items: center; gap: 6px; }
+        .pg-header { background: #7f1627; color: #fff; padding: 0 48px; height: 66px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 18px rgba(127,22,39,.32); }
+        .hd-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+        .pg-header img { height: 42px; }
+        .hd-sep { width: 1px; height: 34px; background: rgba(255,255,255,.28); margin: 0 6px; }
+        .hd-text h1 { font-size: 17px; font-weight: 700; }
+        .hd-text p { font-size: 11.5px; opacity: .72; margin-top: 2px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.35); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; text-decoration: none; transition: background .15s; white-space: nowrap; }
+        .btn-back:hover { background: rgba(255,255,255,.25); }
+
+        .pg-body { max-width: 1180px; margin: 0 auto; padding: 34px 24px 72px; }
+        .page-title { margin-bottom: 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
+        .page-title h2 { font-size: 26px; color: #7f1627; font-weight: 900; }
+        .page-title p { margin-top: 5px; color: #777; font-size: 13.5px; }
+
+        .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+        .summary-card { background: #fff; border: 1px solid #eee3d7; border-radius: 8px; padding: 18px 18px 16px; box-shadow: 0 2px 16px rgba(0,0,0,.045); }
+        .summary-card p { color: #777; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+        .summary-card h3 { margin-top: 8px; color: #1f2937; font-size: 30px; line-height: 1; font-weight: 900; }
+        .summary-card.green { border-top: 4px solid #1a7a34; }
+        .summary-card.red { border-top: 4px solid #b91c1c; }
+        .summary-card.amber { border-top: 4px solid #d97706; }
+        .summary-card.total { border-top: 4px solid #7f1627; }
+
+        .decision-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; background: #fff; border: 1px solid #eee3d7; border-radius: 8px; padding: 10px; box-shadow: 0 2px 16px rgba(0,0,0,.04); }
+        .decision-tab { flex: 1 1 190px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border-radius: 7px; text-decoration: none; font-size: 13px; font-weight: 900; border: 1.5px solid transparent; transition: transform .12s, box-shadow .12s; }
+        .decision-tab:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(0,0,0,.08); }
+        .decision-tab.green { background: #e8f5ea; color: #1a7a34; border-color: #b8e8c8; }
+        .decision-tab.green.active { background: #1a7a34; color: #fff; border-color: #1a7a34; }
+        .decision-tab.red { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+        .decision-tab.red.active { background: #b91c1c; color: #fff; border-color: #b91c1c; }
+        .decision-tab.amber { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+        .decision-tab.amber.active { background: #d97706; color: #fff; border-color: #d97706; }
+
+        .tbl-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 24px rgba(0,0,0,.07); overflow: hidden; border-top: 4px solid #7f1627; }
+        .tbl-card.green { border-top-color: #1a7a34; }
+        .tbl-card.red { border-top-color: #b91c1c; }
+        .tbl-card.amber { border-top-color: #d97706; }
+        .tbl-card-top { padding: 20px 24px 16px; border-bottom: 1px solid #f0ebe4; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+        .tbl-card-top h3 { font-size: 15px; font-weight: 900; color: #333; }
+        .tbl-card-top p { font-size: 12.5px; color: #888; margin-top: 3px; line-height: 1.5; }
+        .status-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 13px; font-size: 12px; font-weight: 900; white-space: nowrap; }
+        .status-pill.green, .badge.green { background: #e8f5ea; color: #1a7a34; }
+        .status-pill.red, .badge.red { background: #fef2f2; color: #b91c1c; }
+        .status-pill.amber, .badge.amber { background: #fffbeb; color: #d97706; }
+
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 940px; }
+        thead th { background: #faf7f4; color: #7f1627; font-size: 11px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; padding: 13px 18px; text-align: left; border-bottom: 2px solid #ecddd5; white-space: nowrap; }
+        tbody tr { border-bottom: 1px solid #f5f0eb; transition: background .1s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #fdfaf7; }
+        tbody td { padding: 17px 18px; vertical-align: top; font-size: 13px; color: #444; }
+        .uni-name { font-size: 14px; font-weight: 800; color: #1a1a1a; }
+        .uni-sub { font-size: 11.5px; color: #999; margin-top: 4px; }
+        .recommendation { max-width: 280px; line-height: 1.5; }
+        .recommendation strong { display: block; margin-bottom: 3px; color: #222; }
+        .badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 5px 11px; font-size: 11.5px; font-weight: 900; white-space: nowrap; }
+        .action-cell { text-align: right; white-space: nowrap; }
+        .btn-view, .btn-review { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 7px; padding: 8px 12px; font-size: 12px; font-weight: 800; text-decoration: none; margin-left: 6px; }
+        .btn-view { background: #f5e8ea; color: #7f1627; border: 1.5px solid #e0b0bb; }
+        .btn-review { background: #d97706; color: #fff; border: 1.5px solid #d97706; }
+        .btn-view:hover { background: #edd6dc; }
+        .btn-review:hover { background: #b45309; border-color: #b45309; }
+        .empty-state { padding: 70px 32px; text-align: center; }
+        .empty-state i { font-size: 50px; color: #d5c4b7; display: block; margin-bottom: 16px; }
+        .empty-state h3 { font-size: 17px; font-weight: 800; color: #555; margin-bottom: 8px; }
+        .empty-state p { font-size: 13.5px; color: #888; max-width: 430px; margin: 0 auto; line-height: 1.7; }
+
+        @@media (max-width: 800px) {
+            .ministry-bar, .pg-header { padding-left: 18px; padding-right: 18px; }
+            .pg-header { height: auto; min-height: 72px; gap: 12px; }
+            .hd-text p { display: none; }
+            .btn-back { padding: 8px 12px; }
+            .pg-body { padding: 24px 14px 48px; }
+            .page-title { display: block; }
+            .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .tbl-card-top { align-items: flex-start; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ministry-bar">
+        <i class="bi bi-bank2"></i>
+        Ministry of Higher Education and Scientific Research - Hashemite Kingdom of Jordan
+    </div>
+
+    <div class="pg-header">
+        <div class="hd-left">
+            <img src="/images/mohelogo.png" alt="Logo" />
+            <div class="hd-sep"></div>
+            <div class="hd-text">
+                <h1>Committee Decisions</h1>
+                <p>Final committee outcomes and recognition statuses</p>
+            </div>
+        </div>
+        <a href="/Home/AdminDashboard" class="btn-back">
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
+        </a>
+    </div>
+
+    <main class="pg-body">
+        <div class="page-title">
+            <div>
+                <h2>Committee Decisions</h2>
+                <p>View final committee outcomes and recognition statuses.</p>
+            </div>
+        </div>
+
+        <section class="summary-grid" aria-label="Decision summary">
+            <div class="summary-card total">
+                <p>Total Decisions</p>
+                <h3>@totalDecisions</h3>
+            </div>
+            <div class="summary-card green">
+                <p>Recognized Count</p>
+                <h3>@recognizedCount</h3>
+            </div>
+            <div class="summary-card red">
+                <p>Non-Recognized Count</p>
+                <h3>@nonRecognizedCount</h3>
+            </div>
+            <div class="summary-card amber">
+                <p>Pending Count</p>
+                <h3>@pendingCount</h3>
+            </div>
+        </section>
+
+        <nav class="decision-tabs" aria-label="Decision status filters">
+            <a class="decision-tab green @(isRecognized ? "active" : "")" href="/Home/CommitteeDecisions?status=Recognized">
+                <i class="bi bi-patch-check-fill"></i> Recognized
+            </a>
+            <a class="decision-tab red @(isNonRecognized ? "active" : "")" href="/Home/CommitteeDecisions?status=Not%20Recognized">
+                <i class="bi bi-x-circle-fill"></i> Non-Recognized
+            </a>
+            <a class="decision-tab amber @(isPending ? "active" : "")" href="/Home/CommitteeDecisions?status=Needs%20More%20Information">
+                <i class="bi bi-hourglass-split"></i> Pending
+            </a>
+        </nav>
+
+        <section class="tbl-card @pageAccent">
+            <div class="tbl-card-top">
+                <div>
+                    <h3>@activeTitle Universities</h3>
+                    <p>@activeDescription</p>
+                </div>
+                <span class="status-pill @pageAccent">
+                    @items.Count @(items.Count == 1 ? "university" : "universities")
+                </span>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>University Name</th>
+                            <th>Request ID</th>
+                            <th>Meeting / Session</th>
+                            <th>Decision Date</th>
+                            <th>Final Committee Recommendation</th>
+                            <th style="text-align:right;padding-right:24px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (items.Any())
+                        {
+                            foreach (var item in items)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="uni-name">@(string.IsNullOrWhiteSpace(item.UniversityName) ? "-" : item.UniversityName)</div>
+                                        <div class="uni-sub">
+                                            @(string.IsNullOrWhiteSpace(item.Country) ? "Country not specified" : item.Country)
+                                            @if (!string.IsNullOrWhiteSpace(item.ReferenceNumber))
+                                            {
+                                                <span> | @item.ReferenceNumber</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td style="font-weight:800;color:#333;">#@item.RequestId</td>
+                                    <td>
+                                        <strong>Meeting #@item.SessionNumber</strong>
+                                        <div class="uni-sub">@item.MeetingDate.ToString("dd MMM yyyy")</div>
+                                    </td>
+                                    <td>@(item.DecisionDate.HasValue ? item.DecisionDate.Value.ToString("dd MMM yyyy") : "-")</td>
+                                    <td>
+                                        <div class="recommendation">
+                                            <span class="badge @pageAccent">
+                                                @if (isRecognized)
+                                                {
+                                                    <i class="bi bi-patch-check-fill"></i>
+                                                    <span>Recognized</span>
+                                                }
+                                                else if (isNonRecognized)
+                                                {
+                                                    <i class="bi bi-x-circle-fill"></i>
+                                                    <span>Non-Recognized</span>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-hourglass-split"></i>
+                                                    <span>Needs More Information</span>
+                                                }
+                                            </span>
+                                            @if (!string.IsNullOrWhiteSpace(item.Notes))
+                                            {
+                                                <div style="margin-top:8px;">@item.Notes</div>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="action-cell">
+                                        <a class="btn-view" href="/Home/MeetingDecision?meetingId=@item.MeetingId&requestId=@item.RequestId">
+                                            <i class="bi bi-eye"></i> View Full Decision
+                                        </a>
+                                        @if (isPending)
+                                        {
+                                            <a class="btn-review" href="/Home/MeetingDecision?meetingId=@item.MeetingId&requestId=@item.RequestId">
+                                                <i class="bi bi-pencil-square"></i> Continue Review
+                                            </a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="bi bi-clipboard2-check"></i>
+                                        <h3>No @activeTitle.ToLower() decisions yet</h3>
+                                        <p>Universities will appear here automatically when the final committee decision is saved inside إدارة الجلسات.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

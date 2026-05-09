@@ -1,4 +1,32 @@
 ﻿(function () {
+    // Navigate to the section that follows currentSectionId in the sidebar order
+    window.scrollToNextSection = function (currentSectionId) {
+        const order = [
+            "sec-instructions",
+            "sec-general",
+            "sec-academic",
+            "sec-admission-duration",
+            "sec-faculties",
+            "sec-programs",
+            "sec-med",
+            "sec-hosp",
+            "sec-infra",
+            "sec-labs",
+            "sec-library",
+            "sec-pictures",
+            "sec-accreditation-bodies",
+            "sec-submit-application"
+        ];
+        const idx = order.indexOf(currentSectionId);
+        if (idx === -1 || idx >= order.length - 1) return;
+        const next = document.getElementById(order[idx + 1]);
+        if (next) {
+            setTimeout(function () {
+                next.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 600);
+        }
+    };
+
     // Sidebar active highlight while scrolling
     document.addEventListener("DOMContentLoaded", () => {
         const sections = document.querySelectorAll("section[id]");

@@ -1,4 +1,4 @@
-﻿@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
+@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
 
 @{
     Layout = null;
@@ -12,27 +12,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .nav-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 30px;
+            text-decoration: none;
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            border: 2px solid #f0ebe4;
+            box-shadow: 0 2px 12px rgba(0,0,0,.05);
+            transition: transform .18s, box-shadow .18s, border-color .18s;
+        }
+        .nav-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 32px rgba(127,22,39,.12);
+            border-color: #d4a8b4;
+        }
+
+        .nav-icon {
+            width: 52px; height: 52px;
+            border-radius: 14px;
+            background: #fde8ec;
+            color: #7f1627;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; flex-shrink: 0;
+        }
+
+        .nav-body { flex: 1; }
+        .nav-body h3 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+        }
+        .nav-body p {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.55;
+        }
+
+        .nav-arrow {
+            font-size: 16px;
+            color: #ddd;
+            align-self: center;
+            flex-shrink: 0;
+            transition: color .15s, transform .15s;
+        }
+        .nav-card:hover .nav-arrow { color: #7f1627; transform: translateX(4px); }
+
+        /* Span full row for the two main cards */
+        .nav-card.nav-decisions { border-color: #d8c6ad; }
+        .nav-card.nav-decisions:hover { border-color: #7f1627; box-shadow: 0 10px 32px rgba(127,22,39,.12); }
+        .nav-card.nav-decisions .nav-icon { background: #f5e8ea; color: #7f1627; }
+        .nav-card.nav-decisions:hover .nav-arrow { color: #7f1627; }
+
+        .decision-mini-counts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .decision-mini {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+        .decision-mini.green { background: #e8f5ea; color: #1a7a34; }
+        .decision-mini.red { background: #fef2f2; color: #b91c1c; }
+        .decision-mini.amber { background: #fffbeb; color: #d97706; }
+
+        .nav-card.nav-submitted { border-color: #bfdbfe; }
+        .nav-card.nav-submitted:hover { border-color: #1d4ed8; box-shadow: 0 10px 32px rgba(29,78,216,.12); }
+        .nav-card.nav-submitted .nav-icon { background: #eff6ff; color: #1d4ed8; }
+        .nav-card.nav-submitted:hover .nav-arrow { color: #1d4ed8; }
+
+        .nav-card.nav-alluni { border-color: #c7d2fe; }
+        .nav-card.nav-alluni:hover { border-color: #4338ca; box-shadow: 0 10px 32px rgba(67,56,202,.12); }
+        .nav-card.nav-alluni .nav-icon { background: #eef2ff; color: #4338ca; }
+        .nav-card.nav-alluni:hover .nav-arrow { color: #4338ca; }
+    </style>
 </head>
 
 <body class="admin-page">
 
-    <!-- 🔴 RED TOP LINE -->
     <div class="top-bar"></div>
 
-    <!-- HEADER -->
     <div class="header">
-
         <div class="header-left">
             <img src="/images/mohelogo.png" class="logo" />
-
             <div class="divider"></div>
-
             <div class="title-box">
                 <h1>Admin Dashboard</h1>
-                <p>Manage requests, assignments, and workflow in one place</p>
+                <p>Recognition Committee — Operations &amp; Management Portal</p>
             </div>
         </div>
-
         <div class="user-box">
             <div class="avatar">A</div>
             <div>
@@ -40,72 +121,109 @@
                 <span>System Administrator</span>
             </div>
         </div>
-
     </div>
 
-    <!-- MAIN -->
     <div class="main-container">
 
-        <!-- OVERVIEW  -->
         <section class="overview-section">
-
             <h2 class="overview-title">Overview</h2>
-
             <div class="overview-cards">
-
                 <div class="overview-card">
                     <p>Total Requests</p>
-                    <h2>@Model.Count</h2>
+                    <h2>@Model.Count(x => x.Status != "Meeting Closed")</h2>
                 </div>
-
                 <div class="overview-card">
                     <p>Pending</p>
                     <h2>@Model.Count(x => x.Status == "Pending")</h2>
                 </div>
-
                 <div class="overview-card">
                     <p>Assigned</p>
-                    <h2>@Model.Count(x => x.AssignedMember != "Unassigned")</h2>
+                    <h2>@Model.Count(x => x.AssignedMember != "Unassigned" && x.Status != "Meeting Closed")</h2>
                 </div>
-
                 <div class="overview-card">
                     <p>Needs Review</p>
                     <h2>@Model.Count(x => x.Status == "Requires Admin Review")</h2>
                 </div>
-
             </div>
-
         </section>
 
+        <div class="nav-grid">
 
-        <!--ACTION BUTTONS -->
-        <div class="main-actions">
-
-            <a asp-controller="Home" asp-action="Requests" class="action-card">
-                <h3>Requests</h3>
-                <p>Manage all submitted requests</p>
+            <a asp-controller="Home" asp-action="Requests" class="nav-card">
+                <div class="nav-icon"><i class="bi bi-inbox-fill"></i></div>
+                <div class="nav-body">
+                    <h3>Requests</h3>
+                    <p>Manage all submitted university recognition requests.</p>
+                </div>
+                <i class="bi bi-arrow-right nav-arrow"></i>
             </a>
 
-
-            <a asp-controller="Home" asp-action="Meetings" class="action-card">
-                <h3>Meetings</h3>
-                <p>Manage and schedule discussion sessions</p>
+            <a asp-controller="Home" asp-action="SubmittedUniversities" class="nav-card nav-submitted">
+                <div class="nav-icon"><i class="bi bi-send-check-fill"></i></div>
+                <div class="nav-body">
+                    <h3>Submitted Universities</h3>
+                    <p>Universities submitted by doctors and ready to be added to meetings.</p>
+                    <div class="decision-mini-counts">
+                        <span class="decision-mini" style="background:#eff6ff;color:#1d4ed8;">@(ViewBag.SubmittedUniversitiesCount ?? 0) ready</span>
+                    </div>
+                </div>
+                <i class="bi bi-arrow-right nav-arrow"></i>
             </a>
 
-            <a asp-controller="Home" asp-action="Employees" class="action-card">
-                <h3>Employees</h3>
-                <p>Manage recognition members</p>
+            <a asp-controller="Home" asp-action="Meetings" class="nav-card">
+                <div class="nav-icon"><i class="bi bi-calendar3"></i></div>
+                <div class="nav-body">
+                    <h3>Meetings</h3>
+                    <p>Schedule meetings, set date, time, and location, and pick the universities to be discussed.</p>
+                </div>
+                <i class="bi bi-arrow-right nav-arrow"></i>
             </a>
 
-           
-            <a asp-controller="Home" asp-action="Decisions" class="action-card">
-                <h3>Decisions</h3>
-                <p>Final results of meeting discussions</p>
+            <a asp-controller="Home" asp-action="SessionWorkflow" class="nav-card">
+                <div class="nav-icon"><i class="bi bi-grid-1x2-fill"></i></div>
+                <div class="nav-body">
+                    <h3>إدارة الجلسات</h3>
+                    <p>Review doctors' recommendations, enter final committee decisions, and close the meeting.</p>
+                </div>
+                <i class="bi bi-arrow-right nav-arrow"></i>
+            </a>
+
+            <a asp-controller="Home" asp-action="Employees" class="nav-card">
+                <div class="nav-icon"><i class="bi bi-people-fill"></i></div>
+                <div class="nav-body">
+                    <h3>Employees</h3>
+                    <p>Manage recognition committee member profiles and information.</p>
+                </div>
+                <i class="bi bi-arrow-right nav-arrow"></i>
+            </a>
+
+            <a asp-controller="Home" asp-action="CommitteeDecisions" class="nav-card nav-decisions">
+                <div class="nav-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
+                <div class="nav-body">
+                    <h3>Committee Decisions</h3>
+                    <p>View final committee outcomes and recognition statuses.</p>
+                    <div class="decision-mini-counts">
+                        <span class="decision-mini green">@(ViewBag.RecognizedCount ?? 0) Recognized</span>
+                        <span class="decision-mini red">@(ViewBag.NonRecognizedCount ?? 0) Non-Recognized</span>
+                        <span class="decision-mini amber">@(ViewBag.PendingCount ?? 0) Pending</span>
+                    </div>
+                </div>
+                <i class="bi bi-arrow-right nav-arrow"></i>
+            </a>
+
+            <a asp-controller="Home" asp-action="AllUniversities" class="nav-card nav-alluni">
+                <div class="nav-icon"><i class="bi bi-buildings-fill"></i></div>
+                <div class="nav-body">
+                    <h3>All Universities</h3>
+                    <p>View all universities with their final recognition status.</p>
+                    <div class="decision-mini-counts">
+                        <span class="decision-mini" style="background:#eef2ff;color:#4338ca;">@(ViewBag.AllUniversitiesCount ?? 0) finalized</span>
+                    </div>
+                </div>
+                <i class="bi bi-arrow-right nav-arrow"></i>
             </a>
 
         </div>
-
-    </div>
 
     </div>
 

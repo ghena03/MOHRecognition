@@ -8,7 +8,7 @@ namespace MOHRecognition.Services
         RecognitionRequestRecord? GetById(int id);
         RecognitionRequestRecord Add(RecognitionRequestRecord request);
 
-        bool RequireAdminReview(int id);
+        bool RequireAdminReview(int id, string submittedBy);
         bool AssignMember(int id, string memberName);
         bool SaveInfrastructureNotes(
             int id,
@@ -25,6 +25,7 @@ namespace MOHRecognition.Services
         bool SaveAdmissionStudyDurationReview(int id, AdmissionStudyDurationReviewDto review);
         bool SaveGlobalRankings(int id, GlobalRankingsDto rankings);
         bool SaveBasicInfoAssessment(int id, string decision, string reason, string accreditationStatus, string accreditationNote);
+        bool UpdateStatus(int id, string status);
     }
 
     public class RecognitionRequestRecord
@@ -50,6 +51,10 @@ namespace MOHRecognition.Services
         public string AssignedMember { get; set; } = "Unassigned";
 
         public string Status { get; set; } = "Pending";
+
+        public string SubmittedToAdminBy { get; set; } = string.Empty;
+
+        public DateTime? SubmittedToAdminAt { get; set; }
 
         public int Year { get; set; }
 

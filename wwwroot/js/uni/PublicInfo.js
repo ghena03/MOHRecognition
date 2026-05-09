@@ -142,6 +142,7 @@
 
                 // Success
                 showToast("Public Info saved successfully.", false);
+                window.scrollToNextSection("sec-general");
                 const b = sec.querySelector("#publicBanner");
                 if (b) b.style.display = "none";
 

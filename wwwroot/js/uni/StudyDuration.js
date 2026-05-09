@@ -121,6 +121,7 @@
 
                 // UI success message
                 showBanner(sec, "ok", "Study Duration saved successfully.");
+                window.scrollToNextSection("sec-admission-duration");
             } catch (e) {
                 showBanner(sec, "warn", "Save failed. Please try again.");
             } finally {
