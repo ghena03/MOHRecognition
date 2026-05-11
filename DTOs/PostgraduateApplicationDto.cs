@@ -53,5 +53,32 @@ namespace MOHRecognition.DTOs
         public string? Email { get; set; }
 
         public string? Location { get; set; }
+
+        // ================= PUBLIC INFO =================
+
+        public string? InstitutionName { get; set; }
+
+        public string? OversightRightsEntity { get; set; }
+
+        public string? FoundationDate { get; set; }
+
+        public string? DateOfEstablishment { get; set; }
+
+        public string? ModeOfStudy { get; set; }
+
+        public string? LanguageOfInstruction { get; set; }
+
+        public string? StartOfTeaching { get; set; }
+
+        public string? PresidentName { get; set; }
+
+        public string? MailingFullAddress { get; set; }
+
+        public string? DirectPhoneNumber { get; set; }
+
+        public string? EmailAddress { get; set; }
+
+        public string? InstitutionalWebAddress { get; set; }
     }
+
 }

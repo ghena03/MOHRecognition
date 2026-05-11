@@ -18,7 +18,7 @@ namespace MOHRecognition.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly IRecognitionRequestService _recognitionRequestService;
         private Dictionary<string, List<string>>? _citiesCache;
-
+        private static PostgraduateApplicationDto _latestPostgraduateRequest;
         private static List<EmployeeDto> employees = new List<EmployeeDto>
 {
     new EmployeeDto { Id = 1,  Name = "H.E. the Minister of Higher Education and Scientific Research, Prof. Azmi Mahafazah",                           Workplace = "Ministry of Higher Education and Scientific Research" },
@@ -4652,6 +4652,7 @@ namespace MOHRecognition.Controllers
         private static Dictionary<(int meetingId, int requestId), MeetingDecisionDto> meetingDecisions = new();
         private static Dictionary<(int meetingId, int employeeId), bool> meetingAttendance = new();
 
+
         // ===================== MEETINGS LIST =====================
         public IActionResult Meetings()
         {
@@ -5015,10 +5016,18 @@ namespace MOHRecognition.Controllers
             Console.WriteLine(dto.Name);
             Console.WriteLine(dto.Email);
             Console.WriteLine(dto.MasterStudents);
+            _latestPostgraduateRequest = dto;
+
+            if (dto == null)
+            {
+                return RedirectToAction("UniPostgraduateInstructions");
+            }
+
+            _latestPostgraduateRequest = dto;
 
             TempData["Success"] = "Application submitted successfully.";
 
-            return RedirectToAction("UniPostgraduateInstructions");
+            return View("~/Views/uni/UniPostgraduateEntry.cshtml", dto);
         }
 
         private static string NormalizeMeetingStatus(string? value)
@@ -5044,7 +5053,12 @@ namespace MOHRecognition.Controllers
             return View("~/Views/Admin/AdminRequestDetails.cshtml", request);
         }
 
-        
+        public IActionResult DetailsPostgraduateRequest(int id)
+        {
+            var model = _latestPostgraduateRequest ?? new PostgraduateApplicationDto();
+            return View("~/Views/member/DetailsPostgraduateRequest.cshtml", model);
+        }
+
         private string GetCurrentRecognitionMember()
         {
             var raw = HttpContext.Session.GetString("CurrentRecognitionMember") ?? "";

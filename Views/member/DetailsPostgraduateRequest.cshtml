@@ -1,0 +1,989 @@
+﻿@model MOHRecognition.DTOs.PostgraduateApplicationDto
+@{
+    Layout = null;
+    ViewData["Title"] = "Postgraduate Request Details";
+
+    // =========================
+    // STUDENTS
+    // =========================
+
+    var masterStudents = Model.MasterStudents ?? 0;
+
+    var phdStudents = Model.PhDStudents ?? 0;
+
+    var diplomaStudents = Model.DiplomaStudents ?? 0;
+
+
+    // =========================
+    // MASTER STAFF
+    // =========================
+
+    var masterProfessor = Model.MasterProfessor ?? 0;
+
+    var masterAssociate = Model.MasterAssociate ?? 0;
+
+    var masterAssistant = Model.MasterAssistant ?? 0;
+
+    var masterFaculty =
+        masterProfessor +
+        masterAssociate +
+        masterAssistant;
+
+
+    // =========================
+    // PHD STAFF
+    // =========================
+
+    var phdProfessor = Model.PhDProfessor ?? 0;
+
+    var phdAssociate = Model.PhDAssociate ?? 0;
+
+    var phdAssistant = Model.PhDAssistant ?? 0;
+
+    var phdFaculty =
+        phdProfessor +
+        phdAssociate +
+        phdAssistant;
+
+
+    // =========================
+    // DIPLOMA STAFF
+    // =========================
+
+    var diplomaProfessor = Model.DiplomaProfessor ?? 0;
+
+    var diplomaAssociate = Model.DiplomaAssociate ?? 0;
+
+    var diplomaAssistant = Model.DiplomaAssistant ?? 0;
+
+    var diplomaFaculty =
+        diplomaProfessor +
+        diplomaAssociate +
+        diplomaAssistant;
+
+
+    // =========================
+    // RATIOS
+    // =========================
+
+    double masterRatio =
+        masterFaculty == 0
+        ? 0
+        : (double)masterStudents / masterFaculty;
+
+    double phdRatio =
+        phdFaculty == 0
+        ? 0
+        : (double)phdStudents / phdFaculty;
+
+    double diplomaRatio =
+        diplomaFaculty == 0
+        ? 0
+        : (double)diplomaStudents / diplomaFaculty;
+
+
+    // =========================
+    // REQUIRED LIMITS
+    // =========================
+
+    int masterAllowed = 15;
+
+    int phdAllowed = 15;
+
+    int diplomaAllowed = 20;
+
+
+    // =========================
+    // STATUS COLORS
+    // =========================
+
+    string GetRatioStatus(double ratio, int allowed)
+    {
+        if (ratio <= allowed)
+        {
+            return "green";
+        }
+
+        if (ratio <= allowed * 1.25)
+        {
+            return "orange";
+        }
+
+        return "red";
+    }
+
+    var masterStatus =
+        GetRatioStatus(masterRatio, masterAllowed);
+
+    var phdStatus =
+        GetRatioStatus(phdRatio, phdAllowed);
+
+    var diplomaStatus =
+        GetRatioStatus(diplomaRatio, diplomaAllowed);
+
+
+    // =========================
+    // FINAL ASSESSMENT
+    // =========================
+
+    var statuses = new[]
+    {
+        masterStatus,
+        phdStatus,
+        diplomaStatus
+    };
+
+    string overallStatus;
+
+    string overallText;
+
+    string overallMessage;
+
+    if (statuses.Contains("red"))
+    {
+        overallStatus = "red";
+
+        overallText = "Not Compliant";
+
+        overallMessage =
+            "One or more postgraduate ratios exceed the allowed tolerance.";
+    }
+    else if (statuses.Contains("orange"))
+    {
+        overallStatus = "orange";
+
+        overallText = "Needs Review";
+
+        overallMessage =
+            "Some ratios exceed the standard limits but remain within tolerance.";
+    }
+    else
+    {
+        overallStatus = "green";
+
+        overallText = "Compliant";
+
+        overallMessage =
+            "All postgraduate ratios are within the acceptable range.";
+   
+}}
+
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>@ViewData["Title"]</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          href="~/css/member/RecognitionMemberDashboard.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/member/DetailsStatistics.css"
+          asp-append-version="true" />
+</head>
+
+<body class="rm-page">
+
+    <!-- HEADER -->
+    <header class="rm-header">
+
+        <div class="rm-brandbar"></div>
+
+        <div class="rm-top">
+            <div class="rm-top-inner">
+
+                <div class="rm-brand">
+                    <img class="rm-logo"
+                         src="@Url.Content("~/images/mohelogo.png")"
+                         alt="MOHE Logo" />
+                </div>
+
+                <div class="rm-user">
+
+                    <div class="rm-userpill">
+                        <i class="bi bi-person-circle"></i>
+                        <span>
+                            Welcome,
+                            <b>Dr. Khaled Ahmed</b>
+                        </span>
+                    </div>
+
+                    <a class="rm-btn rm-btn-light"
+                       href="@Url.Action("Logout", "Home")">
+
+                        <i class="bi bi-box-arrow-right"></i>
+                        Logout
+                    </a>
+
+                </div>
+
+            </div>
+        </div>
+
+    </header>
+
+    <!-- SHELL -->
+    <div class="rm-shell">
+
+        <!-- SIDEBAR -->
+        <aside class="rm-sidebar">
+            <div class="rm-side-title">
+                Navigation
+            </div>
+            <nav class="rm-nav">
+
+                <a class="rm-navitem"
+                   href="@Url.Action("RecognitionMemberDashboard", "Home")">
+
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a class="rm-navitem active"
+                   href="@Url.Action("ElectronicRequests", "Home")">
+
+                    <i class="bi bi-send-check"></i>
+                    <span>My Assigned Requests</span>
+                </a>
+
+                <a class="rm-navitem"
+                   href="@Url.Action("Archive", "Home")">
+
+                    <i class="bi bi-inboxes"></i>
+                    <span>Requests Archive</span>
+                </a>
+
+                <a class="rm-navitem danger"
+                   href="@Url.Action("Logout", "Home")">
+
+                    <i class="bi bi-power"></i>
+                    <span>Sign Out</span>
+                </a>
+
+            </nav>
+        </aside>
+        <!-- MAIN -->
+        <main class="rm-main">
+
+            <!-- TOP REQUEST CARD -->
+            <section class="rm-card rd-head">
+
+                <div>
+                    <h1>Postgraduate Request Details</h1>
+
+                    <p class="rd-inst">
+                        Institution:
+                        <b>Jordan University</b>
+                    </p>
+
+                    <p>
+                        Review postgraduate recognition application.
+                    </p>
+                </div>
+
+                <div class="rd-meta">
+
+                    <div class="meta-pill">
+                        <span>Request ID</span>
+                        <b>#2026</b>
+                    </div>
+
+                    <div class="meta-pill">
+                        <span>Request Type</span>
+                        <b>Postgraduate</b>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= PUBLIC INFORMATION ================= -->
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>Public Information</h2>
+                    <p>General institution and application information.</p>
+                </div>
+                <div class="rd-grid3">
+                    <div class="rd-field">
+                        <label>Institution Name</label>
+
+                        <input type="text"
+                               value="Jordan University"
+                               readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Country</label>
+
+                        <input type="text"
+                               value="Jordan"
+                               readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>University Type</label>
+
+                        <input type="text"
+                               value="Private"
+                               readonly />
+                    </div>
+
+                    <div class="rd-field">
+                        <label>Recognition Type</label>
+
+                        <input type="text"
+                               value="Postgraduate Programs"
+                               readonly />
+                    </div>
+
+                    <div class="rd-field">
+                        <label>Application Date</label>
+
+                        <input type="text"
+                               value="09/05/2026"
+                               readonly />
+                    </div>
+
+                    <div class="rd-field">
+                        <label>Official Website</label>
+
+                        <input type="text"
+                               value="www.ju.edu.jo"
+                               readonly />
+                    </div>
+
+                    <div class="rd-field">
+                        <label>Contact Email</label>
+
+                        <input type="text"
+                               value="info@ju.edu.jo"
+                               readonly />
+                    </div>
+
+                    <div class="rd-field">
+                        <label>Contact Phone</label>
+
+                        <input type="text"
+                               value="+962 6 535 5000"
+                               readonly />
+                    </div>
+
+                    <div class="rd-field">
+                        <label>Language of Instruction</label>
+
+                        <input type="text"
+                               value="English"
+                               readonly />
+                    </div>
+
+                </div>
+
+            </section>
+            <!-- =========== PROGRAMS ================ -->
+            <section class="rm-card rd-card">
+
+                <div class="rd-card-hd">
+                    <h2>Postgraduate Programs</h2>
+                    <p>Submitted postgraduate programs.</p>
+                </div>
+
+                <div class="rd-grid3">
+
+                    <!-- MASTER -->
+                    <div class="rd-field">
+
+                        <label>Master Programs File</label>
+
+                        <input type="text"
+                               value="@(Model.MasterFile?.FileName ?? "No file uploaded")"
+                               readonly />
+
+                    </div>
+
+                    <!-- PHD -->
+                    <div class="rd-field">
+
+                        <label>PhD Programs File</label>
+
+                        <input type="text"
+                               value="@(Model.PhDFile?.FileName ?? "No file uploaded")"
+                               readonly />
+
+                    </div>
+
+                    <!-- DIPLOMA -->
+                    <div class="rd-field">
+
+                        <label>Higher Diploma File</label>
+
+                        <input type="text"
+                               value="@(Model.DiplomaFile?.FileName ?? "No file uploaded")"
+                               readonly />
+
+                    </div>
+
+                </div>
+
+            </section>
+            
+            <!--======================= STUDENTS ======================================-->
+            <section class="rm-card rd-card">
+
+                <div class="rd-card-hd">
+                    <h2>Students Numbers</h2>
+                    <p>Submitted students numbers.</p>
+                </div>
+
+                <div class="rd-grid3">
+
+                    <div class="rd-field">
+                        <label>Master Students</label>
+                        <input type="number"
+                               value="@masterStudents"
+                               readonly />
+                    </div>
+
+                    <div class="rd-field">
+                        <label>PhD Students</label>
+                        <input type="number"
+                               value="@phdStudents"
+                               readonly />
+                    </div>
+
+                    <div class="rd-field">
+                        <label>Higher Diploma Students</label>
+                        <input type="number"
+                               value="@diplomaStudents"
+                               readonly />
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============================ FACULTY ============================ -->
+            <section class="rm-card rd-card">
+
+                <div class="rd-card-hd">
+                    <h2>Academic Staff</h2>
+                    <p>Submitted academic staff information.</p>
+                </div>
+
+                <div class="rank-review-grid">
+
+                    <!-- MASTER -->
+                    <article class="rank-review-card">
+
+                        <header>
+                            <h3>Master Programs</h3>
+
+                            <span class="rank-total-pill">
+                                Total: @masterFaculty
+                            </span>
+                        </header>
+
+                        <div class="rank-review-split">
+
+                            <div class="rank-review-block">
+                                <label>Professor</label>
+
+                                <input type="number"
+                                       value="@masterProfessor"
+                                       readonly />
+                            </div>
+
+                            <div class="rank-review-block">
+                                <label>Associate Professor</label>
+
+                                <input type="number"
+                                       value="@masterAssociate"
+                                       readonly />
+                            </div>
+
+                            <div class="rank-review-block">
+                                <label>Assistant Professor</label>
+
+                                <input type="number"
+                                       value="@masterAssistant"
+                                       readonly />
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                    <!-- PHD -->
+                    <article class="rank-review-card">
+
+                        <header>
+                            <h3>PhD Programs</h3>
+
+                            <span class="rank-total-pill">
+                                Total: @phdFaculty
+                            </span>
+                        </header>
+
+                        <div class="rank-review-split">
+
+                            <div class="rank-review-block">
+                                <label>Professor</label>
+
+                                <input type="number"
+                                       value="@phdProfessor"
+                                       readonly />
+                            </div>
+
+                            <div class="rank-review-block">
+                                <label>Associate Professor</label>
+
+                                <input type="number"
+                                       value="@phdAssociate"
+                                       readonly />
+                            </div>
+
+                            <div class="rank-review-block">
+                                <label>Assistant Professor</label>
+
+                                <input type="number"
+                                       value="@phdAssistant"
+                                       readonly />
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                    <!-- DIPLOMA -->
+                    <article class="rank-review-card">
+
+                        <header>
+                            <h3>Higher Diploma Programs</h3>
+
+                            <span class="rank-total-pill">
+                                Total: @diplomaFaculty
+                            </span>
+                        </header>
+
+                        <div class="rank-review-split">
+
+                            <div class="rank-review-block">
+                                <label>Professor</label>
+
+                                <input type="number"
+                                       value="@diplomaProfessor"
+                                       readonly />
+                            </div>
+
+                            <div class="rank-review-block">
+                                <label>Associate Professor</label>
+
+                                <input type="number"
+                                       value="@diplomaAssociate"
+                                       readonly />
+                            </div>
+
+                            <div class="rank-review-block">
+                                <label>Assistant Professor</label>
+
+                                <input type="number"
+                                       value="@diplomaAssistant"
+                                       readonly />
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+            <!-- ============================ RATIOS ============================ -->
+            <section class="rm-card rd-card">
+
+                <div class="rd-card-hd">
+                    <h2>Ratios & Compliance</h2>
+                    <p>Calculated postgraduate ratios.</p>
+                </div>
+
+                <!-- RATIO CARDS -->
+                <div class="rd-grid3">
+
+                    <!-- MASTER -->
+                    <div class="rd-field ratio-field @(masterStatus)">
+
+                        <label>Master Ratio</label>
+
+                        <input type="text"
+                               value="1:@masterRatio.ToString("0.0")"
+                               readonly />
+
+                        <small>
+                            Allowed Ratio:
+                            1:@masterAllowed
+                        </small>
+
+                    </div>
+
+                    <!-- PHD -->
+                    <div class="rd-field ratio-field @(phdStatus)">
+
+                        <label>PhD Ratio</label>
+
+                        <input type="text"
+                               value="1:@phdRatio.ToString("0.0")"
+                               readonly />
+
+                        <small>
+                            Allowed Ratio:
+                            1:@phdAllowed
+                        </small>
+
+                    </div>
+
+                    <!-- DIPLOMA -->
+                    <div class="rd-field ratio-field @(diplomaStatus)">
+
+                        <label>Higher Diploma Ratio</label>
+
+                        <input type="text"
+                               value="1:@diplomaRatio.ToString("0.0")"
+                               readonly />
+
+                        <small>
+                            Allowed Ratio:
+                            1:@diplomaAllowed
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <!-- RULES -->
+                <div class="ratios-extra-row">
+
+                    <div class="color-rules-wrapper">
+
+                        <label>Color Rules</label>
+
+                        <div class="rd-color-rules color-rules-card">
+
+                            <!-- COLORS -->
+                            <div class="rd-color-section">
+
+                                <div class="rd-color-label">
+                                    Students to Faculty Ratio
+                                </div>
+
+                                <ul>
+
+                                    <li>
+                                        <span class="rd-dot green"></span>
+
+                                        Green = ratio is within the required limit.
+                                    </li>
+
+                                    <li>
+                                        <span class="rd-dot orange"></span>
+
+                                        Orange = ratio exceeds the required limit
+                                        but is still within the allowed 25% tolerance.
+                                    </li>
+
+                                    <li>
+                                        <span class="rd-dot red"></span>
+
+                                        Red = ratio exceeds the 25% tolerance.
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                            <!-- REQUIRED RATIOS -->
+                            <div class="rd-color-section">
+
+                                <div class="rd-color-label">
+                                    Required Ratios
+                                </div>
+
+                                <ul>
+
+                                    <li>
+                                        <span class="rd-dot green"></span>
+                                        PhD Programs = 1:15
+                                    </li>
+
+                                    <li>
+                                        <span class="rd-dot green"></span>
+                                        Master Programs = 1:15
+                                    </li>
+
+                                    <li>
+                                        <span class="rd-dot green"></span>
+                                        Higher Diploma Programs = 1:20
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============== FINAL ASSESSMENT ============== -->
+            <!-- FINAL ASSESSMENT -->
+            <section class="rm-card rd-card fa-final-card">
+
+                <div class="rd-card-hd">
+
+                    <div class="rd-card-hd-row">
+
+                        <div class="fa-final-head">
+
+                            <h2>
+                                <i class="bi bi-clipboard2-check"></i>
+                                Final Recommendation
+                            </h2>
+
+                            <p>
+                                System-generated recommendation based on postgraduate ratios and compliance results.
+                            </p>
+
+                            <div class="fa-final-kpis">
+
+                                <span class="fa-final-kpi ok">
+                                    <i class="bi bi-check-circle-fill"></i>
+
+                                    Compliant:
+                                    @(statuses.Count(x => x == "green"))
+                                </span>
+
+                                <span class="fa-final-kpi warn">
+                                    <i class="bi bi-exclamation-circle-fill"></i>
+
+                                    Needs Review:
+                                    @(statuses.Count(x => x == "orange"))
+                                </span>
+
+                                <span class="fa-final-kpi bad">
+                                    <i class="bi bi-x-circle-fill"></i>
+
+                                    Non-Compliant:
+                                    @(statuses.Count(x => x == "red"))
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- SYSTEM SUGGESTION -->
+                <div class="fa-suggestion-banner @(overallStatus)">
+
+                    <div class="fa-banner-icon">
+
+                        @if (overallStatus == "green")
+                        {
+                            <i class="bi bi-check2-circle"></i>
+                        }
+                        else if (overallStatus == "orange")
+                        {
+                            <i class="bi bi-arrow-repeat"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-x-octagon-fill"></i>
+                        }
+
+                    </div>
+
+                    <div class="fa-banner-body">
+
+                        <div class="fa-banner-eyebrow">
+                            System Suggestion
+                        </div>
+
+                        <div class="fa-suggestion-badge @(overallStatus)">
+
+                            @if (overallStatus == "green")
+                            {
+                                <span>Approve</span>
+                            }
+                            else if (overallStatus == "orange")
+                            {
+                                <span>Conditional Approval</span>
+                            }
+                            else
+                            {
+                                <span>Reject / Committee Review</span>
+                            }
+
+                        </div>
+
+                        <div class="fa-banner-note">
+
+                            @if (overallStatus == "green")
+                            {
+                                <span>
+                                    All postgraduate ratios are within the acceptable range.
+                                </span>
+                            }
+                            else if (overallStatus == "orange")
+                            {
+                                <span>
+                                    Some postgraduate ratios exceed the standard limits but remain within tolerance.
+                                </span>
+                            }
+                            else
+                            {
+                                <span>
+                                    One or more postgraduate ratios exceed the allowed tolerance.
+                                </span>
+                            }
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- FINAL DECISION -->
+                <div class="fa-decision-wrap">
+
+                    <div class="fa-decision-label">
+
+                        <i class="bi bi-person-check-fill"></i>
+
+                        Final Decision
+
+                        <span class="fa-required">*</span>
+
+                    </div>
+
+                    <div class="fa-decision-grid">
+
+                        <!-- APPROVE -->
+                        <button type="button"
+                                class="fa-dec-btn approve">
+
+                            <i class="bi bi-check2-circle"></i>
+
+                            <span>Approve</span>
+
+                            <small>
+                                Institution meets all postgraduate requirements
+                            </small>
+
+                        </button>
+
+                        <!-- CONDITIONAL -->
+                        <button type="button"
+                                class="fa-dec-btn conditional">
+
+                            <i class="bi bi-arrow-repeat"></i>
+
+                            <span>Conditional Approval</span>
+
+                            <small>
+                                Pending corrective measures
+                            </small>
+
+                        </button>
+
+                        <!-- REJECT -->
+                        <button type="button"
+                                class="fa-dec-btn reject">
+
+                            <i class="bi bi-x-octagon-fill"></i>
+
+                            <span>Reject / Committee Review</span>
+
+                            <small>
+                                Requires committee review
+                            </small>
+
+                        </button>
+
+                    </div>
+                </div>
+                <!-- JUSTIFICATION -->
+                <div class="fa-justify-label">
+                    <i class="bi bi-chat-square-text"></i>
+                    Final Justification Note
+                    <span class="fa-required">*</span>
+                </div>
+
+                <textarea class="doc-notes"
+                          placeholder="Provide your professional justification for the final recommendation..."></textarea>
+
+                <!-- SAVE -->
+                <div class="fa-save-row">
+
+                    <span class="fa-save-hint">
+
+                        <i class="bi bi-lock-fill"></i>
+
+                        Your decision will be recorded once saved.
+
+                    </span>
+
+                    <button class="rm-btn rm-btn-primary"
+                            type="button">
+                        <i class="bi bi-check2-circle"></i>
+                        Save Decision
+                    </button>
+              </div>
+            </section>
+
+            <!-- ACTIONS -->
+            <section class="rm-card rd-actions">
+                <div class="rd-actions-left">
+                   <a class="rm-btn rm-btn-light"
+                       href="@Url.Action("ElectronicRequests", "Home")">
+                        Back
+                    </a>
+                </div>
+                <div class="rd-actions-right">
+                    <button class="rm-btn rm-btn-primary"
+                            type="button">
+                        <i class="bi bi-save"></i>
+                        Save
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script>
+        const decisionButtons =
+            document.querySelectorAll(".fa-dec-btn");
+        decisionButtons.forEach(btn => {
+            btn.addEventListener("click", function () {
+                // remove old selection
+                decisionButtons.forEach(b => {
+                    b.classList.remove("selected");
+                });
+               // add new selection
+                this.classList.add("selected");
+            });
+        });
+    </script>
+</body>
+</html>
