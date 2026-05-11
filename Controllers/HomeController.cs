@@ -9,8 +9,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 namespace MOHRecognition.Controllers  
-    //kameliaaaa9 .
-    //ghena
+    //kameliaaaaaaaaaa96
 {
    
     public class HomeController : Controller
