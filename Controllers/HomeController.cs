@@ -5044,6 +5044,31 @@ namespace MOHRecognition.Controllers
             return View("~/Views/Admin/AdminRequestDetails.cshtml", request);
         }
 
+        public IActionResult AdminFullApplicationView(int id, int? meetingId)
+        {
+            var role = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
+            if (!string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("AdminDashboard");
+
+            var request = _recognitionRequestService.GetById(id);
+            if (request == null)
+                return NotFound();
+
+            ViewBag.BackId = meetingId ?? 0;
+            return View("~/Views/Admin/AdminFullApplicationView.cshtml", request);
+        }
+
+        [HttpGet]
+        public IActionResult AdminMeetingApplicationView(int requestId, int? meetingId)
+        {
+            var request = _recognitionRequestService.GetById(requestId);
+            if (request == null)
+                return NotFound();
+
+            ViewBag.MeetingId = meetingId ?? 0;
+            return View("~/Views/AdminMeetings/ApplicationView.cshtml", request);
+        }
+
         
         private string GetCurrentRecognitionMember()
         {

@@ -1,0 +1,308 @@
+@model MOHRecognition.Services.RecognitionRequestRecord
+@{
+    Layout = null;
+    ViewData["Title"] = "Application Review";
+    int meetingId = ViewBag.MeetingId ?? 0;
+
+    var attachments = Model.Attachments?.Rows ?? new List<DTOs.AttachmentRowDto>();
+    var pictures = Model.Pictures?.Rows ?? new List<DTOs.PictureRowDto>();
+    var hospitalDocs = Model.Hospitals?.Documents ?? new List<DTOs.HospitalFileDto>();
+    var labDocs = Model.Laboratories?.UploadedFiles ?? new List<DTOs.LaboratoryFileDto>();
+    var accreditationDocs = Model.AccreditationBodies ?? new List<DTOs.AccreditationBodyRowDto>();
+    var faculties = Model.Faculties ?? new List<DTOs.FacultyRowDto>();
+    var programs = Model.Programs ?? new List<DTOs.ProgramRowDto>();
+    var programHours = Model.ProgramHours ?? new List<DTOs.ProgramHoursRowDto>();
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f0eb; color: #1a1a1a; min-height: 100vh; }
+        .ministry-bar { background: #5a0e1b; color: rgba(255,255,255,.68); font-size: 11.5px; font-weight: 500; letter-spacing: .4px; padding: 6px 48px; display: flex; align-items: center; gap: 6px; }
+        .pg-header { background: #7f1627; color: #fff; padding: 0 48px; height: 66px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 18px rgba(127,22,39,.32); }
+        .hd-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+        .pg-header img { height: 42px; }
+        .hd-sep { width: 1px; height: 34px; background: rgba(255,255,255,.28); margin: 0 6px; }
+        .hd-text h1 { font-size: 17px; font-weight: 700; }
+        .hd-text p { font-size: 11.5px; opacity: .72; margin-top: 2px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.35); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; text-decoration: none; transition: background .15s; white-space: nowrap; }
+        .btn-back:hover { background: rgba(255,255,255,.25); }
+        .pg-body { max-width: 1180px; margin: 0 auto; padding: 32px 24px 70px; display: grid; gap: 16px; }
+        .panel { background: #fff; border-radius: 8px; border: 1px solid #efe7dd; box-shadow: 0 2px 16px rgba(0,0,0,.04); overflow: hidden; }
+        .panel-hd { padding: 14px 18px; border-bottom: 1px solid #f2ebe2; font-size: 14px; font-weight: 900; color: #7f1627; background: #faf7f4; }
+        .panel-bd { padding: 16px 18px; }
+        .meta-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .meta-item { background: #f9f6f1; border: 1px solid #efe6dc; border-radius: 7px; padding: 10px 12px; }
+        .meta-item .lbl { font-size: 11px; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+        .meta-item .val { margin-top: 4px; font-size: 14px; font-weight: 700; color: #1f2937; }
+        .status-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 800; }
+        .pill-approve { background: #e8f5ea; color: #1a7a34; }
+        .pill-conditional { background: #fff8db; color: #b45309; }
+        .pill-reject { background: #fef2f2; color: #b91c1c; }
+        .pill-missing { background: #f0f0f0; color: #666; }
+        .notes { margin-top: 10px; background: #f8fbff; border: 1px solid #dbeafe; border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.55; color: #1f2937; }
+        .files-list { display: grid; gap: 10px; }
+        .file-row { border: 1px solid #eee5db; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .file-meta { min-width: 0; }
+        .file-name { font-size: 13px; font-weight: 700; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-sub { font-size: 12px; color: #7b8794; margin-top: 3px; }
+        .file-actions { display: inline-flex; align-items: center; gap: 6px; }
+        .btn-mini { text-decoration: none; border-radius: 7px; padding: 6px 10px; font-size: 11.5px; font-weight: 800; border: 1px solid #d5c9bb; color: #5b4636; background: #fff; }
+        .btn-mini:hover { background: #f9f4ee; }
+        .empty { color: #999; font-size: 13px; }
+        .mini-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+        .mini-item { background: #f8f6f2; border: 1px solid #ede4da; border-radius: 7px; padding: 10px 12px; }
+        .mini-item .k { font-size: 11px; font-weight: 800; color: #8a8a8a; text-transform: uppercase; letter-spacing: .5px; }
+        .mini-item .v { margin-top: 4px; font-size: 14px; font-weight: 700; color: #1f2937; }
+        .tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+        .tbl th, .tbl td { border-bottom: 1px solid #f0e8de; padding: 9px 8px; text-align: left; vertical-align: top; }
+        .tbl th { color: #7f1627; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; background: #faf7f4; }
+        .subtle { color: #6b7280; font-size: 12.5px; line-height: 1.5; }
+        @@media (max-width: 900px) { .meta-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="ministry-bar"><i class="bi bi-bank2"></i> Ministry of Higher Education and Scientific Research - Hashemite Kingdom of Jordan</div>
+    <div class="pg-header">
+        <div class="hd-left">
+            <img src="/images/mohelogo.png" alt="Logo" />
+            <div class="hd-sep"></div>
+            <div class="hd-text">
+                <h1>Application Review</h1>
+                <p>Admin view with doctor recommendation and uploaded evidence</p>
+            </div>
+        </div>
+        @if (meetingId > 0)
+        {
+            <a href="/Home/SessionDashboard?id=@meetingId" class="btn-back"><i class="bi bi-arrow-left"></i> Back to Meeting</a>
+        }
+        else
+        {
+            <a href="/Home/Requests" class="btn-back"><i class="bi bi-arrow-left"></i> Back</a>
+        }
+    </div>
+
+    <main class="pg-body">
+        <section class="panel">
+            <div class="panel-hd">University Application Overview</div>
+            <div class="panel-bd">
+                <div class="meta-grid">
+                    <div class="meta-item"><div class="lbl">University</div><div class="val">@(string.IsNullOrWhiteSpace(Model.UniversityName) ? "-" : Model.UniversityName)</div></div>
+                    <div class="meta-item"><div class="lbl">Country</div><div class="val">@(string.IsNullOrWhiteSpace(Model.Country) ? "-" : Model.Country)</div></div>
+                    <div class="meta-item"><div class="lbl">Request ID</div><div class="val">#@Model.Id</div></div>
+                    <div class="meta-item"><div class="lbl">Reference</div><div class="val">@(string.IsNullOrWhiteSpace(Model.ReferenceNumber) ? "-" : Model.ReferenceNumber)</div></div>
+                    <div class="meta-item"><div class="lbl">Applicant</div><div class="val">@(string.IsNullOrWhiteSpace(Model.ApplicantName) ? "-" : Model.ApplicantName)</div></div>
+                    <div class="meta-item"><div class="lbl">Submitted Date</div><div class="val">@Model.SubmittedAt.ToString("dd MMM yyyy")</div></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-hd">Doctor Recommendation (Read-Only)</div>
+            <div class="panel-bd">
+                @{
+                    var decision = (Model.BasicInfoAssessmentDecision ?? "").Trim();
+                    var decisionClass = decision switch
+                    {
+                        "Approve" => "pill-approve",
+                        "Conditional Approval" => "pill-conditional",
+                        "Reject / Committee Review" => "pill-reject",
+                        _ => "pill-missing"
+                    };
+                    var accreditation = string.IsNullOrWhiteSpace(Model.AccreditationStatus) ? "Not Set" : Model.AccreditationStatus;
+                }
+                <div class="status-row">
+                    <span class="pill @decisionClass"><i class="bi bi-clipboard2-check"></i> @(!string.IsNullOrWhiteSpace(decision) ? decision : "No doctor decision yet")</span>
+                    <span class="pill pill-missing"><i class="bi bi-patch-check"></i> Accreditation: @accreditation</span>
+                    <span class="pill pill-missing"><i class="bi bi-send-check"></i> Submitted To Admin: @(Model.SubmittedToAdminAt.HasValue ? Model.SubmittedToAdminAt.Value.ToString("dd MMM yyyy") : "Not Submitted")</span>
+                </div>
+                <div class="notes"><strong>Doctor Justification:</strong> @(string.IsNullOrWhiteSpace(Model.BasicInfoAssessmentReason) ? "No justification entered." : Model.BasicInfoAssessmentReason)</div>
+                <div class="notes"><strong>Accreditation Note:</strong> @(string.IsNullOrWhiteSpace(Model.AccreditationNote) ? "No accreditation note entered." : Model.AccreditationNote)</div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-hd">Application Sections (What Member Reviewed)</div>
+            <div class="panel-bd" style="display:grid;gap:14px;">
+                <div>
+                    <div style="font-size:13px;font-weight:800;color:#7f1627;margin-bottom:8px;">Public Information</div>
+                    <div class="mini-grid">
+                        <div class="mini-item"><div class="k">Institution</div><div class="v">@(string.IsNullOrWhiteSpace(Model.PublicInfo?.InstitutionName) ? "-" : Model.PublicInfo.InstitutionName)</div></div>
+                        <div class="mini-item"><div class="k">Forwarding Party</div><div class="v">@(string.IsNullOrWhiteSpace(Model.PublicInfo?.PartyForwardingForm) ? "-" : Model.PublicInfo.PartyForwardingForm)</div></div>
+                        <div class="mini-item"><div class="k">City</div><div class="v">@(string.IsNullOrWhiteSpace(Model.PublicInfo?.City) ? "-" : Model.PublicInfo.City)</div></div>
+                        <div class="mini-item"><div class="k">Website</div><div class="v">@(string.IsNullOrWhiteSpace(Model.PublicInfo?.InstitutionalWebAddress) ? "-" : Model.PublicInfo.InstitutionalWebAddress)</div></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:13px;font-weight:800;color:#7f1627;margin-bottom:8px;">Academic Statistics</div>
+                    <div class="mini-grid">
+                        <div class="mini-item"><div class="k">Total Students</div><div class="v">@((Model.AcademicInfo?.TotalStudentPopulation ?? 0).ToString())</div></div>
+                        <div class="mini-item"><div class="k">Local Students</div><div class="v">@((Model.AcademicInfo?.LocalStudentPopulation ?? 0).ToString())</div></div>
+                        <div class="mini-item"><div class="k">Foreign Students</div><div class="v">@((Model.AcademicInfo?.ForeignStudentPopulation ?? 0).ToString())</div></div>
+                        <div class="mini-item"><div class="k">Student/Faculty Ratio</div><div class="v">@((Model.AcademicInfo?.StudentsToFacultyRatio ?? 0m).ToString("0.##"))</div></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:13px;font-weight:800;color:#7f1627;margin-bottom:8px;">Faculties and Programs</div>
+                    @if (!faculties.Any() && !programs.Any())
+                    {
+                        <div class="subtle">No faculties/programs data available.</div>
+                    }
+                    else
+                    {
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Faculty</th>
+                                    <th>Program</th>
+                                    <th>Degree</th>
+                                    <th>Years</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in programs.Take(30))
+                                {
+                                    <tr>
+                                        <td>@(string.IsNullOrWhiteSpace(p.FacultyName) ? "-" : p.FacultyName)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(p.Program) ? "-" : p.Program)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(p.DegreeAwarded) ? "-" : p.DegreeAwarded)</td>
+                                        <td>@(p.NumberOfYears > 0 ? p.NumberOfYears.ToString() : "-")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+
+                <div>
+                    <div style="font-size:13px;font-weight:800;color:#7f1627;margin-bottom:8px;">Program Hours</div>
+                    @if (!programHours.Any())
+                    {
+                        <div class="subtle">No program-hours records.</div>
+                    }
+                    else
+                    {
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Program</th>
+                                    <th>Theoretical Hours</th>
+                                    <th>Practical Hours</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var h in programHours.Take(30))
+                                {
+                                    <tr>
+                                        <td>@(string.IsNullOrWhiteSpace(h.ProgramName) ? "-" : h.ProgramName)</td>
+                                        <td>@(h.TheoreticalHours > 0 ? h.TheoreticalHours.ToString() : "-")</td>
+                                        <td>@(h.PracticalHours > 0 ? h.PracticalHours.ToString() : "-")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+
+                <div>
+                    <div style="font-size:13px;font-weight:800;color:#7f1627;margin-bottom:8px;">Member Modifications / Assessment Notes</div>
+                    <div class="mini-grid">
+                        <div class="mini-item"><div class="k">Faculties Assessment</div><div class="v">@(string.IsNullOrWhiteSpace(Model.FacultiesAssessment) ? "Not Set" : Model.FacultiesAssessment)</div></div>
+                        <div class="mini-item"><div class="k">Hospitals Assessment</div><div class="v">@(string.IsNullOrWhiteSpace(Model.HospitalsAssessment) ? "Not Set" : Model.HospitalsAssessment)</div></div>
+                        <div class="mini-item"><div class="k">Labs Assessment</div><div class="v">@(string.IsNullOrWhiteSpace(Model.LaboratoriesFacilitiesAssessment) ? "Not Set" : Model.LaboratoriesFacilitiesAssessment)</div></div>
+                        <div class="mini-item"><div class="k">Library Assessment</div><div class="v">@(string.IsNullOrWhiteSpace(Model.LibraryAssessment) ? "Not Set" : Model.LibraryAssessment)</div></div>
+                    </div>
+                    <div class="notes"><strong>Faculties Note:</strong> @(string.IsNullOrWhiteSpace(Model.FacultiesAssessmentNote) ? "No note." : Model.FacultiesAssessmentNote)</div>
+                    <div class="notes"><strong>Hospitals Note:</strong> @(string.IsNullOrWhiteSpace(Model.HospitalsAssessmentNote) ? "No note." : Model.HospitalsAssessmentNote)</div>
+                    <div class="notes"><strong>Labs Note:</strong> @(string.IsNullOrWhiteSpace(Model.LaboratoriesFacilitiesAssessmentNote) ? "No note." : Model.LaboratoriesFacilitiesAssessmentNote)</div>
+                    <div class="notes"><strong>Library Note:</strong> @(string.IsNullOrWhiteSpace(Model.LibraryAssessmentNote) ? "No note." : Model.LibraryAssessmentNote)</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-hd">Uploaded Files</div>
+            <div class="panel-bd files-list">
+                @if (!attachments.Any() && !pictures.Any() && !hospitalDocs.Any() && !labDocs.Any() && !accreditationDocs.Any())
+                {
+                    <div class="empty">No uploaded files found for this request.</div>
+                }
+                @foreach (var file in attachments)
+                {
+                    <div class="file-row">
+                        <div class="file-meta">
+                            <div class="file-name">@(string.IsNullOrWhiteSpace(file.FileName) ? "Attachment File" : file.FileName)</div>
+                            <div class="file-sub">Hospital Contract Attachment • @(string.IsNullOrWhiteSpace(file.Subject) ? "General" : file.Subject)</div>
+                        </div>
+                        <div class="file-actions">
+                            <a class="btn-mini" href="@file.FileUrl" target="_blank" rel="noopener">View</a>
+                            <a class="btn-mini" href="@file.FileUrl" download="@file.FileName">Download</a>
+                        </div>
+                    </div>
+                }
+                @foreach (var file in pictures)
+                {
+                    <div class="file-row">
+                        <div class="file-meta">
+                            <div class="file-name">@(string.IsNullOrWhiteSpace(file.FileName) ? "Picture File" : file.FileName)</div>
+                            <div class="file-sub">Pictures • @(string.IsNullOrWhiteSpace(file.Subject) ? "General" : file.Subject)</div>
+                        </div>
+                        <div class="file-actions">
+                            <a class="btn-mini" href="@file.FileUrl" target="_blank" rel="noopener">View</a>
+                            <a class="btn-mini" href="@file.FileUrl" download="@file.FileName">Download</a>
+                        </div>
+                    </div>
+                }
+                @foreach (var file in hospitalDocs)
+                {
+                    <div class="file-row">
+                        <div class="file-meta">
+                            <div class="file-name">@(string.IsNullOrWhiteSpace(file.OriginalFileName) ? "Hospital Document" : file.OriginalFileName)</div>
+                            <div class="file-sub">Hospitals • @(string.IsNullOrWhiteSpace(file.DocumentType) ? "General" : file.DocumentType)</div>
+                        </div>
+                        <div class="file-actions">
+                            <a class="btn-mini" href="@file.FileUrl" target="_blank" rel="noopener">View</a>
+                            <a class="btn-mini" href="@file.FileUrl" download="@file.OriginalFileName">Download</a>
+                        </div>
+                    </div>
+                }
+                @foreach (var file in labDocs)
+                {
+                    <div class="file-row">
+                        <div class="file-meta">
+                            <div class="file-name">@(string.IsNullOrWhiteSpace(file.OriginalFileName) ? "Laboratory Document" : file.OriginalFileName)</div>
+                            <div class="file-sub">Laboratories • @(string.IsNullOrWhiteSpace(file.Subject) ? "General" : file.Subject)</div>
+                        </div>
+                        <div class="file-actions">
+                            <a class="btn-mini" href="@file.FileUrl" target="_blank" rel="noopener">View</a>
+                            <a class="btn-mini" href="@file.FileUrl" download="@file.OriginalFileName">Download</a>
+                        </div>
+                    </div>
+                }
+                @foreach (var file in accreditationDocs)
+                {
+                    <div class="file-row">
+                        <div class="file-meta">
+                            <div class="file-name">@(string.IsNullOrWhiteSpace(file.PdfOriginalFileName) ? "Accreditation PDF" : file.PdfOriginalFileName)</div>
+                            <div class="file-sub">Accreditation Body • @(string.IsNullOrWhiteSpace(file.AccreditationBodyName) ? "General" : file.AccreditationBodyName)</div>
+                        </div>
+                        <div class="file-actions">
+                            <a class="btn-mini" href="@file.PdfFileUrl" target="_blank" rel="noopener">View</a>
+                            <a class="btn-mini" href="@file.PdfFileUrl" download="@file.PdfOriginalFileName">Download</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    </main>
+</body>
+</html>

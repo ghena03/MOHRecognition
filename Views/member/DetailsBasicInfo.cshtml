@@ -4,6 +4,16 @@
     Layout = null;
     ViewData["Title"] = "Request Details - Basic Information";
     ViewData["ActiveNav"] = "requests";
+    var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
+    var adminMeetingId = (int)(ViewBag.AdminMeetingId ?? 0);
+    var nextLink = adminReadOnly
+        ? Url.Action("AdminDetailsStatistics", "Home", new { id = Model.Id, meetingId = adminMeetingId })
+        : Url.Action("DetailsStatistics", "Home", new { id = Model.Id });
+    var backLink = adminReadOnly
+        ? (adminMeetingId > 0
+            ? Url.Action("SessionDashboard", "Home", new { id = adminMeetingId })
+            : Url.Action("AdminDashboard", "Home"))
+        : Url.Action("ElectronicRequests", "Home");
     var p = Model.PublicInfo ?? new DTOs.PublicInfoDto();
     var a = Model.AcademicInfo ?? new DTOs.AcademicInfoDto();
 
@@ -49,7 +59,7 @@
                 <div class="rm-user">
                     <div class="rm-userpill">
                         <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>Recognition Member</b></span>
+                        <span>Welcome, <b>@(adminReadOnly ? "Admin Review" : "Recognition Member")</b></span>
                     </div>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
                         <i class="bi bi-box-arrow-right"></i> Logout
@@ -60,7 +70,14 @@
     </header>
 
     <div class="rm-shell">
-        @await Html.PartialAsync("_MemberSidebar")
+        @if (adminReadOnly)
+        {
+            @await Html.PartialAsync("_AdminReviewSidebar")
+        }
+        else
+        {
+            @await Html.PartialAsync("_MemberSidebar")
+        }
 
         <main class="rm-main">
             <section class="rm-card rd-head">
@@ -187,12 +204,12 @@
 
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("ElectronicRequests", "Home")">
-                        <i class="bi bi-box-arrow-left"></i> Back to List
+                    <a class="rm-btn rm-btn-light" href="@backLink">
+                        <i class="bi bi-box-arrow-left"></i> @(adminReadOnly ? "Back to Meeting" : "Back to List")
                     </a>
                 </div>
                 <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsStatistics", "Home", new { id = Model.Id })">Next</a>
+                    <a class="rm-btn rm-btn-light" href="@nextLink">Next</a>
                 </div>
             </section>
         </main>

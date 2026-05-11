@@ -69,11 +69,6 @@
         }
         .nav-card:hover .nav-arrow { color: #7f1627; transform: translateX(4px); }
 
-        /* Span full row for the two main cards */
-        .nav-card.nav-decisions { border-color: #d8c6ad; }
-        .nav-card.nav-decisions:hover { border-color: #7f1627; box-shadow: 0 10px 32px rgba(127,22,39,.12); }
-        .nav-card.nav-decisions .nav-icon { background: #f5e8ea; color: #7f1627; }
-        .nav-card.nav-decisions:hover .nav-arrow { color: #7f1627; }
 
         .decision-mini-counts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
         .decision-mini {
@@ -86,18 +81,8 @@
             font-weight: 800;
         }
         .decision-mini.green { background: #e8f5ea; color: #1a7a34; }
-        .decision-mini.red { background: #fef2f2; color: #b91c1c; }
+        .decision-mini.red   { background: #fef2f2; color: #b91c1c; }
         .decision-mini.amber { background: #fffbeb; color: #d97706; }
-
-        .nav-card.nav-submitted { border-color: #bfdbfe; }
-        .nav-card.nav-submitted:hover { border-color: #1d4ed8; box-shadow: 0 10px 32px rgba(29,78,216,.12); }
-        .nav-card.nav-submitted .nav-icon { background: #eff6ff; color: #1d4ed8; }
-        .nav-card.nav-submitted:hover .nav-arrow { color: #1d4ed8; }
-
-        .nav-card.nav-alluni { border-color: #c7d2fe; }
-        .nav-card.nav-alluni:hover { border-color: #4338ca; box-shadow: 0 10px 32px rgba(67,56,202,.12); }
-        .nav-card.nav-alluni .nav-icon { background: #eef2ff; color: #4338ca; }
-        .nav-card.nav-alluni:hover .nav-arrow { color: #4338ca; }
     </style>
 </head>
 
@@ -158,13 +143,13 @@
                 <i class="bi bi-arrow-right nav-arrow"></i>
             </a>
 
-            <a asp-controller="Home" asp-action="SubmittedUniversities" class="nav-card nav-submitted">
+            <a asp-controller="Home" asp-action="SubmittedUniversities" class="nav-card">
                 <div class="nav-icon"><i class="bi bi-send-check-fill"></i></div>
                 <div class="nav-body">
                     <h3>Submitted Universities</h3>
                     <p>Universities submitted by doctors and ready to be added to meetings.</p>
                     <div class="decision-mini-counts">
-                        <span class="decision-mini" style="background:#eff6ff;color:#1d4ed8;">@(ViewBag.SubmittedUniversitiesCount ?? 0) ready</span>
+                        <span class="decision-mini" style="background:#fde8ec;color:#7f1627;">@(ViewBag.SubmittedUniversitiesCount ?? 0) ready</span>
                     </div>
                 </div>
                 <i class="bi bi-arrow-right nav-arrow"></i>
@@ -197,7 +182,7 @@
                 <i class="bi bi-arrow-right nav-arrow"></i>
             </a>
 
-            <a asp-controller="Home" asp-action="CommitteeDecisions" class="nav-card nav-decisions">
+            <a asp-controller="Home" asp-action="CommitteeDecisions" class="nav-card">
                 <div class="nav-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
                 <div class="nav-body">
                     <h3>Committee Decisions</h3>
@@ -211,13 +196,13 @@
                 <i class="bi bi-arrow-right nav-arrow"></i>
             </a>
 
-            <a asp-controller="Home" asp-action="AllUniversities" class="nav-card nav-alluni">
+            <a asp-controller="Home" asp-action="AllUniversities" class="nav-card">
                 <div class="nav-icon"><i class="bi bi-buildings-fill"></i></div>
                 <div class="nav-body">
                     <h3>All Universities</h3>
                     <p>View all universities with their final recognition status.</p>
                     <div class="decision-mini-counts">
-                        <span class="decision-mini" style="background:#eef2ff;color:#4338ca;">@(ViewBag.AllUniversitiesCount ?? 0) finalized</span>
+                        <span class="decision-mini" style="background:#fde8ec;color:#7f1627;">@(ViewBag.AllUniversitiesCount ?? 0) finalized</span>
                     </div>
                 </div>
                 <i class="bi bi-arrow-right nav-arrow"></i>

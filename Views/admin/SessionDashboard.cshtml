@@ -387,10 +387,10 @@
                                 </div>
 
                                 <div class="uni-actions">
-                                    <a class="btn-action btn-view-app" href="/Home/DetailsBasicInfo?id=@r.Id">
+                                    <a class="btn-action btn-view-app" href="/Home/AdminMeetingApplicationView?requestId=@r.Id&meetingId=@meetingId">
                                         <i class="bi bi-eye"></i> View Application
                                     </a>
-                                    <a class="btn-action btn-doctors" href="/Home/DetailsDoctors?id=@r.Id">
+                                    <a class="btn-action btn-doctors" href="/Home/AdminMeetingApplicationView?requestId=@r.Id&meetingId=@meetingId">
                                         <i class="bi bi-file-medical"></i> Doctors Recommendation
                                     </a>
                                     @if (hasDecision)

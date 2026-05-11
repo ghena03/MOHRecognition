@@ -67,12 +67,20 @@
                             <td>@item.Status</td>
                             <td>@item.AssignedMember</td>
 
-                            <td>
+                            <td style="display:flex;gap:6px;align-items:center">
                                 <a asp-controller="Home"
                                    asp-action="AdminRequestDetails"
                                    asp-route-id="@item.Id"
                                    class="action-btn">
                                     View
+                                </a>
+                                <a asp-controller="Home"
+                                   asp-action="AdminFullApplicationView"
+                                   asp-route-id="@item.Id"
+                                   class="action-btn"
+                                   style="background:#7f1627;color:#fff;border-color:#7f1627"
+                                   target="_blank">
+                                    Full Application
                                 </a>
                             </td>
                         </tr>
