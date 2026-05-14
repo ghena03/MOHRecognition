@@ -1,146 +1,195 @@
 @model DTOs.HospitalsDto
+@using System
 @using System.Linq
 
 @{
     var facilities = Model?.Facilities ?? new List<DTOs.HospitalFacilityDto>();
-    var documents = Model?.Documents ?? new List<DTOs.HospitalFileDto>();
-    var medCap = Model?.MedicineCapacity;
-    var dentCap = Model?.DentistryCapacity;
-    var hasAgreement = documents.Any(d =>
-        string.Equals(d.DocumentType, "University-Hospital Agreement", StringComparison.OrdinalIgnoreCase));
+    var documents  = Model?.Documents  ?? new List<DTOs.HospitalFileDto>();
+
+    string NormalizeDocType(string? rawType)
+    {
+        var type = (rawType ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(type)) return string.Empty;
+        if (string.Equals(type, "HospitalAgreement", StringComparison.OrdinalIgnoreCase)) return "HospitalAgreement";
+        if (string.Equals(type, "University-Hospital Agreement", StringComparison.OrdinalIgnoreCase)) return "HospitalAgreement";
+        return type;
+    }
+
+    var agreementDocsByFacility = documents
+        .Where(d => !string.IsNullOrWhiteSpace(d?.FileUrl))
+        .Select(d => new { Doc = d, Type = NormalizeDocType(d.DocumentType) })
+        .Where(x => x.Type == "HospitalAgreement")
+        .GroupBy(x => (x.Doc.FacilityId ?? string.Empty).Trim(), StringComparer.OrdinalIgnoreCase)
+        .ToDictionary(
+            g => g.Key,
+            g => g.Select(x => x.Doc)
+                  .OrderByDescending(d => d.UploadedAt ?? DateTime.MinValue)
+                  .ThenBy(d => d.OriginalFileName)
+                  .ToList(),
+            StringComparer.OrdinalIgnoreCase);
 }
 
-<div class="card-hd">
-    <h2>Hospitals</h2>
-    <p>Provide training hospital data and upload supporting hospital documents.</p>
-</div>
+<div class="duration-wrap" style="margin-top:0;">
+    <div class="card-hd">
+        <h2>Hospitals</h2>
+    </div>
 
-<div class="card-bd">
-    <div id="hospBanner" class="banner warn" style="display:none; margin-bottom:16px;">
+    <div id="hospBanner" class="banner warn" style="display:none; margin:14px 14px 0;" role="status" aria-live="polite">
         <span class="dot"></span>
         <span class="txt"></span>
         <button type="button" class="x" onclick="document.getElementById('hospBanner').style.display='none'">×</button>
     </div>
 
-    <div class="hosp-main-card">
-
-        <!-- Subsection 1: University Submitted Hospital Data -->
-        <div class="hosp-subsection">
-            <div class="hosp-subsection-title">University Submitted Hospital Data</div>
-            <div class="hosp-subsection-sub">Add each training hospital entry with specialization, name, major, and capacity.</div>
+    <div class="hosp-main-content">
+        <div class="lab-section-card">
+            <div class="lab-section-title"><strong>University Hospital Data</strong></div>
+            <div class="lab-section-sub"><strong>Add each training hospital — name, specialization, and capacity.</strong></div>
 
             <input type="hidden" id="hosp_fac_editId" value="" />
-            <input type="hidden" id="hosp_saved_med_capacity" value="@(medCap?.ToString() ?? "")" />
-            <input type="hidden" id="hosp_saved_dent_capacity" value="@(dentCap?.ToString() ?? "")" />
 
-            <div class="hosp-form-card">
-                <div class="hosp-form-eyebrow">Specialization Capacity (One-time)</div>
-                <div class="grid-3" style="margin-top:12px;">
-                    <div class="field">
-                        <label>Specialization <span class="req">*</span></label>
-                        <select id="hosp_cap_specialization" onchange="HospCapacityToggleLabel()">
-                            <option value="">-- Choose --</option>
-                            <option value="Medicine">Medicine</option>
-                            <option value="Dentistry">Dentistry</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label id="hosp_cap_label">Capacity <span class="req">*</span></label>
-                        <input id="hosp_cap_value" type="number" min="0" placeholder="Enter capacity" inputmode="numeric" />
-                        <div class="hosp-field-hint" id="hosp_cap_hint">Set once per specialization and reused across all rows.</div>
-                    </div>
-                    <div class="field">
-                        <label>Saved Values</label>
-                        <div class="hosp-field-hint">
-                            Medicine: <strong id="hosp_cap_med_text">@(medCap.HasValue ? medCap.Value.ToString() : "Not set")</strong>
-                            <br />
-                            Dentistry: <strong id="hosp_cap_dent_text">@(dentCap.HasValue ? dentCap.Value.ToString() : "Not set")</strong>
-                        </div>
-                    </div>
-                </div>
-                <div class="hosp-btn-row">
-                    <button type="button" class="btn-primary" onclick="HospSaveCapacity()">Save Capacity</button>
-                </div>
-            </div>
+            <div class="hosp-add-card add-facility-card">
+                <div class="hosp-add-title" id="hosp_fac_formTitle">Add Facility</div>
 
-            <div class="hosp-form-card">
-                <div class="hosp-form-eyebrow" id="hosp_fac_formTitle">Add Facility</div>
-
-                <div class="grid-3" style="margin-top:12px;">
+                <div class="hosp-facility-grid hosp-facility-grid--full hospital-form-grid">
                     <div class="field">
-                        <label>Specialization <span class="req">*</span></label>
-                        <select id="hosp_fac_specialization">
-                            <option value="">-- Choose --</option>
-                            @if (Model?.Specializations != null)
-                            {
-                                foreach (var s in Model.Specializations)
-                                {
-                                    <option value="@s">@s</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>Name <span class="req">*</span></label>
+                        <label>Facility / Hospital Name <span class="req">*</span></label>
                         <input id="hosp_fac_name" type="text" placeholder="e.g. King Hussein Medical Center" />
                     </div>
                     <div class="field">
-                        <label>Major</label>
-                        <input id="hosp_fac_major" type="text" placeholder="e.g. Internal Medicine / Orthodontics" />
+                        <label>Specialization <span class="req">*</span></label>
+                        <select id="hosp_fac_specialization" onchange="HospFacilityToggleCapacity()">
+                            <option value="">-- Choose --</option>
+                            <option value="Medicine">Medicine</option>
+                            <option value="Dentistry">Dentistry</option>
+                            <option value="Both">Both</option>
+                        </select>
+                    </div>
+                    <div class="field hosp-capacity-field" id="hosp_fac_capacity_wrap">
+                        <label>Beds / Dental Chairs</label>
+                        <div class="hosp-capacity-inputs">
+                            <div id="hosp_fac_capacity_empty" class="hosp-capacity-empty">Select specialization</div>
+                            <div id="hosp_fac_beds_wrap" style="display:none;">
+                                <input id="hosp_fac_beds" type="number" min="0" placeholder="Beds" inputmode="numeric" />
+                            </div>
+                            <div id="hosp_fac_dental_wrap" style="display:none;">
+                                <input id="hosp_fac_dental" type="number" min="0" placeholder="Dental Chairs" inputmode="numeric" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field hosp-upload-box">
+                        <label>Agreement Files Upload</label>
+                        <div class="agreement-upload-box">
+                            <input id="hosp_fac_agreement_files" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" style="display:none;" />
+                            <label for="hosp_fac_agreement_files" class="attach-files-btn">Attach Files</label>
+                            <span id="hosp_fac_agreement_files_hint" class="selected-file-name"></span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="hosp-btn-row">
-                    <button type="button" class="btn-primary" id="hosp_fac_addBtn" onclick="HospFacilityAdd()">Add Facility</button>
-                    <button type="button" class="btn-ghost" id="hosp_fac_cancelBtn" style="display:none;" onclick="HospFacilityCancelEdit()">Cancel</button>
+                <div class="hosp-form-footer">
+                    <div id="hosp_fac_agreement_files_selected" class="hosp-selected-chips"></div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-primary add-facility-btn" id="hosp_fac_addBtn" onclick="HospFacilityAdd()">Add Facility</button>
+                        <button type="button" class="btn-ghost" id="hosp_fac_cancelBtn" style="display:none;" onclick="HospFacilityCancelEdit()">Cancel</button>
+                    </div>
                 </div>
             </div>
 
             <div class="table-wrap hosp-table-wrap">
-                <table class="tbl hosp-tbl">
+                <table class="tbl">
                     <thead>
                         <tr>
-                            <th style="width:40px;">#</th>
+                            <th style="width:44px;">#</th>
+                            <th>Facility Name</th>
                             <th>Specialization</th>
-                            <th>Name</th>
-                            <th>Major</th>
-                            <th>Capacity</th>
-                            <th style="width:140px;">Actions</th>
+                            <th>Beds</th>
+                            <th>Dental Chairs</th>
+                            <th>Agreement Files</th>
+                            <th style="width:180px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (!facilities.Any())
                         {
-                            <tr>
-                                <td colspan="6" class="hosp-empty-cell">No hospital data added yet.</td>
-                            </tr>
+                            <tr><td colspan="7" style="color:#6b7280; font-weight:600;">No hospital data added yet.</td></tr>
                         }
                         else
                         {
                             var i = 1;
                             foreach (var r in facilities)
                             {
-                                var isMed = r.Specialization.Contains("medicine", StringComparison.OrdinalIgnoreCase);
-                                var isDent = r.Specialization.Contains("dent", StringComparison.OrdinalIgnoreCase);
-                                var capLabel = isMed && medCap.HasValue ? $"Beds: {medCap}"
-                                             : isDent && dentCap.HasValue ? $"Dental Chairs: {dentCap}"
-                                             : "—";
+                                var facilityId = (r.Id ?? string.Empty).Trim();
+                                var facilityDocs = agreementDocsByFacility.TryGetValue(facilityId, out var docsForFacility)
+                                    ? docsForFacility
+                                    : new List<DTOs.HospitalFileDto>();
+
                                 <tr>
                                     <td>@i</td>
+                                    <td><strong>@r.Name</strong></td>
                                     <td><span class="hosp-spec-tag">@r.Specialization</span></td>
-                                    <td class="hosp-name-cell"><strong>@r.Name</strong></td>
-                                    <td>@(string.IsNullOrWhiteSpace(r.Major) ? "—" : r.Major)</td>
-                                    <td class="hosp-cap-cell">@capLabel</td>
+                                    <td>@(r.BedCapacity.HasValue ? r.BedCapacity.Value.ToString() : "—")</td>
+                                    <td>@(r.DentalChairCapacity.HasValue ? r.DentalChairCapacity.Value.ToString() : "—")</td>
                                     <td>
-                                        <div class="hosp-actions">
-                                            <button type="button" class="hosp-action-btn" onclick="HospFacilityStartEdit('@r.Id')">Edit</button>
-                                            <button type="button" class="hosp-action-btn danger" onclick="HospFacilityDelete('@r.Id')">Delete</button>
+                                        @if (facilityDocs.Any())
+                                        {
+                                            <div class="hosp-agreement-cell">
+                                                <span class="hosp-count-chip">@facilityDocs.Count file@(facilityDocs.Count == 1 ? "" : "s")</span>
+                                                @if (facilityDocs.Count == 1)
+                                                {
+                                                    <a class="iconbtn iconbtn-edit iconbtn-text" href="@facilityDocs[0].FileUrl" target="_blank" rel="noopener" style="text-decoration:none;">View</a>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="iconbtn iconbtn-edit iconbtn-text" onclick="HospToggleFacilityFiles('@r.Id')">View</button>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span style="color:#6b7280; font-weight:600;">No files</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="icon-actions">
+                                            <button type="button" class="iconbtn iconbtn-edit" onclick="HospFacilityStartEdit('@r.Id')" title="Edit">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.83H5v-.92l9.06-9.06.92.92L5.92 20.08zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/></svg>
+                                            </button>
+                                            <button type="button" class="iconbtn iconbtn-del" onclick="HospFacilityDelete('@r.Id')" title="Delete">×</button>
                                         </div>
+
                                         <input type="hidden" id="hosp_fac_row_spec_@r.Id" value="@r.Specialization" />
                                         <input type="hidden" id="hosp_fac_row_name_@r.Id" value="@r.Name" />
-                                        <input type="hidden" id="hosp_fac_row_major_@r.Id" value="@r.Major" />
                                         <input type="hidden" id="hosp_fac_row_bed_@r.Id" value="@(r.BedCapacity?.ToString() ?? "")" />
                                         <input type="hidden" id="hosp_fac_row_dental_@r.Id" value="@(r.DentalChairCapacity?.ToString() ?? "")" />
+                                    </td>
+                                </tr>
+                                <tr id="hosp_files_row_@r.Id" class="hosp-files-expand-row" style="display:none;">
+                                    <td colspan="7">
+                                        <div class="hosp-files-panel">
+                                            <table class="tbl hosp-files-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>File Name</th>
+                                                        <th style="width:220px;">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var doc in facilityDocs)
+                                                    {
+                                                        <tr>
+                                                            <td><a class="hosp-doc-fn" href="@doc.FileUrl" target="_blank" rel="noopener">@doc.OriginalFileName</a></td>
+                                                            <td>
+                                                                <div class="icon-actions">
+                                                                    <a class="iconbtn iconbtn-edit iconbtn-text" href="@doc.FileUrl" target="_blank" rel="noopener" style="text-decoration:none;">View</a>
+                                                                    <a class="iconbtn iconbtn-edit iconbtn-text" href="@doc.FileUrl" download="@doc.OriginalFileName" style="text-decoration:none;">Download</a>
+                                                                    <button type="button" class="iconbtn iconbtn-del" onclick="HospDeleteDocument('@doc.StoredFileName')" title="Delete File">×</button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </td>
                                 </tr>
                                 i++;
@@ -148,77 +197,6 @@
                         }
                     </tbody>
                 </table>
-            </div>
-        </div>
-
-        <!-- Subsection 2: Documents -->
-        <div class="hosp-subsection">
-            <div class="hosp-subsection-title">Hospital Documents</div>
-            <div class="hosp-subsection-sub">Upload agreements and accreditation documents once for the Hospitals section.</div>
-
-            <input type="hidden" id="hosp_docs_hasAgreement" value="@(hasAgreement ? "1" : "0")" />
-
-            <div class="hosp-docs-area">
-                <div class="grid-2">
-                    <div class="field">
-                        <label>University-Hospital Agreement Documents <span class="req">*</span></label>
-                        <input id="hosp_docs_agreements" type="file" multiple
-                               accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" />
-                        <div class="hosp-field-hint">Upload official agreements/contracts between the university and its training hospitals or dental facilities.</div>
-                    </div>
-                    <div class="field">
-                        <label>Hospital Accreditation Documents</label>
-                        <input id="hosp_docs_accreditation" type="file" multiple
-                               accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" />
-                        <div class="hosp-field-hint">Upload local and/or international hospital accreditation certificates, if available.</div>
-                    </div>
-                </div>
-
-                <div class="hosp-docs-actions">
-                    <button type="button" class="btn-primary" onclick="HospSaveDocuments()">Upload Documents</button>
-                </div>
-
-                <div class="table-wrap hosp-docs-table">
-                    <table class="tbl hosp-tbl">
-                        <thead>
-                            <tr>
-                                <th style="width:40px;">#</th>
-                                <th>Document Type</th>
-                                <th>File Name</th>
-                                <th style="width:120px;">Open</th>
-                                <th style="width:140px;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (!documents.Any())
-                            {
-                                <tr>
-                                    <td colspan="5" class="hosp-empty-cell">No hospital documents uploaded yet.</td>
-                                </tr>
-                            }
-                            else
-                            {
-                                var i = 1;
-                                foreach (var f in documents)
-                                {
-                                    var docType = string.IsNullOrWhiteSpace(f.DocumentType)
-                                        ? "Hospital Document"
-                                        : f.DocumentType;
-                                    <tr>
-                                        <td>@i</td>
-                                        <td>@docType</td>
-                                        <td>@f.OriginalFileName</td>
-                                        <td><a class="hosp-docs-link" href="@f.FileUrl" target="_blank">Open</a></td>
-                                        <td>
-                                            <button type="button" class="hosp-docs-del" onclick="HospDeleteDocument('@f.StoredFileName')">Remove</button>
-                                        </td>
-                                    </tr>
-                                    i++;
-                                }
-                            }
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </div>
     </div>

@@ -52,7 +52,6 @@
             editId: document.getElementById("lab_editId"),
             facultyId: document.getElementById("lab_facultyId"),
             computers: document.getElementById("lab_computers"),
-            workshops: document.getElementById("lab_workshops"),
             laboratories: document.getElementById("lab_laboratories"),
             addBtn: document.getElementById("lab_addBtn"),
             cancelBtn: document.getElementById("lab_cancelBtn")
@@ -64,7 +63,6 @@
             editId,
             facultyId,
             computers,
-            workshops,
             laboratories,
             addBtn,
             cancelBtn
@@ -73,7 +71,6 @@
         if (editId) editId.value = "";
         if (facultyId) facultyId.value = "";
         if (computers) computers.value = "";
-        if (workshops) workshops.value = "";
         if (laboratories) laboratories.value = "";
 
         if (addBtn) {
@@ -82,7 +79,7 @@
         }
         if (cancelBtn) cancelBtn.style.display = "none";
 
-        [facultyId, computers, workshops, laboratories]
+        [facultyId, computers, laboratories]
             .filter(Boolean)
             .forEach(el => el.classList.remove("is-invalid"));
     }
@@ -92,7 +89,6 @@
             Id: document.getElementById("lab_editId")?.value?.trim() || "",
             FacultyId: document.getElementById("lab_facultyId")?.value?.trim() || "",
             Computers: document.getElementById("lab_computers")?.value?.trim() || "",
-            Workshops: document.getElementById("lab_workshops")?.value?.trim() || "",
             Laboratories: document.getElementById("lab_laboratories")?.value?.trim() || ""
         };
     }
@@ -105,11 +101,10 @@
         const {
             facultyId,
             computers,
-            workshops,
             laboratories
         } = getFormElements();
 
-        [facultyId, computers, workshops, laboratories]
+        [facultyId, computers, laboratories]
             .filter(Boolean)
             .forEach(el => el.classList.remove("is-invalid"));
 
@@ -120,7 +115,6 @@
 
         const numericFields = [
             ["Computers", data.Computers, computers],
-            ["Workshops", data.Workshops, workshops],
             ["Laboratories", data.Laboratories, laboratories]
         ];
 
@@ -215,8 +209,6 @@
                     false
                 );
             } else {
-                render(html);
-                bindSectionEvents();
                 showBanner(html || "Save failed.", true);
             }
         } catch (err) {
@@ -241,7 +233,6 @@
             editId,
             facultyId,
             computers,
-            workshops,
             laboratories,
             addBtn,
             cancelBtn
@@ -250,7 +241,6 @@
         if (editId) editId.value = btn.dataset.id || "";
         if (facultyId) facultyId.value = btn.dataset.facultyId || "";
         if (computers) computers.value = btn.dataset.computers || "";
-        if (workshops) workshops.value = btn.dataset.workshops || "";
         if (laboratories) laboratories.value = btn.dataset.laboratories || "";
 
         if (addBtn) addBtn.textContent = defaultUpdateLabel;

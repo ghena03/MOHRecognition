@@ -1,0 +1,197 @@
+@model DTOs.HospitalsDto
+@using System
+@using System.Linq
+
+@{
+    var documents = Model?.Documents ?? new List<DTOs.HospitalFileDto>();
+
+    string NormalizeDocType(string? rawType)
+    {
+        var type = (rawType ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(type)) return string.Empty;
+        if (string.Equals(type, "LocalRecognition", StringComparison.OrdinalIgnoreCase)) return "LocalRecognition";
+        if (string.Equals(type, "LocalAccreditation", StringComparison.OrdinalIgnoreCase)) return "LocalAccreditation";
+        if (string.Equals(type, "RegionalAccreditation", StringComparison.OrdinalIgnoreCase)) return "RegionalAccreditation";
+        if (string.Equals(type, "InternationalAccreditation", StringComparison.OrdinalIgnoreCase)) return "InternationalAccreditation";
+        if (string.Equals(type, "OtherAccreditation", StringComparison.OrdinalIgnoreCase)) return "OtherAccreditation";
+        return string.Empty;
+    }
+
+    string DocTypeLabel(string n) => n switch
+    {
+        "LocalRecognition"          => "Local Recognition",
+        "LocalAccreditation"        => "Local Accreditation",
+        "RegionalAccreditation"     => "Regional Accreditation",
+        "InternationalAccreditation"=> "International Accreditation",
+        "OtherAccreditation"        => "Other Accreditation",
+        _ => "—"
+    };
+
+    var allDocs = documents
+        .Where(d => !string.IsNullOrWhiteSpace(d?.FileUrl))
+        .Select(d => new { Doc = d, Type = NormalizeDocType(d.DocumentType) })
+        .Where(x => !string.IsNullOrWhiteSpace(x.Type))
+        .OrderBy(x => x.Type)
+        .ThenByDescending(x => x.Doc.UploadedAt ?? DateTime.MinValue)
+        .ToList();
+
+    var recognitionDocs   = allDocs.Where(x => x.Type == "LocalRecognition").ToList();
+    var accreditationDocs = allDocs.Where(x =>
+        x.Type == "LocalAccreditation" ||
+        x.Type == "RegionalAccreditation" ||
+        x.Type == "InternationalAccreditation" ||
+        x.Type == "OtherAccreditation").ToList();
+}
+
+<div id="uniRecAccBanner" class="banner warn" style="display:none; margin:0 0 12px;" role="status" aria-live="polite">
+    <span class="dot"></span>
+    <span class="txt"></span>
+    <button type="button" class="x" onclick="document.getElementById('uniRecAccBanner').style.display='none'">×</button>
+</div>
+
+<div class="ura-upload-grid">
+
+    <!-- ── Local Recognition ───────────────────────── -->
+    <div class="ura-card">
+        <div class="ura-card-hd">
+            <div class="ura-card-icon">📄</div>
+            <div>
+                <div class="ura-card-title">Local Recognition</div>
+                <div class="ura-card-sub">Upload official recognition certificates</div>
+            </div>
+        </div>
+
+        <div class="agreement-upload-box">
+            <input id="ura_docs_local_recognition" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" style="display:none;" />
+            <label for="ura_docs_local_recognition" class="attach-files-btn">Attach Files</label>
+            <span id="ura_recog_hint" class="selected-file-name"></span>
+        </div>
+
+        <div class="ura-card-footer">
+            <button type="button" class="btn-primary ura-submit-btn" onclick="URAUploadSection('recognition')">Upload</button>
+        </div>
+    </div>
+
+    <!-- ── Accreditation ───────────────────────────── -->
+    <div class="ura-card">
+        <div class="ura-card-hd">
+            <div class="ura-card-icon">🏅</div>
+            <div>
+                <div class="ura-card-title">Accreditation</div>
+                <div class="ura-card-sub">Upload accreditation documents</div>
+            </div>
+        </div>
+
+        <div class="field ura-field">
+            <label>Accreditation Type</label>
+            <select id="ura_docs_accreditation_type">
+                <option value="Local">Local Accreditation</option>
+                <option value="Regional">Regional Accreditation</option>
+                <option value="International">International Accreditation</option>
+                <option value="Other">Other Accreditation</option>
+            </select>
+        </div>
+
+        <div class="agreement-upload-box">
+            <input id="ura_docs_accreditation" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" style="display:none;" />
+            <label for="ura_docs_accreditation" class="attach-files-btn">Attach Files</label>
+            <span id="ura_accred_hint" class="selected-file-name"></span>
+        </div>
+
+        <div class="ura-card-footer">
+            <button type="button" class="btn-primary ura-submit-btn" onclick="URAUploadSection('accreditation')">Upload</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Uploaded Files ─────────────────────────────── -->
+<div class="ura-docs-grid">
+
+    <!-- Recognition docs -->
+    <div class="ura-docs-card">
+        <div class="ura-docs-card-hd">
+            <span class="ura-docs-card-title">Local Recognition Files</span>
+            <span class="ura-badge">@recognitionDocs.Count</span>
+        </div>
+        @if (recognitionDocs.Any())
+        {
+            <table class="ura-tbl">
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th style="width:200px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in recognitionDocs)
+                    {
+                        var f = item.Doc;
+                        <tr>
+                            <td>
+                                <a class="ura-fn" href="@f.FileUrl" target="_blank" rel="noopener">@f.OriginalFileName</a>
+                            </td>
+                            <td>
+                                <div class="icon-actions">
+                                    <a class="iconbtn iconbtn-edit iconbtn-text" href="@f.FileUrl" target="_blank" rel="noopener" style="text-decoration:none;">View</a>
+                                    <a class="iconbtn iconbtn-edit iconbtn-text" href="@f.FileUrl" download="@f.OriginalFileName" style="text-decoration:none;">Download</a>
+                                    <button type="button" class="iconbtn iconbtn-del" onclick="URADeleteDocument('@f.StoredFileName')" title="Delete">×</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="ura-empty">No recognition files uploaded yet.</div>
+        }
+    </div>
+
+    <!-- Accreditation docs -->
+    <div class="ura-docs-card">
+        <div class="ura-docs-card-hd">
+            <span class="ura-docs-card-title">Accreditation Files</span>
+            <span class="ura-badge">@accreditationDocs.Count</span>
+        </div>
+        @if (accreditationDocs.Any())
+        {
+            <table class="ura-tbl">
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>Type</th>
+                        <th style="width:200px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in accreditationDocs)
+                    {
+                        var f = item.Doc;
+                        <tr>
+                            <td>
+                                <a class="ura-fn" href="@f.FileUrl" target="_blank" rel="noopener">@f.OriginalFileName</a>
+                            </td>
+                            <td>
+                                <span class="ura-type-tag">@DocTypeLabel(item.Type)</span>
+                            </td>
+                            <td>
+                                <div class="icon-actions">
+                                    <a class="iconbtn iconbtn-edit iconbtn-text" href="@f.FileUrl" target="_blank" rel="noopener" style="text-decoration:none;">View</a>
+                                    <a class="iconbtn iconbtn-edit iconbtn-text" href="@f.FileUrl" download="@f.OriginalFileName" style="text-decoration:none;">Download</a>
+                                    <button type="button" class="iconbtn iconbtn-del" onclick="URADeleteDocument('@f.StoredFileName')" title="Delete">×</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="ura-empty">No accreditation files uploaded yet.</div>
+        }
+    </div>
+
+</div>

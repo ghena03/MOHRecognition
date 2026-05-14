@@ -35,8 +35,7 @@
         return {
             Area: document.getElementById("lib_area")?.value || "",
             TotalStudentCapacity: document.getElementById("lib_capacity")?.value || "",
-            NumberOfArabicBooks: document.getElementById("lib_arabicBooks")?.value || "",
-            NumberOfEnglishBooks: document.getElementById("lib_englishBooks")?.value || "",
+            NumberOfBooks: document.getElementById("lib_numberOfBooks")?.value || "",
             NumberOfPaperJournals: document.getElementById("lib_paperJournals")?.value || "",
             NumberOfElectronicBooks: document.getElementById("lib_electronicBooks")?.value || "",
             NumberOfElectronicJournals: document.getElementById("lib_electronicJournals")?.value || ""
@@ -46,8 +45,7 @@
     function validate(data) {
         return data.Area !== "" &&
             data.TotalStudentCapacity !== "" &&
-            data.NumberOfArabicBooks !== "" &&
-            data.NumberOfEnglishBooks !== "" &&
+            data.NumberOfBooks !== "" &&
             data.NumberOfPaperJournals !== "" &&
             data.NumberOfElectronicBooks !== "" &&
             data.NumberOfElectronicJournals !== "";

@@ -1,4 +1,5 @@
 @model MOHRecognition.Services.RecognitionRequestRecord
+@using System
 @using System.Linq
 @using DTOs
 @{
@@ -25,6 +26,12 @@
     var pictures     = Model.Pictures?.Rows          ?? new List<PictureRowDto>();
     var hospFacils   = hosp.Facilities               ?? new List<HospitalFacilityDto>();
     var hospDocs     = hosp.Documents                ?? new List<HospitalFileDto>();
+    var facilityAgreementDocs = hospDocs
+        .Where(x => string.Equals((x.DocumentType ?? string.Empty).Trim(), "HospitalAgreement", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals((x.DocumentType ?? string.Empty).Trim(), "University-Hospital Agreement", StringComparison.OrdinalIgnoreCase))
+        .Where(x => !string.IsNullOrWhiteSpace(x.FacilityId) && !string.IsNullOrWhiteSpace(x.FileUrl))
+        .GroupBy(x => x.FacilityId.Trim(), StringComparer.OrdinalIgnoreCase)
+        .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
     var attachments  = Model.Attachments?.Rows       ?? new List<AttachmentRowDto>();
     var labRows      = labs.Rows                     ?? new List<LaboratoryRowDto>();
     var labFiles     = labs.UploadedFiles            ?? new List<LaboratoryFileDto>();
@@ -637,21 +644,34 @@
                     </div>
                     <div class="clean-table-wrap">
                         <table class="clean-review-table">
-                            <thead><tr><th style="width:72px;">#</th><th>Specialization</th><th>Name</th><th>Major</th></tr></thead>
+                            <thead><tr><th style="width:72px;">#</th><th>Specialization</th><th>Name</th><th>Beds</th><th>Dental Chairs</th><th>Agreement Files</th></tr></thead>
                             <tbody>
                                 @if (hospFacils.Any())
                                 {
                                     for (var i = 0; i < hospFacils.Count; i++)
                                     {
+                                        var rowId = (hospFacils[i].Id ?? string.Empty).Trim();
+                                        var rowDocs = facilityAgreementDocs.TryGetValue(rowId, out var docs) ? docs : new List<HospitalFileDto>();
                                         <tr>
                                             <td class="cell-index">@(i+1)</td>
                                             <td>@(string.IsNullOrWhiteSpace(hospFacils[i].Specialization) ? "—" : hospFacils[i].Specialization)</td>
                                             <td>@(string.IsNullOrWhiteSpace(hospFacils[i].Name) ? "—" : hospFacils[i].Name)</td>
-                                            <td>@(string.IsNullOrWhiteSpace(hospFacils[i].Major) ? "—" : hospFacils[i].Major)</td>
+                                            <td>@(hospFacils[i].BedCapacity.HasValue ? hospFacils[i].BedCapacity.Value.ToString() : "—")</td>
+                                            <td>@(hospFacils[i].DentalChairCapacity.HasValue ? hospFacils[i].DentalChairCapacity.Value.ToString() : "—")</td>
+                                            <td>
+                                                @if (rowDocs.Any())
+                                                {
+                                                    <div class="table-actions"><a class="rm-mini" href="@rowDocs[0].FileUrl" target="_blank" rel="noopener">View Files (@rowDocs.Count)</a></div>
+                                                }
+                                                else
+                                                {
+                                                    @:—
+                                                }
+                                            </td>
                                         </tr>
                                     }
                                 }
-                                else { <tr><td colspan="4">No hospital data submitted.</td></tr> }
+                                else { <tr><td colspan="6">No hospital data submitted.</td></tr> }
                             </tbody>
                         </table>
                     </div>

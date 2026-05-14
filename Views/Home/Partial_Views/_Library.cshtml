@@ -19,8 +19,7 @@
     <div class="lib-modern-grid" style="margin-top:14px;">
         <div class="lib-field-card"><label>Area (m2) <span class="req">*</span></label><input id="lib_area" type="number" min="0" value="@(Model?.Area?.ToString() ?? "")" /></div>
         <div class="lib-field-card"><label>Total Student Capacity <span class="req">*</span></label><input id="lib_capacity" type="number" min="0" value="@(Model?.TotalStudentCapacity?.ToString() ?? "")" /></div>
-        <div class="lib-field-card"><label>Number of Arabic Books (for non-Arabic Institutions) <span class="req">*</span></label><input id="lib_arabicBooks" type="number" min="0" value="@(Model?.NumberOfArabicBooks?.ToString() ?? "")" /></div>
-        <div class="lib-field-card"><label>Number of English Books (for non-Arabic Institutions) <span class="req">*</span></label><input id="lib_englishBooks" type="number" min="0" value="@(Model?.NumberOfEnglishBooks?.ToString() ?? "")" /></div>
+        <div class="lib-field-card"><label>Number of Books <span class="req">*</span></label><input id="lib_numberOfBooks" type="number" min="0" value="@(Model?.NumberOfBooks?.ToString() ?? "")" /></div>
         <div class="lib-field-card"><label>Number of Paper Journals <span class="req">*</span></label><input id="lib_paperJournals" type="number" min="0" value="@(Model?.NumberOfPaperJournals?.ToString() ?? "")" /></div>
         <div class="lib-field-card"><label>Number of Electronic Books <span class="req">*</span></label><input id="lib_electronicBooks" type="number" min="0" value="@(Model?.NumberOfElectronicBooks?.ToString() ?? "")" /></div>
         <div class="lib-field-card"><label>Number of Electronic Journals <span class="req">*</span></label><input id="lib_electronicJournals" type="number" min="0" value="@(Model?.NumberOfElectronicJournals?.ToString() ?? "")" /></div>

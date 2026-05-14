@@ -1,7 +1,7 @@
 ﻿@model MOHRecognition.Services.RecognitionRequestRecord
 @{
     Layout = null;
-    ViewData["Title"] = "Request Details - Infrastructure";
+    ViewData["Title"] = "Request Details - University Infrastructure";
     ViewData["ActiveNav"] = "requests";
     var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
     var adminMeetingId = (int)(ViewBag.AdminMeetingId ?? 0);
@@ -18,6 +18,7 @@
     var laboratoryRows = laboratories.Rows ?? new List<DTOs.LaboratoryRowDto>();
     var laboratoryFiles = laboratories.UploadedFiles ?? new List<DTOs.LaboratoryFileDto>();
     var infrastructure = Model?.Infrastructure ?? new DTOs.InfrastructureDto();
+    var library = Model?.Library ?? new DTOs.LibraryDto();
     var facultiesAssessment = Model?.FacultiesAssessment ?? string.Empty;
     var hospitalsAssessment = Model?.HospitalsAssessment ?? string.Empty;
     var hospitalEnvironmentAssessment = Model?.HospitalEnvironmentAssessment ?? string.Empty;
@@ -90,7 +91,7 @@
                 <div>
                     <h1>Request Details</h1>
                     <p class="rd-inst">Institution: <b>@inst</b></p>
-                    <p>Step 7 of 7 — Infrastructure & Extra Info.</p>
+                    <p>Step 7 of 7 — University Infrastructure & Extra Info.</p>
                 </div>
                 <div class="rd-meta">
                     <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
@@ -100,8 +101,8 @@
 
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2><i class="bi bi-123"></i> Numbers Info</h2>
-                    <p>Quick overview of submitted infrastructure counts.</p>
+                    <h2><i class="bi bi-123"></i> University Infrastructure</h2>
+                    <p>Quick overview of submitted university infrastructure counts.</p>
                 </div>
 
                 <div class="infra-summary-grid">
@@ -131,7 +132,6 @@
                                         <th style="width:60px;">#</th>
                                         <th>College</th>
                                         <th>Computers</th>
-                                        <th>Workshops</th>
                                         <th>Laboratories</th>
                                     </tr>
                                 </thead>
@@ -145,7 +145,6 @@
                                             <td>@idx</td>
                                             <td>@(string.IsNullOrWhiteSpace(row.FacultyName) ? "—" : row.FacultyName)</td>
                                             <td>@(row.Computers?.ToString() ?? "—")</td>
-                                            <td>@(row.Workshops?.ToString() ?? "—")</td>
                                             <td>@(row.Laboratories?.ToString() ?? "—")</td>
                                         </tr>
                                         idx++;
@@ -158,6 +157,23 @@
                     {
                         <div class="infra-empty">No laboratories rows were submitted.</div>
                     }
+                </div>
+            </section>
+
+            <!-- Library of the University -->
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2><i class="bi bi-book"></i> Library of the University</h2>
+                    <p>Submitted library resources and capacity information.</p>
+                </div>
+
+                <div class="infra-summary-grid">
+                    <div class="infra-summary-item"><span>Area (m²)</span><b>@(library.Area.HasValue ? library.Area.Value.ToString("N0") : "—")</b></div>
+                    <div class="infra-summary-item"><span>Total Student Capacity</span><b>@(library.TotalStudentCapacity.HasValue ? library.TotalStudentCapacity.Value.ToString("N0") : "—")</b></div>
+                    <div class="infra-summary-item"><span>Number of Books</span><b>@(library.NumberOfBooks.HasValue ? library.NumberOfBooks.Value.ToString("N0") : "—")</b></div>
+                    <div class="infra-summary-item"><span>Number of Paper Journals</span><b>@(library.NumberOfPaperJournals.HasValue ? library.NumberOfPaperJournals.Value.ToString("N0") : "—")</b></div>
+                    <div class="infra-summary-item"><span>Number of Electronic Books</span><b>@(library.NumberOfElectronicBooks.HasValue ? library.NumberOfElectronicBooks.Value.ToString("N0") : "—")</b></div>
+                    <div class="infra-summary-item"><span>Number of Electronic Journals</span><b>@(library.NumberOfElectronicJournals.HasValue ? library.NumberOfElectronicJournals.Value.ToString("N0") : "—")</b></div>
                 </div>
             </section>
 

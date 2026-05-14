@@ -832,6 +832,41 @@
     white-space: nowrap;
 }
 
+.rd-doc-stack {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.rd-doc-stack .clean-review-table {
+    table-layout: fixed;
+}
+
+.rd-doc-stack .clean-review-table th:nth-child(1),
+.rd-doc-stack .clean-review-table td:nth-child(1) {
+    width: 32%;
+}
+
+.rd-doc-stack .clean-review-table th:nth-child(2),
+.rd-doc-stack .clean-review-table td:nth-child(2) {
+    width: 16%;
+}
+
+.rd-doc-stack .clean-review-table th:nth-child(3),
+.rd-doc-stack .clean-review-table td:nth-child(3) {
+    width: 18%;
+}
+
+.rd-doc-stack .clean-review-table th:nth-child(4),
+.rd-doc-stack .clean-review-table td:nth-child(4) {
+    width: 18%;
+}
+
+.rd-doc-stack .clean-review-table th:nth-child(5),
+.rd-doc-stack .clean-review-table td:nth-child(5) {
+    width: 16%;
+}
+
 .table-attachments th:nth-child(1) { width: 72px !important; }
 .table-attachments th:nth-child(2) { width: 44%; }
 .table-attachments th:nth-child(3) { width: 36%; }
@@ -862,4 +897,32 @@
     .table-actions {
         flex-wrap: wrap;
     }
+}
+
+/* Side-by-side Recognition + Accreditation layout (member & admin views) */
+.recog-accred-row {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 860px) {
+    .recog-accred-row > * {
+        flex: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+}
+
+/* Category badge for Recognition & Accreditation unified table */
+.hosp-spec-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #f3ede6;
+    color: #7b2030;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
 }

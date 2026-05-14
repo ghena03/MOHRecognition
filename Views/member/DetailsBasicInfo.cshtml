@@ -16,6 +16,12 @@
         : Url.Action("ElectronicRequests", "Home");
     var p = Model.PublicInfo ?? new DTOs.PublicInfoDto();
     var a = Model.AcademicInfo ?? new DTOs.AcademicInfoDto();
+    var selectedCollegeCategories = (Model.Faculties ?? new List<DTOs.FacultyRowDto>())
+        .Select(x => (x.CollegeType ?? string.Empty).Trim())
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(x => x)
+        .ToList();
 
     var degrees = new List<string>();
     if (a.DegreeDiploma) degrees.Add("Diploma");
@@ -109,6 +115,10 @@
                             <input type="text" value="@p.InstitutionName" readonly />
                         </div>
                         <div class="rd-field">
+                            <label>Official Entity Possessing Oversight Rights</label>
+                            <input type="text" value="@p.OversightRightsEntity" readonly />
+                        </div>
+                        <div class="rd-field">
                             <label>Country</label>
                             <input type="text" value="@Model.Country" readonly />
                         </div>
@@ -117,11 +127,19 @@
                             <input type="text" value="@p.City" readonly />
                         </div>
                         <div class="rd-field">
-                            <label>Address</label>
+                            <label>Mailing Full Address</label>
                             <input type="text" value="@p.MailingFullAddress" readonly />
                         </div>
                         <div class="rd-field">
-                            <label>Website</label>
+                            <label>Direct Phone Number</label>
+                            <input type="text" value="@p.DirectPhoneNumber" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Email Address</label>
+                            <input type="text" value="@p.EmailAddress" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Institutional Web Address</label>
                             <input type="text" value="@p.InstitutionalWebAddress" readonly />
                         </div>
                     </div>
@@ -149,7 +167,11 @@
                 <!-- Institution Details Section -->
                 <div class="info-section" style="margin-top:18px;">
                     <div class="section-title">Institution Profile</div>
-                    <div class="rd-grid2">
+                    <div class="rd-grid3">
+                        <div class="rd-field">
+                            <label>Mode of Study</label>
+                            <input type="text" value="@p.ModeOfStudy" readonly />
+                        </div>
                         <div class="rd-field">
                             <label>Institution Type</label>
                             <input type="text" value="@a.TypeOfAcademicInstitution" readonly />
@@ -157,6 +179,45 @@
                         <div class="rd-field">
                             <label>Language of Instruction</label>
                             <input type="text" value="@p.LanguageOfInstruction" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- College Categories -->
+                <div class="info-section" style="margin-top:18px;">
+                    <div class="section-title">College Categories</div>
+                    <div class="info-block">
+                        <div class="chip-list">
+                            @if (selectedCollegeCategories.Any())
+                            {
+                                @foreach (var c in selectedCollegeCategories)
+                                {
+                                    <span class="chip">@c</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="chip muted">No college categories submitted</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- President Section -->
+                <div class="info-section" style="margin-top:18px;">
+                    <div class="section-title">Information of President of Institution</div>
+                    <div class="rd-grid3">
+                        <div class="rd-field">
+                            <label>Name</label>
+                            <input type="text" value="@p.PresidentName" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Highest Academic Degree</label>
+                            <input type="text" value="@p.PresidentHighestAcademicDegree" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Major Area of Study</label>
+                            <input type="text" value="@p.PresidentMajorAreaOfStudy" readonly />
                         </div>
                     </div>
                 </div>

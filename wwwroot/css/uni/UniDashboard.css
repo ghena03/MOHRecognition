@@ -94,6 +94,8 @@ html {
 
 .content {
     min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
     padding-bottom: 30px;
 }
 
@@ -350,26 +352,48 @@ html {
 }
 
 .card-hd {
-    padding: 16px 18px;
+    padding: 14px 18px;
     background: #f4eadc;
+    border-bottom: 1px solid #e6e2dc;
 }
 
     .card-hd h2 {
         margin: 0;
-        color: #9e1b32;
-        font-size: 22px;
+        color: #7b2030;
+        font-size: 30px;
         font-weight: 900;
     }
 
     .card-hd p {
-        margin: 8px 0 0;
-        opacity: 0.75;
+        margin: 6px 0 0;
+        color: #5b6472;
         font-size: 14px;
+        font-weight: 600;
     }
 
 .card-bd {
     padding: 18px;
     overflow: hidden;
+}
+
+.uni-rec-accr-card .card-hd h2 {
+    font-size: 28px;
+    line-height: 1.15;
+}
+
+.uni-rec-accr-card .card-hd p {
+    max-width: 900px;
+}
+
+#uniRecAccContainer .hosp-upload-sections {
+    margin-top: 6px;
+}
+
+#uniRecAccContainer .hosp-upload-block {
+    border: 1px solid #eadfd2;
+    border-radius: 12px;
+    background: #fffdf9;
+    padding: 12px;
 }
 
 /* ================= GRIDS ================= */
@@ -1047,6 +1071,10 @@ html {
     margin-top: 14px;
 }
 
+.prg-body > .icon-actions {
+    padding-top: 12px;
+}
+
 .prg-table {
     width: 100%;
     border-collapse: collapse;
@@ -1420,8 +1448,125 @@ html {
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
+/* ── Page header ── */
+.medden-page-hd {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid #f0ece4;
+}
+
+.medden-page-hd-icon {
+    font-size: 28px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.medden-page-hd-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1c1c1e;
+    margin-bottom: 4px;
+}
+
+.medden-page-hd-sub {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
 .medden-banner {
     margin: 12px 12px 0;
+}
+
+/* ── Ratio cards (shared — used on both main dashboard and doctors page) ── */
+.medden-ratio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 14px 12px 0;
+}
+
+.medden-ratio-col {
+    border: 1px solid #e5ddd3;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.medden-ratio-col-head {
+    background: #faf5f1;
+    color: #7a2d2a;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e5ddd3;
+}
+
+.medden-ratio-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 14px;
+    border-bottom: 1px solid #f5f0eb;
+    font-size: 13px;
+    gap: 8px;
+}
+
+.medden-ratio-item:last-child {
+    border-bottom: none;
+}
+
+.medden-ratio-item span {
+    color: #6b7280;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.medden-ratio-item b {
+    color: #111827;
+    font-weight: 800;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.medden-ratio-status-row {
+    background: #fafaf8;
+}
+
+.medden-status-badge {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    border: 1px solid transparent;
+}
+
+.medden-status-badge.ok {
+    background: #ecfdf3;
+    color: #166534;
+    border-color: #86efac;
+}
+
+.medden-status-badge.warn {
+    background: #fffbeb;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.medden-status-badge.fail {
+    background: #fef2f2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+@media (max-width: 700px) {
+    .medden-ratio-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .medden-kicker {
@@ -1992,6 +2137,16 @@ html {
     font-size: 18px;
     font-weight: 900;
     line-height: 1;
+}
+
+.iconbtn-text {
+    width: auto;
+    min-width: 56px;
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 /* ================= HOSPITALS ================= */
@@ -3374,7 +3529,30 @@ html {
     background: #fff !important;
 }
 
-/* ================= HOSPITALS (REFRESHED) ================= */
+/* ================= HOSPITALS ================= */
+#hospitalsContainer .hosp-spec-tag {
+    display: inline-block;
+    background: #f3e8ed;
+    color: #7b2030;
+    font-size: 11.5px;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 2px 10px;
+    white-space: nowrap;
+}
+
+#hospitalsContainer .hosp-docs-link {
+    color: #7b2030;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+#hospitalsContainer .hosp-docs-link:hover {
+    text-decoration: underline;
+}
+
+/* ================= HOSPITALS (LEGACY — kept for session compat) ================= */
 #hospitalsContainer .hosp-main-card {
     border: 1px solid #e7ddd1;
     border-radius: 16px;
@@ -3417,17 +3595,17 @@ html {
 #hospitalsContainer .hosp-subsection-sub {
     margin-top: 4px;
     color: #6b7280;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 
 #hospitalsContainer .hosp-form-card {
-    margin-top: 12px;
+    margin-top: 8px;
     border: 1px solid #efe5d7;
     border-radius: 12px;
     background: #fff;
-    padding: 14px;
+    padding: 10px;
 }
 
 #hospitalsContainer .hosp-form-card + .hosp-form-card {
@@ -3505,6 +3683,1292 @@ html {
     font-weight: 700;
     padding: 6px 10px;
     border-radius: 8px;
+}
+
+#hospitalsContainer .hosp-ra-stack {
+    margin-top: 4px;
+    display: grid;
+    gap: 8px;
+}
+
+#hospitalsContainer .hosp-doc-card {
+    border: 1px solid #efe5d7;
+    border-radius: 10px;
+    background: #fff;
+    padding: 8px 10px;
+}
+
+#hospitalsContainer .hosp-doc-card-title {
+    font-size: 12.5px;
+    font-weight: 900;
+    color: #7b2030;
+    margin-bottom: 6px;
+}
+
+#hospitalsContainer .hosp-doc-upload-row {
+    margin-bottom: 6px;
+}
+
+#hospitalsContainer .hosp-doc-upload-row input[type="file"] {
+    width: 100%;
+}
+
+#hospitalsContainer .hosp-doc-upload-inline .field {
+    margin: 0;
+    padding: 8px 10px;
+}
+
+#hospitalsContainer .hosp-doc-upload-inline .field label,
+#hospitalsContainer .hosp-accred-compact-row .field label {
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+
+#hospitalsContainer .hosp-accred-compact-row {
+    display: grid;
+    grid-template-columns: minmax(220px, 300px) minmax(320px, 1fr);
+    gap: 8px;
+    align-items: start;
+    margin: 4px 0 6px;
+}
+
+#hospitalsContainer .hosp-accred-compact-row .field {
+    margin: 0;
+    padding: 8px 10px;
+}
+
+#hospitalsContainer .hosp-accred-grid {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+#hospitalsContainer .hosp-accred-item {
+    border: 1px solid #efe5d7;
+    border-radius: 10px;
+    background: #fcfaf6;
+    padding: 10px;
+}
+
+#hospitalsContainer .hosp-accred-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #7b2030;
+    margin-bottom: 8px;
+}
+
+#hospitalsContainer .hosp-accred-item input[type="file"] {
+    width: 100%;
+}
+
+#hospitalsContainer .hosp-doc-table th,
+#hospitalsContainer .hosp-doc-table td {
+    font-size: 11.5px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+#hospitalsContainer .hosp-doc-table td {
+    vertical-align: middle;
+}
+
+#hospitalsContainer .hosp-doc-table th {
+    font-size: 11px;
+    letter-spacing: .3px;
+}
+
+#hospitalsContainer .hosp-doc-table .hosp-actions {
+    justify-content: flex-start;
+    gap: 6px;
+}
+
+#hospitalsContainer .hosp-bottom-actions {
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+#hospitalsContainer .hosp-selected-files {
+    margin-top: 6px;
+    padding: 6px 8px;
+    border: 1px dashed #d8c8b6;
+    border-radius: 8px;
+    background: #fffcf7;
+}
+
+#hospitalsContainer .hosp-selected-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #7b2030;
+    margin-bottom: 6px;
+}
+
+#hospitalsContainer .hosp-selected-list {
+    margin: 0;
+    padding-left: 16px;
+    color: #4b5563;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+#hospitalsContainer .hosp-action-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 7px;
+}
+
+#hospitalsContainer .hosp-ra-heading {
+    font-weight: 900;
+    letter-spacing: 0;
+}
+
+#hospitalsContainer .hosp-upload-box {
+    border: 1px solid #ece2d6;
+    border-radius: 10px;
+    padding: 8px 10px;
+    background: #fff;
+}
+
+#hospitalsContainer .hosp-upload-box-group {
+    border: 1px solid #ece2d6;
+    border-radius: 10px;
+    padding: 8px;
+    background: #fff;
+}
+
+#hospitalsContainer .hosp-upload-hint {
+    font-size: 11px;
+    font-weight: 700;
+    color: #7b2030;
+    margin-bottom: 4px;
+}
+
+#hospitalsContainer .hosp-section-note {
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+}
+
+#hospitalsContainer .hosp-upload-sections {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 10px;
+    align-items: start;
+}
+
+#hospitalsContainer .hosp-upload-block {
+    border: 1px solid #eadfce;
+    border-radius: 10px;
+    background: #fffdfa;
+    padding: 8px;
+}
+
+#hospitalsContainer .hosp-upload-btn {
+    margin-top: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 12px;
+    border-radius: 10px;
+}
+
+#hospitalsContainer .hosp-docs-grid {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+    gap: 10px;
+}
+
+#hospitalsContainer .hosp-docs-card {
+    border: 1px solid #eadfce;
+    border-radius: 10px;
+    background: #fff;
+    padding: 8px;
+}
+
+#hospitalsContainer .hosp-docs-card-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #7b2030;
+    margin: 2px 2px 8px;
+}
+
+#hospitalsContainer .hosp-docs-stack {
+    margin-top: 14px;
+    display: grid;
+    gap: 10px;
+}
+
+#hospitalsContainer .hosp-docs-panel {
+    border: 1px solid #eadfce;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+}
+
+#hospitalsContainer .hosp-docs-panel-hd {
+    background: #faf7f3;
+    border-bottom: 1px solid #efe5d7;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#hospitalsContainer .hosp-docs-panel-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #7b2030;
+}
+
+#hospitalsContainer .hosp-docs-count {
+    min-width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    border: 1px solid #e6d8c8;
+    background: #fff;
+    color: #7b2030;
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+}
+
+#hospitalsContainer .hosp-doc-rows {
+    display: grid;
+}
+
+#hospitalsContainer .hosp-doc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border-top: 1px solid #f3ece2;
+}
+
+#hospitalsContainer .hosp-doc-row:first-child {
+    border-top: 0;
+}
+
+#hospitalsContainer .hosp-doc-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+#hospitalsContainer .hosp-doc-fn {
+    color: #2f3b4f;
+    font-weight: 700;
+    font-size: 12px;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    max-width: 100%;
+}
+
+#hospitalsContainer .hosp-doc-fn:hover {
+    color: #7b2030;
+    text-decoration: underline;
+}
+
+#hospitalsContainer .hosp-doc-empty {
+    padding: 10px;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#hospitalsContainer .hosp-facility-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    align-items: end;
+}
+
+#hospitalsContainer .hosp-facility-grid--full {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+    align-items: end;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#hospitalsContainer .hosp-facility-grid .field {
+    margin: 0;
+}
+
+#hospitalsContainer .hosp-form-actions {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#hospitalsContainer .hosp-inline-action {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 0;
+    min-width: 180px;
+    grid-column: 5;
+}
+
+#hospitalsContainer .hosp-inline-action .btn-primary,
+#hospitalsContainer .hosp-inline-action .btn-ghost {
+    width: 100%;
+    min-height: 46px;
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.1;
+}
+
+#hospitalsContainer .hosp-form-actions .btn-primary,
+#hospitalsContainer .hosp-form-actions .btn-ghost {
+    min-width: 150px;
+    text-align: center;
+}
+
+#hospitalsContainer .hosp-agreement-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: end;
+}
+
+#hospitalsContainer .hosp-agreement-row .field {
+    margin: 0;
+}
+
+#hospitalsContainer .hosp-agreement-row .hosp-upload-btn {
+    margin-top: 0;
+    width: auto;
+    min-width: 220px;
+    white-space: nowrap;
+    align-self: end;
+}
+
+#hospitalsContainer .hosp-doc-chip-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#hospitalsContainer .hosp-doc-chip {
+    display: inline-block;
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid #e6ddd1;
+    background: #fff;
+    color: #6a1f2f;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    text-decoration: none;
+}
+
+#hospitalsContainer .hosp-doc-chip:hover {
+    text-decoration: underline;
+}
+
+#hospitalsContainer .hosp-doc-chip-muted {
+    color: #64748b;
+}
+
+#hospitalsContainer .hosp-inline-doc-actions {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+#hospitalsContainer .lab-section-card {
+    border-radius: 14px;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#hospitalsContainer .lab-section-title {
+    font-size: 22px;
+    letter-spacing: 0;
+}
+
+#hospitalsContainer .lab-section-sub {
+    font-size: 15px;
+    line-height: 1.3;
+    color: #4b5563;
+}
+
+#hospitalsContainer .hosp-add-card {
+    margin-top: 10px;
+    background: #faf8f5;
+    border: 1px solid #efe5d7;
+    border-radius: 12px;
+    padding: 12px;
+    overflow: visible;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#hospitalsContainer .hosp-add-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #7b2030;
+    margin-bottom: 10px;
+}
+
+#hospitalsContainer .hosp-facility-grid .field {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    min-width: 0;
+    max-width: 100%;
+}
+
+#hospitalsContainer .hosp-facility-grid .field label {
+    font-size: 13px;
+    font-weight: 800;
+    color: #374151;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-bottom: 6px;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+#hospitalsContainer .hosp-facility-grid .field input,
+#hospitalsContainer .hosp-facility-grid .field select {
+    min-height: 46px;
+    border-radius: 11px;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    max-width: 100%;
+}
+
+#hospitalsContainer .hosp-facility-grid .field input::placeholder {
+    color: #94a3b8;
+}
+
+#hospitalsContainer .hosp-facility-grid .hosp-upload-box {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* --- old picker classes kept inert for safety --- */
+#hospitalsContainer .hosp-file-picker { display: none !important; }
+#hospitalsContainer .hosp-file-native { display: none !important; }
+#hospitalsContainer .hosp-file-btn    { display: none !important; }
+#hospitalsContainer .hosp-file-hint   { display: none !important; }
+
+/* --- new agreement upload box --- */
+#hospitalsContainer .agreement-upload-box {
+    width: 100% !important;
+    height: 46px !important;
+    border: 1px solid #e2ddd6 !important;
+    border-radius: 11px !important;
+    background: #fff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    padding: 0 14px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+#hospitalsContainer .attach-files-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    height: 32px !important;
+    padding: 0 14px !important;
+    border: 1px solid #d9d2c9 !important;
+    border-radius: 8px !important;
+    background: #faf7f2 !important;
+    color: #7b2030 !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+    float: none !important;
+    position: static !important;
+    text-align: center !important;
+}
+
+#hospitalsContainer .selected-file-name {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #64748b;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+#hospitalsContainer .selected-file-name:empty {
+    display: none;
+}
+
+#hospitalsContainer .hosp-selected-chips {
+    display: none !important;
+}
+
+#hospitalsContainer .hosp-selected-chip {
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #e5ddd3;
+    border-radius: 999px;
+    background: #fcfaf6;
+    color: #6a1f2f;
+    padding: 4px 8px 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+#hospitalsContainer .hosp-selected-chip-name {
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#hospitalsContainer .hosp-selected-chip-x {
+    border: 0;
+    background: transparent;
+    color: #9e1b32;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+}
+
+#hospitalsContainer .hosp-agreement-cell {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+#hospitalsContainer .hosp-count-chip {
+    border: 1px solid #e2ddd6;
+    border-radius: 999px;
+    background: #fff;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 4px 10px;
+}
+
+#hospitalsContainer .hosp-files-expand-row > td {
+    background: #fff;
+    border-top: 0;
+    padding: 0 12px 12px;
+}
+
+#hospitalsContainer .hosp-files-panel {
+    border: 1px solid #efe5d7;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#hospitalsContainer .hosp-files-table {
+    min-width: 0;
+}
+
+#hospitalsContainer .hosp-files-table th,
+#hospitalsContainer .hosp-files-table td {
+    font-size: 12px;
+    padding: 8px 10px;
+}
+
+#hospitalsContainer .table-wrap {
+    overflow-x: auto;
+}
+
+#hospitalsContainer .table-wrap .tbl {
+    width: 100%;
+    min-width: 100%;
+    table-layout: fixed;
+}
+
+#hospitalsContainer .table-wrap .tbl th,
+#hospitalsContainer .table-wrap .tbl td {
+    padding: 9px 10px;
+    font-size: 13px;
+}
+
+#hospitalsContainer .table-wrap .tbl th:nth-child(1),
+#hospitalsContainer .table-wrap .tbl td:nth-child(1) {
+    width: 56px;
+}
+
+#hospitalsContainer .table-wrap .tbl th:nth-child(4),
+#hospitalsContainer .table-wrap .tbl td:nth-child(4),
+#hospitalsContainer .table-wrap .tbl th:nth-child(5),
+#hospitalsContainer .table-wrap .tbl td:nth-child(5) {
+    width: 120px;
+}
+
+#hospitalsContainer .table-wrap .tbl th:nth-child(6),
+#hospitalsContainer .table-wrap .tbl td:nth-child(6) {
+    width: 210px;
+}
+
+#hospitalsContainer .table-wrap .tbl th:nth-child(7),
+#hospitalsContainer .table-wrap .tbl td:nth-child(7) {
+    width: 120px;
+}
+
+@media (max-width: 980px) {
+    #hospitalsContainer .hosp-accred-compact-row {
+        grid-template-columns: 1fr;
+    }
+
+    #hospitalsContainer .hosp-accred-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #hospitalsContainer .hosp-upload-sections {
+        grid-template-columns: 1fr;
+    }
+
+    #hospitalsContainer .hosp-docs-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #hospitalsContainer .hosp-doc-row {
+        flex-wrap: wrap;
+    }
+
+    #hospitalsContainer .hosp-facility-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    #hospitalsContainer .hosp-facility-grid--full {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    #hospitalsContainer .hosp-facility-grid .hosp-upload-box {
+        min-width: 0;
+    }
+
+    #hospitalsContainer .hosp-inline-action {
+        min-width: 0;
+        padding-right: 0;
+        grid-column: auto;
+    }
+
+    #hospitalsContainer .hosp-inline-action .btn-primary,
+    #hospitalsContainer .hosp-inline-action .btn-ghost {
+        min-height: 44px;
+    }
+
+    #hospitalsContainer .hosp-agreement-row {
+        grid-template-columns: 1fr;
+    }
+
+    #hospitalsContainer .hosp-agreement-row .hosp-upload-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 760px) {
+    #hospitalsContainer .hosp-facility-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #hospitalsContainer .hosp-facility-grid--full {
+        grid-template-columns: 1fr;
+    }
+
+    #hospitalsContainer .hosp-inline-action {
+        padding-top: 2px;
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ================= HOSPITALS LAYOUT POLISH (FINAL) ================= */
+#hospitalsContainer .hosp-add-card {
+    overflow: visible;
+    padding: 16px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#hospitalsContainer .hospital-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    align-items: start;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#hospitalsContainer .hospital-form-grid .field {
+    min-width: 0;
+    max-width: 100%;
+}
+
+#hospitalsContainer .hospital-form-grid .field label {
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 6px;
+    min-height: 36px;
+    display: flex;
+    align-items: flex-end;
+}
+
+#hospitalsContainer .hospital-form-grid input,
+#hospitalsContainer .hospital-form-grid select,
+#hospitalsContainer .hospital-form-grid .hosp-file-picker,
+#hospitalsContainer .hospital-form-grid .hosp-inline-action .btn-primary,
+#hospitalsContainer .hospital-form-grid .hosp-inline-action .btn-ghost {
+    min-height: 46px;
+    height: 46px;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-capacity-field .hosp-capacity-inputs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-capacity-field .hosp-capacity-inputs > div {
+    min-width: 0;
+    max-width: 100%;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-capacity-field .hosp-capacity-inputs.is-dual {
+    grid-template-columns: 1fr 1fr;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-capacity-field .hosp-capacity-inputs input {
+    min-width: 0;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-capacity-empty {
+    min-height: 46px;
+    border: 1px dashed #d9d2c9;
+    border-radius: 11px;
+    background: #fcfaf6;
+    color: #94a3b8;
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-upload-box {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* hosp-file-picker no longer used — replaced by .agreement-upload-box */
+#hospitalsContainer .hospital-form-grid .hosp-file-picker { display: none !important; }
+#hospitalsContainer .hospital-form-grid .hosp-file-btn    { display: none !important; }
+#hospitalsContainer .hospital-form-grid .hosp-file-hint   { display: none !important; }
+
+#hospitalsContainer .hospital-form-grid .hosp-inline-action {
+    grid-column: auto !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-width: 160px;
+    padding: 0 !important;
+    align-self: stretch;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-inline-action::before {
+    content: "";
+    display: block;
+    min-height: 36px;
+    margin-bottom: 6px;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-inline-action .btn-primary {
+    width: 100%;
+    min-width: 160px;
+    margin: 0;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-inline-action .btn-ghost {
+    width: 100%;
+    min-width: 160px;
+    margin: 0;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-selected-chips {
+    margin-top: 8px;
+    display: none;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-selected-chips.is-visible {
+    display: flex;
+}
+
+#hospitalsContainer .table-wrap {
+    overflow: hidden;
+}
+
+#hospitalsContainer .table-wrap .tbl {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+#hospitalsContainer .table-wrap .tbl th,
+#hospitalsContainer .table-wrap .tbl td {
+    padding: 8px 10px;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+#hospitalsContainer .table-wrap .tbl td {
+    overflow-wrap: anywhere;
+}
+
+#hospitalsContainer .table-wrap .tbl th:nth-child(1),
+#hospitalsContainer .table-wrap .tbl td:nth-child(1) {
+    width: 54px;
+}
+
+#hospitalsContainer .table-wrap .tbl th:nth-child(4),
+#hospitalsContainer .table-wrap .tbl td:nth-child(4),
+#hospitalsContainer .table-wrap .tbl th:nth-child(5),
+#hospitalsContainer .table-wrap .tbl td:nth-child(5) {
+    width: 110px;
+}
+
+#hospitalsContainer .table-wrap .tbl th:nth-child(6),
+#hospitalsContainer .table-wrap .tbl td:nth-child(6) {
+    width: 180px;
+}
+
+#hospitalsContainer .table-wrap .tbl th:nth-child(7),
+#hospitalsContainer .table-wrap .tbl td:nth-child(7) {
+    width: 120px;
+}
+
+@media (max-width: 1200px) {
+    #hospitalsContainer .hospital-form-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    #hospitalsContainer .hospital-form-grid .hosp-inline-action {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 700px) {
+    #hospitalsContainer .hospital-form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    #hospitalsContainer .hospital-form-grid .hosp-capacity-field .hosp-capacity-inputs {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ================= HOSPITALS SPACING POLISH ================= */
+#hospitalsContainer {
+    padding: 18px 24px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+}
+
+#hospitalsContainer .duration-wrap {
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#hospitalsContainer .card-hd {
+    padding: 20px 24px;
+}
+
+#hospitalsContainer .card-hd h2 {
+    margin: 0;
+}
+
+#hospitalsContainer .hosp-main-content {
+    display: grid;
+    gap: 10px;
+    padding: 14px 16px 16px;
+    box-sizing: border-box;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+#hospitalsContainer .hosp-add-card {
+    margin-top: 10px;
+    padding: 16px 24px;
+    display: grid;
+    gap: 10px;
+    overflow: visible;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+#hospitalsContainer .hosp-add-title {
+    margin-bottom: 0;
+}
+
+#hospitalsContainer .hospital-form-grid {
+    margin-top: 0;
+    column-gap: 12px;
+    row-gap: 10px;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-inline-action {
+    padding-left: 4px !important;
+}
+
+#hospitalsContainer .hosp-table-wrap {
+    margin-top: 12px;
+}
+
+#hospitalsContainer .table-wrap .tbl th,
+#hospitalsContainer .table-wrap .tbl td {
+    padding: 14px 16px;
+}
+
+@media (max-width: 1200px) {
+    #hospitalsContainer {
+        padding: 16px 18px;
+    }
+
+    #hospitalsContainer .card-hd {
+        padding: 18px 20px;
+    }
+
+    #hospitalsContainer .hosp-main-content {
+        padding: 18px 18px 22px;
+    }
+
+    #hospitalsContainer .hosp-add-card {
+        padding: 18px 20px;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 700px) {
+    #hospitalsContainer {
+        padding: 12px;
+    }
+
+    #hospitalsContainer .card-hd {
+        padding: 18px 16px;
+    }
+
+    #hospitalsContainer .hosp-main-content {
+        padding: 18px 12px 22px;
+    }
+
+    #hospitalsContainer .hosp-add-card {
+        margin-top: 14px;
+        padding: 16px 14px;
+        gap: 14px;
+    }
+
+    #hospitalsContainer .hospital-form-grid {
+        column-gap: 12px;
+        row-gap: 12px;
+    }
+
+    #hospitalsContainer .hosp-table-wrap {
+        margin-top: 18px;
+    }
+
+    #hospitalsContainer .table-wrap .tbl th,
+    #hospitalsContainer .table-wrap .tbl td {
+        padding: 12px 10px;
+    }
+}
+
+/* ================= HOSPITALS ADD FACILITY BUTTON CONTAINMENT ================= */
+#hospitalsContainer .add-facility-card {
+    padding: 16px 24px;
+    overflow: visible;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+#hospitalsContainer .hospital-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    align-items: end;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+}
+
+#hospitalsContainer .hospital-form-grid > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-upload-box,
+#hospitalsContainer .hospital-form-grid .hosp-file-picker,
+#hospitalsContainer .hospital-form-grid .hosp-file-hint {
+    min-width: 0;
+    max-width: 100%;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-upload-box {
+    padding-right: 0;
+    box-sizing: border-box;
+}
+
+/* hosp-file-picker / hosp-file-hint no longer used — see .agreement-upload-box */
+
+#hospitalsContainer .hosp-form-footer {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 8px 12px;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#hospitalsContainer .hosp-form-footer .hosp-selected-chips {
+    margin-top: 0;
+    display: none;
+    min-width: 0;
+    align-content: flex-start;
+}
+
+#hospitalsContainer .hosp-form-footer .hosp-selected-chips.is-visible {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+#hospitalsContainer .hosp-form-footer .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 0;
+    width: 100%;
+    min-width: 0;
+    padding-right: 0;
+    box-sizing: border-box;
+}
+
+#hospitalsContainer .hosp-form-footer .form-actions .btn-ghost {
+    height: 44px;
+    min-height: 44px;
+    padding: 0 16px;
+    white-space: nowrap;
+}
+
+#hospitalsContainer .add-facility-btn {
+    width: 160px;
+    max-width: 100%;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 16px;
+    white-space: nowrap;
+    box-sizing: border-box;
+    margin-right: 0;
+}
+
+#hospitalsContainer .hosp-table-wrap {
+    overflow-x: auto;
+}
+
+#hospitalsContainer .hosp-table-wrap .tbl {
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
+}
+
+#hospitalsContainer .hosp-table-wrap .tbl th,
+#hospitalsContainer .hosp-table-wrap .tbl td {
+    padding: 12px 14px;
+}
+
+#hospitalsContainer .hosp-table-wrap .tbl th {
+    white-space: nowrap;
+    text-align: left;
+}
+
+#hospitalsContainer .hosp-table-wrap .tbl th:nth-child(3),
+#hospitalsContainer .hosp-table-wrap .tbl td:nth-child(3) {
+    width: 220px;
+}
+
+#hospitalsContainer .hosp-table-wrap .tbl th:nth-child(4),
+#hospitalsContainer .hosp-table-wrap .tbl td:nth-child(4),
+#hospitalsContainer .hosp-table-wrap .tbl th:nth-child(5),
+#hospitalsContainer .hosp-table-wrap .tbl td:nth-child(5) {
+    width: 150px;
+}
+
+@media (max-width: 1200px) {
+    #hospitalsContainer .hospital-form-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 18px;
+    }
+
+    #hospitalsContainer .hospital-form-grid .hosp-upload-box {
+        padding-right: 0;
+    }
+}
+
+@media (max-width: 700px) {
+    #hospitalsContainer .add-facility-card {
+        padding: 16px;
+    }
+
+    #hospitalsContainer .hospital-form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    #hospitalsContainer .hospital-form-grid .hosp-upload-box {
+        padding-right: 0;
+    }
+
+    #hospitalsContainer .hosp-form-footer {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    #hospitalsContainer .hosp-form-footer .form-actions {
+        justify-content: stretch;
+    }
+
+    #hospitalsContainer .add-facility-btn {
+        width: 100%;
+    }
+}
+
+/* ================= HOSPITALS ADD FACILITY OVERFLOW FIX ================= */
+#hospitalsContainer .add-facility-card {
+    padding: 16px 24px !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+#hospitalsContainer .hospital-form-grid,
+#hospitalsContainer .hosp-facility-grid--full {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    gap: 12px !important;
+    align-items: end !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+#hospitalsContainer .hospital-form-grid .field,
+#hospitalsContainer .hospital-form-grid .hosp-upload-box,
+#hospitalsContainer .hospital-form-grid .hosp-capacity-field {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+#hospitalsContainer .hospital-form-grid .hosp-upload-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+#hospitalsContainer .hosp-form-footer {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    margin-top: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+#hospitalsContainer .hosp-form-footer .form-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    padding-right: 0 !important;
+    margin-top: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+#hospitalsContainer .add-facility-btn {
+    width: 160px !important;
+    max-width: 100% !important;
+    height: 44px !important;
+    white-space: nowrap !important;
+}
+
+@media (max-width: 1200px) {
+    #hospitalsContainer .hospital-form-grid,
+    #hospitalsContainer .hosp-facility-grid--full {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    }
+}
+
+@media (max-width: 700px) {
+    #hospitalsContainer .hospital-form-grid,
+    #hospitalsContainer .hosp-facility-grid--full {
+        grid-template-columns: 1fr !important;
+    }
+
+    #hospitalsContainer .hosp-form-footer .form-actions {
+        justify-content: stretch !important;
+    }
+
+    #hospitalsContainer .add-facility-btn {
+        width: 100% !important;
+    }
 }
 
 /* ================= LIBRARY (MODERN) ================= */
@@ -3691,6 +5155,13 @@ html {
     align-items: start;
 }
 
+#picturesContainer .pic-sections .pic-section-block:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    max-width: calc(50% - 6px);
+    margin: 0 auto;
+    width: 100%;
+}
+
 #picturesContainer .pic-upload-card {
     border: 1px solid #e7ddd1;
     border-radius: 14px;
@@ -3705,19 +5176,21 @@ html {
 
 #picturesContainer .pic-card-top {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 8px;
+    margin-bottom: 12px;
+    text-align: center;
 }
 
 #picturesContainer .pic-icon {
-    width: 34px;
-    height: 34px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: #f6f0eb;
     display: grid;
     place-items: center;
-    font-size: 16px;
+    font-size: 22px;
 }
 
 #picturesContainer .pic-subject {
@@ -3734,10 +5207,13 @@ html {
 #picturesContainer .pic-drop-zone {
     border: 1px dashed #d5c7b7;
     border-radius: 12px;
-    padding: 12px;
+    padding: 24px 16px;
     background: #fffcf8;
-    display: grid;
-    gap: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
 }
 
 #picturesContainer .pic-drop-title {
@@ -3756,22 +5232,30 @@ html {
     margin: 0;
 }
 
+#picturesContainer .pic-drop-zone .btn-ghost {
+    min-width: 160px;
+}
+
 #picturesContainer .pic-actions-row {
     margin-top: 10px;
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
 }
 
 #picturesContainer .pic-actions-row .btn-primary,
 #picturesContainer .pic-actions-row .btn-ghost {
-    padding: 12px 22px;
+    width: 190px;
+    height: 52px;
+    padding: 0 16px;
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: 0;
 }
 
 #picturesContainer .pic-files-list {
@@ -4315,6 +5799,275 @@ html {
 @media (max-width: 1000px) {
 
     .faculty-modern-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Side-by-side Recognition + Accreditation layout */
+.recog-accred-row {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.recog-accred-card {
+    flex: 0 0 280px;
+    min-width: 0;
+}
+
+.recog-accred-card--wide {
+    flex: 1 1 0;
+}
+
+@media (max-width: 900px) {
+    .recog-accred-row {
+        flex-direction: column;
+    }
+
+    .recog-accred-card,
+    .recog-accred-card--wide {
+        flex: none;
+        width: 100%;
+    }
+}
+
+/* ============================================================
+   UNIVERSITY RECOGNITION & ACCREDITATION  (#uniRecAccContainer)
+   ============================================================ */
+
+#uniRecAccContainer .ura-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+#uniRecAccContainer .ura-card {
+    background: #fff;
+    border: 1px solid #e5e0d8;
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+#uniRecAccContainer .ura-card-hd {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+#uniRecAccContainer .ura-card-icon {
+    font-size: 24px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+#uniRecAccContainer .ura-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1c1c1e;
+    margin-bottom: 2px;
+}
+
+#uniRecAccContainer .ura-card-sub {
+    font-size: 12.5px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+#uniRecAccContainer .ura-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 5px;
+}
+
+#uniRecAccContainer .ura-field select {
+    width: 100%;
+    height: 40px;
+    border: 1px solid #e2ddd6;
+    border-radius: 9px;
+    padding: 0 10px;
+    font-size: 13px;
+    color: #1c1c1e;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+#uniRecAccContainer .ura-card-footer {
+    margin-top: 2px;
+}
+
+#uniRecAccContainer .ura-submit-btn {
+    width: 100%;
+    height: 38px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+/* ── Upload box (mirrors hospitalsContainer) ── */
+#uniRecAccContainer .agreement-upload-box {
+    width: 100% !important;
+    height: 46px !important;
+    border: 1px solid #e2ddd6 !important;
+    border-radius: 11px !important;
+    background: #fff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    padding: 0 14px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+#uniRecAccContainer .attach-files-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    height: 32px !important;
+    padding: 0 14px !important;
+    border: 1px solid #d9d2c9 !important;
+    border-radius: 8px !important;
+    background: #faf7f2 !important;
+    color: #7b2030 !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+    float: none !important;
+    position: static !important;
+    text-align: center !important;
+}
+
+#uniRecAccContainer .selected-file-name {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #64748b;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+#uniRecAccContainer .selected-file-name:empty {
+    display: none;
+}
+
+/* ── Docs grid ── */
+#uniRecAccContainer .ura-docs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+#uniRecAccContainer .ura-docs-card {
+    background: #fff;
+    border: 1px solid #e5e0d8;
+    border-radius: 14px;
+    padding: 16px 18px;
+    min-width: 0;
+}
+
+#uniRecAccContainer .ura-docs-card-hd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 8px;
+}
+
+#uniRecAccContainer .ura-docs-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1c1c1e;
+}
+
+#uniRecAccContainer .ura-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 20px;
+    background: #7b2030;
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+#uniRecAccContainer .ura-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+#uniRecAccContainer .ura-tbl thead th {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    border-bottom: 1px solid #f0ece5;
+    background: #faf7f2;
+}
+
+#uniRecAccContainer .ura-tbl tbody td {
+    padding: 10px 10px;
+    border-bottom: 1px solid #f5f2ee;
+    vertical-align: middle;
+    color: #374151;
+}
+
+#uniRecAccContainer .ura-tbl tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#uniRecAccContainer .ura-fn {
+    color: #7b2030;
+    font-weight: 600;
+    text-decoration: none;
+    word-break: break-all;
+}
+
+#uniRecAccContainer .ura-fn:hover {
+    text-decoration: underline;
+}
+
+#uniRecAccContainer .ura-type-tag {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 20px;
+    background: #f3f0eb;
+    color: #7b2030;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+#uniRecAccContainer .ura-empty {
+    padding: 18px 0;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+@media (max-width: 700px) {
+    #uniRecAccContainer .ura-upload-grid,
+    #uniRecAccContainer .ura-docs-grid {
         grid-template-columns: 1fr;
     }
 }

@@ -10,6 +10,9 @@ public class HospitalFileDto
     public string StoredFileName { get; set; } = "";
     public string FileUrl { get; set; } = "";
     public string DocumentType { get; set; } = "";
+    public string FacilityId { get; set; } = "";
+    public DateTime? UploadedAt { get; set; }
+    public string UploadedBy { get; set; } = "";
 }
 
 public class HospitalsDto

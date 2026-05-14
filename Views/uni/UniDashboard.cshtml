@@ -62,11 +62,11 @@
             <a class="side-item" href="#sec-programs">Programs</a>
             <a class="side-item" href="#sec-med">Medicine Colleges</a>
             <a class="side-item" href="#sec-hosp">Hospitals</a>
-            <a class="side-item" href="#sec-infra">Infrastructure</a>
+            <a class="side-item" href="#sec-infra">University Infrastructure</a>
             <a class="side-item" href="#sec-labs">Laboratories</a>
             <a class="side-item" href="#sec-library">Library</a>
             <a class="side-item" href="#sec-pictures">Photos / Media</a>
-            <a class="side-item" href="#sec-accreditation-bodies">Accreditation Bodies</a>
+            <a class="side-item" href="#sec-uni-rec-accr">University Recognition and Accreditation</a>
             <a class="side-item" href="#sec-submit-application">Finish &amp; Submit</a>
            
 
@@ -219,7 +219,7 @@
 
                         <!-- President info -->
                         <div class="subhead">Information of President of Institution</div>
-                        <div class="grid-3">
+                        <div class="grid-2">
                             <div class="field">
                                 <label>Name</label>
                                 <input name="PresidentName" value="@P.PresidentName" />
@@ -336,19 +336,10 @@
                             </div>
                         </div>
 
-                        <!-- Official recognition / accreditation -->
+                        <!-- Official accreditation (recognition moved to its own section) -->
                         <div class="grid-2">
                             <div class="field">
-                                <label>Has there been Official Recognition in Home Country? <span class="req">*</span></label>
-                                <select name="OfficialRecognitionInHomeCountry">
-                                    <option value="">-- Choose --</option>
-                                    <option selected="@(A.OfficialRecognitionInHomeCountry == "Yes")">Yes</option>
-                                    <option selected="@(A.OfficialRecognitionInHomeCountry == "No")">No</option>
-                                </select>
-                            </div>
-
-                            <div class="field">
-                                <label>Has there been Official Accreditation & Quality Assurance in Home Country? <span class="req">*</span></label>
+                                <label>Has there been Official Accreditation &amp; Quality Assurance in Home Country? <span class="req">*</span></label>
                                 <select name="OfficialAccreditationQualityInHomeCountry">
                                     <option value="">-- Choose --</option>
                                     <option selected="@(A.OfficialAccreditationQualityInHomeCountry == "Yes")">Yes</option>
@@ -1042,16 +1033,16 @@
                              data-facility-add-url="@Url.Action("AddHospital", "Home")"
                              data-facility-update-url="@Url.Action("UpdateHospital", "Home")"
                              data-facility-delete-url="@Url.Action("DeleteHospital", "Home")"
-                             data-capacity-save-url="@Url.Action("SaveHospitalCapacity", "Home")"
                              data-docs-save-url="@Url.Action("SaveHospitalDocuments", "Home")"
                              data-docs-delete-url="@Url.Action("DeleteHospitalDocument", "Home")">
                         </div>
                     </section>
+
                     <!-- ---------------------- INFASTRUCTURE------------------ -->
                     <section id="sec-infra" class="card">
                         <div class="card-hd">
-                            <h2>Infrastructure</h2>
-                            <p>Provide consolidated infrastructure information required for evaluation.</p>
+                            <h2>University Infrastructure</h2>
+                            <p>Provide consolidated university infrastructure information required for evaluation.</p>
                         </div>
 
                         <div class="card-bd">
@@ -1106,20 +1097,17 @@
                         </div>
                     </div>
                 </section>
-                <!--============================= accreditation-bodies ========================= -->
-                <section id="sec-accreditation-bodies" class="card">
-                    <div class="card-hd">
-                        <h2>Accreditation Bodies</h2>
-                        <p>Add recognition and accreditation bodies with one English PDF document per row.</p>
-                    </div>
 
+                <section id="sec-uni-rec-accr" class="card uni-rec-accr-card">
+                    <div class="card-hd">
+                        <h2>University Recognition and Accreditation</h2>
+                        <p>Upload recognition certificates and accreditation documents in a dedicated section.</p>
+                    </div>
                     <div class="card-bd">
-                        <div id="accreditationBodiesContainer"
-                             data-load-url="@Url.Action("AccreditationBodiesPartial", "Home")"
-                             data-add-url="@Url.Action("AccreditationBodiesAdd", "Home")"
-                             data-update-url="@Url.Action("AccreditationBodiesUpdate", "Home")"
-                             data-delete-url="@Url.Action("AccreditationBodiesDelete", "Home")">
-                            @await Html.PartialAsync("Partial_Views/_AccreditationBodies", (DTOs.AccreditationBodiesDto)ViewBag.AccreditationBodies)
+                        <div id="uniRecAccContainer"
+                             data-load-url="@Url.Action("UniversityRecognitionAccreditationPartial", "Home")"
+                             data-docs-save-url="@Url.Action("SaveHospitalDocuments", "Home")"
+                             data-docs-delete-url="@Url.Action("DeleteHospitalDocument", "Home")">
                         </div>
                     </div>
                 </section>
@@ -1304,6 +1292,7 @@
     <script src="~/js/uni/StudentsNumbers.js" asp-append-version="true"></script>
     <script src="~/js/uni/MedicineDentistry.js" asp-append-version="true"></script>
     <script src="~/js/uni/Hospitals.js" asp-append-version="true"></script>
+    <script src="~/js/uni/UniversityRecognitionAccreditation.js" asp-append-version="true"></script>
     <script src="~/js/uni/Infrastructure.js" asp-append-version="true"></script>
     <script src="~/js/uni/Laboratories.js" asp-append-version="true"></script>
     <script src="~/js/uni/Library.js" asp-append-version="true"></script>

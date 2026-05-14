@@ -22,7 +22,7 @@
             <div class="lab-section-sub">Add detailed counts for each college.</div>
 
             <div id="labEditorForm" style="display:grid; gap:12px; margin-top:14px;">
-                <div class="grid-4">
+                <div class="grid-3">
                     <div class="field">
                         <label>College <span class="req">*</span></label>
                         <select id="lab_facultyId">
@@ -40,11 +40,6 @@
                     <div class="field">
                         <label>Computers <span class="req">*</span></label>
                         <input id="lab_computers" type="text" inputmode="numeric" />
-                    </div>
-
-                    <div class="field">
-                        <label>Workshops <span class="req">*</span></label>
-                        <input id="lab_workshops" type="text" inputmode="numeric" />
                     </div>
 
                     <div class="field">
@@ -67,7 +62,6 @@
                             <th style="width:55px;">#</th>
                             <th>College</th>
                             <th>Computers</th>
-                            <th>Workshops</th>
                             <th>Laboratories</th>
                             <th style="width:120px;"></th>
                         </tr>
@@ -76,7 +70,7 @@
                         @if (Model?.Rows == null || !Model.Rows.Any())
                         {
                             <tr>
-                                <td colspan="6" style="text-align:left; font-weight:600;">No Data Found !</td>
+                                <td colspan="5" style="text-align:left; font-weight:600;">No Data Found !</td>
                             </tr>
                         }
                         else
@@ -88,7 +82,6 @@
                                     <td>@i</td>
                                     <td>@r.FacultyName</td>
                                     <td>@r.Computers</td>
-                                    <td>@r.Workshops</td>
                                     <td>@r.Laboratories</td>
                                     <td style="white-space:nowrap; text-align:center;">
                                         <div class="icon-actions">
@@ -98,7 +91,6 @@
                                                     data-id="@r.Id"
                                                     data-faculty-id="@r.FacultyId"
                                                     data-computers="@r.Computers"
-                                                    data-workshops="@r.Workshops"
                                                     data-laboratories="@r.Laboratories"
                                                     title="Edit"
                                                     aria-label="Edit">
