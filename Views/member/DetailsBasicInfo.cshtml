@@ -16,11 +16,11 @@
         : Url.Action("ElectronicRequests", "Home");
     var p = Model.PublicInfo ?? new DTOs.PublicInfoDto();
     var a = Model.AcademicInfo ?? new DTOs.AcademicInfoDto();
-    var selectedCollegeCategories = (Model.Faculties ?? new List<DTOs.FacultyRowDto>())
-        .Select(x => (x.CollegeType ?? string.Empty).Trim())
+    var selectedCollegeCategories = (a.CollegeCategoriesCsv ?? "")
+        .Split(';', StringSplitOptions.RemoveEmptyEntries)
+        .Select(x => x.Trim())
         .Where(x => !string.IsNullOrWhiteSpace(x))
         .Distinct(StringComparer.OrdinalIgnoreCase)
-        .OrderBy(x => x)
         .ToList();
 
     var degrees = new List<string>();
@@ -210,14 +210,6 @@
                         <div class="rd-field">
                             <label>Name</label>
                             <input type="text" value="@p.PresidentName" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Highest Academic Degree</label>
-                            <input type="text" value="@p.PresidentHighestAcademicDegree" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Major Area of Study</label>
-                            <input type="text" value="@p.PresidentMajorAreaOfStudy" readonly />
                         </div>
                     </div>
                 </div>

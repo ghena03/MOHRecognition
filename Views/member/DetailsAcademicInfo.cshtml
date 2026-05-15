@@ -244,7 +244,7 @@
                                 <th>Facility Name</th>
                                 <th>Beds</th>
                                 <th>Dental Chairs</th>
-                                <th>Agreement Files</th>
+                                <th>Agreement File</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -284,259 +284,6 @@
                     </table>
                 </div>
 
-                <!-- Section 2: Recognition and Accreditation -->
-                <div class="rd-card-hd" style="margin-top:18px;">
-                    <h2 style="font-size:18px;"><i class="bi bi-patch-check"></i> Recognition and Accreditation</h2>
-                    <p>Ordered display: Local Recognition Documents, Accreditation Documents, then University-Hospital Agreement Documents.</p>
-                </div>
-                <div class="rd-field" style="margin-top:10px;">
-                    <label>1. Local Recognition Documents</label>
-                    @if (localRecognitionDocs.Any())
-                    {
-                        <div class="clean-table-wrap" style="margin-top:8px;">
-                            <table class="clean-review-table">
-                                <thead>
-                                    <tr>
-                                        <th>File Name</th>
-                                        <th>Document Category</th>
-                                        <th>Upload Date</th>
-                                        <th>Uploaded By</th>
-                                        <th style="width:180px;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var f in localRecognitionDocs)
-                                    {
-                                        <tr>
-                                            <td class="file-cell">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
-                                            <td>@HospitalDocLabel("LocalRecognition")</td>
-                                            <td>@(f.UploadedAt.HasValue ? f.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                            <td>@(string.IsNullOrWhiteSpace(f.UploadedBy) ? "—" : f.UploadedBy)</td>
-                                            <td class="cell-actions">
-                                                <div class="table-actions">
-                                                    <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">View</a>
-                                                    <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <input type="text" value="No local recognition documents submitted." readonly />
-                    }
-                </div>
-
-                <div class="rd-doc-stack" style="margin-top:10px;">
-                    <div class="rd-field">
-                        <label>2. Local Accreditation Documents</label>
-                        @if (localAccreditationDocs.Any())
-                        {
-                            <div class="clean-table-wrap" style="margin-top:8px;">
-                                <table class="clean-review-table">
-                                    <thead>
-                                        <tr>
-                                            <th>File Name</th>
-                                            <th>Document Category</th>
-                                            <th>Upload Date</th>
-                                            <th>Uploaded By</th>
-                                            <th style="width:180px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var f in localAccreditationDocs)
-                                        {
-                                            <tr>
-                                                <td class="file-cell">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
-                                                <td>@HospitalDocLabel("LocalAccreditation")</td>
-                                                <td>@(f.UploadedAt.HasValue ? f.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                                <td>@(string.IsNullOrWhiteSpace(f.UploadedBy) ? "—" : f.UploadedBy)</td>
-                                                <td class="cell-actions">
-                                                    <div class="table-actions">
-                                                        <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">View</a>
-                                                        <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <input type="text" value="No local accreditation documents submitted." readonly />
-                        }
-                    </div>
-
-                    <div class="rd-field">
-                        <label>2. Regional Accreditation Documents</label>
-                        @if (regionalAccreditationDocs.Any())
-                        {
-                            <div class="clean-table-wrap" style="margin-top:8px;">
-                                <table class="clean-review-table">
-                                    <thead>
-                                        <tr>
-                                            <th>File Name</th>
-                                            <th>Document Category</th>
-                                            <th>Upload Date</th>
-                                            <th>Uploaded By</th>
-                                            <th style="width:180px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var f in regionalAccreditationDocs)
-                                        {
-                                            <tr>
-                                                <td class="file-cell">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
-                                                <td>@HospitalDocLabel("RegionalAccreditation")</td>
-                                                <td>@(f.UploadedAt.HasValue ? f.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                                <td>@(string.IsNullOrWhiteSpace(f.UploadedBy) ? "—" : f.UploadedBy)</td>
-                                                <td class="cell-actions">
-                                                    <div class="table-actions">
-                                                        <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">View</a>
-                                                        <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <input type="text" value="No regional accreditation documents submitted." readonly />
-                        }
-                    </div>
-
-                    <div class="rd-field">
-                        <label>2. International Accreditation Documents</label>
-                        @if (internationalAccreditationDocs.Any())
-                        {
-                            <div class="clean-table-wrap" style="margin-top:8px;">
-                                <table class="clean-review-table">
-                                    <thead>
-                                        <tr>
-                                            <th>File Name</th>
-                                            <th>Document Category</th>
-                                            <th>Upload Date</th>
-                                            <th>Uploaded By</th>
-                                            <th style="width:180px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var f in internationalAccreditationDocs)
-                                        {
-                                            <tr>
-                                                <td class="file-cell">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
-                                                <td>@HospitalDocLabel("InternationalAccreditation")</td>
-                                                <td>@(f.UploadedAt.HasValue ? f.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                                <td>@(string.IsNullOrWhiteSpace(f.UploadedBy) ? "—" : f.UploadedBy)</td>
-                                                <td class="cell-actions">
-                                                    <div class="table-actions">
-                                                        <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">View</a>
-                                                        <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <input type="text" value="No international accreditation documents submitted." readonly />
-                        }
-                    </div>
-
-                    <div class="rd-field">
-                        <label>2. Other Accreditation Documents</label>
-                        @if (otherAccreditationDocs.Any())
-                        {
-                            <div class="clean-table-wrap" style="margin-top:8px;">
-                                <table class="clean-review-table">
-                                    <thead>
-                                        <tr>
-                                            <th>File Name</th>
-                                            <th>Document Category</th>
-                                            <th>Upload Date</th>
-                                            <th>Uploaded By</th>
-                                            <th style="width:180px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var f in otherAccreditationDocs)
-                                        {
-                                            <tr>
-                                                <td class="file-cell">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
-                                                <td>@HospitalDocLabel("OtherAccreditation")</td>
-                                                <td>@(f.UploadedAt.HasValue ? f.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                                <td>@(string.IsNullOrWhiteSpace(f.UploadedBy) ? "—" : f.UploadedBy)</td>
-                                                <td class="cell-actions">
-                                                    <div class="table-actions">
-                                                        <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">View</a>
-                                                        <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <input type="text" value="No other accreditation documents submitted." readonly />
-                        }
-                    </div>
-                </div>
-
-                <div class="rd-field" style="margin-top:10px;">
-                    <label>3. University-Hospital Agreement Documents</label>
-                    <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:8px;">Upload official agreements between the university and training hospitals.</div>
-                    @if (hospitalAgreementDocs.Any())
-                    {
-                        <div class="clean-table-wrap">
-                            <table class="clean-review-table">
-                                <thead>
-                                    <tr>
-                                        <th>File Name</th>
-                                        <th>Document Category</th>
-                                        <th>Upload Date</th>
-                                        <th>Uploaded By</th>
-                                        <th style="width:180px;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var f in hospitalAgreementDocs)
-                                    {
-                                        <tr>
-                                            <td class="file-cell">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
-                                            <td>@HospitalDocLabel("HospitalAgreement")</td>
-                                            <td>@(f.UploadedAt.HasValue ? f.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                            <td>@(string.IsNullOrWhiteSpace(f.UploadedBy) ? "—" : f.UploadedBy)</td>
-                                            <td class="cell-actions">
-                                                <div class="table-actions">
-                                                    <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">View</a>
-                                                    <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <input type="text" value="No university-hospital agreement documents submitted." readonly />
-                    }
-                </div>
             </section>
 
             <section id="sec-doctors-colleges" class="rm-card rd-card doctors-review-section">
@@ -635,13 +382,16 @@
                 </div>
 
                 <!-- Clinical Student to Faculty Ratio (assessor only) -->
-                <h3 class="doctors-group-title" style="margin-top:18px;">Clinical Student to Faculty Ratio</h3>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:18px;margin-bottom:10px;">
+                    <h3 class="doctors-group-title" style="margin:0;">Clinical Doctor-to-Student Ratio</h3>
+                    <button class="eq-info-btn" onclick="openEqModal('modal-clinical')" title="How is this calculated?"><i class="bi bi-info-circle-fill"></i></button>
+                </div>
                 <div class="doctors-sfr-grid">
 
                     <div class="doctors-sfr-card">
                         <div class="doctors-sfr-head">College of Medicine</div>
                         <div class="doctors-sfr-body">
-                            <span class="doctors-sfr-label">Student to Faculty Ratio</span>
+                            <span class="doctors-sfr-label">Clinical Doctor-to-Student Ratio</span>
                             <div class="doctors-sfr-result">
                                 <span class="doctors-sfr-value">@(medDen.Med_StudentFacultyRatio.HasValue ? "1 : " + ((int)Math.Floor(medDen.Med_StudentFacultyRatio.Value)).ToString() : "—")</span>
                                 <span class="status-badge @ClinicalRatioClass(medDen.Med_StudentFacultyRatio)">@ClinicalRatioText(medDen.Med_StudentFacultyRatio)</span>
@@ -652,7 +402,7 @@
                     <div class="doctors-sfr-card">
                         <div class="doctors-sfr-head">College of Dentistry</div>
                         <div class="doctors-sfr-body">
-                            <span class="doctors-sfr-label">Student to Faculty Ratio</span>
+                            <span class="doctors-sfr-label">Clinical Doctor-to-Student Ratio</span>
                             <div class="doctors-sfr-result">
                                 <span class="doctors-sfr-value">@(medDen.Den_StudentFacultyRatio.HasValue ? "1 : " + ((int)Math.Floor(medDen.Den_StudentFacultyRatio.Value)).ToString() : "—")</span>
                                 <span class="status-badge @ClinicalRatioClass(medDen.Den_StudentFacultyRatio)">@ClinicalRatioText(medDen.Den_StudentFacultyRatio)</span>
@@ -661,6 +411,7 @@
                     </div>
 
                 </div>
+
             </section>
 
             <section class="rm-card rd-actions">
@@ -673,5 +424,101 @@
             </section>
         </main>
     </div>
+<!-- ── Clinical Ratio Modal ──────────────────────────────────────────────── -->
+<div id="eq-modal-overlay" class="eq-modal-overlay" onclick="closeEqModalIfOverlay(event)">
+    <div id="modal-clinical" class="eq-modal" role="dialog" aria-modal="true">
+        <button class="eq-modal-close" onclick="closeEqModal()" aria-label="Close">✕</button>
+        <div class="eq-modal-icon">🏥</div>
+        <div class="eq-modal-title">Clinical Doctor-to-Student Ratio</div>
+        <div class="eq-modal-subtitle">How is the ratio of students to clinical PhD faculty calculated for Medicine and Dentistry?</div>
+
+        <!-- Quick threshold summary at the top -->
+        <div class="eq-threshold-row" style="margin-bottom:18px;">
+            <span class="eq-thr-tag eq-thr-green"><i class="bi bi-check-circle-fill"></i> Ratio ≤ 1 : 16.5 — Acceptable</span>
+            <span class="eq-thr-tag eq-thr-orange"><i class="bi bi-exclamation-circle-fill"></i> 1 : 16.5 &lt; Ratio ≤ 1 : 20.6 — Warning</span>
+            <span class="eq-thr-tag eq-thr-red"><i class="bi bi-x-circle-fill"></i> Ratio &gt; 1 : 20.6 — Exceeds Limit</span>
+        </div>
+
+        <div class="eq-step">
+            <div class="eq-step-hd">Step 1 — Identify Full-Time Clinical PhD Staff</div>
+            <div class="eq-step-body">
+                Count all <b>full-time</b> clinical faculty who hold a <b>PhD</b>. This is calculated <em>separately</em> for Medicine and for Dentistry:
+                <ul class="eq-list">
+                    <li><b>Professor</b> (Full-Time, clinical)</li>
+                    <li><b>Associate Professor</b> (Full-Time, clinical)</li>
+                    <li><b>Assistant Professor</b> (Full-Time, clinical)</li>
+                    <li><b>Lecturer with PhD</b> (Full-Time, clinical)</li>
+                    <li><b>Assistant Lecturer with PhD</b> (Full-Time, clinical)</li>
+                </ul>
+                <div class="eq-step-note">MSc lecturers and non-clinical staff are not included in this count.</div>
+            </div>
+        </div>
+
+        <div class="eq-step">
+            <div class="eq-step-hd">Step 2 — Calculate the Allowed Part-Time Limit</div>
+            <div class="eq-step-body">
+                The maximum number of part-time clinical staff that can be counted depends on how many <b>full-time PhD staff (D)</b> the college has. The limit is calculated in tiers:
+                <div class="eq-step-formula" style="text-align:left;line-height:2;">
+                    If D &lt; 50 &nbsp;&nbsp;&nbsp;→ &nbsp; Allowed PT = D × 0.25<br>
+                    If 50 ≤ D ≤ 100 → &nbsp; Allowed PT = (50 × 0.25) + ((D − 50) × 0.35)<br>
+                    If D &gt; 100 &nbsp;&nbsp;→ &nbsp; Allowed PT = (50 × 0.25) + (50 × 0.35) + ((D − 100) × 0.50)
+                </div>
+                <div class="eq-step-note">The more full-time PhD staff a college has, the more part-time staff it is allowed to include — but at a decreasing rate. This prevents over-reliance on part-time staff.</div>
+                Then the actual counted part-time is capped:
+                <div class="eq-step-formula">Counted PT = min( Actual Part-Time Count, Allowed PT Limit )</div>
+                <div class="eq-step-note">If the college employs more part-time staff than the allowed limit, only the allowed number is counted — the rest are ignored.</div>
+            </div>
+        </div>
+
+        <div class="eq-step">
+            <div class="eq-step-hd">Step 3 — Calculate Total Capacity and Ratio</div>
+            <div class="eq-step-body">
+                The total clinical faculty capacity combines full-time PhD staff with the counted part-time staff:
+                <div class="eq-step-formula">Capacity = FT PhD Staff (D) + Counted PT Staff</div>
+                Then the ratio is computed separately for <b>Medicine</b> and <b>Dentistry</b>:
+                <div class="eq-step-formula">Ratio = Total Students ÷ Capacity</div>
+                <div class="eq-step-note">
+                    Example: 500 Medicine students, D = 40 FT PhD, Actual PT = 15<br>
+                    → Allowed PT = 40 × 0.25 = 10 &nbsp;|&nbsp; Counted PT = min(15, 10) = 10<br>
+                    → Capacity = 40 + 10 = 50 &nbsp;|&nbsp; Ratio = 500 ÷ 50 = <b>1 : 10 → Acceptable</b>
+                </div>
+            </div>
+        </div>
+
+        <div class="eq-step eq-step--result">
+            <div class="eq-step-hd">Step 4 — Compliance Thresholds</div>
+            <div class="eq-step-body">
+                The result is compared to fixed international clinical education standards:
+                <div class="eq-threshold-row">
+                    <span class="eq-thr-tag eq-thr-green"><i class="bi bi-check-circle-fill"></i> Ratio ≤ 1 : 16.5 — Acceptable</span>
+                    <span class="eq-thr-tag eq-thr-orange"><i class="bi bi-exclamation-circle-fill"></i> 1 : 16.5 &lt; Ratio ≤ 1 : 20.6 — Warning</span>
+                    <span class="eq-thr-tag eq-thr-red"><i class="bi bi-x-circle-fill"></i> Ratio &gt; 1 : 20.6 — Exceeds Limit</span>
+                </div>
+                <div class="eq-step-note" style="margin-top:10px;">A <b>lower ratio</b> (fewer students per doctor) indicates better supervision quality. The standard of 1 : 16.5 ensures each clinical faculty member can adequately supervise their students in hospital and clinical settings.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEqModal(id) {
+        var overlay = document.getElementById('eq-modal-overlay');
+        overlay.querySelectorAll('.eq-modal').forEach(function(m) { m.style.display = 'none'; });
+        var modal = document.getElementById(id);
+        if (modal) { modal.style.display = 'block'; }
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeEqModal() {
+        document.getElementById('eq-modal-overlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    function closeEqModalIfOverlay(e) {
+        if (e.target === document.getElementById('eq-modal-overlay')) closeEqModal();
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeEqModal();
+    });
+</script>
 </body>
 </html>

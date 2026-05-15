@@ -693,6 +693,57 @@
                 });
             }
         })();
+
+        // ── Save Decision toast ───────────────────────────────────────────────
+        (function () {
+            function showToast(message, type) {
+                var old = document.getElementById('_rec-toast');
+                if (old) old.remove();
+                var t = document.createElement('div');
+                t.id = '_rec-toast';
+                t.textContent = message;
+                Object.assign(t.style, {
+                    position: 'fixed', bottom: '28px', right: '28px', zIndex: '99999',
+                    padding: '13px 20px', borderRadius: '10px', color: '#fff',
+                    fontWeight: '600', fontSize: '14px', boxShadow: '0 4px 18px rgba(0,0,0,.18)',
+                    background: type === 'success' ? '#16a34a' : '#dc2626',
+                    animation: '_recToastIn .22s ease both', transition: 'opacity .3s'
+                });
+                document.body.appendChild(t);
+                setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 320); }, 3500);
+            }
+
+            var form = document.getElementById('finalAssessmentForm');
+            if (!form) return;
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                var btn = form.querySelector('[type="submit"]');
+                var orig = btn ? btn.innerHTML : '';
+                if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving…'; }
+                try {
+                    var res  = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+                    var html = await res.text();
+                    if (html.includes('Final assessment decision saved successfully'))
+                        showToast('Decision saved successfully.', 'success');
+                    else if (html.includes('Please select a valid accreditation status'))
+                        showToast('Please select a valid accreditation status for Point 1.', 'error');
+                    else if (html.includes('Please provide a final justification'))
+                        showToast('Please provide a final justification note.', 'error');
+                    else
+                        showToast('Unable to save decision. Please try again.', 'error');
+                } catch (_) {
+                    showToast('Network error. Please try again.', 'error');
+                } finally {
+                    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+                }
+            });
+        })();
     </script>
+    <style>
+        @@keyframes _recToastIn {
+            from { opacity: 0; transform: translateY(16px) scale(.96); }
+            to   { opacity: 1; transform: translateY(0)    scale(1); }
+        }
+    </style>
 </body>
 </html>

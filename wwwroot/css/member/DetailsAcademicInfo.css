@@ -926,3 +926,242 @@
     font-weight: 700;
     white-space: nowrap;
 }
+
+/* ── Equation breakdown (plain-language) ── */
+.eq-plain {
+    margin-top: 10px;
+    margin-bottom: 14px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.eq-plain-hd {
+    padding: 8px 14px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    background: #f0f4f8;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.eq-plain-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 9px 14px;
+    border-top: 1px solid #f0f0f0;
+}
+.eq-plain-row:first-of-type { border-top: none; }
+.eq-plain-row--result {
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+}
+.eq-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.eq-value {
+    color: #1f2937;
+    line-height: 1.55;
+    font-size: 12.5px;
+}
+.eq-threshold-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #fde8ec;
+    color: #7f1627;
+    border-radius: 999px;
+    padding: 2px 9px;
+    margin: 2px 4px 2px 0;
+    vertical-align: middle;
+}
+
+/* ── PhD Doctors per Program ── */
+.dpp-summary-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    margin-bottom: 14px;
+}
+.dpp-stat {
+    flex: 1;
+    min-width: 160px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.dpp-stat--highlight {
+    background: #fde8ec;
+    border-color: #f4c2cc;
+}
+.dpp-stat-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+.dpp-stat-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1.2;
+}
+.dpp-stat--highlight .dpp-stat-value { color: #7f1627; }
+.dpp-stat-note {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 2px;
+}
+.dpp-table-wrap {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+.dpp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.dpp-table th {
+    background: #f8fafc;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.dpp-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #374151;
+}
+.dpp-table tbody tr:last-child td { border-bottom: none; }
+.dpp-table tbody tr:hover td { background: #fafafa; }
+.dpp-empty {
+    font-size: 13px;
+    color: #9ca3af;
+    padding: 16px 0;
+    text-align: center;
+}
+
+/* ── Equation info button ────────────────────────────────────────────────── */
+.eq-info-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: none; background: #f0e8e8; color: #7a2d2a;
+    font-size: 13px; cursor: pointer; margin-left: 6px;
+    vertical-align: middle; transition: background .15s, color .15s;
+    padding: 0; line-height: 1; flex-shrink: 0;
+    position: relative;
+}
+.eq-info-btn:hover { background: #7a2d2a; color: #fff; }
+.eq-info-btn::after {
+    content: 'Click to see how this is calculated';
+    position: absolute;
+    bottom: calc(100% + 9px);
+    left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: #fff;
+    font-size: 11.5px; font-weight: 500; font-family: Inter, sans-serif;
+    white-space: nowrap; padding: 6px 11px;
+    border-radius: 7px; pointer-events: none;
+    opacity: 0; transition: opacity .18s;
+    z-index: 200; letter-spacing: .1px;
+}
+.eq-info-btn::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 3px);
+    left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1e293b;
+    pointer-events: none;
+    opacity: 0; transition: opacity .18s;
+    z-index: 200;
+}
+.eq-info-btn:hover::after,
+.eq-info-btn:hover::before { opacity: 1; }
+
+/* ── Modal overlay ───────────────────────────────────────────────────────── */
+.eq-modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,23,42,.55); z-index: 99999;
+    align-items: center; justify-content: center; padding: 20px;
+}
+.eq-modal-overlay.open { display: flex; }
+.eq-modal {
+    display: none; background: #fff; border-radius: 18px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.28);
+    max-width: 580px; width: 100%; max-height: 86vh;
+    overflow-y: auto; padding: 32px 36px 28px;
+    position: relative; animation: _eqIn .2s ease both;
+}
+@keyframes _eqIn {
+    from { opacity: 0; transform: translateY(14px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+.eq-modal-close {
+    position: absolute; top: 16px; right: 16px;
+    border: none; background: #f1f5f9; border-radius: 50%;
+    width: 34px; height: 34px; cursor: pointer; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    color: #64748b; transition: background .15s, color .15s;
+}
+.eq-modal-close:hover { background: #e2e8f0; color: #1e293b; }
+.eq-modal-icon { font-size: 30px; margin-bottom: 8px; line-height: 1; }
+.eq-modal-title { font-size: 19px; font-weight: 800; color: #1f2937; margin-bottom: 4px; padding-right: 44px; }
+.eq-modal-subtitle { font-size: 13px; color: #6b7280; margin-bottom: 22px; line-height: 1.5; }
+
+/* ── Steps ───────────────────────────────────────────────────────────────── */
+.eq-step {
+    margin-bottom: 14px; padding: 14px 16px 12px;
+    background: #f8fafc; border-radius: 10px;
+    border-left: 4px solid #c8a8a4;
+}
+.eq-step--result { border-left-color: #7a2d2a; background: #fdf6f6; }
+.eq-step-hd {
+    font-size: 10.5px; font-weight: 800; color: #7a2d2a;
+    text-transform: uppercase; letter-spacing: .6px; margin-bottom: 7px;
+}
+.eq-step-body { font-size: 13px; color: #374151; line-height: 1.65; }
+.eq-step-formula {
+    margin-top: 9px; margin-bottom: 4px;
+    padding: 9px 13px; background: #fff;
+    border: 1px solid #e5e7eb; border-radius: 8px;
+    font-family: ui-monospace, 'Cascadia Code', monospace;
+    font-size: 12px; color: #1f2937; font-weight: 600;
+    white-space: pre-wrap; line-height: 1.7;
+}
+.eq-step-note {
+    margin-top: 7px; font-size: 11.5px; color: #6b7280;
+    font-style: italic; line-height: 1.55;
+}
+.eq-list { margin: 6px 0 0 18px; padding: 0; line-height: 2; }
+.eq-threshold-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.eq-thr-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11.5px; font-weight: 600; border-radius: 999px;
+    padding: 4px 11px; background: #f0f4f8; color: #374151;
+}
+.eq-thr-green  { background: #e8f5ea; color: #1a7a34; }
+.eq-thr-orange { background: #fffbeb; color: #d97706; }
+.eq-thr-red    { background: #fde8ec; color: #7f1627; }

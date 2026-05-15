@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 namespace MOHRecognition.Controllers  
-    //kameliaaaaaaaaaa96
+    //kameliaaaaaaaaaa9666666666666
 {
    
     public class HomeController : Controller
@@ -423,7 +423,7 @@ namespace MOHRecognition.Controllers
                 Safe(dto.StaffAssociateProfessorFullTimeCount) +
                 Safe(dto.StaffAssistantProfessorFullTimeCount) +
                 Safe(dto.StaffTeacherFullTimeCount));
-            var allowedMscSupport = Math.Ceiling(totalPhdHolders * 0.20m);
+            var allowedMscSupport = totalPhdHolders * 0.20m;
             var actualMscSupport = (decimal)(
                 Safe(dto.StaffAssistantTeacherFullTimeCount) +
                 Safe(dto.StaffOthersFullTimeCount));
@@ -4195,6 +4195,38 @@ namespace MOHRecognition.Controllers
             return View("~/Views/Admin/AllUniversities.cshtml");
         }
 
+        public IActionResult DoctorsPerProgram()
+        {
+            var records = _recognitionRequestService.GetAll();
+
+            var report = new DoctorsPerProgramReportDto();
+
+            foreach (var r in records)
+            {
+                var md = r.MedicineDentistry;
+                int ftPhd = md.Med_FullTimeClinicalPhD + md.Den_FullTimeClinicalPhD;
+
+                var programs = r.Programs
+                    .Select(p => new DppProgramRow
+                    {
+                        ProgramName   = p.Program,
+                        DegreeAwarded = p.DegreeAwarded,
+                        FacultyName   = p.FacultyName
+                    })
+                    .ToList();
+
+                report.Universities.Add(new DppUniversityRow
+                {
+                    UniversityName = r.UniversityName,
+                    Country        = r.Country,
+                    FtPhdDoctors   = ftPhd,
+                    Programs       = programs
+                });
+            }
+
+            return View("~/Views/Admin/DoctorsPerProgram.cshtml", report);
+        }
+
         public IActionResult Recognized()
         {
             return RedirectToAction("CommitteeDecisions", new { status = "Recognized" });
@@ -4445,7 +4477,7 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.AdminReadOnly = true;
 
             return View("~/Views/member/DetailsBasicInfo.cshtml", request);
         }
@@ -4462,7 +4494,7 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.AdminReadOnly = true;
 
             ViewBag.RequestId = request.Id;
             ViewBag.InstitutionName = request.UniversityName;
@@ -4481,7 +4513,7 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.AdminReadOnly = true;
 
             request.AdmissionStudyDurationReview ??= new AdmissionStudyDurationReviewDto();
             request.StudyDuration ??= new StudyDurationDto();
@@ -4510,7 +4542,7 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.AdminReadOnly = true;
 
             ViewBag.RequestId = request.Id;
             ViewBag.InstitutionName = request.UniversityName;
@@ -4741,7 +4773,7 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.AdminReadOnly = true;
 
             ViewBag.RequestId = request.Id;
             ViewBag.InstitutionName = request.UniversityName;

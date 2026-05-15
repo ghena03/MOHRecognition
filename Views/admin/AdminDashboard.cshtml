@@ -139,6 +139,9 @@
                 <div class="nav-body">
                     <h3>Requests</h3>
                     <p>Manage all submitted university recognition requests.</p>
+                    <div class="decision-mini-counts">
+                        <span class="decision-mini" style="background:#fde8ec;color:#7f1627;">@Model.Count() total</span>
+                    </div>
                 </div>
                 <i class="bi bi-arrow-right nav-arrow"></i>
             </a>
@@ -176,7 +179,7 @@
             <a asp-controller="Home" asp-action="Employees" class="nav-card">
                 <div class="nav-icon"><i class="bi bi-people-fill"></i></div>
                 <div class="nav-body">
-                    <h3>Employees</h3>
+                    <h3>Advisors</h3>
                     <p>Manage recognition committee member profiles and information.</p>
                 </div>
                 <i class="bi bi-arrow-right nav-arrow"></i>

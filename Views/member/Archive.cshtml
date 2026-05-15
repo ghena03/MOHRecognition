@@ -175,24 +175,13 @@
                                         <td><span class="badge badge-pending">@item.Status</span></td>
                                         <td>@item.SubmittedAt.ToString("yyyy-MM-dd")</td>
                                         <td class="right">
-                                            @if (item.Status == "Requires Admin Review")
+                                            @if (isMine)
                                             {
-                                                <button class="rm-mini" type="button" disabled>Sent to Admin</button>
-                                            }
-                                            else if (isMine)
-                                            {
-                                                <form asp-controller="Home"
-                                                      asp-action="RequireAdminReview"
-                                                      method="post"
-                                                      style="display:inline;">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@item.Id" />
-                                                    <button class="rm-mini" type="submit">Require Admin Review</button>
-                                                </form>
+                                                <a class="rm-mini" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">Open</a>
                                             }
                                             else
                                             {
-                                                <button class="rm-mini" type="button" disabled>Not Your Request</button>
+                                                <a class="rm-mini rm-mini--view" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">View</a>
                                             }
                                         </td>
                                     </tr>

@@ -189,9 +189,7 @@
                                 <tr>
                                     <th style="width:44px;">#</th>
                                     <th>File Name</th>
-                                    <th>Category</th>
-                                    <th>Upload Date</th>
-                                    <th>Uploaded By</th>
+                                    <th style="width:220px;">Category</th>
                                     <th style="width:180px;">Actions</th>
                                 </tr>
                             </thead>
@@ -202,10 +200,8 @@
                                     var f = item.Doc;
                                     <tr>
                                         <td>@di</td>
-                                        <td class="file-cell">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
-                                        <td><span class="hosp-spec-tag">@HospitalDocLabel(item.Type)</span></td>
-                                        <td>@(f.UploadedAt.HasValue ? f.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                        <td>@(string.IsNullOrWhiteSpace(f.UploadedBy) ? "—" : f.UploadedBy)</td>
+                                        <td class="file-cell" style="word-break:break-all;">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
+                                        <td><span class="hosp-spec-tag" style="white-space:nowrap;">@HospitalDocLabel(item.Type)</span></td>
                                         <td class="cell-actions">
                                             <div class="table-actions">
                                                 <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">View</a>
@@ -340,15 +336,6 @@
                         </div>
                     </div>
 
-                    @if (!adminReadOnly)
-                    {
-                        <div style="display:flex; justify-content:flex-end; margin-top:14px;">
-                            <button class="rm-btn rm-btn-primary" type="submit">
-                                <i class="bi bi-save"></i>
-                                Save
-                            </button>
-                        </div>
-                    }
                 </form>
             </section>
 

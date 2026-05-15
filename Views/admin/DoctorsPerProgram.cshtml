@@ -1,0 +1,365 @@
+@model DTOs.DoctorsPerProgramReportDto
+@using System.Globalization
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Full-Time PhD Doctors per Program";
+    string F2(double v) => v.ToString("0.00", CultureInfo.InvariantCulture);
+}
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" asp-append-version="true" />
+    <style>
+        /* ── Page shell ── */
+        .dpp-page { max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px; }
+
+        /* ── Back link ── */
+        .dpp-back {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; font-weight: 700; color: #7f1627;
+            text-decoration: none; margin-bottom: 22px;
+        }
+        .dpp-back:hover { text-decoration: underline; }
+
+        /* ── Page header ── */
+        .dpp-hd {
+            display: flex; align-items: flex-start; gap: 16px;
+            margin-bottom: 28px;
+        }
+        .dpp-hd-icon {
+            width: 54px; height: 54px; border-radius: 14px;
+            background: #fde8ec; color: #7f1627;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; flex-shrink: 0;
+        }
+        .dpp-hd-title  { font-size: 24px; font-weight: 900; color: #1a1a1a; margin-bottom: 4px; }
+        .dpp-hd-sub    { font-size: 13.5px; color: #6b7280; font-weight: 500; line-height: 1.5; }
+
+        /* ── Equation box ── */
+        .dpp-eq-box {
+            background: #fffdf9;
+            border: 1px solid #e8ddd0;
+            border-left: 4px solid #7f1627;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 28px;
+        }
+        .dpp-eq-title {
+            font-size: 12px; font-weight: 800; color: #7f1627;
+            text-transform: uppercase; letter-spacing: .6px;
+            margin-bottom: 12px;
+        }
+        .dpp-eq-list { display: flex; flex-direction: column; gap: 10px; }
+        .dpp-eq-item {
+            display: flex; align-items: baseline; gap: 10px;
+            font-size: 13px; line-height: 1.5;
+        }
+        .dpp-eq-num {
+            min-width: 20px; height: 20px; border-radius: 999px;
+            background: #7f1627; color: #fff;
+            font-size: 10.5px; font-weight: 900;
+            display: inline-flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px;
+        }
+        .dpp-eq-formula {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12.5px; font-weight: 700; color: #1a1a1a;
+        }
+        .dpp-eq-desc { color: #6b7280; font-size: 12px; }
+
+        /* ── Summary stat cards ── */
+        .dpp-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        @@media (max-width: 900px) { .dpp-stats { grid-template-columns: repeat(2, 1fr); } }
+        @@media (max-width: 500px) { .dpp-stats { grid-template-columns: 1fr; } }
+
+        .dpp-stat {
+            background: #fff;
+            border: 1px solid #ede8e0;
+            border-radius: 14px;
+            padding: 18px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.04);
+        }
+        .dpp-stat-label { font-size: 12px; font-weight: 700; color: #9ca3af; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
+        .dpp-stat-value { font-size: 32px; font-weight: 900; color: #1a1a1a; line-height: 1; }
+        .dpp-stat-sub   { font-size: 11.5px; color: #6b7280; font-weight: 600; margin-top: 4px; }
+        .dpp-stat--accent .dpp-stat-value { color: #7f1627; }
+
+        /* ── Table card ── */
+        .dpp-table-card {
+            background: #fff;
+            border: 1px solid #ede8e0;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,.04);
+        }
+        .dpp-table-hd {
+            padding: 16px 20px 14px;
+            border-bottom: 1px solid #f0ece4;
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        }
+        .dpp-table-hd-title { font-size: 15px; font-weight: 800; color: #1a1a1a; }
+        .dpp-table-hd-badge {
+            background: #7f1627; color: #fff;
+            font-size: 11.5px; font-weight: 800;
+            border-radius: 999px; padding: 3px 10px;
+        }
+        .dpp-scroll { overflow-x: auto; }
+        .dpp-tbl {
+            width: 100%; border-collapse: collapse;
+            font-size: 13px; min-width: 700px;
+        }
+        .dpp-tbl thead th {
+            padding: 11px 14px;
+            background: #faf7f2;
+            font-size: 11.5px; font-weight: 800;
+            color: #6b7280; text-align: left;
+            border-bottom: 1px solid #ede8e0;
+            white-space: nowrap;
+        }
+        .dpp-tbl tbody td {
+            padding: 11px 14px;
+            border-bottom: 1px solid #f5f1eb;
+            vertical-align: middle;
+            color: #374151;
+        }
+        .dpp-tbl tbody tr:last-child td { border-bottom: none; }
+        .dpp-tbl tbody tr:hover td { background: #fffaf6; }
+
+        /* Row grouping: first row of a university gets a top separator */
+        .dpp-tbl tbody tr.uni-first-row td { border-top: 2px solid #e8ddd0; }
+        .dpp-tbl tbody tr:first-child.uni-first-row td { border-top: none; }
+
+        /* University name cell */
+        .dpp-uni-name { font-weight: 800; color: #1a1a1a; }
+        .dpp-country  { font-size: 11.5px; color: #9ca3af; font-weight: 600; margin-top: 2px; }
+
+        /* Program name */
+        .dpp-prog-name   { font-weight: 600; color: #374151; }
+        .dpp-prog-degree { font-size: 11px; color: #9ca3af; font-weight: 600; margin-top: 2px; }
+
+        /* Counts */
+        .dpp-num { font-weight: 800; color: #1a1a1a; text-align: right; font-size: 15px; }
+        .dpp-ratio {
+            font-weight: 900; color: #7f1627; font-size: 15px;
+            text-align: right;
+        }
+        .dpp-num-cell  { text-align: right; }
+        .dpp-ratio-cell { text-align: right; }
+
+        /* Colspan for "no programs" */
+        .dpp-no-prog { color: #9ca3af; font-style: italic; font-size: 12.5px; }
+
+        /* Empty state */
+        .dpp-empty { padding: 48px 0; text-align: center; color: #9ca3af; font-size: 14px; font-weight: 700; }
+    </style>
+</head>
+
+<body class="admin-page">
+
+    <div class="top-bar"></div>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="/images/mohelogo.png" class="logo" />
+            <div class="divider"></div>
+            <div class="title-box">
+                <h1>Full-Time PhD Doctors per Program</h1>
+                <p>Recognition Committee — Academic Staff Report</p>
+            </div>
+        </div>
+        <div class="user-box">
+            <div class="avatar">A</div>
+            <div>
+                <strong>Admin User</strong><br>
+                <span>System Administrator</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="dpp-page">
+
+        <a asp-controller="Home" asp-action="AdminDashboard" class="dpp-back">
+            ← Back to Admin Dashboard
+        </a>
+
+        <!-- ── Page header ──────────────────────────────────────── -->
+        <div class="dpp-hd">
+            <div class="dpp-hd-icon">🎓</div>
+            <div>
+                <div class="dpp-hd-title">Full-Time PhD Doctors per Program</div>
+                <div class="dpp-hd-sub">
+                    Distributes each university's full-time PhD academic staff across its registered programs.
+                    Only full-time PhD-level doctors are counted — no part-time, no clinical-only, no MSc/PSc staff.
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Equation reference box ───────────────────────────── -->
+        <div class="dpp-eq-box">
+            <div class="dpp-eq-title">Equations Used in This Report</div>
+            <div class="dpp-eq-list">
+
+                <div class="dpp-eq-item">
+                    <span class="dpp-eq-num">1</span>
+                    <div>
+                        <div class="dpp-eq-formula">
+                            D = (Professor + Assoc. Prof + Assist. Prof + Lecturer PhD + Assist. Lecturer PhD) × 2 colleges
+                        </div>
+                        <div class="dpp-eq-desc">
+                            Total full-time PhD doctors per university — summed separately for Medicine and Dentistry colleges, then combined.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dpp-eq-item">
+                    <span class="dpp-eq-num">2</span>
+                    <div>
+                        <div class="dpp-eq-formula">Doctors per Program = D ÷ N</div>
+                        <div class="dpp-eq-desc">
+                            Where <strong>D</strong> = total FT PhD doctors for the university and <strong>N</strong> = number of registered programs.
+                            The result shows how many PhD-level doctors are available per program on average.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dpp-eq-item">
+                    <span class="dpp-eq-num">3</span>
+                    <div>
+                        <div class="dpp-eq-formula">Average = Σ D (all universities) ÷ Σ N (all universities)</div>
+                        <div class="dpp-eq-desc">
+                            Cross-university average: total PhD doctors across <em>all</em> universities divided by the total number of programs across all universities.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── Summary stats ────────────────────────────────────── -->
+        <div class="dpp-stats">
+            <div class="dpp-stat">
+                <div class="dpp-stat-label">Total Universities</div>
+                <div class="dpp-stat-value">@Model.TotalUniversities</div>
+                <div class="dpp-stat-sub">in this report</div>
+            </div>
+            <div class="dpp-stat">
+                <div class="dpp-stat-label">Total Programs</div>
+                <div class="dpp-stat-value">@Model.TotalPrograms</div>
+                <div class="dpp-stat-sub">across all universities</div>
+            </div>
+            <div class="dpp-stat">
+                <div class="dpp-stat-label">Total FT PhD Doctors</div>
+                <div class="dpp-stat-value">@Model.TotalFtPhdDoctors</div>
+                <div class="dpp-stat-sub">full-time PhD staff only</div>
+            </div>
+            <div class="dpp-stat dpp-stat--accent">
+                <div class="dpp-stat-label">Average Doctors / Program</div>
+                <div class="dpp-stat-value">@F2(Model.AverageDoctorsPerProgram)</div>
+                <div class="dpp-stat-sub">Eq. 3: Σ D ÷ Σ N</div>
+            </div>
+        </div>
+
+        <!-- ── Main table ────────────────────────────────────────── -->
+        <div class="dpp-table-card">
+            <div class="dpp-table-hd">
+                <span class="dpp-table-hd-title">Programs Breakdown by University</span>
+                <span class="dpp-table-hd-badge">@Model.TotalPrograms programs</span>
+            </div>
+
+            @if (!Model.Universities.Any())
+            {
+                <div class="dpp-empty">No university data available yet.</div>
+            }
+            else
+            {
+                <div class="dpp-scroll">
+                    <table class="dpp-tbl">
+                        <thead>
+                            <tr>
+                                <th style="width:220px;">University</th>
+                                <th>Program Name</th>
+                                <th>Degree</th>
+                                <th style="width:130px;" class="dpp-num-cell">FT PhD Doctors</th>
+                                <th style="width:160px;" class="dpp-ratio-cell">Doctors / Program</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var uni in Model.Universities)
+                            {
+                                bool isFirst = true;
+
+                                @if (!uni.Programs.Any())
+                                {
+                                    <tr class="uni-first-row">
+                                        <td>
+                                            <div class="dpp-uni-name">@uni.UniversityName</div>
+                                            <div class="dpp-country">@uni.Country</div>
+                                        </td>
+                                        <td colspan="2"><span class="dpp-no-prog">No programs registered</span></td>
+                                        <td class="dpp-num-cell"><span class="dpp-num">@uni.FtPhdDoctors</span></td>
+                                        <td class="dpp-ratio-cell"><span class="dpp-ratio">—</span></td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var prog in uni.Programs)
+                                    {
+                                        <tr class="@(isFirst ? "uni-first-row" : "")">
+                                            <td>
+                                                @if (isFirst)
+                                                {
+                                                    <div class="dpp-uni-name">@uni.UniversityName</div>
+                                                    <div class="dpp-country">@uni.Country</div>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="dpp-prog-name">@prog.ProgramName</div>
+                                                @if (!string.IsNullOrWhiteSpace(prog.FacultyName))
+                                                {
+                                                    <div class="dpp-prog-degree">@prog.FacultyName</div>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrWhiteSpace(prog.DegreeAwarded))
+                                                {
+                                                    <span style="font-size:12px; color:#6b7280; font-weight:600;">@prog.DegreeAwarded</span>
+                                                }
+                                                else
+                                                {
+                                                    <span style="color:#d1d5db;">—</span>
+                                                }
+                                            </td>
+                                            <td class="dpp-num-cell">
+                                                @if (isFirst)
+                                                {
+                                                    <span class="dpp-num">@uni.FtPhdDoctors</span>
+                                                }
+                                            </td>
+                                            <td class="dpp-ratio-cell">
+                                                <span class="dpp-ratio">@F2(uni.DoctorsPerProgram)</span>
+                                            </td>
+                                        </tr>
+                                        isFirst = false;
+                                    }
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+    </div>
+
+</body>
+</html>
