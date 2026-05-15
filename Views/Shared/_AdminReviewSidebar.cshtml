@@ -1,0 +1,41 @@
+@{
+    var requestId = (int)(ViewBag.RequestId ?? 0);
+    var meetingId = (int)(ViewBag.AdminMeetingId ?? 0);
+    var currentStep = (string)(ViewBag.AdminCurrentStep ?? string.Empty);
+
+    string IsActive(string step) => string.Equals(currentStep, step, StringComparison.OrdinalIgnoreCase) ? " active" : string.Empty;
+    var basicClass = "rm-navitem" + IsActive("basic");
+    var statisticsClass = "rm-navitem" + IsActive("statistics");
+    var admissionClass = "rm-navitem" + IsActive("admission");
+    var academicClass = "rm-navitem" + IsActive("academic");
+    var accreditationClass = "rm-navitem" + IsActive("accreditation");
+    var infrastructureClass = "rm-navitem" + IsActive("infrastructure");
+    var recommendationClass = "rm-navitem" + IsActive("recommendation");
+}
+
+<aside class="rm-sidebar">
+    <div class="rm-side-label">Admin Review</div>
+    <nav class="rm-nav">
+        <a class="@basicClass" href="@Url.Action("AdminDetailsBasicInfo", "Home", new { id = requestId, meetingId })">
+            <i class="bi bi-building"></i><span>Institution Information</span>
+        </a>
+        <a class="@statisticsClass" href="@Url.Action("AdminDetailsStatistics", "Home", new { id = requestId, meetingId })">
+            <i class="bi bi-bar-chart"></i><span>Students & Ratios</span>
+        </a>
+        <a class="@admissionClass" href="@Url.Action("AdminDetailsAdmissionDuration", "Home", new { id = requestId, meetingId })">
+            <i class="bi bi-file-earmark-pdf"></i><span>Admission & Duration</span>
+        </a>
+        <a class="@academicClass" href="@Url.Action("AdminDetailsAcademicInfo", "Home", new { id = requestId, meetingId })">
+            <i class="bi bi-journal-text"></i><span>Academic Review</span>
+        </a>
+        <a class="@accreditationClass" href="@Url.Action("AdminDetailsAccreditationBodies", "Home", new { id = requestId, meetingId })">
+            <i class="bi bi-award"></i><span>Accreditation & Rankings</span>
+        </a>
+        <a class="@infrastructureClass" href="@Url.Action("AdminDetailsInfrastructure", "Home", new { id = requestId, meetingId })">
+            <i class="bi bi-diagram-3"></i><span>Infrastructure</span>
+        </a>
+        <a class="@recommendationClass" href="@Url.Action("AdminDetailsRecommendation", "Home", new { id = requestId, meetingId })">
+            <i class="bi bi-clipboard2-check"></i><span>Final Assessment</span>
+        </a>
+    </nav>
+</aside>

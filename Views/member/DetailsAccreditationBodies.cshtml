@@ -3,9 +3,17 @@
     Layout = null;
     ViewData["Title"] = "Request Details - Accreditation Bodies";
     ViewData["ActiveNav"] = "requests";
+    var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
+    var adminMeetingId = (int)(ViewBag.AdminMeetingId ?? 0);
 
     var requestId = ViewBag.RequestId ?? Model?.Id ?? 0;
     var inst = ViewBag.InstitutionName ?? Model?.UniversityName ?? "—";
+    var previousLink = adminReadOnly
+        ? Url.Action("AdminDetailsAcademicInfo", "Home", new { id = requestId, meetingId = adminMeetingId })
+        : Url.Action("DetailsAcademicInfo", "Home", new { id = requestId });
+    var nextLink = adminReadOnly
+        ? Url.Action("AdminDetailsInfrastructure", "Home", new { id = requestId, meetingId = adminMeetingId })
+        : Url.Action("DetailsInfrastructure", "Home", new { id = requestId });
 
     var accreditationRows = Model?.AccreditationBodies ?? new List<DTOs.AccreditationBodyRowDto>();
     var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
@@ -42,7 +50,7 @@
                 <div class="rm-user">
                     <div class="rm-userpill">
                         <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>Recognition Member</b></span>
+                        <span>Welcome, <b>@(adminReadOnly ? "Admin Review" : "Recognition Member")</b></span>
                     </div>
 
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
@@ -55,7 +63,14 @@
     </header>
 
     <div class="rm-shell">
-        @await Html.PartialAsync("_MemberSidebar")
+        @if (adminReadOnly)
+        {
+            @await Html.PartialAsync("_AdminReviewSidebar")
+        }
+        else
+        {
+            @await Html.PartialAsync("_MemberSidebar")
+        }
 
         <main class="rm-main">
             <section class="rm-card rd-head">
@@ -199,14 +214,16 @@
                                        name="arwuValue"
                                        value="@rankings.ArwuValue"
                                        placeholder="Enter ranking"
-                                       data-rank-input="arwu" />
+                                       data-rank-input="arwu"
+                                       @(adminReadOnly ? "readonly disabled" : null) />
 
                                 <label class="na-toggle">
                                     <input type="checkbox"
                                            name="arwuIsNa"
                                            value="true"
                                            @(rankings.ArwuIsNa ? "checked" : null)
-                                           data-rank-na="arwu" />
+                                           data-rank-na="arwu"
+                                           @(adminReadOnly ? "disabled" : null) />
                                     N/A
                                 </label>
                             </div>
@@ -220,14 +237,16 @@
                                        name="qsValue"
                                        value="@rankings.QsValue"
                                        placeholder="Enter ranking"
-                                       data-rank-input="qs" />
+                                       data-rank-input="qs"
+                                       @(adminReadOnly ? "readonly disabled" : null) />
 
                                 <label class="na-toggle">
                                     <input type="checkbox"
                                            name="qsIsNa"
                                            value="true"
                                            @(rankings.QsIsNa ? "checked" : null)
-                                           data-rank-na="qs" />
+                                           data-rank-na="qs"
+                                           @(adminReadOnly ? "disabled" : null) />
                                     N/A
                                 </label>
                             </div>
@@ -241,14 +260,16 @@
                                        name="theValue"
                                        value="@rankings.TheValue"
                                        placeholder="Enter ranking"
-                                       data-rank-input="the" />
+                                       data-rank-input="the"
+                                       @(adminReadOnly ? "readonly disabled" : null) />
 
                                 <label class="na-toggle">
                                     <input type="checkbox"
                                            name="theIsNa"
                                            value="true"
                                            @(rankings.TheIsNa ? "checked" : null)
-                                           data-rank-na="the" />
+                                           data-rank-na="the"
+                                           @(adminReadOnly ? "disabled" : null) />
                                     N/A
                                 </label>
                             </div>
@@ -262,40 +283,45 @@
                                        name="scopusValue"
                                        value="@rankings.ScopusValue"
                                        placeholder="Enter ranking"
-                                       data-rank-input="scopus" />
+                                       data-rank-input="scopus"
+                                       @(adminReadOnly ? "readonly disabled" : null) />
 
                                 <label class="na-toggle">
                                     <input type="checkbox"
                                            name="scopusIsNa"
                                            value="true"
                                            @(rankings.ScopusIsNa ? "checked" : null)
-                                           data-rank-na="scopus" />
+                                           data-rank-na="scopus"
+                                           @(adminReadOnly ? "disabled" : null) />
                                     N/A
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    <div style="display:flex; justify-content:flex-end; margin-top:14px;">
-                        <button class="rm-btn rm-btn-primary" type="submit">
-                            <i class="bi bi-save"></i>
-                            Save
-                        </button>
-                    </div>
+                    @if (!adminReadOnly)
+                    {
+                        <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+                            <button class="rm-btn rm-btn-primary" type="submit">
+                                <i class="bi bi-save"></i>
+                                Save
+                            </button>
+                        </div>
+                    }
                 </form>
             </section>
 
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
                     <a class="rm-btn rm-btn-light"
-                       href="@Url.Action("DetailsAcademicInfo", "Home", new { id = requestId })">
+                       href="@previousLink">
                         Previous
                     </a>
                 </div>
 
                 <div class="rd-actions-right">
                     <a class="rm-btn rm-btn-light"
-                       href="@Url.Action("DetailsInfrastructure", "Home", new { id = requestId })">
+                       href="@nextLink">
                         Next
                     </a>
                 </div>

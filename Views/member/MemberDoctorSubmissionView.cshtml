@@ -1,0 +1,756 @@
+@model MOHRecognition.Services.RecognitionRequestRecord
+@{
+    Layout = null;
+    ViewData["Title"] = "Assessment Report — View Only";
+    ViewData["ActiveNav"] = "requests";
+
+    var requestId = Model?.Id ?? 0;
+    var inst      = Model?.UniversityName ?? "—";
+    var refNum    = Model?.ReferenceNumber ?? "—";
+
+    // ── Submitted values ──────────────────────────────────────────────────────
+    var accreditationStatus = (Model?.AccreditationStatus       ?? "").Trim();
+    var accreditationNote   =  Model?.AccreditationNote         ?? "";
+    var finalJustification  =  Model?.BasicInfoAssessmentReason ?? "";
+    var finalDecision       = (Model?.BasicInfoAssessmentDecision ?? "").Trim();
+    var submittedAt         =  Model?.SubmittedToAdminAt ?? Model?.SubmittedAt;
+    var submittedBy         =  Model?.SubmittedToAdminBy ?? Model?.AssignedMember ?? "—";
+    var hasSubmission       = !string.IsNullOrWhiteSpace(finalDecision);
+
+    // ── Academic calculations (mirror of DetailsRecommendation) ──────────────
+    var A              = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
+    var hasFacultyData = Model?.AcademicInfo != null;
+
+    int professorFT          = A.StaffProfessorFullTimeCount          ?? 0;
+    int associateProfessorFT = A.StaffAssociateProfessorFullTimeCount ?? 0;
+    int assistantProfessorFT = A.StaffAssistantProfessorFullTimeCount ?? 0;
+    int teacherFT            = A.StaffTeacherFullTimeCount            ?? 0;
+    int researcherFT         = A.StaffResearcherFullTimeCount         ?? 0;
+    int assistantTeacherFT   = A.StaffAssistantTeacherFullTimeCount   ?? 0;
+    int othersFT             = A.StaffOthersFullTimeCount             ?? 0;
+
+    int  totalPhdHolders          = professorFT + associateProfessorFT + assistantProfessorFT + teacherFT;
+    int  fullTimeFacultyDoctorate = professorFT + associateProfessorFT + assistantProfessorFT +
+                                    teacherFT + assistantTeacherFT + othersFT + researcherFT;
+    decimal doctorateHoldersPercentage = fullTimeFacultyDoctorate > 0
+        ? Math.Floor(((decimal)totalPhdHolders * 100m) / fullTimeFacultyDoctorate) : 0m;
+    string doctorateColorStatus = fullTimeFacultyDoctorate > 0
+        ? (doctorateHoldersPercentage >= 50m ? "green" : "red") : "";
+
+    decimal ratioValue = A.StudentsToFacultyRatio ?? 0m;
+
+    var selectedCategories = (A.CollegeCategoriesCsv ?? "")
+        .Split(';', StringSplitOptions.RemoveEmptyEntries)
+        .Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+    var categoryRatioMap = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Scientific"] = 20m, ["Humanities"] = 35m, ["Medical"] = 25m, ["Applied"] = 20m
+    };
+    var selectedRatios = selectedCategories
+        .Where(k => categoryRatioMap.ContainsKey(k)).Select(k => categoryRatioMap[k]).ToList();
+    decimal avgRatio    = selectedRatios.Any() ? selectedRatios.Average() : 0m;
+    decimal orangeLimit = avgRatio + (avgRatio * 0.25m);
+
+    string ratioColorStatus = "";
+    if (ratioValue >= 1m && avgRatio > 0m)
+    {
+        if      (ratioValue <= avgRatio)    ratioColorStatus = "green";
+        else if (ratioValue <= orangeLimit) ratioColorStatus = "orange";
+        else                                ratioColorStatus = "red";
+    }
+
+    static string RatioCompliance(string s) => s switch {
+        "green" or "orange" => "Compliant", "red" => "Not Compliant", _ => "missing"
+    };
+    static string DoctorateCompliance(string s) => s switch {
+        "green" => "Compliant", "red" => "Not Compliant", _ => "missing"
+    };
+    static string Css(string s) => s switch {
+        "Compliant"     => "compliant",
+        "Needs Review"  => "needs-review",
+        "Not Compliant" => "not-compliant",
+        "Not Assessed"  => "not-assessed",
+        _               => "missing"
+    };
+    static string Icon(string s) => s switch {
+        "Compliant"     => "bi-check-circle-fill",
+        "Needs Review"  => "bi-exclamation-circle-fill",
+        "Not Compliant" => "bi-x-circle-fill",
+        "Not Assessed"  => "bi-dash-circle",
+        _               => "bi-question-circle"
+    };
+    static string Lbl(string s) => s == "missing" ? "Missing Data" : s;
+
+    string ratioCompliance = hasFacultyData ? RatioCompliance(ratioColorStatus)         : "missing";
+    string docCompliance   = hasFacultyData ? DoctorateCompliance(doctorateColorStatus) : "missing";
+
+    // ── Medicine/Dentistry ────────────────────────────────────────────────────
+    var medDen = Model?.MedicineDentistry ?? new DTOs.MedicineDentistryDto();
+    static string CliColor(double? r) => r == null ? "" : r <= 16.5 ? "green" : r <= 20.625 ? "orange" : "red";
+    string medCliColor = CliColor(medDen.Med_StudentFacultyRatio);
+    string denCliColor = CliColor(medDen.Den_StudentFacultyRatio);
+    string clinicalCapCompliance;
+    if (!medDen.Med_StudentFacultyRatio.HasValue && !medDen.Den_StudentFacultyRatio.HasValue)
+        clinicalCapCompliance = "Needs Review";
+    else if (medCliColor == "red" || denCliColor == "red")
+        clinicalCapCompliance = "Not Compliant";
+    else if (medCliColor == "orange" || denCliColor == "orange"
+          || string.IsNullOrEmpty(medCliColor) || string.IsNullOrEmpty(denCliColor))
+        clinicalCapCompliance = "Needs Review";
+    else
+        clinicalCapCompliance = "Compliant";
+
+    static string CliFmt(double? r) => r.HasValue ? "1:" + ((int)Math.Floor(r.Value)) : "—";
+    static string CliBadgeCss(string c) => c switch {
+        "green" => "compliant", "orange" => "needs-review", "red" => "not-compliant", _ => "missing"
+    };
+    static string CliBadgeLbl(string c) => c switch {
+        "green" => "Acceptable", "orange" => "Warning", "red" => "Exceeds Limit", _ => "Missing Data"
+    };
+    static string CliBadgeIcon(string c) => c switch {
+        "green" => "bi-check-circle-fill", "orange" => "bi-exclamation-circle-fill",
+        "red"   => "bi-x-circle-fill",     _        => "bi-question-circle"
+    };
+
+    // ── Environment ──────────────────────────────────────────────────────────
+    static string EnvMap(string? v) => (v ?? "").Trim() switch {
+        "Meets Standards"   => "Compliant",
+        "Needs Improvement" => "Needs Review",
+        _                   => "Not Assessed"
+    };
+    string envColleges  = EnvMap(Model?.FacultiesAssessment);
+    string envHospitals = EnvMap(Model?.HospitalsAssessment);
+    string envLabs      = EnvMap(Model?.LaboratoriesFacilitiesAssessment);
+    string envLibrary   = EnvMap(Model?.LibraryAssessment);
+    var    envAll       = new[] { envColleges, envHospitals, envLabs, envLibrary };
+    string envOverall   = envAll.Any(s => s == "Not Compliant") ? "Not Compliant"
+                        : envAll.Any(s => s == "Needs Review")  ? "Needs Review"
+                        : envAll.All(s => s == "Compliant")     ? "Compliant"
+                        :                                          "Not Assessed";
+
+    // ── Scorecard summary ────────────────────────────────────────────────────
+    string p1 = string.IsNullOrWhiteSpace(accreditationStatus) ? "Not Assessed" : accreditationStatus;
+    var allPoints          = new[] { p1, ratioCompliance, docCompliance, clinicalCapCompliance, envOverall };
+    int compliantPoints    = allPoints.Count(p => p == "Compliant");
+    int reviewPoints       = allPoints.Count(p => p == "Needs Review" || p == "Not Assessed" || p == "missing");
+    int nonCompliantPoints = allPoints.Count(p => p == "Not Compliant");
+
+    // ── Ratio/Doctorate helpers ───────────────────────────────────────────────
+    string ratioDisplay   = ratioValue > 0 ? $"1:{ratioValue:0}" : "—";
+    int    docProgWidth   = (int)Math.Min(doctorateHoldersPercentage, 100m);
+
+    string RatioExpl(string c) => c switch {
+        "Compliant"     => $"Ratio {ratioDisplay} is within the benchmark (including 25% tolerance) for the selected college category.",
+        "Needs Review"  => $"Ratio {ratioDisplay} exceeds the benchmark but stays within the 25% tolerance band.",
+        "Not Compliant" => $"Ratio {ratioDisplay} exceeds the 25% tolerance — capacity review required.",
+        _               => "Insufficient data to calculate the students-to-faculty ratio."
+    };
+    string DocExpl(string c) => c switch {
+        "Compliant"     => $"{doctorateHoldersPercentage:0}% of full-time faculty hold a doctorate — meets the 50% minimum requirement.",
+        "Not Compliant" => $"Only {doctorateHoldersPercentage:0}% of full-time faculty hold a doctorate — below the 50% minimum requirement.",
+        _               => "Insufficient data to calculate the doctorate holders percentage."
+    };
+
+    // ── Decision styling ──────────────────────────────────────────────────────
+    string DecIcon(string d) => d switch {
+        "Approve"                   => "bi-check2-circle",
+        "Conditional Approval"      => "bi-arrow-repeat",
+        "Reject / Committee Review" => "bi-x-octagon-fill",
+        _                           => "bi-hourglass-split"
+    };
+    string DecBg(string d) => d switch {
+        "Approve"                   => "#e8f5ea",
+        "Conditional Approval"      => "#fff8db",
+        "Reject / Committee Review" => "#fef2f2",
+        _                           => "#f3f4f6"
+    };
+    string DecBorder(string d) => d switch {
+        "Approve"                   => "#b0ddb6",
+        "Conditional Approval"      => "#f0d06c",
+        "Reject / Committee Review" => "#fca5a5",
+        _                           => "#d1d5db"
+    };
+    string DecColor(string d) => d switch {
+        "Approve"                   => "#15803d",
+        "Conditional Approval"      => "#b45309",
+        "Reject / Committee Review" => "#b91c1c",
+        _                           => "#6b7280"
+    };
+}
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/DetailsRecommendation.css" asp-append-version="true" />
+    <style>
+        /* ── View-only utilities ───────────────────────────────────────────── */
+        .vo-strip {
+            display: flex; align-items: center; gap: 10px;
+            background: #fdf4f5; border: 1.5px solid #e4c0c8;
+            border-radius: 10px; padding: 10px 16px;
+            font-size: 12.5px; font-weight: 700; color: #7f1627;
+            margin-bottom: 4px;
+        }
+        .vo-strip i { font-size: 16px; flex-shrink: 0; }
+        .vo-strip span { flex: 1; }
+        .print-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 15px; border-radius: 8px; font-size: 12.5px;
+            font-weight: 600; cursor: pointer; border: 1.5px solid #d1d5db;
+            background: #f9fafb; color: #374151;
+        }
+        .print-btn:hover { background: #f3f4f6; }
+
+        /* ── Submitted-by header strip ─────────────────────────────────────── */
+        .sub-strip {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 18px;
+            background: #fff; border: 1px solid #ede4da;
+            border-radius: 10px; padding: 12px 18px;
+            font-size: 12.5px; color: #374151;
+        }
+        .sub-strip-item { display: flex; align-items: center; gap: 6px; }
+        .sub-strip-item i { color: #7f1627; }
+        .sub-strip-item strong { color: #111; font-weight: 700; }
+        .sub-strip-sep { width: 1px; height: 18px; background: #e5e7eb; }
+        .sub-strip .not-submitted-tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #fff8db; border: 1px solid #f0d06c;
+            border-radius: 999px; padding: 3px 10px;
+            font-size: 11.5px; font-weight: 700; color: #b45309;
+        }
+
+        /* ── Section report blocks ─────────────────────────────────────────── */
+        .rd-card { position: relative; }
+        .rd-readonly-tag {
+            position: absolute; top: 16px; right: 18px;
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #f3f4f6; border: 1px solid #d1d5db;
+            border-radius: 999px; padding: 3px 10px;
+            font-size: 11px; font-weight: 700; color: #6b7280;
+        }
+
+        /* ── Read-only text block ──────────────────────────────────────────── */
+        .ro-block {
+            background: #fafaf9; border: 1px solid #ede4da;
+            border-radius: 8px; padding: 13px 15px;
+            font-size: 13.5px; line-height: 1.65; color: #1f2937;
+            white-space: pre-wrap; word-break: break-word;
+            min-height: 52px;
+        }
+        .ro-block.ro-empty { color: #9ca3af; font-style: italic; font-size: 13px; }
+
+        /* ── Status display (large badge row) ─────────────────────────────── */
+        .status-display {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 0 10px;
+        }
+        .status-display-lbl {
+            font-size: 11px; font-weight: 700; color: #9ca3af;
+            text-transform: uppercase; letter-spacing: .5px; white-space: nowrap;
+        }
+
+        /* ── Decision result card ──────────────────────────────────────────── */
+        .decision-card {
+            border-radius: 12px; padding: 20px 22px;
+            display: flex; align-items: center; gap: 18px;
+            margin: 14px 0;
+        }
+        .decision-icon-wrap {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: rgba(255,255,255,.6); display: flex;
+            align-items: center; justify-content: center;
+            font-size: 24px; flex-shrink: 0;
+        }
+        .decision-text .d-label {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px; opacity: .7; margin-bottom: 3px;
+        }
+        .decision-text .d-value {
+            font-size: 20px; font-weight: 800; line-height: 1.1;
+        }
+
+        /* ── KPI chips ─────────────────────────────────────────────────────── */
+        .kpi-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .kpi-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            border-radius: 999px; padding: 5px 13px;
+            font-size: 12px; font-weight: 700;
+        }
+        .kpi-ok   { background: #dcfce7; color: #166534; }
+        .kpi-warn { background: #fef9c3; color: #854d0e; }
+        .kpi-bad  { background: #fee2e2; color: #b91c1c; }
+
+        /* ── "Pending submission" notice ───────────────────────────────────── */
+        .pending-notice {
+            display: flex; align-items: flex-start; gap: 12px;
+            background: #fffbeb; border: 1.5px solid #fde68a;
+            border-radius: 10px; padding: 14px 16px;
+            font-size: 13px; color: #92400e;
+        }
+        .pending-notice i { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
+        /* ── Environment sub-notes ─────────────────────────────────────────── */
+        .env-note {
+            background: #fafaf9; border-left: 3px solid #d5c3b8;
+            border-radius: 0 7px 7px 0; padding: 9px 13px;
+            font-size: 13px; color: #374151; margin-top: 8px;
+        }
+        .env-note .env-note-label {
+            font-size: 10.5px; font-weight: 800; color: #9ca3af;
+            text-transform: uppercase; letter-spacing: .4px;
+            margin-bottom: 3px;
+        }
+
+        .rd-actions-right { display: flex; gap: 8px; align-items: center; }
+
+        @@media print {
+            .rm-header, .rm-sidebar, .rd-actions, .vo-strip, .rd-readonly-tag { display: none !important; }
+            .rm-main { padding: 0 !important; }
+            .rm-shell { display: block !important; }
+            .rm-card { break-inside: avoid; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body class="rm-page">
+
+    <header class="rm-header">
+        <div class="rm-brandbar"></div>
+        <div class="rm-top">
+            <div class="rm-top-inner">
+                <div class="rm-brand">
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+                </div>
+                <div class="rm-user">
+                    <div class="rm-userpill">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Welcome, <b>Recognition Member</b></span>
+                    </div>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="rm-shell">
+        @await Html.PartialAsync("_MemberSidebar")
+
+        <main class="rm-main">
+
+            <!-- View-only notice -->
+            <div class="vo-strip">
+                <i class="bi bi-shield-lock-fill"></i>
+                <span>View Only &nbsp;—&nbsp; This is a read-only report of the submitted assessment. No changes can be made from this page.</span>
+            </div>
+
+            <!-- Page header card -->
+            <section class="rm-card rd-head">
+                <div>
+                    <h1>Assessment Report</h1>
+                    <p class="rd-inst">Institution: <b>@inst</b></p>
+                    <p>Read-Only — Professional Assessment Decision Report</p>
+                </div>
+                <div class="rd-meta">
+                    <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
+                    <div class="meta-pill"><span>Stage</span><b>Final</b></div>
+                </div>
+            </section>
+
+            <!-- Submitted-by strip -->
+            <div class="sub-strip">
+                <div class="sub-strip-item">
+                    <i class="bi bi-person-check-fill"></i>
+                    <span>Submitted by: <strong>@submittedBy</strong></span>
+                </div>
+                <div class="sub-strip-sep"></div>
+                <div class="sub-strip-item">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Date: <strong>@(submittedAt.HasValue ? submittedAt.Value.ToString("dd MMMM yyyy, HH:mm") : "—")</strong></span>
+                </div>
+                <div class="sub-strip-sep"></div>
+                <div class="sub-strip-item">
+                    <i class="bi bi-hash"></i>
+                    <span>Reference: <strong>@refNum</strong></span>
+                </div>
+                @if (!hasSubmission)
+                {
+                    <div class="sub-strip-sep"></div>
+                    <span class="not-submitted-tag"><i class="bi bi-hourglass-split"></i> Not yet submitted</span>
+                }
+            </div>
+
+            <!-- ═══════════════════════════ SCORECARD ═══════════════════════════ -->
+            <div class="fa-scorecard" style="margin-bottom:0">
+                <div class="fa-sc-eyebrow">
+                    <i class="bi bi-layout-three-columns" style="margin-right:5px"></i>
+                    Assessment Overview
+                </div>
+                <div class="fa-sc-grid">
+                    <div class="fa-sc-cell">
+                        <div class="fa-sc-step">1</div>
+                        <div class="fa-sc-info">
+                            <div class="fa-sc-name">Accreditation</div>
+                            <span class="fa-compliance-badge @Css(p1)">
+                                <i class="bi @Icon(p1)"></i> @Lbl(p1)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="fa-sc-cell">
+                        <div class="fa-sc-step">2</div>
+                        <div class="fa-sc-info">
+                            <div class="fa-sc-name">Faculty Ratio</div>
+                            <span class="fa-compliance-badge @Css(ratioCompliance)">
+                                <i class="bi @Icon(ratioCompliance)"></i> @Lbl(ratioCompliance)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="fa-sc-cell">
+                        <div class="fa-sc-step">3</div>
+                        <div class="fa-sc-info">
+                            <div class="fa-sc-name">Doctorate %</div>
+                            <span class="fa-compliance-badge @Css(docCompliance)">
+                                <i class="bi @Icon(docCompliance)"></i> @Lbl(docCompliance)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="fa-sc-cell">
+                        <div class="fa-sc-step">4</div>
+                        <div class="fa-sc-info">
+                            <div class="fa-sc-name">Clinical Capacity</div>
+                            <span class="fa-compliance-badge @Css(clinicalCapCompliance)">
+                                <i class="bi @Icon(clinicalCapCompliance)"></i> @Lbl(clinicalCapCompliance)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="fa-sc-cell">
+                        <div class="fa-sc-step">5</div>
+                        <div class="fa-sc-info">
+                            <div class="fa-sc-name">Environment</div>
+                            <span class="fa-compliance-badge @Css(envOverall)">
+                                <i class="bi @Icon(envOverall)"></i> @Lbl(envOverall)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════ POINT 1 — Accreditation ═══════════════ -->
+            <section class="rm-card rd-card">
+                <span class="rd-readonly-tag"><i class="bi bi-eye"></i> Read Only</span>
+                <div class="rd-card-hd">
+                    <div class="rd-card-hd-row">
+                        <div>
+                            <h2><i class="bi bi-award"></i> 1. Accreditation &amp; Recognition</h2>
+                            <p>Manually evaluated by the assigned assessor.</p>
+                        </div>
+                        <span class="fa-mode-badge"><i class="bi bi-pencil-square"></i> Manual</span>
+                    </div>
+                </div>
+
+                <div class="status-display">
+                    <span class="status-display-lbl">Compliance Status</span>
+                    <span class="fa-compliance-badge fa-compliance-badge-lg @Css(p1)" style="padding:8px 18px;font-size:14px;">
+                        <i class="bi @Icon(p1)"></i> @Lbl(p1)
+                    </span>
+                </div>
+
+                <div style="margin-top:6px">
+                    <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">
+                        Assessment Note
+                    </div>
+                    @if (string.IsNullOrWhiteSpace(accreditationNote))
+                    {
+                        <div class="ro-block ro-empty">No accreditation note was submitted.</div>
+                    }
+                    else
+                    {
+                        <div class="ro-block">@accreditationNote</div>
+                    }
+                </div>
+            </section>
+
+            <!-- ═══════════════ POINT 2 — Faculty Ratio ═══════════════ -->
+            <section class="rm-card rd-card">
+                <span class="rd-readonly-tag"><i class="bi bi-cpu"></i> Auto-Calculated</span>
+                <div class="rd-card-hd">
+                    <div class="rd-card-hd-row">
+                        <div>
+                            <h2><i class="bi bi-person-lines-fill"></i> 2. Students to Faculty Ratio</h2>
+                            <p>Automatically calculated from submitted Academic Info data.</p>
+                        </div>
+                        <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                    </div>
+                </div>
+
+                <div class="fa-metrics" style="margin-bottom:16px;">
+                    <div class="fa-metric-tile primary">
+                        <div class="fa-metric-lbl">Calculated Ratio</div>
+                        <div class="fa-metric-val @ratioColorStatus">@ratioDisplay</div>
+                    </div>
+                    <div class="fa-metric-tile">
+                        <div class="fa-metric-lbl">Compliance</div>
+                        <span class="fa-compliance-badge @Css(ratioCompliance)" style="margin-top:4px;">
+                            <i class="bi @Icon(ratioCompliance)"></i> @Lbl(ratioCompliance)
+                        </span>
+                    </div>
+                    @if (avgRatio > 0)
+                    {
+                        <div class="fa-metric-tile">
+                            <div class="fa-metric-lbl">Benchmark</div>
+                            <div class="fa-metric-val neutral">1:@avgRatio.ToString("0")</div>
+                        </div>
+                    }
+                </div>
+
+                <div class="fa-note" style="margin-bottom:12px;">
+                    <i class="bi bi-info-circle"></i>
+                    <span>@RatioExpl(ratioCompliance)</span>
+                </div>
+
+                @if (selectedCategories.Any())
+                {
+                    <div class="fa-tags">
+                        @foreach (var cat in selectedCategories) { <span class="fa-tag">@cat</span> }
+                    </div>
+                }
+            </section>
+
+            <!-- ═══════════════ POINT 3 — Doctorate % ═══════════════ -->
+            <section class="rm-card rd-card">
+                <span class="rd-readonly-tag"><i class="bi bi-cpu"></i> Auto-Calculated</span>
+                <div class="rd-card-hd">
+                    <div class="rd-card-hd-row">
+                        <div>
+                            <h2><i class="bi bi-mortarboard"></i> 3. Doctorate Holders Percentage</h2>
+                            <p>Automatically calculated from submitted Academic Info data.</p>
+                        </div>
+                        <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                    </div>
+                </div>
+
+                <div class="fa-metrics" style="margin-bottom:16px;">
+                    <div class="fa-metric-tile primary">
+                        <div class="fa-metric-lbl">Doctorate Holders</div>
+                        <div class="fa-metric-val @doctorateColorStatus">@doctorateHoldersPercentage.ToString("0")%</div>
+                        @if (hasFacultyData)
+                        {
+                            <div class="fa-progress-wrap">
+                                <div class="fa-progress-labels">
+                                    <span>0%</span><span>Min: 50%</span><span>100%</span>
+                                </div>
+                                <div class="fa-progress-track">
+                                    <div class="fa-progress-fill @doctorateColorStatus" style="width:@docProgWidth%"></div>
+                                    <div class="fa-progress-marker"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="fa-metric-tile">
+                        <div class="fa-metric-lbl">Compliance</div>
+                        <span class="fa-compliance-badge @Css(docCompliance)" style="margin-top:4px;">
+                            <i class="bi @Icon(docCompliance)"></i> @Lbl(docCompliance)
+                        </span>
+                    </div>
+                    <div class="fa-metric-tile">
+                        <div class="fa-metric-lbl">Minimum Required</div>
+                        <div class="fa-metric-val neutral">50%</div>
+                    </div>
+                </div>
+
+                <div class="fa-note" style="margin-bottom:12px;">
+                    <i class="bi bi-info-circle"></i>
+                    <span>@DocExpl(docCompliance)</span>
+                </div>
+
+                @if (hasFacultyData)
+                {
+                    <div class="fa-breakdown">
+                        <i class="bi bi-people-fill" style="color:#7a2d2a;"></i>
+                        <span><b>@totalPhdHolders</b> PhD holders</span>
+                        <span class="fa-breakdown-sep">out of</span>
+                        <span><b>@fullTimeFacultyDoctorate</b> full-time faculty</span>
+                    </div>
+                }
+            </section>
+
+            <!-- ═══════════════ POINT 4 — Clinical Capacity ═══════════════ -->
+            <section class="rm-card rd-card">
+                <span class="rd-readonly-tag"><i class="bi bi-cpu"></i> Auto-Calculated</span>
+                <div class="rd-card-hd">
+                    <div class="rd-card-hd-row">
+                        <div>
+                            <h2><i class="bi bi-hospital"></i> 4. Medicine &amp; Dentistry Clinical Capacity</h2>
+                            <p>Automatically calculated from submitted Medicine/Dentistry staff data.</p>
+                        </div>
+                        <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                    </div>
+                </div>
+
+                <div class="csr-college-grid">
+                    <div class="csr-college-card">
+                        <div class="csr-college-head">College of Medicine</div>
+                        <div class="csr-college-body">
+                            <span class="csr-college-lbl">Student to Faculty Ratio</span>
+                            <div class="csr-college-result">
+                                <span class="csr-college-val @medCliColor">@CliFmt(medDen.Med_StudentFacultyRatio)</span>
+                                <span class="fa-compliance-badge @CliBadgeCss(medCliColor)">
+                                    <i class="bi @CliBadgeIcon(medCliColor)"></i> @CliBadgeLbl(medCliColor)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="csr-college-card">
+                        <div class="csr-college-head">College of Dentistry</div>
+                        <div class="csr-college-body">
+                            <span class="csr-college-lbl">Student to Faculty Ratio</span>
+                            <div class="csr-college-result">
+                                <span class="csr-college-val @denCliColor">@CliFmt(medDen.Den_StudentFacultyRatio)</span>
+                                <span class="fa-compliance-badge @CliBadgeCss(denCliColor)">
+                                    <i class="bi @CliBadgeIcon(denCliColor)"></i> @CliBadgeLbl(denCliColor)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════ POINT 5 — Environment ═══════════════ -->
+            <section class="rm-card rd-card">
+                <span class="rd-readonly-tag"><i class="bi bi-cpu"></i> Auto-Calculated</span>
+                <div class="rd-card-hd">
+                    <div class="rd-card-hd-row">
+                        <div>
+                            <h2><i class="bi bi-building-check"></i> 5. Environment Assessment</h2>
+                            <p>Summarised from the Environment Assessment summary.</p>
+                        </div>
+                        <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                    </div>
+                </div>
+
+                @{
+                    var envRows = new[]
+                    {
+                        (Label: "Colleges Environment",    Status: envColleges,  Icon: "bi-building",   Note: Model?.FacultiesAssessmentNote),
+                        (Label: "Hospitals Assessment",    Status: envHospitals, Icon: "bi-hospital",   Note: Model?.HospitalsAssessmentNote),
+                        (Label: "Laboratories Facilities", Status: envLabs,      Icon: "bi-eyedropper", Note: Model?.LaboratoriesFacilitiesAssessmentNote),
+                        (Label: "Library Assessment",      Status: envLibrary,   Icon: "bi-book",       Note: Model?.LibraryAssessmentNote),
+                    };
+                }
+
+                <div class="fa-env-grid" style="margin-bottom:10px;">
+                    @foreach (var row in envRows)
+                    {
+                        <div class="fa-env-item">
+                            <div class="fa-env-item-head">
+                                <i class="bi @row.Icon"></i>
+                                <span>@row.Label</span>
+                            </div>
+                            <span class="fa-compliance-badge @Css(row.Status)">
+                                <i class="bi @Icon(row.Status)"></i> @row.Status
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                @foreach (var row in envRows)
+                {
+                    if (!string.IsNullOrWhiteSpace(row.Note))
+                    {
+                        <div class="env-note">
+                            <div class="env-note-label"><i class="bi @row.Icon"></i> @row.Label — Assessor Note</div>
+                            @row.Note
+                        </div>
+                    }
+                }
+
+                <div class="fa-env-overall" style="margin-top:14px;">
+                    <span class="fa-env-overall-lbl">Overall Environment Status</span>
+                    <span class="fa-compliance-badge fa-compliance-badge-lg @Css(envOverall)">
+                        <i class="bi @Icon(envOverall)"></i> @envOverall
+                    </span>
+                </div>
+            </section>
+
+            <!-- ═══════════════ FINAL DECISION ═══════════════ -->
+            <section class="rm-card rd-card fa-final-card">
+                <div class="rd-card-hd">
+                    <div class="rd-card-hd-row">
+                        <div class="fa-final-head">
+                            <h2><i class="bi bi-clipboard2-check"></i> Final Recommendation</h2>
+                            <p>Submitted decision and professional justification by the assigned assessor.</p>
+                            <div class="kpi-row" style="margin-top:8px;">
+                                <span class="kpi-chip kpi-ok"><i class="bi bi-check-circle-fill"></i> Compliant: @compliantPoints</span>
+                                <span class="kpi-chip kpi-warn"><i class="bi bi-exclamation-circle-fill"></i> Needs Review: @reviewPoints</span>
+                                <span class="kpi-chip kpi-bad"><i class="bi bi-x-circle-fill"></i> Non-Compliant: @nonCompliantPoints</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (!hasSubmission)
+                {
+                    <div class="pending-notice">
+                        <i class="bi bi-hourglass-split"></i>
+                        <div>
+                            <strong>Assessment not yet submitted.</strong><br />
+                            The assessor has not yet completed and saved their final decision. This report will update automatically once submitted.
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="decision-card"
+                         style="background:@DecBg(finalDecision);border:2px solid @DecBorder(finalDecision);">
+                        <div class="decision-icon-wrap">
+                            <i class="bi @DecIcon(finalDecision)" style="color:@DecColor(finalDecision)"></i>
+                        </div>
+                        <div class="decision-text" style="color:@DecColor(finalDecision)">
+                            <div class="d-label">Submitted Decision</div>
+                            <div class="d-value">@finalDecision</div>
+                        </div>
+                    </div>
+                }
+
+                <div style="margin-top:16px;">
+                    <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;">
+                        <i class="bi bi-chat-square-text" style="color:#7f1627;font-size:13px;"></i>
+                        Final Justification Note
+                    </div>
+                    @if (string.IsNullOrWhiteSpace(finalJustification))
+                    {
+                        <div class="ro-block ro-empty">No justification note has been submitted.</div>
+                    }
+                    else
+                    {
+                        <div class="ro-block">@finalJustification</div>
+                    }
+                </div>
+            </section>
+
+            <!-- ── Bottom navigation ── -->
+            <section class="rm-card rd-actions">
+                <div class="rd-actions-left">
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("ElectronicRequests", "Home")">
+                        <i class="bi bi-arrow-left"></i> Back to My Requests
+                    </a>
+                </div>
+                <div class="rd-actions-right">
+                    <button type="button" class="print-btn" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Print Report
+                    </button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+</body>
+</html>

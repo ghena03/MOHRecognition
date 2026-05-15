@@ -3,8 +3,16 @@
     Layout = null;
     ViewData["Title"] = "Request Details - Admission Requirements and Study Duration";
     ViewData["ActiveNav"] = "requests";
+    var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
+    var adminMeetingId = (int)(ViewBag.AdminMeetingId ?? 0);
     var requestId = Model?.Id ?? 0;
     var inst = Model?.UniversityName ?? "—";
+    var previousLink = adminReadOnly
+        ? Url.Action("AdminDetailsStatistics", "Home", new { id = requestId, meetingId = adminMeetingId })
+        : Url.Action("DetailsStatistics", "Home", new { id = requestId });
+    var nextLink = adminReadOnly
+        ? Url.Action("AdminDetailsAcademicInfo", "Home", new { id = requestId, meetingId = adminMeetingId })
+        : Url.Action("DetailsAcademicInfo", "Home", new { id = requestId });
 
     var review = Model?.AdmissionStudyDurationReview ?? new DTOs.AdmissionStudyDurationReviewDto();
     var submittedDuration = Model?.StudyDuration ?? new DTOs.StudyDurationDto();
@@ -41,7 +49,7 @@
             <div class="rm-top-inner">
                 <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
                 <div class="rm-user">
-                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>Recognition Member</b></span></div>
+                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>@(adminReadOnly ? "Admin Review" : "Recognition Member")</b></span></div>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </div>
             </div>
@@ -49,7 +57,14 @@
     </header>
 
     <div class="rm-shell">
-        @await Html.PartialAsync("_MemberSidebar")
+        @if (adminReadOnly)
+        {
+            @await Html.PartialAsync("_AdminReviewSidebar")
+        }
+        else
+        {
+            @await Html.PartialAsync("_MemberSidebar")
+        }
 
         <main class="rm-main">
             <section class="rm-card rd-head">
@@ -201,10 +216,10 @@
 
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsStatistics", "Home", new { id = requestId })">Previous</a>
+                    <a class="rm-btn rm-btn-light" href="@previousLink">Previous</a>
                 </div>
                 <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAcademicInfo", "Home", new { id = requestId })">Next</a>
+                    <a class="rm-btn rm-btn-light" href="@nextLink">Next</a>
                 </div>
             </section>
         </main>
