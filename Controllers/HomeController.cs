@@ -3941,7 +3941,7 @@ namespace MOHRecognition.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult NewUniAccount(string Institution, string Country, string City, string CityOther, string Email, string Password, string ConfirmPassword, bool Agree)
+        public IActionResult NewUniAccount(string Institution, string Country, string City, string CityOther, string InstitutionType, string Email, string Password, string ConfirmPassword, bool Agree)
         {
             var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "countries.json");
             var countries = new List<string>();
@@ -3984,7 +3984,7 @@ namespace MOHRecognition.Controllers
 
             HttpContext.Session.SetString("SignupCountry", Country ?? "");
             HttpContext.Session.SetString("SignupCity", resolvedCity);
-
+            HttpContext.Session.SetString("InstitutionType", InstitutionType ?? "");
             return RedirectToAction("UniStatus", "Home");
         }
 
