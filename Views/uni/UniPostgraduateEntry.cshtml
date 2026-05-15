@@ -15,25 +15,19 @@
 </head>
 
 <body class="submitapp-page ltr">
-    <!-- ghena -->
 
     <!-- HEADER -->
     <header class="top-header en">
         <div class="hdr-grid">
-
             <div></div>
-
             <nav class="hdr-nav">
                 <a class="hdr-link" href="@Url.Action("UniDashboard", "Home")">← Back</a>
                 <a class="hdr-link" href="https://www.mohe.gov.jo/" target="_blank">Ministry Website</a>
             </nav>
-
             <div class="hdr-logo">
                 <img class="rm-logo" src="~/images/mohelogo.png" />
             </div>
-
         </div>
-
         <div class="brand-bar"></div>
     </header>
 
@@ -41,7 +35,6 @@
 
         <!-- SIDEBAR -->
         <aside class="sidebar">
-
             <a href="@Url.Action("UniStatus", "Home")" class="side-user">
                 <div class="user-avatar">UN</div>
                 <div class="user-info">
@@ -49,17 +42,14 @@
                     <span class="user-link">Show account</span>
                 </div>
             </a>
-
             <a class="side-item" href="#sec-general">Public Info</a>
             <a class="side-item" href="#sec-programs">Postgraduate Programs</a>
             <a class="side-item" href="#sec-students">Number of students</a>
             <a class="side-item" href="#sec-faculty">Academic Staff</a>
             <a class="side-item" href="#sec-user">Applicant Info</a>
-
             <div class="side-footer">
                 <a class="logout" href="@Url.Action("Logout", "Home")">Logout</a>
             </div>
-
         </aside>
 
         <!-- MAIN -->
@@ -69,50 +59,26 @@
             <section class="welcome">
                 <div class="welcome-card">
                     <div class="welcome-icon">📘</div>
-
                     <h1 class="welcome-title">Postgraduate Recognition Instructions</h1>
-
                     <p class="welcome-text">
                         To apply for postgraduate recognition (Master / PhD), the institution must meet all the following requirements.
                     </p>
                 </div>
             </section>
 
-            <!-- ===================== Public / General Info ===================== -->
             @{
                 var P = ViewBag.Public as DTOs.PublicInfoDto ?? new DTOs.PublicInfoDto();
                 var languageOfInstruction = (P.LanguageOfInstruction ?? "").Trim();
                 var languageInstructionOptions = new[]
                 {
-                        "English only",
-                        "Arabic only",
-                        "English + Arabic",
-                        "English + Spanish",
-                        "English + French",
-                        "English + Hindi",
-                        "English + Turkish",
-                        "English + German",
-                        "English + Portuguese",
-                        "English + Chinese (Mandarin)",
-                        "English + Russian",
-                        "English + Japanese",
-                        "English + Korean",
-                        "English + Italian",
-                        "English + Urdu",
-                        "English + Bengali",
-                        "English + Persian",
-                        "English + Indonesian",
-                        "English + Malay",
-                        "English + Dutch",
-                        "English + Swahili",
-                        "English + Tamil",
-                        "English + Punjabi",
-                        "English + Vietnamese",
-                        "English + Thai",
-                        "English + Filipino (Tagalog)",
-                        "English + Greek",
-                        "English + Polish",
-                        "English + Ukrainian"
+                        "English only", "Arabic only", "English + Arabic", "English + Spanish",
+                        "English + French", "English + Hindi", "English + Turkish", "English + German",
+                        "English + Portuguese", "English + Chinese (Mandarin)", "English + Russian",
+                        "English + Japanese", "English + Korean", "English + Italian", "English + Urdu",
+                        "English + Bengali", "English + Persian", "English + Indonesian", "English + Malay",
+                        "English + Dutch", "English + Swahili", "English + Tamil", "English + Punjabi",
+                        "English + Vietnamese", "English + Thai", "English + Filipino (Tagalog)",
+                        "English + Greek", "English + Polish", "English + Ukrainian"
                         };
                 var isKnownLanguageOption = languageInstructionOptions.Any(opt =>
                 languageOfInstruction.Equals(opt, StringComparison.OrdinalIgnoreCase));
@@ -122,598 +88,341 @@
                 var showOtherLanguageInput = isOtherLanguage || languageOfInstruction.Equals("Others", StringComparison.OrdinalIgnoreCase);
             }
 
-            <section class="card" id="sec-general">
-                <div class="card-hd">
-                    <h2>Public Info</h2>
-                    <p>Fields marked with (*) are required.</p>
-                </div>
+            <!-- ===================== ENTIRE FORM STARTS HERE ===================== -->
+            <form method="post"
+                  asp-controller="Home"
+                  asp-action="SavePostgraduatePrograms"
+                  enctype="multipart/form-data"
+                  id="mainPostgraduateForm">
 
-                <div class="card-bd">
-
-                    <!-- Top basic -->
-                    <div class="grid-2">
-                        <div class="field">
-                            <label>Name of Institution <span class="req">*</span></label>
-                            <input name="InstitutionName" value="@P.InstitutionName" />
-                        </div>
-
-                        <div class="field">
-                            <label>Official Entity Possessing Oversight Rights</label>
-                            <select name="OversightRightsEntity">
-                                <option value="">-- Choose --</option>
-                                <option selected="@(P.OversightRightsEntity == "Ministry")">Ministry</option>
-                                <option selected="@(P.OversightRightsEntity == "Accreditation Body")">Accreditation Body</option>
-                                <option selected="@(P.OversightRightsEntity == "Other")">Other</option>
-                            </select>
-                        </div>
+                <!-- ================= PUBLIC INFO ================= -->
+                <section class="card" id="sec-general">
+                    <div class="card-hd">
+                        <h2>Public Info</h2>
+                        <p>Fields marked with (*) are required.</p>
                     </div>
-
-                    <!-- Dates + Oversight -->
-                    <div class="grid-2">
-                        <div class="field">
-                            <label>Founding Date <span class="req">*</span></label>
-                            <input name="FoundationDate" type="date" value="@P.FoundationDate" />
-                        </div>
-
-                        <div class="field">
-                            <label>Date of Establishment <span class="req">*</span></label>
-                            <input name="DateOfEstablishment" type="date" value="@P.DateOfEstablishment" />
-                        </div>
-
-                        <div class="field">
-                            <label>Mode of Study <span class="req">*</span></label>
-                            <select name="ModeOfStudy">
-                                <option value="">-- Choose --</option>
-                                <option selected="@(P.ModeOfStudy == "On-campus")">On-campus</option>
-                                <option selected="@(P.ModeOfStudy == "Blended")">Blended</option>
-                                <option selected="@(P.ModeOfStudy == "Online")">Online</option>
-                            </select>
-                        </div>
-
-                        <div class="field">
-                            <label>Language of Instruction <span class="req">*</span></label>
-                            <select name="LanguageOfInstruction" id="LanguageOfInstruction">
-                                <option value="">-- Choose --</option>
-                                @foreach (var languageOption in languageInstructionOptions)
-                                {
-                                    <option value="@languageOption" selected="@(languageOfInstruction.Equals(languageOption, StringComparison.OrdinalIgnoreCase))">@languageOption</option>
-                                }
-                                <option value="Others" selected="@showOtherLanguageInput">Others</option>
-                            </select>
-
-                            <div id="LanguageOfInstructionOtherWrap" style="margin-top:10px; display:@(showOtherLanguageInput ? "block" : "none");">
-                                <input type="text" name="LanguageOfInstructionOther" id="LanguageOfInstructionOther" placeholder="Please specify" value="@(isOtherLanguage? languageOfInstruction : "")" />
+                    <div class="card-bd">
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Name of Institution <span class="req">*</span></label>
+                                <input name="InstitutionName" value="@P.InstitutionName" />
+                            </div>
+                            <div class="field">
+                                <label>Official Entity Possessing Oversight Rights</label>
+                                <select name="OversightRightsEntity">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(P.OversightRightsEntity == "Ministry")">Ministry</option>
+                                    <option selected="@(P.OversightRightsEntity == "Accreditation Body")">Accreditation Body</option>
+                                    <option selected="@(P.OversightRightsEntity == "Other")">Other</option>
+                                </select>
                             </div>
                         </div>
-
-                        <div class="field">
-                            <label>Start of Teaching <span class="req">*</span></label>
-                            <input name="StartOfTeaching" type="date" value="@P.StartOfTeaching" />
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Founding Date <span class="req">*</span></label>
+                                <input name="FoundationDate" type="date" value="@P.FoundationDate" />
+                            </div>
+                            <div class="field">
+                                <label>Date of Establishment <span class="req">*</span></label>
+                                <input name="DateOfEstablishment" type="date" value="@P.DateOfEstablishment" />
+                            </div>
+                            <div class="field">
+                                <label>Mode of Study <span class="req">*</span></label>
+                                <select name="ModeOfStudy">
+                                    <option value="">-- Choose --</option>
+                                    <option selected="@(P.ModeOfStudy == "On-campus")">On-campus</option>
+                                    <option selected="@(P.ModeOfStudy == "Blended")">Blended</option>
+                                    <option selected="@(P.ModeOfStudy == "Online")">Online</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Language of Instruction <span class="req">*</span></label>
+                                <select name="LanguageOfInstruction" id="LanguageOfInstruction">
+                                    <option value="">-- Choose --</option>
+                                    @foreach (var languageOption in languageInstructionOptions)
+                                    {
+                                        <option value="@languageOption" selected="@(languageOfInstruction.Equals(languageOption, StringComparison.OrdinalIgnoreCase))">@languageOption</option>
+                                    }
+                                    <option value="Others" selected="@showOtherLanguageInput">Others</option>
+                                </select>
+                                <div id="LanguageOfInstructionOtherWrap" style="margin-top:10px; display:@(showOtherLanguageInput ? "block" : "none");">
+                                    <input type="text" name="LanguageOfInstructionOther" id="LanguageOfInstructionOther" placeholder="Please specify" value="@(isOtherLanguage? languageOfInstruction : "")" />
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label>Start of Teaching <span class="req">*</span></label>
+                                <input name="StartOfTeaching" type="date" value="@P.StartOfTeaching" />
+                            </div>
                         </div>
-
-                    </div>
-
-                    <!-- President info -->
-                    <div class="subhead">Information of President of Institution</div>
-                    <div class="grid-3">
-                        <div class="field">
-                            <label>Name</label>
-                            <input name="PresidentName" value="@P.PresidentName" />
+                        <div class="subhead">Information of President of Institution</div>
+                        <div class="grid-3">
+                            <div class="field">
+                                <label>Name</label>
+                                <input name="PresidentName" value="@P.PresidentName" />
+                            </div>
+                        </div>
+                        <div class="subhead">Contact Information</div>
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Mailing Full Address <span class="req">*</span></label>
+                                <input name="MailingFullAddress" value="@P.MailingFullAddress" />
+                            </div>
+                            <div class="field">
+                                <label>Direct Phone Number <span class="req">*</span></label>
+                                <input name="DirectPhoneNumber" value="@P.DirectPhoneNumber" inputmode="tel" />
+                            </div>
+                            <div class="field">
+                                <label>Email Address <span class="req">*</span></label>
+                                <input name="EmailAddress" value="@P.EmailAddress" type="email" />
+                            </div>
+                            <div class="field">
+                                <label>Institutional Web Address <span class="req">*</span></label>
+                                <input name="InstitutionalWebAddress" value="@P.InstitutionalWebAddress" type="url" placeholder="https://..." />
+                            </div>
+                        </div>
+                        <div class="actions" style="justify-content:center; margin-top:14px;">
+                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-programs')">
+                                Save Public Info →
+                            </button>
                         </div>
                     </div>
+                </section>
 
-                    <!-- Contact info -->
-                    <div class="subhead">Contact Information</div>
-                    <div class="grid-2">
-                        <div class="field">
-                            <label>Mailing Full Address <span class="req">*</span></label>
-                            <input name="MailingFullAddress" value="@P.MailingFullAddress" />
+                <!-- ================= PROGRAMS ================= -->
+                <section class="card" id="sec-programs">
+                    <div class="card-hd">
+                        <h2>Postgraduate Programs</h2>
+                    </div>
+                    <div class="card-bd">
+                        <div class="degree-options">
+                            <label class="degree-pill">
+                                <input type="checkbox" id="chkMaster" hidden />
+                                <span>Master</span>
+                            </label>
+                            <label class="degree-pill">
+                                <input type="checkbox" id="chkPhD" hidden />
+                                <span>PhD</span>
+                            </label>
+                            <label class="degree-pill">
+                                <input type="checkbox" id="chkDiploma" hidden />
+                                <span>Higher Diploma</span>
+                            </label>
                         </div>
-
-                        <div class="field">
-                            <label>Direct Phone Number <span class="req">*</span></label>
-                            <input name="DirectPhoneNumber" value="@P.DirectPhoneNumber" inputmode="tel" />
+                        <div class="program-grid">
+                            <div id="masterCard" class="upload-card" style="display:none;">
+                                <h3>Master Programs *</h3>
+                                <input asp-for="MasterFile" type="file" />
+                            </div>
+                            <div id="phdCard" class="upload-card" style="display:none;">
+                                <h3>PhD Programs *</h3>
+                                <input asp-for="PhDFile" type="file" />
+                            </div>
+                            <div id="diplomaCard" class="upload-card" style="display:none;">
+                                <h3>Higher Diploma Programs *</h3>
+                                <input asp-for="DiplomaFile" type="file" />
+                            </div>
                         </div>
-
-                        <div class="field">
-                            <label>Email Address <span class="req">*</span></label>
-                            <input name="EmailAddress" value="@P.EmailAddress" type="email" />
+                        <div class="actions" style="justify-content:center; margin-top:20px;">
+                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-students')">
+                                Save Programs →
+                            </button>
                         </div>
+                    </div>
+                </section>
 
-                        <div class="field">
-                            <label>Institutional Web Address <span class="req">*</span></label>
-                            <input name="InstitutionalWebAddress" value="@P.InstitutionalWebAddress" type="url" placeholder="https://..." />
+                <!-- ================= STUDENTS ================= -->
+                <section class="card" id="sec-students">
+                    <div class="card-hd modern-hd">
+                        <div class="students-title-wrap">
+                            <div>
+                                <h2>Number of Students</h2>
+                                <p>Enter the total number of enrolled postgraduate students.</p>
+                            </div>
                         </div>
-
                     </div>
-
-                    <!-- Save -->
-                    <div class="actions" style="justify-content:center; margin-top:14px;">
-                        <button type="button"
-                                class="btn-primary"
-                                id="btnSavePublic"
-                                data-save-url="@Url.Action("SavePublicInfo", "Home")">
-                            Save Public Info
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <form method="post"
-      asp-controller="Home"
-      asp-action="SavePostgraduatePrograms"
-      enctype="multipart/form-data">
-
-    <!-- ================= PROGRAMS ================= -->
-    <section class="card" id="sec-programs">
-
-        <div class="card-hd">
-            <h2>Postgraduate Programs</h2>
-        </div>
-
-        <div class="card-bd">
-
-            <div class="degree-options">
-
-                <label class="degree-pill">
-                    <input type="checkbox" id="chkMaster" hidden />
-                    <span>Master</span>
-                </label>
-
-                <label class="degree-pill">
-                    <input type="checkbox" id="chkPhD" hidden />
-                    <span>PhD</span>
-                </label>
-
-                <label class="degree-pill">
-                    <input type="checkbox" id="chkDiploma" hidden />
-                    <span>Higher Diploma</span>
-                </label>
-
-            </div>
-
-            <div class="program-grid">
-
-                <!-- MASTER -->
-                <div id="masterCard"
-                     class="upload-card"
-                     style="display:none;">
-
-                    <h3>Master Programs *</h3>
-
-                    <input asp-for="MasterFile"
-                           type="file" />
-
-                </div>
-
-                <!-- PHD -->
-                <div id="phdCard"
-                     class="upload-card"
-                     style="display:none;">
-
-                    <h3>PhD Programs *</h3>
-
-                    <input asp-for="PhDFile"
-                           type="file" />
-
-                </div>
-
-                <!-- DIPLOMA -->
-                <div id="diplomaCard"
-                     class="upload-card"
-                     style="display:none;">
-
-                    <h3>Higher Diploma Programs *</h3>
-
-                    <input asp-for="DiplomaFile"
-                           type="file" />
-
-                </div>
-
-            </div>
-
-        </div>
-    </section>
-
-    <!-- ================= STUDENTS ================= -->
-    <section class="card" id="sec-students">
-
-        <div class="card-hd modern-hd">
-
-            <div class="students-title-wrap">
-
-                <div>
-                    <h2>Number of Students</h2>
-
-                    <p>
-                        Enter the total number of enrolled postgraduate students.
-                    </p>
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="card-bd students-modern-body">
-
-            <!-- MASTER -->
-            <div id="masterStudents"
-                 class="student-modern-row"
-                 style="display:none;">
-
-                <div class="student-left">
-
-                    <div class="student-mini-icon">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                    </div>
-
-                    <div>
-                        <label>
-                            Master Students
-                            <span class="required">*</span>
-                        </label>
-
-                        <small>Total enrolled master students</small>
-                    </div>
-
-                </div>
-
-                <input asp-for="MasterStudents"
-                       type="number" />
-
-            </div>
-
-            <!-- PHD -->
-            <div id="phdStudents"
-                 class="student-modern-row"
-                 style="display:none;">
-
-                <div class="student-left">
-
-                    <div class="student-mini-icon">
-                        <i class="fa-solid fa-book-open-reader"></i>
-                    </div>
-
-                    <div>
-                        <label>
-                            PhD Students
-                            <span class="required">*</span>
-                        </label>
-
-                        <small>Total enrolled PhD students</small>
-                    </div>
-
-                </div>
-
-                <input asp-for="PhDStudents"
-                       type="number" />
-
-            </div>
-
-            <!-- DIPLOMA -->
-            <div id="diplomaStudents"
-                 class="student-modern-row"
-                 style="display:none; border-bottom:none;">
-
-                <div class="student-left">
-
-                    <div class="student-mini-icon">
-                        <i class="fa-solid fa-scroll"></i>
-                    </div>
-
-                    <div>
-                        <label>
-                            Diploma Students
-                            <span class="required">*</span>
-                        </label>
-
-                        <small>Total enrolled diploma students</small>
-                    </div>
-
-                </div>
-
-                <input asp-for="DiplomaStudents"
-                       type="number" />
-
-            </div>
-
-        </div>
-    </section>
-
-    <!-- ================= FACULTY ================= -->
-    <section class="card" id="sec-faculty">
-
-        <div class="card-hd">
-            <h2>Academic Staff</h2>
-        </div>
-
-        <div class="card-bd">
-
-            <!-- MASTER -->
-            <div id="masterFaculty"
-                 class="faculty-modern-card"
-                 style="display:none;">
-
-                <div class="faculty-modern-head">
-
-                    <div class="faculty-head-left">
-
-                        <div>
-                            <h3>Master Programs</h3>
-
-                            <p>
-                                Academic staff assigned to master programs.
-                            </p>
+                    <div class="card-bd students-modern-body">
+                        <div id="masterStudents" class="student-modern-row" style="display:none;">
+                            <div class="student-left">
+                                <div class="student-mini-icon">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                </div>
+                                <div>
+                                    <label>Master Students <span class="required">*</span></label>
+                                    <small>Total enrolled master students</small>
+                                </div>
+                            </div>
+                            <input asp-for="MasterStudents" type="number" />
                         </div>
-
-                    </div>
-
-                </div>
-
-                <div class="faculty-modern-grid">
-
-                    <div class="faculty-input-box">
-
-                        <label>
-                            <i class="fa-solid fa-chalkboard-user"></i>
-                            Professor
-                        </label>
-
-                        <input asp-for="MasterProfessor"
-                               type="number" />
-
-                    </div>
-
-                    <div class="faculty-input-box">
-
-                        <label>
-                            <i class="fa-solid fa-user-graduate"></i>
-                            Associate Professor
-                        </label>
-
-                        <input asp-for="MasterAssociate"
-                               type="number" />
-
-                    </div>
-
-                    <div class="faculty-input-box">
-
-                        <label>
-                            <i class="fa-solid fa-book-open-reader"></i>
-                            Assistant Professor
-                        </label>
-
-                        <input asp-for="MasterAssistant"
-                               type="number" />
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- PHD -->
-            <div id="phdFaculty"
-                 class="faculty-modern-card"
-                 style="display:none;">
-
-                <div class="faculty-modern-head">
-
-                    <div class="faculty-head-left">
-
-                        <div>
-                            <h3>PhD Programs</h3>
-
-                            <p>
-                                Academic staff assigned to PhD programs.
-                            </p>
+                        <div id="phdStudents" class="student-modern-row" style="display:none;">
+                            <div class="student-left">
+                                <div class="student-mini-icon">
+                                    <i class="fa-solid fa-book-open-reader"></i>
+                                </div>
+                                <div>
+                                    <label>PhD Students <span class="required">*</span></label>
+                                    <small>Total enrolled PhD students</small>
+                                </div>
+                            </div>
+                            <input asp-for="PhDStudents" type="number" />
                         </div>
-
-                    </div>
-
-                </div>
-
-                <div class="faculty-modern-grid">
-
-                    <div class="faculty-input-box">
-
-                        <label>
-                            <i class="fa-solid fa-chalkboard-user"></i>
-                            Professor
-                        </label>
-
-                        <input asp-for="PhDProfessor"
-                               type="number" />
-
-                    </div>
-
-                    <div class="faculty-input-box">
-
-                        <label>
-                            <i class="fa-solid fa-user-graduate"></i>
-                            Associate Professor
-                        </label>
-
-                        <input asp-for="PhDAssociate"
-                               type="number" />
-
-                    </div>
-
-                    <div class="faculty-input-box">
-
-                        <label>
-                            <i class="fa-solid fa-book-open-reader"></i>
-                            Assistant Professor
-                        </label>
-
-                        <input asp-for="PhDAssistant"
-                               type="number" />
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- DIPLOMA -->
-            <div id="diplomaFaculty"
-                 class="faculty-modern-card"
-                 style="display:none;">
-
-                <div class="faculty-modern-head">
-
-                    <div class="faculty-head-left">
-
-                        <div>
-                            <h3>Higher Diploma Programs</h3>
-
-                            <p>
-                                Academic staff assigned to diploma programs.
-                            </p>
+                        <div id="diplomaStudents" class="student-modern-row" style="display:none; border-bottom:none;">
+                            <div class="student-left">
+                                <div class="student-mini-icon">
+                                    <i class="fa-solid fa-scroll"></i>
+                                </div>
+                                <div>
+                                    <label>Diploma Students <span class="required">*</span></label>
+                                    <small>Total enrolled diploma students</small>
+                                </div>
+                            </div>
+                            <input asp-for="DiplomaStudents" type="number" />
                         </div>
-
+                        <div class="actions" style="justify-content:center; margin-top:20px;">
+                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-faculty')">
+                                Save Students →
+                            </button>
+                        </div>
                     </div>
+                </section>
 
-                </div>
-
-                <div class="faculty-modern-grid">
-
-                    <div class="faculty-input-box">
-
-                        <label>
-                            <i class="fa-solid fa-chalkboard-user"></i>
-                            Professor
-                        </label>
-
-                        <input asp-for="DiplomaProfessor"
-                               type="number" />
-
+                <!-- ================= FACULTY ================= -->
+                <section class="card" id="sec-faculty">
+                    <div class="card-hd">
+                        <h2>Academic Staff</h2>
                     </div>
-
-                    <div class="faculty-input-box">
-
-                        <label>
-                            <i class="fa-solid fa-user-graduate"></i>
-                            Associate Professor
-                        </label>
-
-                        <input asp-for="DiplomaAssociate"
-                               type="number" />
-
+                    <div class="card-bd">
+                        <div id="masterFaculty" class="faculty-modern-card" style="display:none;">
+                            <div class="faculty-modern-head">
+                                <div class="faculty-head-left">
+                                    <div>
+                                        <h3>Master Programs</h3>
+                                        <p>Academic staff assigned to master programs.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="faculty-modern-grid">
+                                <div class="faculty-input-box">
+                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor</label>
+                                    <input asp-for="MasterProfessor" type="number" />
+                                </div>
+                                <div class="faculty-input-box">
+                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor</label>
+                                    <input asp-for="MasterAssociate" type="number" />
+                                </div>
+                                <div class="faculty-input-box">
+                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor</label>
+                                    <input asp-for="MasterAssistant" type="number" />
+                                </div>
+                            </div>
+                        </div>
+                        <div id="phdFaculty" class="faculty-modern-card" style="display:none;">
+                            <div class="faculty-modern-head">
+                                <div class="faculty-head-left">
+                                    <div>
+                                        <h3>PhD Programs</h3>
+                                        <p>Academic staff assigned to PhD programs.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="faculty-modern-grid">
+                                <div class="faculty-input-box">
+                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor</label>
+                                    <input asp-for="PhDProfessor" type="number" />
+                                </div>
+                                <div class="faculty-input-box">
+                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor</label>
+                                    <input asp-for="PhDAssociate" type="number" />
+                                </div>
+                                <div class="faculty-input-box">
+                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor</label>
+                                    <input asp-for="PhDAssistant" type="number" />
+                                </div>
+                            </div>
+                        </div>
+                        <div id="diplomaFaculty" class="faculty-modern-card" style="display:none;">
+                            <div class="faculty-modern-head">
+                                <div class="faculty-head-left">
+                                    <div>
+                                        <h3>Higher Diploma Programs</h3>
+                                        <p>Academic staff assigned to diploma programs.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="faculty-modern-grid">
+                                <div class="faculty-input-box">
+                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor</label>
+                                    <input asp-for="DiplomaProfessor" type="number" />
+                                </div>
+                                <div class="faculty-input-box">
+                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor</label>
+                                    <input asp-for="DiplomaAssociate" type="number" />
+                                </div>
+                                <div class="faculty-input-box">
+                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor</label>
+                                    <input asp-for="DiplomaAssistant" type="number" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="actions" style="justify-content:center; margin-top:20px;">
+                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-user')">
+                                Save Academic Staff →
+                            </button>
+                        </div>
                     </div>
+                </section>
 
-                    <div class="faculty-input-box">
-
-                        <label>
-                            <i class="fa-solid fa-book-open-reader"></i>
-                            Assistant Professor
-                        </label>
-
-                        <input asp-for="DiplomaAssistant"
-                               type="number" />
-
+                <!-- ================= USER INFO ================= -->
+                <section class="card" id="sec-user">
+                    <div class="card-hd modern-applicant-hd">
+                        <div class="applicant-title-wrap">
+                            <div>
+                                <h2>Applicant Information</h2>
+                                <p>Please enter the official applicant details.</p>
+                            </div>
+                        </div>
                     </div>
+                    <div class="card-bd applicant-modern-body">
+                        <div class="applicant-grid">
+                            <div class="applicant-field">
+                                <label><i class="fa-solid fa-user"></i> Full Name</label>
+                                <input asp-for="Name" type="text" placeholder="Enter applicant name" />
+                            </div>
+                            <div class="applicant-field">
+                                <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+                                <input asp-for="Email" type="email" placeholder="example@email.com" />
+                            </div>
+                            <div class="applicant-field full-width">
+                                <label><i class="fa-solid fa-location-dot"></i> Location</label>
+                                <input asp-for="Location" type="text" placeholder="Country / City" />
+                            </div>
+                        </div>
+                        <div class="submit-area">
+                            <!-- ✅ ONLY this button submits the form -->
+                            <button type="submit" class="submit-modern-btn">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                Submit Application
+                            </button>
+                        </div>
+                    </div>
+                </section>
 
-                </div>
-
-            </div>
-
-        </div>
-    </section>
-
-    <!-- ================= USER INFO ================= -->
-    <section class="card" id="sec-user">
-
-        <div class="card-hd modern-applicant-hd">
-
-            <div class="applicant-title-wrap">
-
-                <div>
-                    <h2>Applicant Information</h2>
-
-                    <p>
-                        Please enter the official applicant details.
-                    </p>
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="card-bd applicant-modern-body">
-
-            <div class="applicant-grid">
-
-                <div class="applicant-field">
-
-                    <label>
-                        <i class="fa-solid fa-user"></i>
-                        Full Name
-                    </label>
-
-                    <input asp-for="Name"
-                           type="text"
-                           placeholder="Enter applicant name" />
-
-                </div>
-
-                <div class="applicant-field">
-
-                    <label>
-                        <i class="fa-solid fa-envelope"></i>
-                        Email Address
-                    </label>
-
-                    <input asp-for="Email"
-                           type="email"
-                           placeholder="example@email.com" />
-
-                </div>
-
-                <div class="applicant-field full-width">
-
-                    <label>
-                        <i class="fa-solid fa-location-dot"></i>
-                        Location
-                    </label>
-
-                    <input asp-for="Location"
-                           type="text"
-                           placeholder="Country / City" />
-
-                </div>
-
-            </div>
-
-            <div class="submit-area">
-
-                <button type="submit"
-                        class="submit-modern-btn">
-
-                    <i class="fa-solid fa-paper-plane"></i>
-
-                    Submit Application
-
-                </button>
-
-            </div>
-
-        </div>
-
-    </section>
-
-</form>
+            </form>
+            <!-- ===================== ENTIRE FORM ENDS HERE ===================== -->
 
             <footer class="foot">© Ministry of Higher Education</footer>
 
         </main>
     </div>
 
-    <!-- SWEET ALERT -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- EXTERNAL JS -->
     <script src="~/js/uni/PostgraduatePrograms.js" asp-append-version="true"></script>
+
+    <script>
+        function scrollToNext(sectionId) {
+            const el = document.getElementById(sectionId);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
 
 </body>
 </html>

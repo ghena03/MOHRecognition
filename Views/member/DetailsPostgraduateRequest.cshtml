@@ -66,20 +66,10 @@
     // RATIOS
     // =========================
 
-    double masterRatio =
-        masterFaculty == 0
-        ? 0
-        : (double)masterStudents / masterFaculty;
+    double masterRatio = masterFaculty == 0 ? 0 : Math.Floor((double)masterStudents / masterFaculty);
+    double phdRatio = phdFaculty == 0 ? 0 : Math.Floor((double)phdStudents / phdFaculty);
+    double diplomaRatio = diplomaFaculty == 0 ? 0 : Math.Floor((double)diplomaStudents / diplomaFaculty);
 
-    double phdRatio =
-        phdFaculty == 0
-        ? 0
-        : (double)phdStudents / phdFaculty;
-
-    double diplomaRatio =
-        diplomaFaculty == 0
-        ? 0
-        : (double)diplomaStudents / diplomaFaculty;
 
 
     // =========================
@@ -280,34 +270,24 @@
 
             <!-- TOP REQUEST CARD -->
             <section class="rm-card rd-head">
-
                 <div>
                     <h1>Postgraduate Request Details</h1>
-
                     <p class="rd-inst">
-                        Institution:
-                        <b>Jordan University</b>
+                        Institution: <b>@(Model.InstitutionName ?? "N/A")</b>
                     </p>
-
-                    <p>
-                        Review postgraduate recognition application.
-                    </p>
+                    <p>Review postgraduate recognition application.</p>
                 </div>
-
                 <div class="rd-meta">
-
                     <div class="meta-pill">
-                        <span>Request ID</span>
-                        <b>#2026</b>
+                        <span>Applicant</span>
+                        <b>@(Model.Name ?? "N/A")</b>
                     </div>
-
                     <div class="meta-pill">
                         <span>Request Type</span>
                         <b>Postgraduate</b>
                     </div>
                 </div>
             </section>
-
             <!-- ================= PUBLIC INFORMATION ================= -->
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
@@ -317,123 +297,66 @@
                 <div class="rd-grid3">
                     <div class="rd-field">
                         <label>Institution Name</label>
-
-                        <input type="text"
-                               value="Jordan University"
-                               readonly />
+                        <input type="text" value="@(Model.InstitutionName ?? "N/A")" readonly />
                     </div>
                     <div class="rd-field">
-                        <label>Country</label>
-
-                        <input type="text"
-                               value="Jordan"
-                               readonly />
+                        <label>Mode of Study</label>
+                        <input type="text" value="@(Model.ModeOfStudy ?? "N/A")" readonly />
                     </div>
-                    <div class="rd-field">
-                        <label>University Type</label>
-
-                        <input type="text"
-                               value="Private"
-                               readonly />
-                    </div>
-
-                    <div class="rd-field">
-                        <label>Recognition Type</label>
-
-                        <input type="text"
-                               value="Postgraduate Programs"
-                               readonly />
-                    </div>
-
-                    <div class="rd-field">
-                        <label>Application Date</label>
-
-                        <input type="text"
-                               value="09/05/2026"
-                               readonly />
-                    </div>
-
-                    <div class="rd-field">
-                        <label>Official Website</label>
-
-                        <input type="text"
-                               value="www.ju.edu.jo"
-                               readonly />
-                    </div>
-
-                    <div class="rd-field">
-                        <label>Contact Email</label>
-
-                        <input type="text"
-                               value="info@ju.edu.jo"
-                               readonly />
-                    </div>
-
-                    <div class="rd-field">
-                        <label>Contact Phone</label>
-
-                        <input type="text"
-                               value="+962 6 535 5000"
-                               readonly />
-                    </div>
-
                     <div class="rd-field">
                         <label>Language of Instruction</label>
-
-                        <input type="text"
-                               value="English"
-                               readonly />
+                        <input type="text" value="@(Model.LanguageOfInstruction ?? "N/A")" readonly />
                     </div>
-
+                    <div class="rd-field">
+                        <label>Official Website</label>
+                        <input type="text" value="@(Model.InstitutionalWebAddress ?? "N/A")" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Contact Email</label>
+                        <input type="text" value="@(Model.EmailAddress ?? "N/A")" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Contact Phone</label>
+                        <input type="text" value="@(Model.DirectPhoneNumber ?? "N/A")" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Applicant Name</label>
+                        <input type="text" value="@(Model.Name ?? "N/A")" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Applicant Email</label>
+                        <input type="text" value="@(Model.Email ?? "N/A")" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Location</label>
+                        <input type="text" value="@(Model.Location ?? "N/A")" readonly />
+                    </div>
                 </div>
-
             </section>
             <!-- =========== PROGRAMS ================ -->
-            <section class="rm-card rd-card">
+        <!-- MASTER -->
+<div class="rd-field">
+    <label>Master Programs File</label>
+    <input type="text"
+           value="@(Model.MasterFileName ?? "No file uploaded")"
+           readonly />
+</div>
 
-                <div class="rd-card-hd">
-                    <h2>Postgraduate Programs</h2>
-                    <p>Submitted postgraduate programs.</p>
-                </div>
+<!-- PHD -->
+<div class="rd-field">
+    <label>PhD Programs File</label>
+    <input type="text"
+           value="@(Model.PhDFileName ?? "No file uploaded")"
+           readonly />
+</div>
 
-                <div class="rd-grid3">
-
-                    <!-- MASTER -->
-                    <div class="rd-field">
-
-                        <label>Master Programs File</label>
-
-                        <input type="text"
-                               value="@(Model.MasterFile?.FileName ?? "No file uploaded")"
-                               readonly />
-
-                    </div>
-
-                    <!-- PHD -->
-                    <div class="rd-field">
-
-                        <label>PhD Programs File</label>
-
-                        <input type="text"
-                               value="@(Model.PhDFile?.FileName ?? "No file uploaded")"
-                               readonly />
-
-                    </div>
-
-                    <!-- DIPLOMA -->
-                    <div class="rd-field">
-
-                        <label>Higher Diploma File</label>
-
-                        <input type="text"
-                               value="@(Model.DiplomaFile?.FileName ?? "No file uploaded")"
-                               readonly />
-
-                    </div>
-
-                </div>
-
-            </section>
+<!-- DIPLOMA -->
+<div class="rd-field">
+    <label>Higher Diploma File</label>
+    <input type="text"
+           value="@(Model.DiplomaFileName ?? "No file uploaded")"
+           readonly />
+</div>
             
             <!--======================= STUDENTS ======================================-->
             <section class="rm-card rd-card">
@@ -981,6 +904,54 @@
                     b.classList.remove("selected");
                 });
                // add new selection
+                this.classList.add("selected");
+            });
+        });
+    </script>
+    <style>
+        .fa-dec-btn {
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            background: #fff;
+            text-align: left;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+            .fa-dec-btn:hover {
+                border-color: #aaa;
+                background: #f9f9f9;
+            }
+
+            .fa-dec-btn.approve.selected {
+                border-color: #16a34a;
+                background: #f0fdf4;
+                color: #15803d;
+            }
+
+            .fa-dec-btn.conditional.selected {
+                border-color: #ca8a04;
+                background: #fefce8;
+                color: #a16207;
+            }
+
+            .fa-dec-btn.reject.selected {
+                border-color: #dc2626;
+                background: #fef2f2;
+                color: #b91c1c;
+            }
+    </style>
+
+    <script>
+        const decisionButtons = document.querySelectorAll(".fa-dec-btn");
+
+        decisionButtons.forEach(btn => {
+            btn.addEventListener("click", function () {
+                // remove selected from all
+                decisionButtons.forEach(b => b.classList.remove("selected"));
+                // add selected to clicked
                 this.classList.add("selected");
             });
         });

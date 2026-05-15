@@ -4955,81 +4955,36 @@ namespace MOHRecognition.Controllers
         [HttpPost]
         public async Task<IActionResult> SavePostgraduatePrograms(PostgraduateApplicationDto dto)
         {
-            // uploads folder path
-            var uploadsFolder = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                 "wwwroot/uploads/postgraduate"
-            );
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/postgraduate");
 
-            // create uploads folder if it doesn't exist
             if (!Directory.Exists(uploadsFolder))
-            {
                 Directory.CreateDirectory(uploadsFolder);
-            }
-
-            // ================= MASTER FILE =================
 
             if (dto.MasterFile != null)
             {
-                var masterPath = Path.Combine(
-                    uploadsFolder,
-                    dto.MasterFile.FileName
-                );
-
-                using (var stream = new FileStream(masterPath, FileMode.Create))
-                {
+                using (var stream = new FileStream(Path.Combine(uploadsFolder, dto.MasterFile.FileName), FileMode.Create))
                     await dto.MasterFile.CopyToAsync(stream);
-                }
+                dto.MasterFileName = dto.MasterFile.FileName;
             }
-
-            // ================= PHD FILE =================
 
             if (dto.PhDFile != null)
             {
-                var phdPath = Path.Combine(
-                    uploadsFolder,
-                    dto.PhDFile.FileName
-                );
-
-                using (var stream = new FileStream(phdPath, FileMode.Create))
-                {
+                using (var stream = new FileStream(Path.Combine(uploadsFolder, dto.PhDFile.FileName), FileMode.Create))
                     await dto.PhDFile.CopyToAsync(stream);
-                }
+                dto.PhDFileName = dto.PhDFile.FileName;
             }
-
-            // ================= DIPLOMA FILE =================
 
             if (dto.DiplomaFile != null)
             {
-                var diplomaPath = Path.Combine(
-                    uploadsFolder,
-                    dto.DiplomaFile.FileName
-                );
-
-                using (var stream = new FileStream(diplomaPath, FileMode.Create))
-                {
+                using (var stream = new FileStream(Path.Combine(uploadsFolder, dto.DiplomaFile.FileName), FileMode.Create))
                     await dto.DiplomaFile.CopyToAsync(stream);
-                }
-            }
-
-            // DEBUG
-            Console.WriteLine(dto.Name);
-            Console.WriteLine(dto.Email);
-            Console.WriteLine(dto.MasterStudents);
-            _latestPostgraduateRequest = dto;
-
-            if (dto == null)
-            {
-                return RedirectToAction("UniPostgraduateInstructions");
+                dto.DiplomaFileName = dto.DiplomaFile.FileName;
             }
 
             _latestPostgraduateRequest = dto;
 
-            TempData["Success"] = "Application submitted successfully.";
-
-            return View("~/Views/uni/UniPostgraduateEntry.cshtml", dto);
+            return RedirectToAction("UniStatus", "Home");
         }
-
         private static string NormalizeMeetingStatus(string? value)
         {
             var status = (value ?? string.Empty).Trim();
