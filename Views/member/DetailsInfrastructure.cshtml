@@ -1,7 +1,7 @@
 ﻿@model MOHRecognition.Services.RecognitionRequestRecord
 @{
     Layout = null;
-    ViewData["Title"] = "Request Details - Infrastructure";
+    ViewData["Title"] = "Request Details - University Infrastructure";
     ViewData["ActiveNav"] = "requests";
     var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
     var adminMeetingId = (int)(ViewBag.AdminMeetingId ?? 0);
@@ -18,6 +18,7 @@
     var laboratoryRows = laboratories.Rows ?? new List<DTOs.LaboratoryRowDto>();
     var laboratoryFiles = laboratories.UploadedFiles ?? new List<DTOs.LaboratoryFileDto>();
     var infrastructure = Model?.Infrastructure ?? new DTOs.InfrastructureDto();
+    var library = Model?.Library ?? new DTOs.LibraryDto();
     var facultiesAssessment = Model?.FacultiesAssessment ?? string.Empty;
     var hospitalsAssessment = Model?.HospitalsAssessment ?? string.Empty;
     var hospitalEnvironmentAssessment = Model?.HospitalEnvironmentAssessment ?? string.Empty;
@@ -90,7 +91,7 @@
                 <div>
                     <h1>Request Details</h1>
                     <p class="rd-inst">Institution: <b>@inst</b></p>
-                    <p>Step 7 of 7 — Infrastructure & Extra Info.</p>
+                    <p>Step 7 of 7 — University Infrastructure & Extra Info.</p>
                 </div>
                 <div class="rd-meta">
                     <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
@@ -100,8 +101,8 @@
 
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2><i class="bi bi-123"></i> Numbers Info</h2>
-                    <p>Quick overview of submitted infrastructure counts.</p>
+                    <h2><i class="bi bi-123"></i> University Infrastructure</h2>
+                    <p>Quick overview of submitted university infrastructure counts.</p>
                 </div>
 
                 <div class="infra-summary-grid">
@@ -131,7 +132,6 @@
                                         <th style="width:60px;">#</th>
                                         <th>College</th>
                                         <th>Computers</th>
-                                        <th>Workshops</th>
                                         <th>Laboratories</th>
                                     </tr>
                                 </thead>
@@ -145,7 +145,6 @@
                                             <td>@idx</td>
                                             <td>@(string.IsNullOrWhiteSpace(row.FacultyName) ? "—" : row.FacultyName)</td>
                                             <td>@(row.Computers?.ToString() ?? "—")</td>
-                                            <td>@(row.Workshops?.ToString() ?? "—")</td>
                                             <td>@(row.Laboratories?.ToString() ?? "—")</td>
                                         </tr>
                                         idx++;
@@ -158,6 +157,23 @@
                     {
                         <div class="infra-empty">No laboratories rows were submitted.</div>
                     }
+                </div>
+            </section>
+
+            <!-- Library of the University -->
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2><i class="bi bi-book"></i> Library of the University</h2>
+                    <p>Submitted library resources and capacity information.</p>
+                </div>
+
+                <div class="infra-summary-grid">
+                    <div class="infra-summary-item"><span>Area (m²)</span><b>@(library.Area.HasValue ? library.Area.Value.ToString("N0") : "—")</b></div>
+                    <div class="infra-summary-item"><span>Total Student Capacity</span><b>@(library.TotalStudentCapacity.HasValue ? library.TotalStudentCapacity.Value.ToString("N0") : "—")</b></div>
+                    <div class="infra-summary-item"><span>Number of Books</span><b>@(library.NumberOfBooks.HasValue ? library.NumberOfBooks.Value.ToString("N0") : "—")</b></div>
+                    <div class="infra-summary-item"><span>Number of Paper Journals</span><b>@(library.NumberOfPaperJournals.HasValue ? library.NumberOfPaperJournals.Value.ToString("N0") : "—")</b></div>
+                    <div class="infra-summary-item"><span>Number of Electronic Books</span><b>@(library.NumberOfElectronicBooks.HasValue ? library.NumberOfElectronicBooks.Value.ToString("N0") : "—")</b></div>
+                    <div class="infra-summary-item"><span>Number of Electronic Journals</span><b>@(library.NumberOfElectronicJournals.HasValue ? library.NumberOfElectronicJournals.Value.ToString("N0") : "—")</b></div>
                 </div>
             </section>
 
@@ -379,8 +395,83 @@
             chevron.style.transform = isOpen ? "rotate(180deg)" : "";
         }
     </script>
+    <style>
+        @@keyframes _infraToastIn {
+            from { opacity: 0; transform: translateY(16px) scale(.96); }
+            to   { opacity: 1; transform: translateY(0)     scale(1);   }
+        }
+        #_infra-toast {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            box-shadow: 0 8px 32px rgba(0,0,0,.22);
+            max-width: 380px;
+            animation: _infraToastIn .22s ease both;
+            pointer-events: none;
+        }
+        #_infra-toast.toast-success { background: #16a34a; }
+        #_infra-toast.toast-error   { background: #dc2626; }
+        #_infra-toast i { font-size: 18px; flex-shrink: 0; }
+    </style>
     <script>
         (function () {
+            /* ── Toast ─────────────────────────────────────────── */
+            function showToast(message, type) {
+                const old = document.getElementById('_infra-toast');
+                if (old) old.remove();
+                const t = document.createElement('div');
+                t.id = '_infra-toast';
+                t.className = type === 'success' ? 'toast-success' : 'toast-error';
+                const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill';
+                t.innerHTML = `<i class="bi ${icon}"></i><span>${message}</span>`;
+                document.body.appendChild(t);
+                setTimeout(() => {
+                    t.style.transition = 'opacity .28s, transform .28s';
+                    t.style.opacity = '0';
+                    t.style.transform = 'translateY(10px)';
+                    setTimeout(() => t.remove(), 300);
+                }, 3500);
+            }
+
+            /* ── AJAX form submit ──────────────────────────────── */
+            const form = document.getElementById('infraForm');
+            if (form) {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const btn = this.querySelector('button[type="submit"]');
+                    const origHtml = btn ? btn.innerHTML : '';
+                    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving…'; }
+                    try {
+                        const res  = await fetch(this.action, { method: 'POST', body: new FormData(this) });
+                        const html = await res.text();
+                        if (html.includes('Infrastructure assessments saved successfully')) {
+                            showToast('Infrastructure assessments saved successfully.', 'success');
+                        } else if (html.includes('Please add a professional note')) {
+                            showToast('Please add a note for each section marked as Needs Improvement.', 'error');
+                        } else if (html.includes('Unable to save')) {
+                            showToast('Unable to save. Please try again.', 'error');
+                        } else {
+                            showToast('Saved successfully.', 'success');
+                        }
+                    } catch {
+                        showToast('Connection error. Please try again.', 'error');
+                    } finally {
+                        if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+                    }
+                });
+            }
+
+            /* ── Badge + note-wrap live update ─────────────────── */
             const selects = document.querySelectorAll("[data-assessment-select]");
             const isAdminReadOnly = "@adminReadOnly".toLowerCase() === "true";
 
@@ -392,23 +483,19 @@
 
             function updateAssessment(selectEl) {
                 const selectedValue = selectEl.value || "";
-                const badgeId = selectEl.getAttribute("data-assessment-select");
+                const badgeId    = selectEl.getAttribute("data-assessment-select");
                 const noteWrapId = selectEl.getAttribute("data-note-wrap");
                 const noteInputId = selectEl.getAttribute("data-note-input");
-
-                const badge = badgeId ? document.getElementById(badgeId) : null;
-                const noteWrap = noteWrapId ? document.getElementById(noteWrapId) : null;
+                const badge     = badgeId    ? document.getElementById(badgeId)    : null;
+                const noteWrap  = noteWrapId  ? document.getElementById(noteWrapId)  : null;
                 const noteInput = noteInputId ? document.getElementById(noteInputId) : null;
-
                 if (badge) {
                     const status = getBadgeStyle(selectedValue);
                     badge.textContent = status.text;
                     badge.classList.remove("ok", "warn", "neutral", "mod", "bad");
                     badge.classList.add(status.cls);
                 }
-
                 const requiresNote = selectedValue === "Needs Improvement";
-
                 if (noteWrap) {
                     if (isAdminReadOnly) {
                         const hasContent = noteInput && noteInput.value && noteInput.value.trim().length > 0;
@@ -417,12 +504,9 @@
                         noteWrap.style.display = requiresNote ? "grid" : "none";
                     }
                 }
-
                 if (noteInput) {
                     noteInput.required = !isAdminReadOnly && requiresNote;
-                    if (!requiresNote && !isAdminReadOnly) {
-                        noteInput.value = "";
-                    }
+                    if (!requiresNote && !isAdminReadOnly) noteInput.value = "";
                 }
             }
 
@@ -430,8 +514,6 @@
                 s.addEventListener("change", () => updateAssessment(s));
                 updateAssessment(s);
             });
-
-
         })();
     </script>
 </body>

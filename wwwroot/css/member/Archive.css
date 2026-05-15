@@ -102,3 +102,12 @@
     font-weight: 700;
     font-size: 13px;
 }
+
+.rm-mini--view {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+.rm-mini--view:hover {
+    background: #e2e8f0;
+}

@@ -1,4 +1,5 @@
 @model MOHRecognition.Services.RecognitionRequestRecord
+@using System
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Accreditation Bodies";
@@ -16,8 +17,88 @@
         : Url.Action("DetailsInfrastructure", "Home", new { id = requestId });
 
     var accreditationRows = Model?.AccreditationBodies ?? new List<DTOs.AccreditationBodyRowDto>();
-    var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
+    var A        = Model?.AcademicInfo   ?? new DTOs.AcademicInfoDto();
     var rankings = Model?.GlobalRankings ?? new DTOs.GlobalRankingsDto();
+    var hosp = Model?.Hospitals ?? new DTOs.HospitalsDto();
+    string NormalizeHospitalDocType(string? rawType)
+    {
+        var type = (rawType ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(type))
+            return string.Empty;
+
+        if (string.Equals(type, "LocalRecognition", StringComparison.OrdinalIgnoreCase))
+            return "LocalRecognition";
+        if (string.Equals(type, "LocalAccreditation", StringComparison.OrdinalIgnoreCase))
+            return "LocalAccreditation";
+        if (string.Equals(type, "RegionalAccreditation", StringComparison.OrdinalIgnoreCase))
+            return "RegionalAccreditation";
+        if (string.Equals(type, "InternationalAccreditation", StringComparison.OrdinalIgnoreCase))
+            return "InternationalAccreditation";
+        if (string.Equals(type, "OtherAccreditation", StringComparison.OrdinalIgnoreCase))
+            return "OtherAccreditation";
+        if (string.Equals(type, "HospitalAgreement", StringComparison.OrdinalIgnoreCase))
+            return "HospitalAgreement";
+
+        if (string.Equals(type, "University-Hospital Agreement", StringComparison.OrdinalIgnoreCase))
+            return "HospitalAgreement";
+        if (string.Equals(type, "Local Recognition Document", StringComparison.OrdinalIgnoreCase))
+            return "LocalRecognition";
+        if (string.Equals(type, "Recognition Document", StringComparison.OrdinalIgnoreCase))
+            return "LocalRecognition";
+
+        if (type.StartsWith("Recognition Document (", StringComparison.OrdinalIgnoreCase))
+            return "LocalRecognition";
+
+        if (type.StartsWith("Accreditation Document (", StringComparison.OrdinalIgnoreCase))
+        {
+            var open = type.IndexOf('(');
+            var close = type.LastIndexOf(')');
+            var inner = (open >= 0 && close > open)
+                ? type.Substring(open + 1, close - open - 1).Trim()
+                : string.Empty;
+
+            if (inner.Equals("Local", StringComparison.OrdinalIgnoreCase))
+                return "LocalAccreditation";
+            if (inner.Equals("Regional", StringComparison.OrdinalIgnoreCase))
+                return "RegionalAccreditation";
+            if (inner.Equals("International", StringComparison.OrdinalIgnoreCase))
+                return "InternationalAccreditation";
+
+            return "OtherAccreditation";
+        }
+
+        if (string.Equals(type, "Accreditation Document", StringComparison.OrdinalIgnoreCase))
+            return "OtherAccreditation";
+
+        return type;
+    }
+
+    string HospitalDocLabel(string normalizedType) => normalizedType switch
+    {
+        "LocalRecognition" => "Local Recognition",
+        "LocalAccreditation" => "Local Accreditation",
+        "RegionalAccreditation" => "Regional Accreditation",
+        "InternationalAccreditation" => "International Accreditation",
+        "OtherAccreditation" => "Other Accreditation",
+        "HospitalAgreement" => "University-Hospital Agreement",
+        _ => string.IsNullOrWhiteSpace(normalizedType) ? "—" : normalizedType
+    };
+
+    var typedHospitalDocuments = hosp.Documents
+        .Where(x => !string.IsNullOrWhiteSpace(x.FileUrl))
+        .Select(x => new { Doc = x, Type = NormalizeHospitalDocType(x.DocumentType) })
+        .Where(x => !string.IsNullOrWhiteSpace(x.Type))
+        .OrderBy(x => x.Type)
+        .ThenByDescending(x => x.Doc.UploadedAt ?? DateTime.MinValue)
+        .ThenBy(x => x.Doc.OriginalFileName)
+        .ToList();
+
+    var localRecognitionDocs = typedHospitalDocuments.Where(x => x.Type == "LocalRecognition").Select(x => x.Doc).ToList();
+    var localAccreditationDocs = typedHospitalDocuments.Where(x => x.Type == "LocalAccreditation").Select(x => x.Doc).ToList();
+    var regionalAccreditationDocs = typedHospitalDocuments.Where(x => x.Type == "RegionalAccreditation").Select(x => x.Doc).ToList();
+    var internationalAccreditationDocs = typedHospitalDocuments.Where(x => x.Type == "InternationalAccreditation").Select(x => x.Doc).ToList();
+    var otherAccreditationDocs = typedHospitalDocuments.Where(x => x.Type == "OtherAccreditation").Select(x => x.Doc).ToList();
+    var hospitalAgreementDocs = typedHospitalDocuments.Where(x => x.Type == "HospitalAgreement").Select(x => x.Doc).ToList();
 }
 
 <!doctype html>
@@ -93,76 +174,42 @@
                 </div>
             </section>
 
+            <!-- Recognition and Accreditation (unified table) -->
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2>Accreditation Bodies</h2>
-                    <p>Accreditation bodies recognized by the institution.</p>
+                    <h2>Recognition and Accreditation</h2>
+                    <p>All submitted recognition certificates, accreditation documents, and university-hospital agreements.</p>
                 </div>
 
-                @if (accreditationRows.Any())
+                @if (typedHospitalDocuments.Any())
                 {
-                    <div class="clean-table-wrap">
-                        <table class="clean-review-table table-accreditation">
+                    <div class="clean-table-wrap" style="margin-top:14px;">
+                        <table class="clean-review-table">
                             <thead>
                                 <tr>
-                                    <th style="width:90px;">#</th>
-                                    <th>Accreditation Body</th>
-                                    <th>Accreditation Type</th>
-                                    <th>Uploaded PDF</th>
-                                    <th style="width:220px;">Actions</th>
+                                    <th style="width:44px;">#</th>
+                                    <th>File Name</th>
+                                    <th style="width:220px;">Category</th>
+                                    <th style="width:180px;">Actions</th>
                                 </tr>
                             </thead>
-
                             <tbody>
-                                @for (var i = 0; i < accreditationRows.Count; i++)
+                                @{ var di = 1; }
+                                @foreach (var item in typedHospitalDocuments)
                                 {
-                                    var row = accreditationRows[i];
-
+                                    var f = item.Doc;
                                     <tr>
-                                        <td class="cell-index">@(i + 1)</td>
-
-                                        <td class="cell-subject">
-                                            @(string.IsNullOrWhiteSpace(row.AccreditationBodyName)
-                                                ? "—"
-                                                : row.AccreditationBodyName)
-                                        </td>
-
-                                        <td>
-                                            @(string.IsNullOrWhiteSpace(row.AccreditationType)
-                                                ? "—"
-                                                : row.AccreditationType)
-                                        </td>
-
-                                        <td class="file-cell">
-                                            @(string.IsNullOrWhiteSpace(row.PdfOriginalFileName)
-                                                ? "—"
-                                                : row.PdfOriginalFileName)
-                                        </td>
-
+                                        <td>@di</td>
+                                        <td class="file-cell" style="word-break:break-all;">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
+                                        <td><span class="hosp-spec-tag" style="white-space:nowrap;">@HospitalDocLabel(item.Type)</span></td>
                                         <td class="cell-actions">
-                                            @if (!string.IsNullOrWhiteSpace(row.PdfFileUrl))
-                                            {
-                                                <div class="table-actions">
-                                                    <a class="rm-mini"
-                                                       href="@row.PdfFileUrl"
-                                                       target="_blank"
-                                                       rel="noopener">
-                                                        Open
-                                                    </a>
-
-                                                    <a class="rm-mini"
-                                                       href="@row.PdfFileUrl"
-                                                       download="@row.PdfOriginalFileName">
-                                                        Download
-                                                    </a>
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <span>—</span>
-                                            }
+                                            <div class="table-actions">
+                                                <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">View</a>
+                                                <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
+                                            </div>
                                         </td>
                                     </tr>
+                                    di++;
                                 }
                             </tbody>
                         </table>
@@ -170,17 +217,7 @@
                 }
                 else
                 {
-                    <div class="rd-grid2">
-                        <div class="rd-field">
-                            <label>Accreditation Bodies</label>
-                            <input type="text" value="@A.AccreditationBodies" readonly />
-                        </div>
-
-                        <div class="rd-field">
-                            <label>Accreditation Type</label>
-                            <input type="text" value="@A.AccreditationBodiesType" readonly />
-                        </div>
-                    </div>
+                    <div class="infra-empty" style="margin-top:14px;">No recognition or accreditation documents submitted.</div>
                 }
             </section>
 
@@ -299,15 +336,6 @@
                         </div>
                     </div>
 
-                    @if (!adminReadOnly)
-                    {
-                        <div style="display:flex; justify-content:flex-end; margin-top:14px;">
-                            <button class="rm-btn rm-btn-primary" type="submit">
-                                <i class="bi bi-save"></i>
-                                Save
-                            </button>
-                        </div>
-                    }
                 </form>
             </section>
 

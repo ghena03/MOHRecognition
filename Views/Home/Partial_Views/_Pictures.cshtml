@@ -4,10 +4,11 @@
 @{
     var rows = Model?.Rows ?? new List<DTOs.PictureRowDto>();
 
-    var librarySubject = "Library photos";
-    var hospitalSubject = "Hospital photos";
-    var facultiesSubject = "Colleges photos";
+    var librarySubject      = "Library photos";
+    var hospitalSubject     = "Hospital photos";
+    var facultiesSubject    = "Colleges photos";
     var laboratoriesSubject = "Laboratories photos";
+    var facilitiesSubject   = "Facilities photos";
 
     var libraryRows = rows.Where(x =>
         string.Equals(x.Subject, librarySubject, StringComparison.OrdinalIgnoreCase) ||
@@ -23,12 +24,16 @@
     var laboratoriesRows = rows.Where(x =>
         string.Equals(x.Subject, laboratoriesSubject, StringComparison.OrdinalIgnoreCase) ||
         string.Equals(x.Subject, "Laboratories photos (PDF)", StringComparison.OrdinalIgnoreCase)).ToList();
+    var facilitiesRows = rows.Where(x =>
+        string.Equals(x.Subject, facilitiesSubject, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(x.Subject, "Facilities photos (PDF)", StringComparison.OrdinalIgnoreCase)).ToList();
 
     var uploadedCount = 0;
     if (libraryRows.Any()) uploadedCount++;
     if (hospitalRows.Any()) uploadedCount++;
     if (facultiesRows.Any()) uploadedCount++;
     if (laboratoriesRows.Any()) uploadedCount++;
+    if (facilitiesRows.Any()) uploadedCount++;
 }
 
 <div class="pic-modern-wrap">
@@ -43,7 +48,7 @@
             <h3>Photos / Media Upload</h3>
             <p>Upload PDF or image files in each section. Multiple files are allowed.</p>
         </div>
-        <div class="pic-progress" id="picProgressText" data-uploaded="@uploadedCount" data-total="4">Uploaded @uploadedCount of 4 files</div>
+        <div class="pic-progress" id="picProgressText" data-uploaded="@uploadedCount" data-total="5">Uploaded @uploadedCount of 5 files</div>
     </div>
 
     <div class="pic-sections">
@@ -84,6 +89,16 @@
                 { "Title", "4) Laboratories Photos" },
                 { "Subject", laboratoriesSubject },
                 { "Rows", laboratoriesRows }
+            })
+        </section>
+
+        <section class="pic-section-block">
+            @await Html.PartialAsync("Partial_Views/_PicturesCard", new ViewDataDictionary(ViewData)
+            {
+                { "CardId", "facilities" },
+                { "Title", "5) Facilities Photos" },
+                { "Subject", facilitiesSubject },
+                { "Rows", facilitiesRows }
             })
         </section>
     </div>

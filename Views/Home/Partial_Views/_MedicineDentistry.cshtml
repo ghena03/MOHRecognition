@@ -5,21 +5,30 @@
 }
 
 <div class="duration-wrap medden-wrap" style="margin-top:0;">
-    <div class="duration-titlebar">Doctors / Medicine Colleges</div>
+
+    <!-- ── Header ─────────────────────────────────────────────── -->
+    <div class="medden-page-hd">
+        <div class="medden-page-hd-icon">🩺</div>
+        <div>
+            <div class="medden-page-hd-title">Doctors / Medicine Colleges</div>
+            <div class="medden-page-hd-sub">Enter academic staff counts for Medicine and Dentistry. All full-time fields are required.</div>
+        </div>
+    </div>
+
     <div id="medDenBanner" class="banner warn medden-banner" style="display:none;">
         <span class="dot"></span>
         <span class="txt"></span>
         <button type="button" class="x" onclick="document.getElementById('medDenBanner').style.display='none'">×</button>
     </div>
 
-    <!-- ── Academic Staff Table (merged FT + PT) ────────── -->
-    <div class="table-wrap medden-table-wrap">
+    <!-- ── Academic Staff Table ───────────────────────────────── -->
+    <div class="medden-table-wrap">
         <table class="tbl staff-split-table">
             <thead>
                 <tr>
                     <th class="sst-cat-col">Category</th>
-                    <th class="sst-coll-col">College of Medicine</th>
-                    <th class="sst-coll-col">College of Dentistry</th>
+                    <th class="sst-coll-col">🏥 College of Medicine</th>
+                    <th class="sst-coll-col">🦷 College of Dentistry</th>
                 </tr>
             </thead>
             <tbody>
@@ -28,17 +37,22 @@
                     <td class="sst-cat">Total Students</td>
                     <td class="sst-cell">
                         <div class="input-stack">
-                            <div class="input-row"><span class="irow-lbl">Students</span><input class="num" id="med_totalStudents" type="number" min="0" step="1" value="@N(Model.Med_TotalStudents)" /></div>
+                            <div class="input-row">
+                                <span class="irow-lbl">Students</span>
+                                <input class="num" id="med_totalStudents" type="number" min="0" step="1" value="@N(Model.Med_TotalStudents)" />
+                            </div>
                         </div>
                     </td>
                     <td class="sst-cell">
                         <div class="input-stack">
-                            <div class="input-row"><span class="irow-lbl">Students</span><input class="num" id="den_totalStudents" type="number" min="0" step="1" value="@N(Model.Den_TotalStudents)" /></div>
+                            <div class="input-row">
+                                <span class="irow-lbl">Students</span>
+                                <input class="num" id="den_totalStudents" type="number" min="0" step="1" value="@N(Model.Den_TotalStudents)" />
+                            </div>
                         </div>
                     </td>
                 </tr>
 
-                <!-- Professor -->
                 <tr class="sst-phd-row">
                     <td class="sst-cat">Professor</td>
                     <td class="sst-cell">
@@ -55,7 +69,6 @@
                     </td>
                 </tr>
 
-                <!-- Associate Professor -->
                 <tr class="sst-phd-row">
                     <td class="sst-cat">Associate Professor</td>
                     <td class="sst-cell">
@@ -72,7 +85,6 @@
                     </td>
                 </tr>
 
-                <!-- Assistant Professor -->
                 <tr class="sst-phd-row">
                     <td class="sst-cat">Assistant Professor</td>
                     <td class="sst-cell">
@@ -89,7 +101,6 @@
                     </td>
                 </tr>
 
-                <!-- Lecturer (PhD) -->
                 <tr class="sst-phd-row">
                     <td class="sst-cat">Lecturer <span class="sst-qual">(PhD)</span></td>
                     <td class="sst-cell">
@@ -106,37 +117,6 @@
                     </td>
                 </tr>
 
-                <!-- Lecturer (MSc) -->
-                <tr>
-                    <td class="sst-cat">Lecturer <span class="sst-qual">(MSc)</span></td>
-                    <td class="sst-cell">
-                        <div class="input-stack">
-                            <div class="input-row"><span class="irow-lbl ft">Full-Time</span><input class="num" id="med_fullTimeLecturerMsc" type="number" min="0" step="1" value="@N(Model.Med_FullTimeLecturerMsc)" /></div>
-                        </div>
-                    </td>
-                    <td class="sst-cell">
-                        <div class="input-stack">
-                            <div class="input-row"><span class="irow-lbl ft">Full-Time</span><input class="num" id="den_fullTimeLecturerMsc" type="number" min="0" step="1" value="@N(Model.Den_FullTimeLecturerMsc)" /></div>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Assistant Lecturer (MSc) -->
-                <tr>
-                    <td class="sst-cat">Assistant Lecturer <span class="sst-qual">(MSc)</span></td>
-                    <td class="sst-cell">
-                        <div class="input-stack">
-                            <div class="input-row"><span class="irow-lbl ft">Full-Time</span><input class="num" id="med_fullTimeAssistantLecturerMsc" type="number" min="0" step="1" value="@N(Model.Med_FullTimeAssistantLecturerMsc)" /></div>
-                        </div>
-                    </td>
-                    <td class="sst-cell">
-                        <div class="input-stack">
-                            <div class="input-row"><span class="irow-lbl ft">Full-Time</span><input class="num" id="den_fullTimeAssistantLecturerMsc" type="number" min="0" step="1" value="@N(Model.Den_FullTimeAssistantLecturerMsc)" /></div>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Assistant Lecturer (PhD) -->
                 <tr class="sst-phd-row">
                     <td class="sst-cat">Assistant Lecturer <span class="sst-qual">(PhD)</span></td>
                     <td class="sst-cell">
@@ -153,7 +133,34 @@
                     </td>
                 </tr>
 
-                <!-- Practitioner (BSc) -->
+                <tr>
+                    <td class="sst-cat">Lecturer <span class="sst-qual">(MSc)</span></td>
+                    <td class="sst-cell">
+                        <div class="input-stack">
+                            <div class="input-row"><span class="irow-lbl ft">Full-Time</span><input class="num" id="med_fullTimeLecturerMsc" type="number" min="0" step="1" value="@N(Model.Med_FullTimeLecturerMsc)" /></div>
+                        </div>
+                    </td>
+                    <td class="sst-cell">
+                        <div class="input-stack">
+                            <div class="input-row"><span class="irow-lbl ft">Full-Time</span><input class="num" id="den_fullTimeLecturerMsc" type="number" min="0" step="1" value="@N(Model.Den_FullTimeLecturerMsc)" /></div>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="sst-cat">Assistant Lecturer <span class="sst-qual">(MSc)</span></td>
+                    <td class="sst-cell">
+                        <div class="input-stack">
+                            <div class="input-row"><span class="irow-lbl ft">Full-Time</span><input class="num" id="med_fullTimeAssistantLecturerMsc" type="number" min="0" step="1" value="@N(Model.Med_FullTimeAssistantLecturerMsc)" /></div>
+                        </div>
+                    </td>
+                    <td class="sst-cell">
+                        <div class="input-stack">
+                            <div class="input-row"><span class="irow-lbl ft">Full-Time</span><input class="num" id="den_fullTimeAssistantLecturerMsc" type="number" min="0" step="1" value="@N(Model.Den_FullTimeAssistantLecturerMsc)" /></div>
+                        </div>
+                    </td>
+                </tr>
+
                 <tr>
                     <td class="sst-cat">Practitioner <span class="sst-qual">(BSc)</span></td>
                     <td class="sst-cell">
@@ -168,7 +175,6 @@
                     </td>
                 </tr>
 
-                <!-- Practitioner (MSc) -->
                 <tr>
                     <td class="sst-cat">Practitioner <span class="sst-qual">(MSc)</span></td>
                     <td class="sst-cell">
@@ -187,7 +193,9 @@
         </table>
     </div>
 
-    <!-- ── Computed Read-Only Summary ── -->
+    <!-- ratio cards removed — assessor-only data, not shown to university -->
+
+    <!-- ── Computed Read-Only Summary ─────────────────────────── -->
     <div class="medden-summary-wrap">
         <div class="medden-summary-title">Computed Read-Only Summary</div>
         <div class="medden-summary-sub">Totals are automatically calculated for each college.</div>

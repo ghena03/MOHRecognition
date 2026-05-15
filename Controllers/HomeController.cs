@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 namespace MOHRecognition.Controllers  
-    //kameliaaaaaaaaaa96
+    //kameliaaaaaaaaaa9666666666666
 {
    
     public class HomeController : Controller
@@ -423,7 +423,7 @@ namespace MOHRecognition.Controllers
                 Safe(dto.StaffAssociateProfessorFullTimeCount) +
                 Safe(dto.StaffAssistantProfessorFullTimeCount) +
                 Safe(dto.StaffTeacherFullTimeCount));
-            var allowedMscSupport = Math.Ceiling(totalPhdHolders * 0.20m);
+            var allowedMscSupport = totalPhdHolders * 0.20m;
             var actualMscSupport = (decimal)(
                 Safe(dto.StaffAssistantTeacherFullTimeCount) +
                 Safe(dto.StaffOthersFullTimeCount));
@@ -450,7 +450,6 @@ namespace MOHRecognition.Controllers
             var required = new[]
             {
         "TypeOfAcademicInstitution",
-        "OfficialRecognitionInHomeCountry",
         "OfficialAccreditationQualityInHomeCountry",
         "CollegeCategoriesCsv",
         "JordanianStudentPopulation",
@@ -2298,6 +2297,17 @@ namespace MOHRecognition.Controllers
         private HospitalsDto NormalizeHospitalsData(HospitalsDto model)
         {
             model ??= new HospitalsDto();
+            var uploaderFallback = HttpContext.Session.GetString("UniversityEmail") ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(uploaderFallback))
+            {
+                var publicJson = HttpContext.Session.GetString("PublicInfo");
+                if (!string.IsNullOrWhiteSpace(publicJson))
+                {
+                    var publicInfo = JsonSerializer.Deserialize<PublicInfoDto>(publicJson);
+                    if (publicInfo != null && !string.IsNullOrWhiteSpace(publicInfo.EmailAddress))
+                        uploaderFallback = publicInfo.EmailAddress.Trim();
+                }
+            }
 
             model.Rows ??= new List<HospitalRowDto>();
             model.Facilities ??= new List<HospitalFacilityDto>();
@@ -2326,8 +2336,50 @@ namespace MOHRecognition.Controllers
                     OriginalFileName = f.OriginalFileName,
                     StoredFileName = f.StoredFileName,
                     FileUrl = f.FileUrl,
-                    DocumentType = "University-Hospital Agreement"
+                    DocumentType = HospDocTypeHospitalAgreement,
+                    UploadedAt = f.UploadedAt,
+                    UploadedBy = f.UploadedBy
                 }).ToList();
+            }
+
+            foreach (var doc in model.Documents)
+            {
+                doc.DocumentType = NormalizeHospitalDocumentType(doc.DocumentType);
+                doc.FacilityId = (doc.FacilityId ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(doc.UploadedBy))
+                    doc.UploadedBy = uploaderFallback;
+            }
+
+            var facilitiesById = model.Facilities
+                .Where(f => !string.IsNullOrWhiteSpace(f.Id))
+                .Select(f => f.Id.Trim())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var doc in model.Documents)
+            {
+                if (!string.Equals(doc.DocumentType, HospDocTypeHospitalAgreement, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!string.IsNullOrWhiteSpace(doc.FacilityId) && !facilitiesById.Contains(doc.FacilityId))
+                    doc.FacilityId = string.Empty;
+            }
+
+            // Backward compatibility: if legacy agreement files have no facility id and there is exactly one facility,
+            // attach them to that facility so they continue to appear in table-based views.
+            if (model.Facilities.Count == 1)
+            {
+                var onlyId = model.Facilities[0].Id ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(onlyId))
+                {
+                    foreach (var doc in model.Documents)
+                    {
+                        if (string.Equals(doc.DocumentType, HospDocTypeHospitalAgreement, StringComparison.OrdinalIgnoreCase) &&
+                            string.IsNullOrWhiteSpace(doc.FacilityId))
+                        {
+                            doc.FacilityId = onlyId;
+                        }
+                    }
+                }
             }
 
             return model;
@@ -2372,6 +2424,14 @@ namespace MOHRecognition.Controllers
             return PartialView("Partial_Views/_Hospitals", model);
         }
 
+        [HttpGet]
+        public IActionResult UniversityRecognitionAccreditationPartial()
+        {
+            var model = GetHospitalsData();
+            model.Documents ??= new List<HospitalFileDto>();
+            return PartialView("Partial_Views/_UniversityRecognitionAccreditation", model);
+        }
+
         private string EnsureHospitalUploadsFolder()
         {
             var folder = Path.Combine(_env.WebRootPath, "uploads", "hospitals");
@@ -2389,6 +2449,7 @@ namespace MOHRecognition.Controllers
             public string Major { get; set; } = "";
             public string BedCapacity { get; set; } = "";
             public string DentalChairCapacity { get; set; } = "";
+            public List<IFormFile>? AgreementDocuments { get; set; }
         }
 
         public class HospitalCapacityRequest
@@ -2407,8 +2468,12 @@ namespace MOHRecognition.Controllers
 
         public class HospitalDocumentsUploadRequest
         {
-            public List<IFormFile>? AgreementDocuments { get; set; }
-            public List<IFormFile>? AccreditationDocuments { get; set; }
+            public List<IFormFile>? LocalRecognitionDocuments { get; set; }
+            public List<IFormFile>? LocalAccreditationDocuments { get; set; }
+            public List<IFormFile>? RegionalAccreditationDocuments { get; set; }
+            public List<IFormFile>? InternationalAccreditationDocuments { get; set; }
+            public List<IFormFile>? OtherAccreditationDocuments { get; set; }
+            public List<IFormFile>? HospitalAgreementDocuments { get; set; }
         }
 
         public class HospFileDeleteReq
@@ -2419,6 +2484,144 @@ namespace MOHRecognition.Controllers
 
         private static readonly string[] _hospAllowedExts =
             { ".pdf", ".jpg", ".jpeg", ".png", ".webp", ".doc", ".docx" };
+        private const string HospDocTypeLocalRecognition = "LocalRecognition";
+        private const string HospDocTypeLocalAccreditation = "LocalAccreditation";
+        private const string HospDocTypeRegionalAccreditation = "RegionalAccreditation";
+        private const string HospDocTypeInternationalAccreditation = "InternationalAccreditation";
+        private const string HospDocTypeOtherAccreditation = "OtherAccreditation";
+        private const string HospDocTypeHospitalAgreement = "HospitalAgreement";
+
+        private static string NormalizeHospitalDocumentType(string? rawType)
+        {
+            var type = (rawType ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(type))
+                return string.Empty;
+
+            if (string.Equals(type, HospDocTypeLocalRecognition, StringComparison.OrdinalIgnoreCase))
+                return HospDocTypeLocalRecognition;
+            if (string.Equals(type, HospDocTypeLocalAccreditation, StringComparison.OrdinalIgnoreCase))
+                return HospDocTypeLocalAccreditation;
+            if (string.Equals(type, HospDocTypeRegionalAccreditation, StringComparison.OrdinalIgnoreCase))
+                return HospDocTypeRegionalAccreditation;
+            if (string.Equals(type, HospDocTypeInternationalAccreditation, StringComparison.OrdinalIgnoreCase))
+                return HospDocTypeInternationalAccreditation;
+            if (string.Equals(type, HospDocTypeOtherAccreditation, StringComparison.OrdinalIgnoreCase))
+                return HospDocTypeOtherAccreditation;
+            if (string.Equals(type, HospDocTypeHospitalAgreement, StringComparison.OrdinalIgnoreCase))
+                return HospDocTypeHospitalAgreement;
+
+            if (string.Equals(type, "University-Hospital Agreement", StringComparison.OrdinalIgnoreCase))
+                return HospDocTypeHospitalAgreement;
+            if (string.Equals(type, "Local Recognition Document", StringComparison.OrdinalIgnoreCase))
+                return HospDocTypeLocalRecognition;
+            if (string.Equals(type, "Recognition Document", StringComparison.OrdinalIgnoreCase))
+                return HospDocTypeLocalRecognition;
+
+            if (type.StartsWith("Recognition Document (", StringComparison.OrdinalIgnoreCase))
+                return HospDocTypeLocalRecognition;
+
+            if (type.StartsWith("Accreditation Document (", StringComparison.OrdinalIgnoreCase))
+            {
+                var open = type.IndexOf('(');
+                var close = type.LastIndexOf(')');
+                var inner = (open >= 0 && close > open)
+                    ? type.Substring(open + 1, close - open - 1).Trim()
+                    : string.Empty;
+
+                if (inner.Equals("Local", StringComparison.OrdinalIgnoreCase))
+                    return HospDocTypeLocalAccreditation;
+                if (inner.Equals("Regional", StringComparison.OrdinalIgnoreCase))
+                    return HospDocTypeRegionalAccreditation;
+                if (inner.Equals("International", StringComparison.OrdinalIgnoreCase))
+                    return HospDocTypeInternationalAccreditation;
+
+                return HospDocTypeOtherAccreditation;
+            }
+
+            if (string.Equals(type, "Accreditation Document", StringComparison.OrdinalIgnoreCase))
+                return HospDocTypeOtherAccreditation;
+
+            return type;
+        }
+
+        private static (int? Beds, int? Dental, string? Error) NormalizeFacilityCapacities(
+            string specialization,
+            string? bedCapacityRaw,
+            string? dentalChairCapacityRaw)
+        {
+            var isMed = string.Equals(specialization, "Medicine", StringComparison.OrdinalIgnoreCase);
+            var isDent = string.Equals(specialization, "Dentistry", StringComparison.OrdinalIgnoreCase);
+            var isBoth = string.Equals(specialization, "Both", StringComparison.OrdinalIgnoreCase);
+
+            int? beds = int.TryParse((bedCapacityRaw ?? string.Empty).Trim(), out var b) && b >= 0 ? b : (int?)null;
+            int? dental = int.TryParse((dentalChairCapacityRaw ?? string.Empty).Trim(), out var d) && d >= 0 ? d : (int?)null;
+
+            if ((isMed || isBoth) && beds == null)
+                return (null, null, "Please enter number of beds.");
+            if ((isDent || isBoth) && dental == null)
+                return (null, null, "Please enter number of dental chairs.");
+
+            if (isMed)
+                dental = null;
+            else if (isDent)
+                beds = null;
+
+            return (beds, dental, null);
+        }
+
+        private async Task SaveHospitalAgreementFilesForFacility(
+            HospitalsDto model,
+            string facilityId,
+            IEnumerable<IFormFile>? files,
+            string uploader)
+        {
+            if (model == null || string.IsNullOrWhiteSpace(facilityId) || files == null)
+                return;
+
+            var uploadsFolder = EnsureHospitalUploadsFolder();
+            model.Documents ??= new List<HospitalFileDto>();
+
+            foreach (var file in files.Where(f => f != null && f.Length > 0))
+            {
+                var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+                if (!_hospAllowedExts.Contains(ext))
+                    continue;
+
+                var stored = $"{Guid.NewGuid()}{ext}";
+                var path = Path.Combine(uploadsFolder, stored);
+
+                await using (var stream = new FileStream(path, FileMode.Create))
+                    await file.CopyToAsync(stream);
+
+                model.Documents.Add(new HospitalFileDto
+                {
+                    OriginalFileName = Path.GetFileName(file.FileName),
+                    StoredFileName = stored,
+                    FileUrl = $"/uploads/hospitals/{stored}",
+                    DocumentType = HospDocTypeHospitalAgreement,
+                    FacilityId = facilityId,
+                    UploadedAt = DateTime.UtcNow,
+                    UploadedBy = uploader
+                });
+            }
+        }
+
+        private string GetHospitalUploader()
+        {
+            var uploader = HttpContext.Session.GetString("UniversityEmail") ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(uploader))
+                return uploader;
+
+            var publicJson = HttpContext.Session.GetString("PublicInfo");
+            if (!string.IsNullOrWhiteSpace(publicJson))
+            {
+                var publicInfo = JsonSerializer.Deserialize<PublicInfoDto>(publicJson);
+                if (publicInfo != null && !string.IsNullOrWhiteSpace(publicInfo.EmailAddress))
+                    return publicInfo.EmailAddress.Trim();
+            }
+
+            return "University User";
+        }
 
         [HttpPost]
         public IActionResult SaveHospitalCapacity([FromForm] HospitalCapacityRequest req)
@@ -2456,18 +2659,36 @@ namespace MOHRecognition.Controllers
 
             var model = GetHospitalsData();
             model.Facilities ??= new List<HospitalFacilityDto>();
+            var normalized = NormalizeFacilityCapacities(row.Specialization, row.BedCapacity, row.DentalChairCapacity);
+            if (!string.IsNullOrWhiteSpace(normalized.Error))
+                return Json(new { success = false, message = normalized.Error });
+
+            var uploader = GetHospitalUploader();
+            var newId = Guid.NewGuid().ToString();
 
             var newRow = new HospitalFacilityDto
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = newId,
                 Specialization = row.Specialization.Trim(),
                 Name = row.Name.Trim(),
                 Major = (row.Major ?? "").Trim(),
-                BedCapacity = null,
-                DentalChairCapacity = null
+                BedCapacity = normalized.Beds,
+                DentalChairCapacity = normalized.Dental
             };
 
             model.Facilities.Add(newRow);
+            var agreementFiles = (row.AgreementDocuments ?? new List<IFormFile>())
+                .Where(f => f != null && f.Length > 0)
+                .ToList();
+
+            if (!agreementFiles.Any() && Request?.Form?.Files != null && Request.Form.Files.Count > 0)
+            {
+                agreementFiles = Request.Form.Files
+                    .Where(f => f != null && f.Length > 0)
+                    .ToList();
+            }
+
+            await SaveHospitalAgreementFilesForFacility(model, newId, agreementFiles, uploader);
             SaveHospitalsData(model);
             return Json(new { success = true, message = "Hospital added successfully." });
         }
@@ -2489,11 +2710,29 @@ namespace MOHRecognition.Controllers
             if (existing == null)
                 return Json(new { success = false, message = "Row not found." });
 
+            var normalized = NormalizeFacilityCapacities(row.Specialization, row.BedCapacity, row.DentalChairCapacity);
+            if (!string.IsNullOrWhiteSpace(normalized.Error))
+                return Json(new { success = false, message = normalized.Error });
+
             existing.Specialization = row.Specialization.Trim();
             existing.Name = row.Name.Trim();
             existing.Major = (row.Major ?? "").Trim();
-            existing.BedCapacity = null;
-            existing.DentalChairCapacity = null;
+            existing.BedCapacity = normalized.Beds;
+            existing.DentalChairCapacity = normalized.Dental;
+
+            var uploader = GetHospitalUploader();
+            var agreementFiles = (row.AgreementDocuments ?? new List<IFormFile>())
+                .Where(f => f != null && f.Length > 0)
+                .ToList();
+
+            if (!agreementFiles.Any() && Request?.Form?.Files != null && Request.Form.Files.Count > 0)
+            {
+                agreementFiles = Request.Form.Files
+                    .Where(f => f != null && f.Length > 0)
+                    .ToList();
+            }
+
+            await SaveHospitalAgreementFilesForFacility(model, existing.Id, agreementFiles, uploader);
 
             SaveHospitalsData(model);
             return Json(new { success = true, message = "Hospital updated successfully." });
@@ -2514,6 +2753,26 @@ namespace MOHRecognition.Controllers
                 return Json(new { success = false, message = "Row not found." });
 
             model.Facilities.Remove(existing);
+            model.Documents ??= new List<HospitalFileDto>();
+
+            var facilityDocs = model.Documents
+                .Where(d => string.Equals(NormalizeHospitalDocumentType(d.DocumentType), HospDocTypeHospitalAgreement, StringComparison.OrdinalIgnoreCase) &&
+                            string.Equals(d.FacilityId, id, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (facilityDocs.Any())
+            {
+                var uploadsFolder = EnsureHospitalUploadsFolder();
+                foreach (var doc in facilityDocs)
+                {
+                    if (string.IsNullOrWhiteSpace(doc.StoredFileName))
+                        continue;
+                    var path = Path.Combine(uploadsFolder, doc.StoredFileName);
+                    if (System.IO.File.Exists(path))
+                        System.IO.File.Delete(path);
+                    model.Documents.Remove(doc);
+                }
+            }
 
             if (model.Fields != null)
             {
@@ -2620,68 +2879,79 @@ namespace MOHRecognition.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveHospitalDocuments([FromForm] HospitalDocumentsUploadRequest req)
         {
-            var agreements = req?.AgreementDocuments ?? new List<IFormFile>();
-            var accreditations = req?.AccreditationDocuments ?? new List<IFormFile>();
+            var localRecognition = req?.LocalRecognitionDocuments ?? new List<IFormFile>();
+            var localAccreditation = req?.LocalAccreditationDocuments ?? new List<IFormFile>();
+            var regionalAccreditation = req?.RegionalAccreditationDocuments ?? new List<IFormFile>();
+            var internationalAccreditation = req?.InternationalAccreditationDocuments ?? new List<IFormFile>();
+            var otherAccreditation = req?.OtherAccreditationDocuments ?? new List<IFormFile>();
+            var hospitalAgreements = req?.HospitalAgreementDocuments ?? new List<IFormFile>();
 
-            if (!agreements.Any() && !accreditations.Any())
-                return Json(new { success = false, message = "Please choose one or more files." });
+            if (!localRecognition.Any() &&
+                !localAccreditation.Any() &&
+                !regionalAccreditation.Any() &&
+                !internationalAccreditation.Any() &&
+                !otherAccreditation.Any() &&
+                !hospitalAgreements.Any())
+            {
+                return Json(new { success = false, message = "Please choose one or more files to upload." });
+            }
 
             var uploadsFolder = EnsureHospitalUploadsFolder();
-
             var model = GetHospitalsData();
             model.Documents ??= new List<HospitalFileDto>();
 
-            var hasAgreement = model.Documents.Any(d =>
-                string.Equals(d.DocumentType, "University-Hospital Agreement", StringComparison.OrdinalIgnoreCase));
-            if (!agreements.Any() && !hasAgreement)
-                return Json(new { success = false, message = "Please upload at least one agreement document." });
-
-            foreach (var file in agreements.Where(f => f != null && f.Length > 0))
+            var uploader = HttpContext.Session.GetString("UniversityEmail") ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(uploader))
             {
-                var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
-                if (!_hospAllowedExts.Contains(ext)) continue;
-
-                var stored = $"{Guid.NewGuid()}{ext}";
-                var path = Path.Combine(uploadsFolder, stored);
-
-                using (var stream = new FileStream(path, FileMode.Create))
+                var publicJson = HttpContext.Session.GetString("PublicInfo");
+                if (!string.IsNullOrWhiteSpace(publicJson))
                 {
-                    await file.CopyToAsync(stream);
+                    var publicInfo = JsonSerializer.Deserialize<PublicInfoDto>(publicJson);
+                    if (publicInfo != null && !string.IsNullOrWhiteSpace(publicInfo.EmailAddress))
+                    {
+                        uploader = publicInfo.EmailAddress.Trim();
+                    }
                 }
+            }
+            if (string.IsNullOrWhiteSpace(uploader))
+                uploader = "University User";
 
-                model.Documents.Add(new HospitalFileDto
+            async Task SaveFiles(IEnumerable<IFormFile> files, string docType)
+            {
+                foreach (var file in files.Where(f => f != null && f.Length > 0))
                 {
-                    OriginalFileName = Path.GetFileName(file.FileName),
-                    StoredFileName = stored,
-                    FileUrl = $"/uploads/hospitals/{stored}",
-                    DocumentType = "University-Hospital Agreement"
-                });
+                    var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+                    if (!_hospAllowedExts.Contains(ext))
+                        continue;
+
+                    var stored = $"{Guid.NewGuid()}{ext}";
+                    var path = Path.Combine(uploadsFolder, stored);
+
+                    await using (var stream = new FileStream(path, FileMode.Create))
+                        await file.CopyToAsync(stream);
+
+                    model.Documents.Add(new HospitalFileDto
+                    {
+                        OriginalFileName = Path.GetFileName(file.FileName),
+                        StoredFileName = stored,
+                        FileUrl = $"/uploads/hospitals/{stored}",
+                        DocumentType = docType,
+                        FacilityId = string.Empty,
+                        UploadedAt = DateTime.UtcNow,
+                        UploadedBy = uploader
+                    });
+                }
             }
 
-            foreach (var file in accreditations.Where(f => f != null && f.Length > 0))
-            {
-                var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
-                if (!_hospAllowedExts.Contains(ext)) continue;
-
-                var stored = $"{Guid.NewGuid()}{ext}";
-                var path = Path.Combine(uploadsFolder, stored);
-
-                using (var stream = new FileStream(path, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
-
-                model.Documents.Add(new HospitalFileDto
-                {
-                    OriginalFileName = Path.GetFileName(file.FileName),
-                    StoredFileName = stored,
-                    FileUrl = $"/uploads/hospitals/{stored}",
-                    DocumentType = "Hospital Accreditation"
-                });
-            }
+            await SaveFiles(localRecognition, HospDocTypeLocalRecognition);
+            await SaveFiles(localAccreditation, HospDocTypeLocalAccreditation);
+            await SaveFiles(regionalAccreditation, HospDocTypeRegionalAccreditation);
+            await SaveFiles(internationalAccreditation, HospDocTypeInternationalAccreditation);
+            await SaveFiles(otherAccreditation, HospDocTypeOtherAccreditation);
+            await SaveFiles(hospitalAgreements, HospDocTypeHospitalAgreement);
 
             SaveHospitalsData(model);
-            return Json(new { success = true, message = "Hospital documents uploaded successfully." });
+            return Json(new { success = true, message = "Documents uploaded successfully." });
         }
 
         [HttpPost]
@@ -2741,7 +3011,9 @@ namespace MOHRecognition.Controllers
                     OriginalFileName = Path.GetFileName(file.FileName),
                     StoredFileName = stored,
                     FileUrl = $"/uploads/hospitals/{stored}",
-                    DocumentType = "University-Hospital Agreement"
+                    DocumentType = HospDocTypeHospitalAgreement,
+                    UploadedAt = DateTime.UtcNow,
+                    UploadedBy = HttpContext.Session.GetString("UniversityEmail") ?? ""
                 };
 
                 model.HospitalContracts.Add(dto);
@@ -3179,15 +3451,28 @@ namespace MOHRecognition.Controllers
                 return BadRequest("Faculty is required.");
 
             if (!dto.Computers.HasValue ||
-                !dto.Workshops.HasValue ||
                 !dto.Laboratories.HasValue)
             {
                 return BadRequest("Please fill all required fields.");
             }
 
             var allowedCategories = GetCollegeCategoriesFromSession();
-            if (!allowedCategories.Contains(dto.FacultyId))
+            static string NormalizeCollegeCategory(string? raw)
+            {
+                var s = (raw ?? string.Empty).Trim().ToLowerInvariant();
+                if (string.IsNullOrWhiteSpace(s)) return string.Empty;
+                s = s.Replace("colleges", "").Replace("college", "").Trim();
+                return s;
+            }
+
+            var selectedNormalized = NormalizeCollegeCategory(dto.FacultyId);
+            var matchedCategory = allowedCategories.FirstOrDefault(x =>
+                string.Equals(NormalizeCollegeCategory(x), selectedNormalized, StringComparison.OrdinalIgnoreCase));
+
+            if (string.IsNullOrWhiteSpace(matchedCategory))
                 return BadRequest("Selected college category was not found.");
+
+            dto.FacultyId = matchedCategory;
 
             var model = LoadLaboratoriesData();
             var rows = model.Rows;
@@ -3198,6 +3483,7 @@ namespace MOHRecognition.Controllers
             {
                 dto.Id = string.IsNullOrWhiteSpace(dto.Id) ? Guid.NewGuid().ToString() : dto.Id;
                 dto.FacultyName = dto.FacultyId;
+                dto.Workshops ??= 0;
                 rows.Add(dto);
             }
             else
@@ -3205,7 +3491,7 @@ namespace MOHRecognition.Controllers
                 existing.FacultyId = dto.FacultyId;
                 existing.FacultyName = dto.FacultyId;
                 existing.Computers = dto.Computers;
-                existing.Workshops = dto.Workshops;
+                existing.Workshops = dto.Workshops ?? existing.Workshops ?? 0;
                 existing.Laboratories = dto.Laboratories;
             }
 
@@ -3274,8 +3560,7 @@ namespace MOHRecognition.Controllers
 
             if (!dto.Area.HasValue ||
                 !dto.TotalStudentCapacity.HasValue ||
-                !dto.NumberOfArabicBooks.HasValue ||
-                !dto.NumberOfEnglishBooks.HasValue ||
+                !dto.NumberOfBooks.HasValue ||
                 !dto.NumberOfPaperJournals.HasValue ||
                 !dto.NumberOfElectronicBooks.HasValue ||
                 !dto.NumberOfElectronicJournals.HasValue)
@@ -3509,6 +3794,17 @@ namespace MOHRecognition.Controllers
                 ? new AcademicInfoDto()
                 : (JsonSerializer.Deserialize<AcademicInfoDto>(academicJson) ?? new AcademicInfoDto());
 
+            // Keep legacy academic surface aligned when local recognition documents exist.
+            var hospitalsForSync = GetHospitalsData();
+            if (hospitalsForSync.Documents != null &&
+                hospitalsForSync.Documents.Any(d => string.Equals(
+                    NormalizeHospitalDocumentType(d.DocumentType),
+                    HospDocTypeLocalRecognition,
+                    StringComparison.OrdinalIgnoreCase)))
+            {
+                academicInfo.OfficialRecognitionInHomeCountry = "Yes";
+            }
+
            var submittedFaculties = LoadFaculties().Rows
     .Select(f => new FacultyRowDto
     {
@@ -3594,7 +3890,8 @@ namespace MOHRecognition.Controllers
                 Pictures = LoadPictures(),
                 Laboratories = LoadLaboratoriesData(),
                 Infrastructure = LoadInfrastructure(),
-                Hospitals = GetHospitalsData()
+                Hospitals = GetHospitalsData(),
+                Library = LoadLibrary()
             };
 
             var saved = _recognitionRequestService.Add(request);
@@ -3898,6 +4195,38 @@ namespace MOHRecognition.Controllers
             return View("~/Views/Admin/AllUniversities.cshtml");
         }
 
+        public IActionResult DoctorsPerProgram()
+        {
+            var records = _recognitionRequestService.GetAll();
+
+            var report = new DoctorsPerProgramReportDto();
+
+            foreach (var r in records)
+            {
+                var md = r.MedicineDentistry;
+                int ftPhd = md.Med_FullTimeClinicalPhD + md.Den_FullTimeClinicalPhD;
+
+                var programs = r.Programs
+                    .Select(p => new DppProgramRow
+                    {
+                        ProgramName   = p.Program,
+                        DegreeAwarded = p.DegreeAwarded,
+                        FacultyName   = p.FacultyName
+                    })
+                    .ToList();
+
+                report.Universities.Add(new DppUniversityRow
+                {
+                    UniversityName = r.UniversityName,
+                    Country        = r.Country,
+                    FtPhdDoctors   = ftPhd,
+                    Programs       = programs
+                });
+            }
+
+            return View("~/Views/Admin/DoctorsPerProgram.cshtml", report);
+        }
+
         public IActionResult Recognized()
         {
             return RedirectToAction("CommitteeDecisions", new { status = "Recognized" });
@@ -4148,7 +4477,7 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.AdminReadOnly = true;
 
             return View("~/Views/member/DetailsBasicInfo.cshtml", request);
         }
@@ -4165,7 +4494,7 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.AdminReadOnly = true;
 
             ViewBag.RequestId = request.Id;
             ViewBag.InstitutionName = request.UniversityName;
@@ -4184,7 +4513,7 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.AdminReadOnly = true;
 
             request.AdmissionStudyDurationReview ??= new AdmissionStudyDurationReviewDto();
             request.StudyDuration ??= new StudyDurationDto();
@@ -4213,7 +4542,7 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.AdminReadOnly = true;
 
             ViewBag.RequestId = request.Id;
             ViewBag.InstitutionName = request.UniversityName;
@@ -4444,7 +4773,7 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.AdminReadOnly = true;
 
             ViewBag.RequestId = request.Id;
             ViewBag.InstitutionName = request.UniversityName;
