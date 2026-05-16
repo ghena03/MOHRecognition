@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 namespace MOHRecognition.Controllers  
-    //kameliaaaaaaaaaa9666666666666
 {
    
     public class HomeController : Controller
@@ -4059,6 +4058,16 @@ namespace MOHRecognition.Controllers
             return View("~/Views/member/Archive.cshtml", model);
         }
 
+        public IActionResult ElectronicRequests()
+        {
+            var currentMember = GetCurrentRecognitionMember();
+            var model = _recognitionRequestService.GetAll()
+                .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
+            return View("~/Views/member/ElectronicRequests.cshtml", model);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult AssignToMember(int id, string assignedMember)
@@ -4184,7 +4193,14 @@ namespace MOHRecognition.Controllers
             if (id == null) return RedirectToAction("SubmittedUniversities");
             var request = _recognitionRequestService.GetById(id.Value);
             if (request == null) return RedirectToAction("SubmittedUniversities");
-            return View("~/Views/Admin/AdminViewRecommendation.cshtml", request);
+
+            var linkedMeeting = meetings.FirstOrDefault(m => m.RequestIds.Contains(request.Id));
+            ViewBag.ShowRecommendation  = true;
+            ViewBag.IsInMeeting         = linkedMeeting != null;
+            ViewBag.MeetingId           = linkedMeeting?.Id ?? 0;
+            ViewBag.ReviewerDisplayName = GetRecognitionMemberDisplayName(request.AssignedMember);
+
+            return View("~/Views/Admin/AdminFullApplicationView.cshtml", request);
         }
 
         [HttpGet]
@@ -4279,18 +4295,25 @@ namespace MOHRecognition.Controllers
             var selectedCountry = string.IsNullOrWhiteSpace(country) ? "All" : country.Trim();
             var selectedSort = string.IsNullOrWhiteSpace(sort) ? "NewestActivity" : sort.Trim();
 
-            var availableSessions = allItems
-                .Where(x => x.SessionNo.HasValue)
-                .Select(x => x.SessionNo!.Value)
+            var availableSessions = meetings
+                .Select(m => m.SessionNumber)
                 .Distinct()
                 .OrderByDescending(x => x)
                 .ToList();
 
             if (!availableSessions.Any())
-                availableSessions = new List<int> { 1, 2, 3 };
+                availableSessions = new List<int> { 1 };
 
             if (selectedSession == null)
-                selectedSession = availableSessions.FirstOrDefault();
+            {
+                // default to the latest non-completed meeting; fall back to the highest session
+                var latestActive = meetings
+                    .Where(m => !string.Equals(m.Status, "Completed", StringComparison.OrdinalIgnoreCase))
+                    .OrderByDescending(m => m.SessionNumber)
+                    .FirstOrDefault();
+
+                selectedSession = latestActive?.SessionNumber ?? availableSessions.First();
+            }
 
             var availableYears = allItems
                 .Select(x => x.Year)
@@ -4415,15 +4438,13 @@ namespace MOHRecognition.Controllers
 
         private static int? ResolveSessionNo(RecognitionRequestRecord request)
         {
-            if (!string.IsNullOrWhiteSpace(request.ReferenceNumber))
-            {
-                var parts = request.ReferenceNumber.Split('-', StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length >= 4 && int.TryParse(parts[2], out var parsedSession) && parsedSession > 0)
-                    return parsedSession;
-            }
+            var meeting = meetings
+                .Where(m => m.RequestIds.Contains(request.Id))
+                .OrderByDescending(m => m.SessionNumber)
+                .FirstOrDefault();
 
-            if (request.SubmittedAt != default)
-                return ((request.SubmittedAt.Month - 1) / 4) + 1;
+            if (meeting != null)
+                return meeting.SessionNumber;
 
             return null;
         }
@@ -4450,19 +4471,6 @@ namespace MOHRecognition.Controllers
                 !string.IsNullOrWhiteSpace(request.LibraryAssessment);
 
             return hasWorkStarted ? "In Progress" : "Not Reviewed";
-        }
-
-        [HttpGet]
-        public IActionResult ElectronicRequests()
-        {
-            var currentMember = GetCurrentRecognitionMember();
-            var model = _recognitionRequestService
-                .GetAll()
-                .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
-            return View("~/Views/member/ElectronicRequests.cshtml", model);
         }
 
         [HttpGet]
@@ -4938,15 +4946,12 @@ namespace MOHRecognition.Controllers
             if (!ok)
             {
                 TempData["RecommendationError"] = "Unable to save recommendation decision.";
-            }
-            else
-            {
-                var assignedMember = request?.AssignedMember ?? HttpContext.Session.GetString("CurrentStaffUsername") ?? "";
-                _recognitionRequestService.RequireAdminReview(id, assignedMember);
-                TempData["RecommendationSaved"] = "Final assessment decision saved successfully.";
+                return RedirectToAction("DetailsRecommendation", new { id });
             }
 
-            return RedirectToAction("DetailsRecommendation", new { id });
+            var assignedMember = request?.AssignedMember ?? HttpContext.Session.GetString("CurrentStaffUsername") ?? "";
+            _recognitionRequestService.RequireAdminReview(id, assignedMember);
+            return RedirectToAction("ElectronicRequests");
         }
 
 
@@ -5191,7 +5196,7 @@ namespace MOHRecognition.Controllers
         // ===================== SAVE MEETING DECISION (POST) =====================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult SaveMeetingDecision(int meetingId, int requestId, string decision, string notes)
+        public IActionResult SaveMeetingDecision(int meetingId, int requestId, string decision, string notes, string? from = null)
         {
             var validDecisions = new[] { "Recognized", "Not Recognized", "Needs More Information" };
             if (!validDecisions.Contains(decision))
@@ -5206,7 +5211,10 @@ namespace MOHRecognition.Controllers
                 SavedAt = DateTime.Now
             };
 
-            return RedirectToAction("SessionDashboard", new { id = meetingId });
+            if (string.Equals(from, "committee", StringComparison.OrdinalIgnoreCase))
+                return Redirect($"/Home/CommitteeApplicationView?requestId={requestId}&meetingId={meetingId}#t8");
+
+            return Redirect($"/Home/MeetingDecision?meetingId={meetingId}&requestId={requestId}");
         }
 
         // ===================== DETAILS =====================
@@ -5374,10 +5382,6 @@ namespace MOHRecognition.Controllers
 
         public IActionResult AdminFullApplicationView(int id, int? meetingId)
         {
-            var role = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
-            if (!string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase))
-                return RedirectToAction("AdminDashboard");
-
             var request = _recognitionRequestService.GetById(id);
             if (request == null)
                 return NotFound();
@@ -5393,7 +5397,27 @@ namespace MOHRecognition.Controllers
             if (request == null)
                 return NotFound();
 
-            ViewBag.MeetingId = meetingId ?? 0;
+            int mid = meetingId ?? 0;
+            meetingDecisions.TryGetValue((mid, requestId), out var existingDecision);
+
+            ViewBag.MeetingId        = mid;
+            ViewBag.ExistingDecision = existingDecision;
+
+            return View("~/Views/AdminMeetings/ApplicationView.cshtml", request);
+        }
+
+        [HttpGet]
+        public IActionResult CommitteeApplicationView(int requestId, int meetingId)
+        {
+            var request = _recognitionRequestService.GetById(requestId);
+            if (request == null)
+                return NotFound();
+
+            meetingDecisions.TryGetValue((meetingId, requestId), out var existingDecision);
+
+            ViewBag.MeetingId        = meetingId;
+            ViewBag.ExistingDecision = existingDecision;
+
             return View("~/Views/AdminMeetings/ApplicationView.cshtml", request);
         }
 

@@ -35,6 +35,7 @@
     var attachments  = Model.Attachments?.Rows       ?? new List<AttachmentRowDto>();
     var labRows      = labs.Rows                     ?? new List<LaboratoryRowDto>();
     var labFiles     = labs.UploadedFiles            ?? new List<LaboratoryFileDto>();
+    var library      = Model.Library                 ?? new LibraryDto();
 
     // ── Degrees / Systems chips (Step 1)
     var degrees = new List<string>();
@@ -178,6 +179,9 @@
     var displayDecision = !string.IsNullOrWhiteSpace(savedDecision) ? savedDecision : autoSuggestion;
     string SuggClass(string s) => s switch { "Approve" => "approve", "Conditional Approval" => "conditional", _ => "reject" };
     string SuggIcon(string s)  => s switch { "Approve" => "bi-check2-circle", "Conditional Approval" => "bi-arrow-repeat", _ => "bi-x-octagon-fill" };
+    var existingDecision = ViewBag.ExistingDecision as MOHRecognition.DTOs.MeetingDecisionDto;
+    var committeeDecision = existingDecision?.Decision ?? "Needs More Information";
+    var committeeNotes    = existingDecision?.Notes    ?? "";
     var ratioDisplay = ratioValue > 0 ? $"1:{ratioValue:0}" : "—";
     string RatioExp(string c) => c switch {
         "Compliant"     => $"The ratio of {ratioDisplay} is within the accepted benchmark range.",
@@ -191,7 +195,7 @@
         _               => "Insufficient data to calculate the doctorate holders percentage."
     };
 
-    string backUrl = meetingId > 0 ? $"/Home/SessionDashboard?id={meetingId}" : "/Home/Meetings";
+    string backUrl = meetingId > 0 ? $"/Home/MeetingRequests?meetingId={meetingId}" : "/Home/Meetings";
 }
 <!doctype html>
 <html lang="en" dir="ltr">
@@ -246,6 +250,23 @@
         .rec-big-badge.approve    { background: #e8f5ea; color: #166534; border: 2px solid #86efac; }
         .rec-big-badge.conditional{ background: #fefce8; color: #854d0e; border: 2px solid #fde047; }
         .rec-big-badge.reject     { background: #fef2f2; color: #991b1b; border: 2px solid #fca5a5; }
+
+        /* Committee Decision form (t8) */
+        .cd-form-group { margin-bottom: 20px; }
+        .cd-form-group label { display: block; font-weight: 700; color: #444; margin-bottom: 6px; font-size: 0.92em; }
+        .cd-form-group select,
+        .cd-form-group textarea {
+            width: 100%; padding: 10px 12px;
+            border: 1.5px solid #d0b0bb; border-radius: 7px;
+            font-size: 0.95em; color: #333; background: #fff;
+            box-sizing: border-box; font-family: inherit;
+        }
+        .cd-form-group select:focus,
+        .cd-form-group textarea:focus { outline: none; border-color: #7f1627; box-shadow: 0 0 0 2px rgba(127,22,39,.12); }
+        .cd-btn-row { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+        .cd-btn-save { padding: 10px 32px; border-radius: 7px; font-size: 0.95em; font-weight: 700; border: none; cursor: pointer; background: #7f1627; color: #fff; }
+        .cd-btn-save:hover { background: #6a1020; }
+        .cd-saved-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 8px; background: #e8f5ea; color: #166534; font-size: 12px; font-weight: 700; border: 1.5px solid #86efac; }
     </style>
 </head>
 <body class="rm-page">
@@ -341,12 +362,13 @@
                         <div class="section-title">Location &amp; Contact Information</div>
                         <div class="rd-grid4">
                             <div class="rd-field"><label>Institution Name</label><input type="text" value="@p.InstitutionName" readonly /></div>
+                            <div class="rd-field"><label>Official Entity Possessing Oversight Rights</label><input type="text" value="@p.OversightRightsEntity" readonly /></div>
                             <div class="rd-field"><label>Country</label><input type="text" value="@Model.Country" readonly /></div>
                             <div class="rd-field"><label>City</label><input type="text" value="@p.City" readonly /></div>
-                            <div class="rd-field"><label>Address</label><input type="text" value="@p.MailingFullAddress" readonly /></div>
-                            <div class="rd-field"><label>Website</label><input type="text" value="@p.InstitutionalWebAddress" readonly /></div>
-                            <div class="rd-field"><label>Email</label><input type="text" value="@p.EmailAddress" readonly /></div>
-                            <div class="rd-field"><label>Direct Phone</label><input type="text" value="@p.DirectPhoneNumber" readonly /></div>
+                            <div class="rd-field"><label>Mailing Full Address</label><input type="text" value="@p.MailingFullAddress" readonly /></div>
+                            <div class="rd-field"><label>Direct Phone Number</label><input type="text" value="@p.DirectPhoneNumber" readonly /></div>
+                            <div class="rd-field"><label>Email Address</label><input type="text" value="@p.EmailAddress" readonly /></div>
+                            <div class="rd-field"><label>Institutional Web Address</label><input type="text" value="@p.InstitutionalWebAddress" readonly /></div>
                         </div>
                     </div>
 
@@ -361,18 +383,33 @@
 
                     <div class="info-section" style="margin-top:18px;">
                         <div class="section-title">Institution Profile</div>
-                        <div class="rd-grid2">
+                        <div class="rd-grid3">
+                            <div class="rd-field"><label>Mode of Study</label><input type="text" value="@p.ModeOfStudy" readonly /></div>
                             <div class="rd-field"><label>Institution Type</label><input type="text" value="@A.TypeOfAcademicInstitution" readonly /></div>
                             <div class="rd-field"><label>Language of Instruction</label><input type="text" value="@p.LanguageOfInstruction" readonly /></div>
-                            <div class="rd-field"><label>Mode of Study</label><input type="text" value="@p.ModeOfStudy" readonly /></div>
-                            <div class="rd-field"><label>Oversight Rights Entity</label><input type="text" value="@p.OversightRightsEntity" readonly /></div>
+                        </div>
+                    </div>
+
+                    @{
+                        var t1Cats = (A.CollegeCategoriesCsv ?? "")
+                            .Split(new char[]{';',','}, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x))
+                            .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                    }
+                    <div class="info-section" style="margin-top:18px;">
+                        <div class="section-title">College Categories</div>
+                        <div class="info-block">
+                            <div class="chip-list">
+                                @if (t1Cats.Any()) { @foreach (var c in t1Cats) { <span class="chip">@c</span> } }
+                                else { <span class="chip muted">No college categories submitted</span> }
+                            </div>
                         </div>
                     </div>
 
                     <div class="info-section" style="margin-top:18px;">
-                        <div class="section-title">President / Leadership</div>
+                        <div class="section-title">Information of President of Institution</div>
                         <div class="rd-grid3">
-                            <div class="rd-field"><label>President Name</label><input type="text" value="@p.PresidentName" readonly /></div>
+                            <div class="rd-field"><label>Name</label><input type="text" value="@p.PresidentName" readonly /></div>
                         </div>
                     </div>
 
@@ -1144,33 +1181,120 @@
                     </div>
                 </section>
 
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd"><h2>Environment Assessment Summary</h2><p>Infrastructure assessment results submitted by the reviewing doctor.</p></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;">
+                        @{
+                            string EnvLabel(string? v) => (v ?? "").Trim() switch { "Meets Standards" => "Meets Standards", "Needs Improvement" => "Needs Improvement", _ => "Not Assessed" };
+                            string EnvCss(string? v)   => (v ?? "").Trim() switch { "Meets Standards" => "compliant", "Needs Improvement" => "needs-review", _ => "missing" };
+                            string EnvIcon(string? v)  => (v ?? "").Trim() switch { "Meets Standards" => "bi-check-circle-fill", "Needs Improvement" => "bi-exclamation-circle-fill", _ => "bi-dash-circle" };
+                            var envItems = new[]
+                            {
+                                new { Area = "Colleges Environment",      Val = Model.FacultiesAssessment },
+                                new { Area = "Hospitals Environment",     Val = Model.HospitalsAssessment },
+                                new { Area = "Laboratories Facilities",   Val = Model.LaboratoriesFacilitiesAssessment },
+                                new { Area = "Library Environment",       Val = Model.LibraryAssessment },
+                            };
+                        }
+                        @foreach (var ei in envItems)
+                        {
+                            <div style="background:#f9f6f2;border:1px solid #e8ddd4;border-radius:10px;padding:14px 16px;">
+                                <div style="font-size:11.5px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">@ei.Area</div>
+                                <span class="fa-compliance-badge @EnvCss(ei.Val)"><i class="bi @EnvIcon(ei.Val)"></i> @EnvLabel(ei.Val)</span>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                @{
+                    string decCss  = displayDecision switch { "Approve" => "approve", "Conditional Approval" => "conditional", _ => "reject" };
+                    string decIcon = displayDecision switch { "Approve" => "bi-check2-circle", "Conditional Approval" => "bi-arrow-repeat", _ => "bi-x-octagon-fill" };
+                }
+                <section class="rm-card rd-card" style="border-top:3px solid @(decCss == "approve" ? "#86efac" : decCss == "conditional" ? "#fde047" : "#fca5a5");">
+                    <div class="rd-card-hd">
+                        <h2><i class="bi bi-clipboard2-check"></i> Doctor's Final Recommendation</h2>
+                        <p>The reviewing doctor's submitted decision and written justification.</p>
+                    </div>
+                    <div style="margin:16px 0;">
+                        <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Recommendation</div>
+                        <span class="rec-big-badge @decCss"><i class="bi @decIcon"></i> @displayDecision</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(savedFinalJustification))
+                    {
+                        <div style="margin-top:16px;">
+                            <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Justification / Notes</div>
+                            <div class="ro-textarea">@savedFinalJustification</div>
+                        </div>
+                    }
+                    @if (string.IsNullOrWhiteSpace(savedDecision))
+                    {
+                        <p style="font-size:12.5px;color:#aaa;margin-top:12px;font-style:italic;"><i class="bi bi-info-circle"></i> No final decision submitted yet — showing system suggestion.</p>
+                    }
+                </section>
+
+                <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+                    <button class="cd-btn-save" id="btn-goto-t8" style="padding:12px 32px;font-size:1em;display:inline-flex;align-items:center;gap:8px;">
+                        <i class="bi bi-check2-circle"></i> Proceed to Final Decision
+                    </button>
+                </div>
+
             </div>
 
             <div id="t8" class="tab-panel">
 
+                <section class="rm-card rd-head">
+                    <div>
+                        <h1>Final Decision</h1>
+                        <p class="rd-inst">Institution: <b>@inst</b></p>
+                        <p>Committee Decision — Record the official recognition outcome.</p>
+                    </div>
+                    <div class="rd-meta">
+                        <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
+                        <div class="meta-pill"><span>Stage</span><b>Final</b></div>
+                        @if (existingDecision != null)
+                        {
+                            <div class="cd-saved-badge"><i class="bi bi-check-circle-fill"></i> Decision Saved</div>
+                        }
+                    </div>
+                </section>
+
                 <section class="rm-card rd-card">
-                    <div class="rd-card-hd"><h2>Final Decision</h2><p>Decision submitted by the recognition member.</p></div>
-                    <div style="margin:12px 0 16px;">
-                        <span class="rec-big-badge @SuggClass(displayDecision)">
-                            <i class="bi @SuggIcon(displayDecision)" style="font-size:22px;"></i>
-                            @displayDecision
-                        </span>
+                    <div class="rd-card-hd">
+                        <h2>Committee Decision</h2>
+                        <p>Select the committee's official decision and enter any supporting notes.</p>
                     </div>
-                    @if (!string.IsNullOrWhiteSpace(savedFinalJustification))
-                    {
-                        <div class="rd-field">
-                            <label>Justification / Notes</label>
-                            <div class="ro-textarea">@savedFinalJustification</div>
+
+                    <form method="post" action="/Home/SaveMeetingDecision">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="meetingId" value="@meetingId" />
+                        <input type="hidden" name="requestId" value="@requestId" />
+                        <input type="hidden" name="from" value="committee" />
+
+                        <div class="cd-form-group">
+                            <label for="cd-decision">Decision</label>
+                            @{
+                                string selRec   = committeeDecision == "Recognized"             ? " selected" : "";
+                                string selNot   = committeeDecision == "Not Recognized"         ? " selected" : "";
+                                string selNeeds = committeeDecision == "Needs More Information" ? " selected" : "";
+                                string cdSelectHtml =
+                                    "<select id=\"cd-decision\" name=\"decision\">" +
+                                    "<option value=\"Recognized\""            + selRec   + ">Recognized / معترف بها</option>" +
+                                    "<option value=\"Not Recognized\""        + selNot   + ">Not Recognized / غير معترف بها</option>" +
+                                    "<option value=\"Needs More Information\"" + selNeeds + ">Needs More Information / بحاجة لمعلومات إضافية</option>" +
+                                    "</select>";
+                            }
+                            @Html.Raw(cdSelectHtml)
                         </div>
-                    }
-                    else
-                    {
-                        <p style="color:#aaa;font-size:13px;">No justification entered.</p>
-                    }
-                    <div style="margin-top:16px;padding:12px 16px;background:#f8f6f2;border-radius:8px;font-size:12px;color:#6b7280;">
-                        <i class="bi bi-shield-lock"></i>
-                        This is an admin read-only view. The decision above was submitted by the assigned recognition member and cannot be edited here.
-                    </div>
+
+                        <div class="cd-form-group">
+                            <label for="cd-notes">Committee Notes / Written Recommendation</label>
+                            <textarea id="cd-notes" name="notes" rows="8" placeholder="Enter the committee's written decision or notes here...">@committeeNotes</textarea>
+                        </div>
+
+                        <div class="cd-btn-row">
+                            <button type="submit" class="cd-btn-save"><i class="bi bi-check2-circle"></i> Save Decision</button>
+                        </div>
+                    </form>
                 </section>
 
             </div>
@@ -1186,6 +1310,19 @@
             btn.classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        // Auto-open tab from URL hash (e.g. after save redirect)
+        (function () {
+            var hash = window.location.hash.replace('#', '');
+            if (hash && document.getElementById(hash)) {
+                var btn = document.querySelector('[onclick="showTab(\'' + hash + '\',this)"]');
+                if (btn) showTab(hash, btn);
+            }
+        })();
+        // "Proceed to Final Decision" button at bottom of Tab 7
+        document.getElementById('btn-goto-t8').addEventListener('click', function () {
+            var t8btn = document.querySelector('[onclick="showTab(\'t8\',this)"]');
+            if (t8btn) showTab('t8', t8btn);
+        });
         function toggleFileSection(btn) {
             const body = btn.nextElementSibling;
             const chevron = btn.querySelector('.file-section-chevron');

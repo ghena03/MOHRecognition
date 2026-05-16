@@ -94,28 +94,6 @@
         <span class="md-pill">Request ID: @request.Id</span>
     </div>
 
-    <!-- DOCTOR'S RECOMMENDATION (read-only) -->
-    <div class="md-card">
-        <div class="md-card-title">Doctor's Recommendation</div>
-        @if (string.IsNullOrWhiteSpace(request.BasicInfoAssessmentDecision))
-        {
-            <div class="rec-block">
-                <div class="rec-value" style="color: #888; font-weight: 400;">No recommendation submitted yet.</div>
-            </div>
-        }
-        else
-        {
-            <div class="rec-block">
-                <div class="rec-label">Decision</div>
-                <div class="rec-value">@request.BasicInfoAssessmentDecision</div>
-                @if (!string.IsNullOrWhiteSpace(request.BasicInfoAssessmentReason))
-                {
-                    <div class="rec-reason">@request.BasicInfoAssessmentReason</div>
-                }
-            </div>
-        }
-    </div>
-
     <!-- COMMITTEE DECISION FORM -->
     <div class="md-card">
         <div class="md-card-title">Committee Decision</div>

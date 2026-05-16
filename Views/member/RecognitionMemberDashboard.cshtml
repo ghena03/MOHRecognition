@@ -141,157 +141,119 @@
             </section>
 
             <div class="rm-lower">
-                <section class="rm-card">
-                    <div class="rm-card-hd">
-                        <div class="rm-card-hd-left">
-                            <h2>Assigned Recognition Applications</h2>
-                            <p>Applications assigned to you for academic review and recommendation.</p>
+                <div class="ws-stack">
+                    @{
+                        int wsTotal     = Model.AssignedReviewsCount;
+                        int wsCompleted = Model.SubmittedRecommendationsCount;
+                        int wsPending   = Model.NotReviewedCount + Model.InProgressCount;
+                        int wsPct       = wsTotal > 0 ? (int)Math.Round((double)wsCompleted / wsTotal * 100) : 0;
+
+                        var firstPending = Model.Applications
+                            .FirstOrDefault(a => a.ReviewStatus != "Recommendation Submitted");
+
+                        var latestRec = Model.Applications
+                            .Where(a => a.ReviewStatus == "Recommendation Submitted")
+                            .OrderByDescending(a => a.LastActivityDate)
+                            .FirstOrDefault();
+                    }
+
+                    <!-- A) Main Summary Card -->
+                    <div class="rm-card ws-main-card">
+                        <div class="ws-main-icon-wrap">
+                            <i class="bi bi-journal-check"></i>
                         </div>
-                    </div>
-
-                    <form class="rm-table-filters" method="get" asp-action="RecognitionMemberDashboard" asp-controller="Home">
-                        <input type="hidden" name="sessionNo" value="@Model.SessionNo" />
-                        <input type="hidden" name="year" value="@Model.Year" />
-
-                        <div class="rm-field grow">
-                            <label for="search">Search</label>
-                            <div class="rm-input">
-                                <i class="bi bi-search"></i>
-                                <input id="search" name="search" type="text" value="@Model.Search" placeholder="Reference or university name" />
+                        <div class="ws-main-body">
+                            <h2 class="ws-main-title">Today's Review Workspace</h2>
+                            <p class="ws-main-desc">
+                                You have <strong>@wsTotal</strong> assigned application@(wsTotal == 1 ? "" : "s") in this session.
+                                <strong>@wsCompleted</strong> recommendation@(wsCompleted == 1 ? "" : "s") submitted.
+                            </p>
+                            <div class="ws-main-actions">
+                                <a class="rm-btn rm-btn-primary" href="@Url.Action("ElectronicRequests", "Home")">
+                                    <i class="bi bi-folder2-open"></i> My Assigned Requests
+                                </a>
+                                <a class="rm-btn" href="@Url.Action("Archive", "Home")">
+                                    <i class="bi bi-archive"></i> Requests Archive
+                                </a>
                             </div>
                         </div>
-
-                        <div class="rm-field">
-                            <label for="status">Status</label>
-                            <select id="status" name="status">
-                                @foreach (var option in new[] { "All", "Not Reviewed", "In Progress", "Recommendation Submitted", "Returned for Update" })
-                                {
-                                    if (string.Equals(Model.Status, option, StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        <option value="@option" selected>@option</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="@option">@option</option>
-                                    }
-                                }
-                            </select>
-                        </div>
-
-                        <div class="rm-field">
-                            <label for="country">Country</label>
-                            <select id="country" name="country">
-                                @if (Model.Country == "All")
-                                {
-                                    <option value="All" selected>All</option>
-                                }
-                                else
-                                {
-                                    <option value="All">All</option>
-                                }
-                                @foreach (var c in Model.AvailableCountries)
-                                {
-                                    if (string.Equals(Model.Country, c, StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        <option value="@c" selected>@c</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="@c">@c</option>
-                                    }
-                                }
-                            </select>
-                        </div>
-
-                        <div class="rm-field">
-                            <label for="sort">Sort</label>
-                            <select id="sort" name="sort">
-                                @if (Model.Sort == "NewestActivity")
-                                {
-                                    <option value="NewestActivity" selected>Newest Activity</option>
-                                }
-                                else
-                                {
-                                    <option value="NewestActivity">Newest Activity</option>
-                                }
-                                @if (Model.Sort == "OldestActivity")
-                                {
-                                    <option value="OldestActivity" selected>Oldest Activity</option>
-                                }
-                                else
-                                {
-                                    <option value="OldestActivity">Oldest Activity</option>
-                                }
-                                @if (Model.Sort == "UniversityAZ")
-                                {
-                                    <option value="UniversityAZ" selected>University A-Z</option>
-                                }
-                                else
-                                {
-                                    <option value="UniversityAZ">University A-Z</option>
-                                }
-                            </select>
-                        </div>
-
-                        <button class="rm-btn rm-btn-ghost" type="submit">
-                            <i class="bi bi-funnel"></i> Apply
-                        </button>
-                    </form>
-
-                    <div class="rm-tablewrap">
-                        <table class="rm-table">
-                            <thead>
-                                <tr>
-                                    <th>Reference</th>
-                                    <th>University</th>
-                                    <th>Country</th>
-                                    <th>Current Review Status</th>
-                                    <th>Last Activity</th>
-                                    <th class="right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.Applications.Any())
-                                {
-                                    @foreach (var item in Model.Applications)
-                                    {
-                                        var actionUrl = item.ReviewStatus == "Recommendation Submitted"
-                                            ? Url.Action("DetailsRecommendation", "Home", new { id = item.Id })
-                                            : Url.Action("DetailsBasicInfo", "Home", new { id = item.Id });
-                                        var actionClass = item.ActionLabel == "Review" ? "rm-action rm-action-primary" : "rm-action";
-                                        var statusClass = item.ReviewStatus switch
-                                        {
-                                            "Not Reviewed" => "badge-neutral",
-                                            "In Progress" => "badge-warn",
-                                            "Recommendation Submitted" => "badge-ok",
-                                            _ => "badge-returned"
-                                        };
-
-                                        <tr>
-                                            <td class="rm-ref">@item.ReferenceNo</td>
-                                            <td class="rm-university">@item.UniversityName</td>
-                                            <td>@item.Country</td>
-                                            <td><span class="badge @statusClass">@item.ReviewStatus</span></td>
-                                            <td class="rm-date">@item.LastActivityDate.ToString("dd MMM yyyy")</td>
-                                            <td class="right">
-                                                <a class="@actionClass" href="@actionUrl">@item.ActionLabel</a>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="6" class="rm-empty">
-                                            <div class="rm-empty-title">No applications assigned for the selected session and year.</div>
-                                            <div class="rm-empty-sub">Assigned applications will appear here once they are distributed to recognition members.</div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
                     </div>
-                </section>
+
+                    <!-- B/C/D) Three-column row -->
+                    <div class="ws-row">
+
+                        <!-- B) Next Action -->
+                        <div class="rm-card ws-sub-card">
+                            <div class="ws-sub-icon @(wsPending > 0 ? "ws-icon-warn" : "ws-icon-ok")">
+                                <i class="bi bi-@(wsPending > 0 ? "exclamation-circle-fill" : "check-circle-fill")"></i>
+                            </div>
+                            @if (wsPending > 0)
+                            {
+                                <div class="ws-sub-title">Next Action Required</div>
+                                <p class="ws-sub-desc">You have <strong>@wsPending</strong> application@(wsPending == 1 ? "" : "s") waiting for review.</p>
+                                <a class="rm-btn rm-btn-primary rm-btn-block ws-cta"
+                                   href="@(firstPending != null ? Url.Action("DetailsBasicInfo", "Home", new { id = firstPending.Id }) : Url.Action("ElectronicRequests", "Home"))">
+                                    <i class="bi bi-play-circle-fill"></i> Start Review
+                                </a>
+                            }
+                            else if (wsTotal == 0)
+                            {
+                                <div class="ws-sub-title">No Applications Yet</div>
+                                <p class="ws-sub-desc">No applications have been assigned to you for this session.</p>
+                                <a class="rm-btn rm-btn-block ws-cta" href="@Url.Action("ElectronicRequests", "Home")">
+                                    <i class="bi bi-folder2-open"></i> View Requests
+                                </a>
+                            }
+                            else
+                            {
+                                <div class="ws-sub-title">All Reviews Complete</div>
+                                <p class="ws-sub-desc">All assigned applications for this session are completed.</p>
+                                <a class="rm-btn rm-btn-block ws-cta" href="@Url.Action("Archive", "Home")">
+                                    <i class="bi bi-archive"></i> View Archive
+                                </a>
+                            }
+                        </div>
+
+                        <!-- C) Review Progress -->
+                        <div class="rm-card ws-sub-card">
+                            <div class="ws-sub-icon ws-icon-brand">
+                                <i class="bi bi-bar-chart-fill"></i>
+                            </div>
+                            <div class="ws-sub-title">Review Progress</div>
+                            <div class="ws-prog-nums">
+                                <span class="ws-prog-big">@wsCompleted</span>
+                                <span class="ws-prog-label">of @wsTotal completed</span>
+                            </div>
+                            <div class="ws-prog-track">
+                                <div class="ws-prog-fill" style="width:@wsPct%"></div>
+                            </div>
+                            <div class="ws-prog-pct">@wsPct% complete</div>
+                        </div>
+
+                        <!-- D) Latest Recommendation -->
+                        <div class="rm-card ws-sub-card">
+                            <div class="ws-sub-icon ws-icon-ok">
+                                <i class="bi bi-patch-check-fill"></i>
+                            </div>
+                            <div class="ws-sub-title">Latest Recommendation</div>
+                            @if (latestRec != null)
+                            {
+                                <div class="ws-latest-ref">@latestRec.ReferenceNo</div>
+                                <div class="ws-latest-uni">@latestRec.UniversityName</div>
+                                <div class="ws-latest-date"><i class="bi bi-calendar3"></i> @latestRec.LastActivityDate.ToString("dd MMM yyyy")</div>
+                                <a class="rm-btn rm-btn-block ws-cta"
+                                   href="@Url.Action("DetailsRecommendation", "Home", new { id = latestRec.Id })">
+                                    <i class="bi bi-eye"></i> View Recommendation
+                                </a>
+                            }
+                            else
+                            {
+                                <p class="ws-sub-desc ws-empty-note">No recommendations submitted yet for this session.</p>
+                            }
+                        </div>
+
+                    </div>
+                </div>
 
                 <aside class="rm-aside-cards">
                     <section class="rm-card" id="meetings-section">

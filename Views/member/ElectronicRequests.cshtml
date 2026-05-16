@@ -124,7 +124,7 @@
                                 <th>Country</th>
                                 <th>Status</th>
                                 <th>Submitted</th>
-                                <th class="right">Action</th>
+                                <th style="text-align:center;">Action</th>
                             </tr>
                         </thead>
 
@@ -137,9 +137,38 @@
                                         <td><b>@item.ReferenceNumber</b></td>
                                         <td>@item.UniversityName</td>
                                         <td>@item.Country</td>
-                                        <td><span class="badge badge-pending">@item.Status</span></td>
+                                        @{
+                                        var dec = item.BasicInfoAssessmentDecision ?? "";
+                                        string decLabel, decClass;
+                                        if (string.IsNullOrWhiteSpace(dec))
+                                        {
+                                            decLabel = "Pending Review";
+                                            decClass = "badge-neutral";
+                                        }
+                                        else if (dec.Contains("Approve", StringComparison.OrdinalIgnoreCase) && !dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            decLabel = "Approved";
+                                            decClass = "badge-ok";
+                                        }
+                                        else if (dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            decLabel = "Conditional Approval";
+                                            decClass = "badge-warn";
+                                        }
+                                        else if (dec.Contains("Reject", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            decLabel = "Rejected";
+                                            decClass = "badge-returned";
+                                        }
+                                        else
+                                        {
+                                            decLabel = dec;
+                                            decClass = "badge-neutral";
+                                        }
+                                    }
+                                    <td><span class="badge @decClass">@decLabel</span></td>
                                         <td>@item.SubmittedAt.ToString("yyyy-MM-dd")</td>
-                                        <td class="right">
+                                        <td style="text-align:center;">
                                             <a class="rm-mini" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">Open</a>
                                         </td>
                                     </tr>

@@ -109,8 +109,33 @@
     string V(string? s) => string.IsNullOrWhiteSpace(s) ? "—" : s;
     string N(int? n)    => n.HasValue && n.Value > 0 ? n.Value.ToString("N0") : "—";
     string D(decimal? d) => d.HasValue && d.Value > 0 ? d.Value.ToString("0.##") : "—";
+    bool F(string? s)   => !string.IsNullOrWhiteSpace(s);
+    bool FN(int? n)     => n.HasValue && n.Value > 0;
+    bool FD(decimal? d) => d.HasValue && d.Value > 0;
 
     int backId = ViewBag.BackId ?? 0;
+
+    bool showRec     = ViewBag.ShowRecommendation ?? false;
+    bool isInMeeting = ViewBag.IsInMeeting  ?? false;
+    int  meetingIdRec = ViewBag.MeetingId   ?? 0;
+    string reviewerName = ViewBag.ReviewerDisplayName ?? "Recognition Member";
+
+    if (showRec) ViewData["Title"] = "Submitted University — Full Details";
+
+    var recDecision = Model.BasicInfoAssessmentDecision ?? "";
+    string DecCss(string d) => d switch {
+        "Approve" => "dec-approve", "Conditional Approval" => "dec-conditional",
+        var x when x.Contains("Reject", StringComparison.OrdinalIgnoreCase) => "dec-reject",
+        _ => string.IsNullOrWhiteSpace(d) ? "dec-na" : "dec-neutral" };
+    string DecIcon(string d) => d switch {
+        "Approve" => "bi-check2-circle", "Conditional Approval" => "bi-arrow-repeat",
+        var x when x.Contains("Reject", StringComparison.OrdinalIgnoreCase) => "bi-x-octagon-fill",
+        _ => "bi-dash-circle" };
+    static string BadgeCss(string s) => s switch {
+        "Compliant" => "badge-compliant", "Needs Review" => "badge-review",
+        "Not Compliant" => "badge-noncompliant", _ => "badge-na" };
+    static string EnvMap(string? v) => (v ?? "").Trim() switch {
+        "Meets Standards" => "Compliant", "Needs Improvement" => "Needs Review", _ => "Not Assessed" };
 }
 <!doctype html>
 <html lang="en" dir="ltr">
@@ -158,6 +183,8 @@
         .btn-hd { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); color: #fff; border: 1.5px solid rgba(255,255,255,.3); border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; text-decoration: none; cursor: pointer; transition: background .15s; white-space: nowrap; }
         .btn-hd:hover { background: rgba(255,255,255,.22); }
         .btn-hd.print-btn { background: rgba(255,255,255,.08); }
+        .btn-hd-decision { display: inline-flex; align-items: center; gap: 6px; background: #F2C94C; color: #3A2500; border: 1.5px solid #D6A800; border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; text-decoration: none; cursor: pointer; transition: background .15s; white-space: nowrap; }
+        .btn-hd-decision:hover { background: #e6bb38; }
 
         /* ── Layout ── */
         .layout { display: flex; padding-top: var(--header-h); min-height: 100vh; }
@@ -184,7 +211,7 @@
         .sid-num { width: 20px; height: 20px; border-radius: 50%; background: #f0e8e0; color: var(--brand); font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
         /* ── Main content ── */
-        .main { margin-left: var(--sidebar-w); flex: 1; padding: 28px 28px 80px; max-width: 1060px; }
+        .main { margin-left: var(--sidebar-w); flex: 1; padding: 28px 28px 120px; max-width: 1060px; }
 
         /* ── Summary strip ── */
         .summary-strip {
@@ -290,8 +317,50 @@
         .ap-noncomp      { background: #fef2f2; color: #b91c1c; }
         .ap-missing      { background: #f0f0f0; color: #888; }
 
+        /* ── Bottom action bar ── */
+        .bottom-bar {
+            position: fixed; bottom: 0; left: var(--sidebar-w); right: 0; z-index: 150;
+            background: #fff; border-top: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+            padding: 12px 28px;
+            box-shadow: 0 -2px 16px rgba(0,0,0,.08);
+        }
+        .btn-bar { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; border: 1.5px solid var(--border); background: #fff; color: #374151; transition: background .15s; white-space: nowrap; }
+        .btn-bar:hover { background: #f5f0ea; }
+        .btn-bar-decision { background: #F2C94C; color: #3A2500; border-color: #D6A800; font-weight: 700; }
+        .btn-bar-decision:hover { background: #e6bb38; }
+        /* ── Recommendation section ── */
+        .sec-hd-rec { background: #92400e; }
+        .sid-rec { background: #fef3c7 !important; color: #92400e !important; }
+
+        .badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 5px 11px; font-size: 11.5px; font-weight: 800; }
+        .badge-compliant    { background: #dcfce7; color: #15803d; }
+        .badge-review       { background: #fef9c3; color: #a16207; }
+        .badge-noncompliant { background: #fee2e2; color: #b91c1c; }
+        .badge-na           { background: #f3f4f6; color: #6b7280; }
+
+        .score-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
+        .score-cell { border: 1px solid #f0ece6; border-radius: 8px; padding: 14px; text-align: center; }
+        .score-num-r { font-size: 22px; font-weight: 900; color: #aaa; margin-bottom: 6px; }
+        .score-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #666; margin-bottom: 10px; }
+
+        .env-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+        .env-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8f9fa; border-radius: 6px; font-size: 13px; }
+        .env-label { font-weight: 600; color: #444; }
+        .env-note { font-size: 12px; color: #888; margin-top: 3px; }
+
+        .dec-badge { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 8px 20px; font-size: 14px; font-weight: 800; }
+        .dec-approve      { background: #dcfce7; color: #15803d; }
+        .dec-conditional  { background: #fef9c3; color: #a16207; }
+        .dec-reject       { background: #fee2e2; color: #b91c1c; }
+        .dec-na           { background: #f3f4f6; color: #6b7280; }
+        .dec-neutral      { background: #dbeafe; color: #1e40af; }
+
+        .note-box { background: #f8fbff; border: 1px solid #dbeafe; border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.6; color: #1f2937; white-space: pre-wrap; }
+        .note-box.empty { color: #aaa; font-style: italic; background: #faf7f3; border-color: #ede4da; }
+
         @@media print {
-            .pg-header, .sidebar, .hd-right { display: none !important; }
+            .pg-header, .sidebar, .hd-right, .bottom-bar { display: none !important; }
             .layout { padding-top: 0 !important; }
             .main { margin-left: 0 !important; max-width: 100% !important; }
             .section-card { break-inside: avoid; }
@@ -300,7 +369,7 @@
             .sidebar { display: none; }
             .main { margin-left: 0; }
             .fg { grid-template-columns: 1fr 1fr; }
-            .fg-4, .stat-grid { grid-template-columns: 1fr 1fr; }
+            .fg-4, .stat-grid, .score-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -311,14 +380,41 @@
         <img src="/images/mohelogo.png" alt="Ministry Logo" />
         <div class="hd-sep"></div>
         <div class="hd-text">
-            <h1>Full Application View</h1>
-            <p>Read-only · All sections · Request #@Model.Id</p>
+            @if (showRec && backId > 0)
+            {
+                <h1>Full Application View</h1>
+                <p>Read-only · All sections + doctor recommendation · Request #@Model.Id</p>
+            }
+            else if (showRec)
+            {
+                <h1>Submitted University — Full Details</h1>
+                <p>Read-only · Full application + doctor recommendation · #@Model.Id</p>
+            }
+            else
+            {
+                <h1>Full Application View</h1>
+                <p>Read-only · All sections · Request #@Model.Id</p>
+            }
         </div>
     </div>
     <div class="hd-right">
-        <span class="badge-view-only"><i class="bi bi-eye"></i> View Only</span>
-        <button class="btn-hd print-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
-        @if (backId > 0)
+        @if (!showRec)
+        {
+            <span class="badge-view-only"><i class="bi bi-eye"></i> View Only</span>
+        }
+        @if (showRec && backId == 0)
+        {
+            <a class="btn-hd" href="/Home/SubmittedUniversities"><i class="bi bi-arrow-left"></i> Back to List</a>
+            @if (!isInMeeting)
+            {
+                <a class="btn-hd btn-hd-decision" href="/Home/CreateMeeting?preselectRequestId=@Model.Id"><i class="bi bi-calendar-plus"></i> Add to Meeting</a>
+            }
+            else
+            {
+                <a class="btn-hd" href="/Home/SessionDashboard?id=@meetingIdRec"><i class="bi bi-calendar2-check"></i> View Meeting</a>
+            }
+        }
+        else if (backId > 0)
         {
             <a class="btn-hd" href="/Home/SessionDashboard?id=@backId"><i class="bi bi-arrow-left"></i> Back to Meeting</a>
         }
@@ -334,12 +430,12 @@
     <!-- ── Sidebar Navigation ── -->
     <nav class="sidebar">
         <div class="sidebar-inner">
-            <div class="sid-group">Application</div>
-            <a class="sid-link active" href="#sec-overview"><span class="sid-num"><i class="bi bi-info-circle" style="font-size:9px"></i></span> Overview</a>
+            <div class="sid-group">@(showRec ? "Overview" : "Application")</div>
+            <a class="sid-link active" href="#sec-overview"><span class="sid-num"><i class="bi bi-info-circle" style="font-size:9px"></i></span> @(showRec ? "Summary" : "Overview")</a>
 
-            <div class="sid-group">Sections</div>
+            <div class="sid-group">@(showRec ? "University Application" : "Sections")</div>
             <a class="sid-link" href="#sec-public"><span class="sid-num">1</span> Public Info</a>
-            <a class="sid-link" href="#sec-academic"><span class="sid-num">2</span> Academic Info</a>
+            <a class="sid-link" href="#sec-academic"><span class="sid-num">2</span> Academic Info &amp; Accreditation</a>
             <a class="sid-link" href="#sec-admission"><span class="sid-num">3</span> Admission &amp; Duration</a>
             <a class="sid-link" href="#sec-faculties"><span class="sid-num">4</span> Colleges</a>
             <a class="sid-link" href="#sec-programs"><span class="sid-num">5</span> Programs</a>
@@ -347,14 +443,15 @@
             <a class="sid-link" href="#sec-hospitals"><span class="sid-num">7</span> Hospitals</a>
             <a class="sid-link" href="#sec-infra"><span class="sid-num">8</span> University Infrastructure</a>
             <a class="sid-link" href="#sec-labs"><span class="sid-num">9</span> Laboratories</a>
+            <a class="sid-link" href="#sec-library"><span class="sid-num">10</span> Library</a>
+            <a class="sid-link" href="#sec-photos"><span class="sid-num">11</span> Photos / Media</a>
+            <a class="sid-link" href="#sec-documents"><span class="sid-num">12</span> Recognition &amp; Accreditation</a>
 
-            <div class="sid-group">Media &amp; Files</div>
-            <a class="sid-link" href="#sec-photos"><span class="sid-num"><i class="bi bi-image" style="font-size:9px"></i></span> Photos</a>
-            <a class="sid-link" href="#sec-documents"><span class="sid-num"><i class="bi bi-file-earmark" style="font-size:9px"></i></span> Documents</a>
-
-            <div class="sid-group">Assessment</div>
-            <a class="sid-link" href="#sec-rankings"><span class="sid-num"><i class="bi bi-bar-chart" style="font-size:9px"></i></span> Global Rankings</a>
-            <a class="sid-link" href="#sec-assessment"><span class="sid-num"><i class="bi bi-clipboard2-check" style="font-size:9px"></i></span> Assessment Notes</a>
+            @if (showRec)
+            {
+                <div class="sid-group">Recommendation</div>
+                <a class="sid-link sid-rec" href="#sec-recommendation"><span class="sid-num" style="background:#fde68a;color:#92400e">R</span> Doctor's Recommendation</a>
+            }
         </div>
     </nav>
 
@@ -395,43 +492,58 @@
                 </div>
             </div>
             <div class="sec-bd">
-                <div class="sub-hd">Institution Details</div>
-                <div class="fg">
-                    <div class="field"><div class="lbl">Institution Name</div><div class="val">@V(pub.InstitutionName)</div></div>
-                    <div class="field"><div class="lbl">Party Forwarding Form</div><div class="val">@V(pub.PartyForwardingForm)</div></div>
-                    <div class="field"><div class="lbl">City</div><div class="val">@V(pub.City)</div></div>
-                    <div class="field"><div class="lbl">Foundation Date</div><div class="val">@V(pub.FoundationDate)</div></div>
-                    <div class="field"><div class="lbl">Date of Establishment</div><div class="val">@V(pub.DateOfEstablishment)</div></div>
-                    <div class="field"><div class="lbl">Start of Teaching</div><div class="val">@V(pub.StartOfTeaching)</div></div>
-                    <div class="field"><div class="lbl">Mode of Study</div><div class="val">@V(pub.ModeOfStudy)</div></div>
-                    <div class="field"><div class="lbl">Language of Instruction</div><div class="val">@V(pub.LanguageOfInstruction)</div></div>
-                    <div class="field"><div class="lbl">Oversight Rights Entity</div><div class="val">@V(pub.OversightRightsEntity)</div></div>
-                </div>
-
-                <div class="sub-hd">President / Leadership</div>
-                <div class="fg">
-                    <div class="field"><div class="lbl">President Name</div><div class="val">@V(pub.PresidentName)</div></div>
-                    <div class="field"><div class="lbl">Highest Academic Degree</div><div class="val">@V(pub.PresidentHighestAcademicDegree)</div></div>
-                    <div class="field"><div class="lbl">Major Area of Study</div><div class="val">@V(pub.PresidentMajorAreaOfStudy)</div></div>
-                </div>
-
-                <div class="sub-hd">Contact Information</div>
-                <div class="fg">
-                    <div class="field"><div class="lbl">Mailing Address</div><div class="val">@V(pub.MailingFullAddress)</div></div>
-                    <div class="field"><div class="lbl">Direct Phone</div><div class="val mono">@V(pub.DirectPhoneNumber)</div></div>
-                    <div class="field"><div class="lbl">Fax Number</div><div class="val mono">@V(pub.FaxNumber)</div></div>
-                    <div class="field"><div class="lbl">Email Address</div><div class="val"><a href="mailto:@pub.EmailAddress">@V(pub.EmailAddress)</a></div></div>
-                    <div class="field"><div class="lbl">Website</div><div class="val"><a href="@pub.InstitutionalWebAddress" target="_blank" rel="noopener">@V(pub.InstitutionalWebAddress)</a></div></div>
-                    <div class="field"><div class="lbl">Last Website Update</div><div class="val">@V(pub.LastDateWebsiteUpdated)</div></div>
-                </div>
-
-                <div class="sub-hd">Institutional Identity</div>
-                <div class="fg-wide">
-                    <div class="field"><div class="lbl">Vision Statement</div><div class="val">@V(pub.InstitutionalVisionStatement)</div></div>
-                    <div class="field"><div class="lbl">Mission Statement</div><div class="val">@V(pub.InstitutionalMissionStatement)</div></div>
-                    <div class="field"><div class="lbl">Targeted Objectives</div><div class="val">@V(pub.InstitutionalTargettedObjectives)</div></div>
-                    <div class="field"><div class="lbl">Institutional Values</div><div class="val">@V(pub.InstitutionalValues)</div></div>
-                </div>
+                @{
+                    bool hasInstDetails = F(pub.InstitutionName)||F(pub.PartyForwardingForm)||F(pub.City)||F(pub.FoundationDate)||F(pub.DateOfEstablishment)||F(pub.StartOfTeaching)||F(pub.ModeOfStudy)||F(pub.LanguageOfInstruction)||F(pub.OversightRightsEntity);
+                    bool hasPresident   = F(pub.PresidentName)||F(pub.PresidentHighestAcademicDegree)||F(pub.PresidentMajorAreaOfStudy);
+                    bool hasContact     = F(pub.MailingFullAddress)||F(pub.DirectPhoneNumber)||F(pub.FaxNumber)||F(pub.EmailAddress)||F(pub.InstitutionalWebAddress)||F(pub.LastDateWebsiteUpdated);
+                    bool hasIdentity    = F(pub.InstitutionalVisionStatement)||F(pub.InstitutionalMissionStatement)||F(pub.InstitutionalTargettedObjectives)||F(pub.InstitutionalValues);
+                }
+                @if (hasInstDetails)
+                {
+                    <div class="sub-hd">Institution Details</div>
+                    <div class="fg">
+                        @if (F(pub.InstitutionName))          { <div class="field"><div class="lbl">Institution Name</div><div class="val">@pub.InstitutionName</div></div> }
+                        @if (F(pub.PartyForwardingForm))       { <div class="field"><div class="lbl">Party Forwarding Form</div><div class="val">@pub.PartyForwardingForm</div></div> }
+                        @if (F(pub.City))                      { <div class="field"><div class="lbl">City</div><div class="val">@pub.City</div></div> }
+                        @if (F(pub.FoundationDate))            { <div class="field"><div class="lbl">Foundation Date</div><div class="val">@pub.FoundationDate</div></div> }
+                        @if (F(pub.DateOfEstablishment))       { <div class="field"><div class="lbl">Date of Establishment</div><div class="val">@pub.DateOfEstablishment</div></div> }
+                        @if (F(pub.StartOfTeaching))           { <div class="field"><div class="lbl">Start of Teaching</div><div class="val">@pub.StartOfTeaching</div></div> }
+                        @if (F(pub.ModeOfStudy))               { <div class="field"><div class="lbl">Mode of Study</div><div class="val">@pub.ModeOfStudy</div></div> }
+                        @if (F(pub.LanguageOfInstruction))     { <div class="field"><div class="lbl">Language of Instruction</div><div class="val">@pub.LanguageOfInstruction</div></div> }
+                        @if (F(pub.OversightRightsEntity))     { <div class="field"><div class="lbl">Oversight Rights Entity</div><div class="val">@pub.OversightRightsEntity</div></div> }
+                    </div>
+                }
+                @if (hasPresident)
+                {
+                    <div class="sub-hd">President / Leadership</div>
+                    <div class="fg">
+                        @if (F(pub.PresidentName))                     { <div class="field"><div class="lbl">President Name</div><div class="val">@pub.PresidentName</div></div> }
+                        @if (F(pub.PresidentHighestAcademicDegree))    { <div class="field"><div class="lbl">Highest Academic Degree</div><div class="val">@pub.PresidentHighestAcademicDegree</div></div> }
+                        @if (F(pub.PresidentMajorAreaOfStudy))         { <div class="field"><div class="lbl">Major Area of Study</div><div class="val">@pub.PresidentMajorAreaOfStudy</div></div> }
+                    </div>
+                }
+                @if (hasContact)
+                {
+                    <div class="sub-hd">Contact Information</div>
+                    <div class="fg">
+                        @if (F(pub.MailingFullAddress))        { <div class="field"><div class="lbl">Mailing Address</div><div class="val">@pub.MailingFullAddress</div></div> }
+                        @if (F(pub.DirectPhoneNumber))         { <div class="field"><div class="lbl">Direct Phone</div><div class="val mono">@pub.DirectPhoneNumber</div></div> }
+                        @if (F(pub.FaxNumber))                 { <div class="field"><div class="lbl">Fax Number</div><div class="val mono">@pub.FaxNumber</div></div> }
+                        @if (F(pub.EmailAddress))              { <div class="field"><div class="lbl">Email Address</div><div class="val"><a href="mailto:@pub.EmailAddress">@pub.EmailAddress</a></div></div> }
+                        @if (F(pub.InstitutionalWebAddress))   { <div class="field"><div class="lbl">Website</div><div class="val"><a href="@pub.InstitutionalWebAddress" target="_blank" rel="noopener">@pub.InstitutionalWebAddress</a></div></div> }
+                        @if (F(pub.LastDateWebsiteUpdated))    { <div class="field"><div class="lbl">Last Website Update</div><div class="val">@pub.LastDateWebsiteUpdated</div></div> }
+                    </div>
+                }
+                @if (hasIdentity)
+                {
+                    <div class="sub-hd">Institutional Identity</div>
+                    <div class="fg-wide">
+                        @if (F(pub.InstitutionalVisionStatement))      { <div class="field"><div class="lbl">Vision Statement</div><div class="val">@pub.InstitutionalVisionStatement</div></div> }
+                        @if (F(pub.InstitutionalMissionStatement))     { <div class="field"><div class="lbl">Mission Statement</div><div class="val">@pub.InstitutionalMissionStatement</div></div> }
+                        @if (F(pub.InstitutionalTargettedObjectives))  { <div class="field"><div class="lbl">Targeted Objectives</div><div class="val">@pub.InstitutionalTargettedObjectives</div></div> }
+                        @if (F(pub.InstitutionalValues))               { <div class="field"><div class="lbl">Institutional Values</div><div class="val">@pub.InstitutionalValues</div></div> }
+                    </div>
+                }
             </div>
         </div>
 
@@ -448,115 +560,174 @@
             </div>
             <div class="sec-bd">
 
-                <div class="sub-hd">Institution Type &amp; Recognition</div>
-                <div class="fg">
-                    <div class="field"><div class="lbl">Type of Academic Institution</div><div class="val">@V(acad.TypeOfAcademicInstitution)</div></div>
-                    <div class="field"><div class="lbl">Official Recognition (Home Country)</div><div class="val">@V(acad.OfficialRecognitionInHomeCountry)</div></div>
-                    <div class="field"><div class="lbl">Official Accreditation &amp; QA (Home Country)</div><div class="val">@V(acad.OfficialAccreditationQualityInHomeCountry)</div></div>
-                </div>
-
-                <div class="sub-hd">Degrees Offered</div>
-                <div class="check-row" style="margin-bottom:4px">
-                    <span class="check-tag @(acad.DegreeDiploma ? "check-yes" : "check-no")"><i class="bi bi-@(acad.DegreeDiploma ? "check-circle-fill" : "x-circle")"></i> Diploma</span>
-                    <span class="check-tag @(acad.DegreeBSC ? "check-yes" : "check-no")"><i class="bi bi-@(acad.DegreeBSC ? "check-circle-fill" : "x-circle")"></i> BSc</span>
-                    <span class="check-tag @(acad.DegreeHigherDiploma ? "check-yes" : "check-no")"><i class="bi bi-@(acad.DegreeHigherDiploma ? "check-circle-fill" : "x-circle")"></i> Higher Diploma</span>
-                    <span class="check-tag @(acad.DegreeMaster ? "check-yes" : "check-no")"><i class="bi bi-@(acad.DegreeMaster ? "check-circle-fill" : "x-circle")"></i> Master</span>
-                    <span class="check-tag @(acad.DegreePhD ? "check-yes" : "check-no")"><i class="bi bi-@(acad.DegreePhD ? "check-circle-fill" : "x-circle")"></i> PhD</span>
-                </div>
-
-                <div class="sub-hd">Student Population</div>
-                <div class="stat-grid">
-                    <div class="stat-card"><div class="sv">@N(acad.TotalStudentPopulation)</div><div class="sk">Total Students</div></div>
-                    <div class="stat-card light"><div class="sv">@N(acad.LocalStudentPopulation)</div><div class="sk">Local Students</div></div>
-                    <div class="stat-card light"><div class="sv">@N(acad.ForeignStudentPopulation)</div><div class="sk">Foreign Students</div></div>
-                    <div class="stat-card light"><div class="sv">@N(acad.JordanianStudentPopulation)</div><div class="sk">Jordanian Students</div></div>
-                </div>
-                <div class="fg" style="margin-top:10px">
-                    <div class="field"><div class="lbl">Students-to-Faculty Ratio</div><div class="val">@D(acad.StudentsToFacultyRatio)</div></div>
-                    <div class="field"><div class="lbl">Doctorate Holders %</div><div class="val">@(acad.DoctorateHoldersPercentage.HasValue ? acad.DoctorateHoldersPercentage.Value + "%" : "—")</div></div>
-                    <div class="field"><div class="lbl">Associate Professor %</div><div class="val">@(acad.AssociateProfessorPercentage.HasValue ? acad.AssociateProfessorPercentage.Value + "%" : "—")</div></div>
-                    <div class="field"><div class="lbl">Foreign Students in Joint Classrooms</div><div class="val">@V(acad.ForeignStudentsJointClassroomsWithLocal)</div></div>
-                    <div class="field"><div class="lbl">Language (Domestic Students)</div><div class="val">@V(acad.LanguageForDomesticStudents)</div></div>
-                    <div class="field"><div class="lbl">Language (Foreign Students)</div><div class="val">@V(acad.LanguageForForeignStudents)</div></div>
-                </div>
-
-                <div class="sub-hd">Academic Staff Head Count by Rank</div>
-                <div class="tbl-wrap">
-                    <table class="tbl rank-tbl">
-                        <thead>
-                            <tr>
-                                <th>Academic Rank</th>
-                                <th>Full-Time</th>
-                                <th>Part-Time</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                var ranks = new[]
-                                {
-                                    ("Professor",             acad.StaffProfessorFullTimeCount,             acad.StaffProfessorPartTimeCount),
-                                    ("Associate Professor",   acad.StaffAssociateProfessorFullTimeCount,    acad.StaffAssociateProfessorPartTimeCount),
-                                    ("Assistant Professor",   acad.StaffAssistantProfessorFullTimeCount,    acad.StaffAssistantProfessorPartTimeCount),
-                                    ("Lecturer (PhD)",        acad.StaffResearcherFullTimeCount,            acad.StaffResearcherPartTimeCount),
-                                    ("Lecturer (MSc)",        acad.StaffTeacherFullTimeCount,               acad.StaffTeacherPartTimeCount),
-                                    ("Asst. Lecturer (MSc)",  acad.StaffAssistantTeacherFullTimeCount,      acad.StaffAssistantTeacherPartTimeCount),
-                                    ("Asst. Lecturer (BSc)",  acad.StaffOthersFullTimeCount,                acad.StaffOthersPartTimeCount),
-                                    ("Practitioner (PSc)",    acad.StaffPractitionerPscFullTimeCount,       acad.StaffPractitionerPscPartTimeCount),
-                                    ("Practitioner (MSc)",    acad.StaffPractitionerMscFullTimeCount,       acad.StaffPractitionerMscPartTimeCount),
-                                };
-                            }
-                            @foreach (var (rankName, ft, pt) in ranks)
-                            {
-                                int total = (ft ?? 0) + (pt ?? 0);
-                                <tr>
-                                    <td>@rankName</td>
-                                    <td>@(ft.HasValue && ft.Value > 0 ? ft.Value.ToString() : "—")</td>
-                                    <td>@(pt.HasValue && pt.Value > 0 ? pt.Value.ToString() : "—")</td>
-                                    <td class="rank-total">@(total > 0 ? total.ToString() : "—")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="sub-hd">Educational Systems</div>
-                <div class="check-row">
-                    <span class="check-tag @(acad.SystemYearlyProgram ? "check-yes" : "check-no")"><i class="bi bi-@(acad.SystemYearlyProgram ? "check-circle-fill" : "x-circle")"></i> Yearly Program</span>
-                    <span class="check-tag @(acad.SystemSemesterProgram ? "check-yes" : "check-no")"><i class="bi bi-@(acad.SystemSemesterProgram ? "check-circle-fill" : "x-circle")"></i> Semester Program</span>
-                    <span class="check-tag @(acad.SystemCreditHours ? "check-yes" : "check-no")"><i class="bi bi-@(acad.SystemCreditHours ? "check-circle-fill" : "x-circle")"></i> Credit Hours</span>
-                    <span class="check-tag @(acad.SystemECTS ? "check-yes" : "check-no")"><i class="bi bi-@(acad.SystemECTS ? "check-circle-fill" : "x-circle")"></i> ECTS</span>
-                </div>
-
-                <div class="sub-hd">E-Learning &amp; Delivery</div>
-                <div class="fg">
-                    <div class="field"><div class="lbl">Uses E-Learning</div><div class="val">@V(acad.UsesELearning)</div></div>
-                    <div class="field"><div class="lbl">Delivery Type</div><div class="val">@V(acad.DeliveryType)</div></div>
-                    <div class="field"><div class="lbl">E-Learning %</div><div class="val">@(acad.ELearningPercentage.HasValue ? acad.ELearningPercentage.Value + "%" : "—")</div></div>
-                    <div class="field"><div class="lbl">Blended Learning %</div><div class="val">@(acad.BlendedLearningPercentage.HasValue ? acad.BlendedLearningPercentage.Value + "%" : "—")</div></div>
-                    <div class="field"><div class="lbl">Platforms</div><div class="val">@V(acad.PlatformsCsv)</div></div>
-                    <div class="field"><div class="lbl">E-Assessment Used</div><div class="val">@V(acad.EAssessmentUsed)</div></div>
-                    <div class="field"><div class="lbl">E-Assessment Methods</div><div class="val">@V(acad.EAssessmentMethodsCsv)</div></div>
-                    <div class="field"><div class="lbl">Teaching Methods</div><div class="val">@V(acad.TeachingMethodsCsv)</div></div>
-                    <div class="field"><div class="lbl">Assessment Methods</div><div class="val">@V(acad.AssessmentMethodsCsv)</div></div>
-                </div>
-
-                <div class="sub-hd">Research Activity</div>
-                <div class="fg-2">
-                    <div class="field"><div class="lbl">Scopus Research Items</div><div class="val">@N(acad.ResearchItemsScopus)</div></div>
-                    <div class="field"><div class="lbl">Other Engines Research Items</div><div class="val">@N(acad.ResearchItemsOtherSearchEngines)</div></div>
-                </div>
-
-                <div class="sub-hd">Additional Academic Policies</div>
-                <div class="fg">
-                    <div class="field"><div class="lbl">College Categories</div><div class="val">@V(acad.CollegeCategoriesCsv)</div></div>
-                    <div class="field"><div class="lbl">Foreign Graduates Allowed to Practice</div><div class="val">@V(acad.ForeignGraduatesAllowedToPractice)</div></div>
-                    <div class="field"><div class="lbl">Class Attendance Enforced</div><div class="val">@V(acad.EnforceClassAttendance)</div></div>
-                    @if (!string.IsNullOrWhiteSpace(acad.MentionExceptions))
+                @{
+                    bool hasInstType = F(acad.TypeOfAcademicInstitution)||F(acad.OfficialRecognitionInHomeCountry)||F(acad.OfficialAccreditationQualityInHomeCountry);
+                    var checkedCats  = (acad.CollegeCategoriesCsv ?? "")
+                        .Split(new char[]{',', ';'}, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                    var checkedDegrees = new List<string>();
+                    if (acad.DegreeDiploma)       checkedDegrees.Add("Diploma");
+                    if (acad.DegreeBSC)            checkedDegrees.Add("BSc");
+                    if (acad.DegreeHigherDiploma)  checkedDegrees.Add("Higher Diploma");
+                    if (acad.DegreeMaster)         checkedDegrees.Add("Master");
+                    if (acad.DegreePhD)            checkedDegrees.Add("PhD");
+                    var checkedSystems = new List<string>();
+                    if (acad.SystemYearlyProgram)   checkedSystems.Add("Yearly Program");
+                    if (acad.SystemSemesterProgram) checkedSystems.Add("Semester Program");
+                    if (acad.SystemCreditHours)     checkedSystems.Add("Credit Hours");
+                    if (acad.SystemECTS)            checkedSystems.Add("ECTS");
+                    var ranks = new[]
                     {
-                        <div class="field fg-wide"><div class="lbl">Exceptions</div><div class="val">@acad.MentionExceptions</div></div>
-                    }
-                </div>
+                        new { Name = "Professor",            Key = "Professor",          Ft = acad.StaffProfessorFullTimeCount,           Pt = acad.StaffProfessorPartTimeCount,          FtFile = acad.ProfessorFullTimeExcelFileName,           PtFile = acad.ProfessorPartTimeExcelFileName },
+                        new { Name = "Associate Professor",  Key = "AssociateProfessor", Ft = acad.StaffAssociateProfessorFullTimeCount,  Pt = acad.StaffAssociateProfessorPartTimeCount, FtFile = acad.AssociateProfessorFullTimeExcelFileName,  PtFile = acad.AssociateProfessorPartTimeExcelFileName },
+                        new { Name = "Assistant Professor",  Key = "AssistantProfessor", Ft = acad.StaffAssistantProfessorFullTimeCount,  Pt = acad.StaffAssistantProfessorPartTimeCount, FtFile = acad.AssistantProfessorFullTimeExcelFileName,  PtFile = acad.AssistantProfessorPartTimeExcelFileName },
+                        new { Name = "Lecturer (PhD)",       Key = "Teacher",            Ft = acad.StaffTeacherFullTimeCount,             Pt = acad.StaffTeacherPartTimeCount,            FtFile = acad.TeacherFullTimeExcelFileName,             PtFile = acad.TeacherPartTimeExcelFileName },
+                        new { Name = "Lecturer (MSc)",       Key = "Researcher",         Ft = acad.StaffResearcherFullTimeCount,          Pt = acad.StaffResearcherPartTimeCount,         FtFile = acad.ResearcherFullTimeExcelFileName,          PtFile = acad.ResearcherPartTimeExcelFileName },
+                        new { Name = "Asst. Lecturer (MSc)", Key = "AssistantTeacher",   Ft = acad.StaffAssistantTeacherFullTimeCount,    Pt = acad.StaffAssistantTeacherPartTimeCount,   FtFile = acad.AssistantTeacherFullTimeExcelFileName,    PtFile = acad.AssistantTeacherPartTimeExcelFileName },
+                        new { Name = "Asst. Lecturer (BSc)", Key = "Others",             Ft = acad.StaffOthersFullTimeCount,              Pt = acad.StaffOthersPartTimeCount,             FtFile = acad.OthersFullTimeExcelFileName,              PtFile = acad.OthersPartTimeExcelFileName },
+                        new { Name = "Practitioner (PSc)",   Key = "PractitionerPsc",    Ft = acad.StaffPractitionerPscFullTimeCount,     Pt = acad.StaffPractitionerPscPartTimeCount,    FtFile = acad.PractitionerPscFullTimeExcelFileName,     PtFile = acad.PractitionerPscPartTimeExcelFileName },
+                        new { Name = "Practitioner (MSc)",   Key = "PractitionerMsc",    Ft = acad.StaffPractitionerMscFullTimeCount,     Pt = acad.StaffPractitionerMscPartTimeCount,    FtFile = acad.PractitionerMscFullTimeExcelFileName,     PtFile = acad.PractitionerMscPartTimeExcelFileName },
+                    };
+                    var filledRanks = ranks.Where(r => (r.Ft ?? 0) + (r.Pt ?? 0) > 0 || F(r.FtFile) || F(r.PtFile)).ToList();
+                    bool hasStudentPop = FN(acad.TotalStudentPopulation)||FN(acad.LocalStudentPopulation)||FN(acad.ForeignStudentPopulation)||FN(acad.JordanianStudentPopulation);
+                    bool hasStudentExtra = acad.DoctorateHoldersPercentage.HasValue||acad.AssociateProfessorPercentage.HasValue||F(acad.ForeignStudentsJointClassroomsWithLocal)||F(acad.LanguageForDomesticStudents)||F(acad.LanguageForForeignStudents);
+                }
+                @if (hasInstType)
+                {
+                    <div class="sub-hd">Institution Type &amp; Recognition</div>
+                    <div class="fg">
+                        @if (F(acad.TypeOfAcademicInstitution))                    { <div class="field"><div class="lbl">Type of Academic Institution</div><div class="val">@acad.TypeOfAcademicInstitution</div></div> }
+                        @if (F(acad.OfficialRecognitionInHomeCountry))              { <div class="field"><div class="lbl">Official Recognition (Home Country)</div><div class="val">@acad.OfficialRecognitionInHomeCountry</div></div> }
+                        @if (F(acad.OfficialAccreditationQualityInHomeCountry))    { <div class="field"><div class="lbl">Official Accreditation &amp; QA (Home Country)</div><div class="val">@acad.OfficialAccreditationQualityInHomeCountry</div></div> }
+                    </div>
+                }
+                @if (checkedDegrees.Any())
+                {
+                    <div class="sub-hd">Degrees Offered</div>
+                    <div class="check-row" style="margin-bottom:4px">
+                        @foreach (var deg in checkedDegrees)
+                        {
+                            <span class="check-tag check-yes"><i class="bi bi-check-circle-fill"></i> @deg</span>
+                        }
+                    </div>
+                }
+                @if (checkedCats.Any())
+                {
+                    <div class="sub-hd">College Categories</div>
+                    <div class="check-row" style="margin-bottom:4px">
+                        @foreach (var cat in checkedCats)
+                        {
+                            <span class="check-tag check-yes"><i class="bi bi-check-circle-fill"></i> @cat Colleges</span>
+                        }
+                    </div>
+                }
+                @if (hasStudentPop)
+                {
+                    <div class="sub-hd">Student Population</div>
+                    <div class="stat-grid">
+                        @if (FN(acad.TotalStudentPopulation))      { <div class="stat-card"><div class="sv">@N(acad.TotalStudentPopulation)</div><div class="sk">Total Students</div></div> }
+                        @if (FN(acad.LocalStudentPopulation))       { <div class="stat-card light"><div class="sv">@N(acad.LocalStudentPopulation)</div><div class="sk">Local Students</div></div> }
+                        @if (FN(acad.ForeignStudentPopulation))     { <div class="stat-card light"><div class="sv">@N(acad.ForeignStudentPopulation)</div><div class="sk">Foreign Students</div></div> }
+                        @if (FN(acad.JordanianStudentPopulation))   { <div class="stat-card light"><div class="sv">@N(acad.JordanianStudentPopulation)</div><div class="sk">Jordanian Students</div></div> }
+                    </div>
+                }
+                @if (hasStudentExtra)
+                {
+                    <div class="fg" style="margin-top:10px">
+                        @if (acad.DoctorateHoldersPercentage.HasValue)      { <div class="field"><div class="lbl">Doctorate Holders %</div><div class="val">@acad.DoctorateHoldersPercentage.Value%</div></div> }
+                        @if (acad.AssociateProfessorPercentage.HasValue)    { <div class="field"><div class="lbl">Associate Professor %</div><div class="val">@acad.AssociateProfessorPercentage.Value%</div></div> }
+                        @if (F(acad.ForeignStudentsJointClassroomsWithLocal)){ <div class="field"><div class="lbl">Foreign Students in Joint Classrooms</div><div class="val">@acad.ForeignStudentsJointClassroomsWithLocal</div></div> }
+                        @if (F(acad.LanguageForDomesticStudents))           { <div class="field"><div class="lbl">Language (Domestic Students)</div><div class="val">@acad.LanguageForDomesticStudents</div></div> }
+                        @if (F(acad.LanguageForForeignStudents))            { <div class="field"><div class="lbl">Language (Foreign Students)</div><div class="val">@acad.LanguageForForeignStudents</div></div> }
+                    </div>
+                }
+                @if (filledRanks.Any())
+                {
+                    <div class="sub-hd">Academic Staff Head Count by Rank</div>
+                    <div class="tbl-wrap">
+                        <table class="tbl rank-tbl">
+                            <thead>
+                                <tr><th>Academic Rank</th><th>Full-Time</th><th>FT Excel File</th><th>Part-Time</th><th>PT Excel File</th><th>Total</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var rank in filledRanks)
+                                {
+                                    int total = (rank.Ft ?? 0) + (rank.Pt ?? 0);
+                                    <tr>
+                                        <td>@rank.Name</td>
+                                        <td>@(FN(rank.Ft) ? rank.Ft!.Value.ToString() : "—")</td>
+                                        <td>
+                                            @if (F(rank.FtFile))
+                                            {
+                                                <div style="display:flex;gap:5px;flex-wrap:wrap">
+                                                    <a class="btn-view" href="@Url.Action("AcademicRankFilePreview", "Home", new { id = Model.Id, rankKey = rank.Key, employmentType = "fulltime" })" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
+                                                    <a class="btn-view" href="@Url.Action("DownloadAcademicRankStaffFile", "Home", new { id = Model.Id, rankKey = rank.Key, employmentType = "fulltime" })" target="_blank" rel="noopener"><i class="bi bi-download"></i></a>
+                                                </div>
+                                            }
+                                            else { <span style="color:var(--muted);font-size:12px">—</span> }
+                                        </td>
+                                        <td>@(FN(rank.Pt) ? rank.Pt!.Value.ToString() : "—")</td>
+                                        <td>
+                                            @if (F(rank.PtFile))
+                                            {
+                                                <div style="display:flex;gap:5px;flex-wrap:wrap">
+                                                    <a class="btn-view" href="@Url.Action("AcademicRankFilePreview", "Home", new { id = Model.Id, rankKey = rank.Key, employmentType = "parttime" })" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
+                                                    <a class="btn-view" href="@Url.Action("DownloadAcademicRankStaffFile", "Home", new { id = Model.Id, rankKey = rank.Key, employmentType = "parttime" })" target="_blank" rel="noopener"><i class="bi bi-download"></i></a>
+                                                </div>
+                                            }
+                                            else { <span style="color:var(--muted);font-size:12px">—</span> }
+                                        </td>
+                                        <td class="rank-total">@total</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                @if (checkedSystems.Any())
+                {
+                    <div class="sub-hd">Educational Systems</div>
+                    <div class="check-row">
+                        @foreach (var sys in checkedSystems)
+                        {
+                            <span class="check-tag check-yes"><i class="bi bi-check-circle-fill"></i> @sys</span>
+                        }
+                    </div>
+                }
+                @if (accBodies.Any())
+                {
+                    <div class="sub-hd">Accreditation Bodies</div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr><th>#</th><th>Accreditation Body</th><th>Type</th><th style="width:160px">Document</th></tr>
+                            </thead>
+                            <tbody>
+                                @{ int abIdx = 1; }
+                                @foreach (var ab in accBodies)
+                                {
+                                    <tr>
+                                        <td style="color:var(--muted);width:36px">@abIdx</td>
+                                        <td style="font-weight:600">@V(ab.AccreditationBodyName)</td>
+                                        <td>@V(ab.AccreditationType)</td>
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(ab.PdfFileUrl))
+                                            {
+                                                <div style="display:flex;gap:6px">
+                                                    <a class="btn-view" href="@ab.PdfFileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
+                                                    <a class="btn-view" href="@ab.PdfFileUrl" download="@ab.PdfOriginalFileName"><i class="bi bi-download"></i></a>
+                                                </div>
+                                            }
+                                            else { <span style="color:var(--muted);font-size:12px">No document</span> }
+                                        </td>
+                                    </tr>
+                                    abIdx++;
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
         </div>
 
@@ -572,21 +743,48 @@
                 </div>
             </div>
             <div class="sec-bd">
-                <div class="sub-hd">Study Duration by Degree</div>
-                <div class="tbl-wrap">
-                    <table class="tbl dur-tbl">
-                        <thead>
-                            <tr><th>Degree</th><th>Enrollment Duration</th><th>Obtain Duration</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>Diploma</td><td>@V(dur.DiplomaEnrollment)</td><td>@V(dur.DiplomaObtain)</td></tr>
-                            <tr><td>Bachelor (BSc)</td><td>@V(dur.BachelorEnrollment)</td><td>@V(dur.BachelorObtain)</td></tr>
-                            <tr><td>Higher Diploma</td><td>@V(dur.HigherDiplomaEnrollment)</td><td>@V(dur.HigherDiplomaObtain)</td></tr>
-                            <tr><td>Master</td><td>@V(dur.MasterEnrollment)</td><td>@V(dur.MasterObtain)</td></tr>
-                            <tr><td>PhD</td><td>@V(dur.PhDEnrollment)</td><td>@V(dur.PhDObtain)</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+                @{
+                    var adsr = Model.AdmissionStudyDurationReview;
+                    var durRows = new[]
+                    {
+                        new { Degree = "Diploma",        Duration = dur.DiplomaObtain,        Level = "Diploma",       PdfFile = adsr?.DiplomaSamplePdfFileName },
+                        new { Degree = "Bachelor (BSc)", Duration = dur.BachelorObtain,       Level = "BSc",           PdfFile = adsr?.BScSamplePdfFileName },
+                        new { Degree = "Higher Diploma", Duration = dur.HigherDiplomaObtain,  Level = "HigherDiploma", PdfFile = adsr?.HigherDiplomaSamplePdfFileName },
+                        new { Degree = "Master",         Duration = dur.MasterObtain,         Level = "Master",        PdfFile = adsr?.MasterSamplePdfFileName },
+                        new { Degree = "PhD",            Duration = dur.PhDObtain,            Level = "Phd",           PdfFile = adsr?.PhdSamplePdfFileName },
+                    }.Where(r => F(r.Duration) || F(r.PdfFile)).ToList();
+                }
+                @if (durRows.Any())
+                {
+                    <div class="sub-hd">Study Duration by Degree</div>
+                    <div class="tbl-wrap">
+                        <table class="tbl dur-tbl">
+                            <thead>
+                                <tr><th>Degree</th><th>Duration</th><th>Sample PDF</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in durRows)
+                                {
+                                    <tr>
+                                        <td>@row.Degree</td>
+                                        <td>@(F(row.Duration) ? row.Duration : "—")</td>
+                                        <td>
+                                            @if (F(row.PdfFile))
+                                            {
+                                                <a class="btn-view" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = Model.Id, level = row.Level, inline = true })" target="_blank">View</a>
+                                                <a class="btn-view" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = Model.Id, level = row.Level })" target="_blank">↓</a>
+                                            }
+                                            else
+                                            {
+                                                @:—
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
 
                 @{
                     var admGroups = new[]
@@ -681,7 +879,7 @@
                     <div class="tbl-wrap">
                         <table class="tbl">
                             <thead>
-                                <tr><th>#</th><th>Program</th><th>Faculty</th><th>Degree</th><th>Years</th><th>System</th><th>Accreditation Date</th></tr>
+                                <tr><th>#</th><th>Program</th><th>Faculty</th><th>Degree</th><th>Years</th><th>System</th><th>Accreditation Date</th><th>Last Graduation</th></tr>
                             </thead>
                             <tbody>
                                 @{ int pi = 1; }
@@ -695,6 +893,7 @@
                                         <td>@(p.NumberOfYears > 0 ? p.NumberOfYears.ToString() : "—")</td>
                                         <td>@V(p.EducationalSystem)</td>
                                         <td>@(p.AccreditationDate.HasValue ? p.AccreditationDate.Value.ToString("dd MMM yyyy") : "—")</td>
+                                        <td>@(p.GraduationDateOfLastRegiment.HasValue ? p.GraduationDateOfLastRegiment.Value.ToString("dd MMM yyyy") : "—")</td>
                                     </tr>
                                     pi++;
                                 }
@@ -729,6 +928,38 @@
             </div>
         </div>
 
+        @{
+            var medFtAll = new[]
+            {
+                ("Professor",               medDen.Med_FullTimeProfessor,               medDen.Den_FullTimeProfessor),
+                ("Associate Professor",     medDen.Med_FullTimeAssociateProfessor,       medDen.Den_FullTimeAssociateProfessor),
+                ("Assistant Professor",     medDen.Med_FullTimeAssistantProfessor,       medDen.Den_FullTimeAssistantProfessor),
+                ("Lecturer (PhD)",          medDen.Med_FullTimeLecturerPhd,              medDen.Den_FullTimeLecturerPhd),
+                ("Asst. Lecturer (PhD)",    medDen.Med_FullTimeAssistantLecturerPhd,     medDen.Den_FullTimeAssistantLecturerPhd),
+                ("Lecturer (MSc)",          medDen.Med_FullTimeLecturerMsc,              medDen.Den_FullTimeLecturerMsc),
+                ("Asst. Lecturer (MSc)",    medDen.Med_FullTimeAssistantLecturerMsc,     medDen.Den_FullTimeAssistantLecturerMsc),
+                ("Practitioner (PSc)",      medDen.Med_FullTimePractitionerPsc,          medDen.Den_FullTimePractitionerPsc),
+                ("Practitioner (MSc)",      medDen.Med_FullTimePractitionerMsc,          medDen.Den_FullTimePractitionerMsc),
+            };
+            var medPtAll = new[]
+            {
+                ("Professor",               medDen.Med_PartTimeClinicalProfessor,               medDen.Den_PartTimeClinicalProfessor),
+                ("Associate Professor",     medDen.Med_PartTimeClinicalAssociateProfessor,       medDen.Den_PartTimeClinicalAssociateProfessor),
+                ("Assistant Professor",     medDen.Med_PartTimeClinicalAssistantProfessor,       medDen.Den_PartTimeClinicalAssistantProfessor),
+                ("Lecturer (PhD)",          medDen.Med_PartTimeClinicalLecturerPhd,              medDen.Den_PartTimeClinicalLecturerPhd),
+                ("Asst. Lecturer (PhD)",    medDen.Med_PartTimeClinicalAssistantLecturerPhd,     medDen.Den_PartTimeClinicalAssistantLecturerPhd),
+                ("Lecturer (MSc)",          medDen.Med_PartTimeClinicalLecturerMsc,              medDen.Den_PartTimeClinicalLecturerMsc),
+                ("Asst. Lecturer (MSc)",    medDen.Med_PartTimeClinicalAssistantLecturerMsc,     medDen.Den_PartTimeClinicalAssistantLecturerMsc),
+                ("Practitioner (PSc)",      medDen.Med_PartTimeClinicalPractitionerPsc,          medDen.Den_PartTimeClinicalPractitionerPsc),
+                ("Practitioner (MSc)",      medDen.Med_PartTimeClinicalPractitionerMsc,          medDen.Den_PartTimeClinicalPractitionerMsc),
+            };
+            var medFtFilled = medFtAll.Where(r => FN(r.Item2) || FN(r.Item3)).ToList();
+            var medPtFilled = medPtAll.Where(r => FN(r.Item2) || FN(r.Item3)).ToList();
+            bool hasMedRatio = medDen.Med_StudentFacultyRatio.HasValue || medDen.Den_StudentFacultyRatio.HasValue;
+            bool hasMedSection = FN(medDen.Med_TotalStudents) || FN(medDen.Den_TotalStudents) || medFtFilled.Any() || medPtFilled.Any() || hasMedRatio;
+        }
+        @if (hasMedSection)
+        {
         <!-- ══════════════════════════════════════════════════════════ -->
         <!-- SECTION 6 — MEDICINE & DENTISTRY                          -->
         <!-- ══════════════════════════════════════════════════════════ -->
@@ -741,76 +972,54 @@
                 </div>
             </div>
             <div class="sec-bd">
-                <div class="fg-2" style="margin-bottom:16px">
-                    <div class="stat-card light"><div class="sv">@N(medDen.Med_TotalStudents)</div><div class="sk">Medicine Students</div></div>
-                    <div class="stat-card light"><div class="sv">@N(medDen.Den_TotalStudents)</div><div class="sk">Dentistry Students</div></div>
-                </div>
-
-                <div class="sub-hd">Full-Time Academic Staff</div>
-                <div class="tbl-wrap">
-                    <table class="tbl rank-tbl">
-                        <thead>
-                            <tr><th>Rank</th><th>Medicine</th><th>Dentistry</th></tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                var medFtRanks = new[]
+                @if (FN(medDen.Med_TotalStudents) || FN(medDen.Den_TotalStudents))
+                {
+                    <div class="fg-2" style="margin-bottom:16px">
+                        @if (FN(medDen.Med_TotalStudents)) { <div class="stat-card light"><div class="sv">@N(medDen.Med_TotalStudents)</div><div class="sk">Medicine Students</div></div> }
+                        @if (FN(medDen.Den_TotalStudents)) { <div class="stat-card light"><div class="sv">@N(medDen.Den_TotalStudents)</div><div class="sk">Dentistry Students</div></div> }
+                    </div>
+                }
+                @if (medFtFilled.Any())
+                {
+                    <div class="sub-hd">Full-Time Academic Staff</div>
+                    <div class="tbl-wrap">
+                        <table class="tbl rank-tbl">
+                            <thead><tr><th>Rank</th><th>Medicine</th><th>Dentistry</th></tr></thead>
+                            <tbody>
+                                @foreach (var (rn, mv, dv) in medFtFilled)
                                 {
-                                    ("Professor",           medDen.Med_FullTimeProfessor,           medDen.Den_FullTimeProfessor),
-                                    ("Associate Professor", medDen.Med_FullTimeAssociateProfessor,  medDen.Den_FullTimeAssociateProfessor),
-                                    ("Assistant Professor", medDen.Med_FullTimeAssistantProfessor,  medDen.Den_FullTimeAssistantProfessor),
-                                    ("Lecturer (PhD)",      medDen.Med_FullTimeLecturerPhd,         medDen.Den_FullTimeLecturerPhd),
-                                    ("Lecturer (MSc)",      medDen.Med_FullTimeLecturerMsc,         medDen.Den_FullTimeLecturerMsc),
-                                    ("Asst. Lecturer (MSc)",medDen.Med_FullTimeAssistantLecturerMsc,medDen.Den_FullTimeAssistantLecturerMsc),
-                                    ("Practitioner (PSc)",  medDen.Med_FullTimePractitionerPsc,     medDen.Den_FullTimePractitionerPsc),
-                                    ("Practitioner (MSc)",  medDen.Med_FullTimePractitionerMsc,     medDen.Den_FullTimePractitionerMsc),
-                                };
-                            }
-                            @foreach (var (rn, mv, dv) in medFtRanks)
-                            {
-                                <tr>
-                                    <td>@rn</td>
-                                    <td>@(mv.HasValue && mv.Value > 0 ? mv.Value.ToString() : "—")</td>
-                                    <td>@(dv.HasValue && dv.Value > 0 ? dv.Value.ToString() : "—")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="sub-hd">Part-Time Clinical Staff</div>
-                <div class="tbl-wrap">
-                    <table class="tbl rank-tbl">
-                        <thead>
-                            <tr><th>Rank</th><th>Medicine</th><th>Dentistry</th></tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                var medPtRanks = new[]
+                                    <tr>
+                                        <td>@rn</td>
+                                        <td>@(FN(mv) ? mv!.Value.ToString() : "—")</td>
+                                        <td>@(FN(dv) ? dv!.Value.ToString() : "—")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                @if (medPtFilled.Any())
+                {
+                    <div class="sub-hd">Part-Time Clinical Staff</div>
+                    <div class="tbl-wrap">
+                        <table class="tbl rank-tbl">
+                            <thead><tr><th>Rank</th><th>Medicine</th><th>Dentistry</th></tr></thead>
+                            <tbody>
+                                @foreach (var (rn, mv, dv) in medPtFilled)
                                 {
-                                    ("Professor",           medDen.Med_PartTimeClinicalProfessor,           medDen.Den_PartTimeClinicalProfessor),
-                                    ("Associate Professor", medDen.Med_PartTimeClinicalAssociateProfessor,  medDen.Den_PartTimeClinicalAssociateProfessor),
-                                    ("Assistant Professor", medDen.Med_PartTimeClinicalAssistantProfessor,  medDen.Den_PartTimeClinicalAssistantProfessor),
-                                    ("Lecturer (PhD)",      medDen.Med_PartTimeClinicalLecturerPhd,         medDen.Den_PartTimeClinicalLecturerPhd),
-                                    ("Lecturer (MSc)",      medDen.Med_PartTimeClinicalLecturerMsc,         medDen.Den_PartTimeClinicalLecturerMsc),
-                                    ("Asst. Lecturer (MSc)",medDen.Med_PartTimeClinicalAssistantLecturerMsc,medDen.Den_PartTimeClinicalAssistantLecturerMsc),
-                                    ("Practitioner (PSc)",  medDen.Med_PartTimeClinicalPractitionerPsc,     medDen.Den_PartTimeClinicalPractitionerPsc),
-                                    ("Practitioner (MSc)",  medDen.Med_PartTimeClinicalPractitionerMsc,     medDen.Den_PartTimeClinicalPractitionerMsc),
-                                };
-                            }
-                            @foreach (var (rn, mv, dv) in medPtRanks)
-                            {
-                                <tr>
-                                    <td>@rn</td>
-                                    <td>@(mv.HasValue && mv.Value > 0 ? mv.Value.ToString() : "—")</td>
-                                    <td>@(dv.HasValue && dv.Value > 0 ? dv.Value.ToString() : "—")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                                    <tr>
+                                        <td>@rn</td>
+                                        <td>@(FN(mv) ? mv!.Value.ToString() : "—")</td>
+                                        <td>@(FN(dv) ? dv!.Value.ToString() : "—")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
         </div>
+        }
 
         <!-- ══════════════════════════════════════════════════════════ -->
         <!-- SECTION 7 — HOSPITALS                                     -->
@@ -825,8 +1034,6 @@
             </div>
             <div class="sec-bd">
 
-                <!-- Section 1: Hospital Facilities -->
-                <div class="sub-hd">University Submitted Hospital Data</div>
                 @if (!hosp.Rows.Any() && !hosp.Facilities.Any())
                 {
                     <div class="empty-state"><i class="bi bi-hospital"></i>No hospital records entered.</div>
@@ -842,14 +1049,16 @@
                     <div class="tbl-wrap">
                         <table class="tbl">
                             <thead>
-                                <tr><th>Specialization</th><th>Facility Name</th><th>Beds</th><th>Dental Chairs</th><th>Agreement Files</th></tr>
+                                <tr><th>#</th><th>Specialization</th><th>Facility Name</th><th>Beds</th><th>Dental Chairs</th><th>Agreement Files</th></tr>
                             </thead>
                             <tbody>
+                                @{ int hi = 1; }
                                 @foreach (var h in hospRows)
                                 {
                                     var rowId = (h.Id ?? string.Empty).Trim();
                                     var rowDocs = facilityAgreementDocs.TryGetValue(rowId, out var docs) ? docs : new List<HospitalFileDto>();
                                     <tr>
+                                        <td style="color:var(--muted);width:36px">@hi</td>
                                         <td>@V(h.Specialization)</td>
                                         <td style="font-weight:600">@V(h.Name)</td>
                                         <td>@N(h.BedCapacity)</td>
@@ -857,8 +1066,15 @@
                                         <td>
                                             @if (rowDocs.Any())
                                             {
-                                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                                    <a class="btn-view" href="@rowDocs[0].FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View Files (@rowDocs.Count)</a>
+                                                <div style="display:flex;flex-direction:column;gap:6px">
+                                                    @foreach (var rd in rowDocs)
+                                                    {
+                                                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                                                            <span style="font-size:12px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="@rd.OriginalFileName">@rd.OriginalFileName</span>
+                                                            <a class="btn-view" href="@rd.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
+                                                            <a class="btn-view" href="@rd.FileUrl" download="@rd.OriginalFileName"><i class="bi bi-download"></i></a>
+                                                        </div>
+                                                    }
                                                 </div>
                                             }
                                             else
@@ -867,262 +1083,12 @@
                                             }
                                         </td>
                                     </tr>
+                                    hi++;
                                 }
                             </tbody>
                         </table>
                     </div>
                 }
-
-                <!-- Section 2: Recognition and Accreditation -->
-                <div class="sub-hd" style="margin-top:20px;">Recognition and Accreditation</div>
-                <div class="field" style="margin-bottom:10px;">
-                    <div class="lbl">1. Local Recognition Documents</div>
-                    @if (localRecognitionDocs.Any())
-                    {
-                        <div class="tbl-wrap" style="margin-top:8px;">
-                            <table class="tbl">
-                                <thead>
-                                    <tr>
-                                        <th>File Name</th>
-                                        <th>Document Category</th>
-                                        <th>Upload Date</th>
-                                        <th>Uploaded By</th>
-                                        <th style="width:180px;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var doc in localRecognitionDocs)
-                                    {
-                                        <tr>
-                                            <td>@V(doc.OriginalFileName)</td>
-                                            <td>@HospitalDocLabel("LocalRecognition")</td>
-                                            <td>@(doc.UploadedAt.HasValue ? doc.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                            <td>@V(doc.UploadedBy)</td>
-                                            <td>
-                                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                                    <a class="btn-view" href="@doc.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
-                                                    <a class="btn-view" href="@doc.FileUrl" download="@doc.OriginalFileName"><i class="bi bi-download"></i> Download</a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="val">No local recognition documents submitted.</div>
-                    }
-                </div>
-
-                <div class="fg-docs" style="margin-bottom:10px;">
-                    <div class="field">
-                        <div class="lbl">2. Local Accreditation Documents</div>
-                        @if (localAccreditationDocs.Any())
-                        {
-                            <div class="tbl-wrap" style="margin-top:8px;">
-                                <table class="tbl">
-                                    <thead>
-                                        <tr>
-                                            <th>File Name</th>
-                                            <th>Document Category</th>
-                                            <th>Upload Date</th>
-                                            <th>Uploaded By</th>
-                                            <th style="width:180px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var doc in localAccreditationDocs)
-                                        {
-                                            <tr>
-                                                <td>@V(doc.OriginalFileName)</td>
-                                                <td>@HospitalDocLabel("LocalAccreditation")</td>
-                                                <td>@(doc.UploadedAt.HasValue ? doc.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                                <td>@V(doc.UploadedBy)</td>
-                                                <td>
-                                                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                                        <a class="btn-view" href="@doc.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
-                                                        <a class="btn-view" href="@doc.FileUrl" download="@doc.OriginalFileName"><i class="bi bi-download"></i> Download</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="val">No local accreditation documents submitted.</div>
-                        }
-                    </div>
-
-                    <div class="field">
-                        <div class="lbl">2. Regional Accreditation Documents</div>
-                        @if (regionalAccreditationDocs.Any())
-                        {
-                            <div class="tbl-wrap" style="margin-top:8px;">
-                                <table class="tbl">
-                                    <thead>
-                                        <tr>
-                                            <th>File Name</th>
-                                            <th>Document Category</th>
-                                            <th>Upload Date</th>
-                                            <th>Uploaded By</th>
-                                            <th style="width:180px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var doc in regionalAccreditationDocs)
-                                        {
-                                            <tr>
-                                                <td>@V(doc.OriginalFileName)</td>
-                                                <td>@HospitalDocLabel("RegionalAccreditation")</td>
-                                                <td>@(doc.UploadedAt.HasValue ? doc.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                                <td>@V(doc.UploadedBy)</td>
-                                                <td>
-                                                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                                        <a class="btn-view" href="@doc.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
-                                                        <a class="btn-view" href="@doc.FileUrl" download="@doc.OriginalFileName"><i class="bi bi-download"></i> Download</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="val">No regional accreditation documents submitted.</div>
-                        }
-                    </div>
-
-                    <div class="field">
-                        <div class="lbl">2. International Accreditation Documents</div>
-                        @if (internationalAccreditationDocs.Any())
-                        {
-                            <div class="tbl-wrap" style="margin-top:8px;">
-                                <table class="tbl">
-                                    <thead>
-                                        <tr>
-                                            <th>File Name</th>
-                                            <th>Document Category</th>
-                                            <th>Upload Date</th>
-                                            <th>Uploaded By</th>
-                                            <th style="width:180px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var doc in internationalAccreditationDocs)
-                                        {
-                                            <tr>
-                                                <td>@V(doc.OriginalFileName)</td>
-                                                <td>@HospitalDocLabel("InternationalAccreditation")</td>
-                                                <td>@(doc.UploadedAt.HasValue ? doc.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                                <td>@V(doc.UploadedBy)</td>
-                                                <td>
-                                                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                                        <a class="btn-view" href="@doc.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
-                                                        <a class="btn-view" href="@doc.FileUrl" download="@doc.OriginalFileName"><i class="bi bi-download"></i> Download</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="val">No international accreditation documents submitted.</div>
-                        }
-                    </div>
-
-                    <div class="field">
-                        <div class="lbl">2. Other Accreditation Documents</div>
-                        @if (otherAccreditationDocs.Any())
-                        {
-                            <div class="tbl-wrap" style="margin-top:8px;">
-                                <table class="tbl">
-                                    <thead>
-                                        <tr>
-                                            <th>File Name</th>
-                                            <th>Document Category</th>
-                                            <th>Upload Date</th>
-                                            <th>Uploaded By</th>
-                                            <th style="width:180px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var doc in otherAccreditationDocs)
-                                        {
-                                            <tr>
-                                                <td>@V(doc.OriginalFileName)</td>
-                                                <td>@HospitalDocLabel("OtherAccreditation")</td>
-                                                <td>@(doc.UploadedAt.HasValue ? doc.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                                <td>@V(doc.UploadedBy)</td>
-                                                <td>
-                                                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                                        <a class="btn-view" href="@doc.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
-                                                        <a class="btn-view" href="@doc.FileUrl" download="@doc.OriginalFileName"><i class="bi bi-download"></i> Download</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="val">No other accreditation documents submitted.</div>
-                        }
-                    </div>
-                </div>
-
-                <div class="field">
-                    <div class="lbl">3. University-Hospital Agreement Documents</div>
-                    <div class="val" style="margin-bottom:8px;">Upload official agreements between the university and training hospitals.</div>
-                    @if (hospitalAgreementDocs.Any())
-                    {
-                        <div class="tbl-wrap">
-                            <table class="tbl">
-                                <thead>
-                                    <tr>
-                                        <th>File Name</th>
-                                        <th>Document Category</th>
-                                        <th>Upload Date</th>
-                                        <th>Uploaded By</th>
-                                        <th style="width:180px;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var doc in hospitalAgreementDocs)
-                                    {
-                                        <tr>
-                                            <td>@V(doc.OriginalFileName)</td>
-                                            <td>@HospitalDocLabel("HospitalAgreement")</td>
-                                            <td>@(doc.UploadedAt.HasValue ? doc.UploadedAt.Value.ToString("dd MMM yyyy, HH:mm") : "—")</td>
-                                            <td>@V(doc.UploadedBy)</td>
-                                            <td>
-                                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                                    <a class="btn-view" href="@doc.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
-                                                    <a class="btn-view" href="@doc.FileUrl" download="@doc.OriginalFileName"><i class="bi bi-download"></i> Download</a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="val">No university-hospital agreement documents submitted.</div>
-                    }
-                </div>
             </div>
         </div>
 
@@ -1138,13 +1104,17 @@
                 </div>
             </div>
             <div class="sec-bd">
-                <div class="fg-2">
-                    <div class="field"><div class="lbl">Area (km²)</div><div class="val">@V(infra.AreaKm2)</div></div>
-                    <div class="field"><div class="lbl">Campuses Count</div><div class="val">@V(infra.CampusesCount)</div></div>
-                    <div class="field"><div class="lbl">Stadiums Count</div><div class="val">@V(infra.StadiumsCount)</div></div>
-                    <div class="field"><div class="lbl">Classrooms &amp; Lecture Halls</div><div class="val">@V(infra.ClassroomsAndLectureHallsCount)</div></div>
-                    <div class="field"><div class="lbl">Libraries Count</div><div class="val">@V(infra.LibrariesCount)</div></div>
-                </div>
+                @{bool hasInfraFields = F(infra.AreaKm2)||F(infra.CampusesCount)||F(infra.StadiumsCount)||F(infra.ClassroomsAndLectureHallsCount)||F(infra.LibrariesCount);}
+                @if (hasInfraFields)
+                {
+                    <div class="fg-2">
+                        @if (F(infra.AreaKm2))                          { <div class="field"><div class="lbl">Area (km²)</div><div class="val">@infra.AreaKm2</div></div> }
+                        @if (F(infra.CampusesCount))                    { <div class="field"><div class="lbl">Campuses Count</div><div class="val">@infra.CampusesCount</div></div> }
+                        @if (F(infra.StadiumsCount))                    { <div class="field"><div class="lbl">Stadiums Count</div><div class="val">@infra.StadiumsCount</div></div> }
+                        @if (F(infra.ClassroomsAndLectureHallsCount))   { <div class="field"><div class="lbl">Classrooms &amp; Lecture Halls</div><div class="val">@infra.ClassroomsAndLectureHallsCount</div></div> }
+                        @if (F(infra.LibrariesCount))                   { <div class="field"><div class="lbl">Libraries Count</div><div class="val">@infra.LibrariesCount</div></div> }
+                    </div>
+                }
                 @if (!string.IsNullOrWhiteSpace(infra.LaboratoriesDetails))
                 {
                     <div class="sub-hd">Laboratories Details</div>
@@ -1170,12 +1140,15 @@
                 </div>
             </div>
             <div class="sec-bd">
-                <div class="fg-4" style="margin-bottom:16px">
-                    <div class="stat-card light"><div class="sv">@N(labs.TotalLaboratoriesCount)</div><div class="sk">Laboratories</div></div>
-                    <div class="stat-card light"><div class="sv">@N(labs.TotalFacilitiesCount)</div><div class="sk">Total Facilities</div></div>
-                    <div class="stat-card light"><div class="sv">@N(labs.TeachingHallsCount)</div><div class="sk">Teaching Halls</div></div>
-                    <div class="stat-card light"><div class="sv">@N(labs.StadiumsCount)</div><div class="sk">Stadiums</div></div>
-                </div>
+                @if (FN(labs.TotalLaboratoriesCount)||FN(labs.TotalFacilitiesCount)||FN(labs.TeachingHallsCount)||FN(labs.StadiumsCount))
+                {
+                    <div class="fg-4" style="margin-bottom:16px">
+                        @if (FN(labs.TotalLaboratoriesCount)) { <div class="stat-card light"><div class="sv">@N(labs.TotalLaboratoriesCount)</div><div class="sk">Laboratories</div></div> }
+                        @if (FN(labs.TotalFacilitiesCount))   { <div class="stat-card light"><div class="sv">@N(labs.TotalFacilitiesCount)</div><div class="sk">Total Facilities</div></div> }
+                        @if (FN(labs.TeachingHallsCount))     { <div class="stat-card light"><div class="sv">@N(labs.TeachingHallsCount)</div><div class="sk">Teaching Halls</div></div> }
+                        @if (FN(labs.StadiumsCount))          { <div class="stat-card light"><div class="sv">@N(labs.StadiumsCount)</div><div class="sk">Stadiums</div></div> }
+                    </div>
+                }
 
                 @if (labs.Rows.Any())
                 {
@@ -1197,39 +1170,125 @@
                         </table>
                     </div>
                 }
-                else
+                else if (!labFiles.Any())
                 {
                     <div class="empty-state"><i class="bi bi-flask"></i>No laboratory records entered.</div>
+                }
+                @if (labFiles.Any())
+                {
+                    var labFileGroups = labFiles
+                        .GroupBy(f => string.IsNullOrWhiteSpace(f.Subject) ? "General" : f.Subject.Trim())
+                        .OrderBy(g => g.Key)
+                        .ToList();
+                    <div class="sub-hd" style="margin-top:16px">Uploaded Laboratory Files</div>
+                    @foreach (var grp in labFileGroups)
+                    {
+                        @if (labFileGroups.Count > 1)
+                        {
+                            <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin:10px 0 6px">@grp.Key</div>
+                        }
+                        <div class="file-grid" style="margin-bottom:8px">
+                            @foreach (var lf in grp)
+                            {
+                                <div class="file-row">
+                                    <div class="file-info">
+                                        <div class="fn">@V(lf.OriginalFileName)</div>
+                                        <div class="fs">@lf.UploadedAt.ToString("dd MMM yyyy")</div>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(lf.FileUrl))
+                                    {
+                                        <div style="display:flex;gap:6px">
+                                            <a class="btn-view" href="@lf.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
+                                            <a class="btn-view" href="@lf.FileUrl" download="@lf.OriginalFileName"><i class="bi bi-download"></i></a>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
                 }
             </div>
         </div>
 
 
         <!-- ══════════════════════════════════════════════════════════ -->
-        <!-- SECTION — PHOTOS / MEDIA                                  -->
+        <!-- SECTION 10 — LIBRARY                                      -->
         <!-- ══════════════════════════════════════════════════════════ -->
-        <div class="section-card" id="sec-photos">
+        @{
+            var lib = Model.Library ?? new DTOs.LibraryDto();
+            bool hasLibData = FN(lib.Area) || FN(lib.TotalStudentCapacity) || FN(lib.NumberOfBooks)
+                           || FN(lib.NumberOfPaperJournals) || FN(lib.NumberOfElectronicBooks) || FN(lib.NumberOfElectronicJournals);
+        }
+        @if (hasLibData)
+        {
+        <div class="section-card" id="sec-library">
             <div class="sec-hd">
-                <div class="sec-num"><i class="bi bi-image"></i></div>
+                <div class="sec-num">10</div>
                 <div>
-                    <h2>Photos &amp; Media</h2>
-                    <p>Uploaded campus and facility photographs</p>
+                    <h2>Library</h2>
+                    <p>Library facilities and resources submitted by the university</p>
                 </div>
             </div>
             <div class="sec-bd">
-                @if (!pictures.Any())
+                <div class="fg">
+                    @if (FN(lib.Area))
+                    {
+                        <div class="field"><div class="lbl">Area (m²)</div><div class="val">@lib.Area!.Value.ToString("N0")</div></div>
+                    }
+                    @if (FN(lib.TotalStudentCapacity))
+                    {
+                        <div class="field"><div class="lbl">Student Seating Capacity</div><div class="val">@lib.TotalStudentCapacity!.Value.ToString("N0")</div></div>
+                    }
+                    @if (FN(lib.NumberOfBooks))
+                    {
+                        <div class="field"><div class="lbl">Total Books</div><div class="val">@lib.NumberOfBooks!.Value.ToString("N0")</div></div>
+                    }
+                    @if (FN(lib.NumberOfPaperJournals))
+                    {
+                        <div class="field"><div class="lbl">Paper Journals</div><div class="val">@lib.NumberOfPaperJournals!.Value.ToString("N0")</div></div>
+                    }
+                    @if (FN(lib.NumberOfElectronicBooks))
+                    {
+                        <div class="field"><div class="lbl">Electronic Books</div><div class="val">@lib.NumberOfElectronicBooks!.Value.ToString("N0")</div></div>
+                    }
+                    @if (FN(lib.NumberOfElectronicJournals))
+                    {
+                        <div class="field"><div class="lbl">Electronic Journals</div><div class="val">@lib.NumberOfElectronicJournals!.Value.ToString("N0")</div></div>
+                    }
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <!-- SECTION — PHOTOS / MEDIA                                  -->
+        <!-- ══════════════════════════════════════════════════════════ -->
+        @if (pictures.Any())
+        {
+            var photoGroups = pictures
+                .GroupBy(p => string.IsNullOrWhiteSpace(p.Subject) ? "General" : p.Subject.Trim())
+                .OrderBy(g => g.Key == "General" ? 1 : 0)
+                .ThenBy(g => g.Key)
+                .ToList();
+        <div class="section-card" id="sec-photos">
+            <div class="sec-hd">
+                <div class="sec-num">11</div>
+                <div>
+                    <h2>Photos &amp; Media</h2>
+                    <p>Uploaded campus and facility photographs (@pictures.Count total)</p>
+                </div>
+            </div>
+            <div class="sec-bd">
+                @foreach (var grp in photoGroups)
                 {
-                    <div class="empty-state"><i class="bi bi-images"></i>No photos uploaded.</div>
-                }
-                else
-                {
-                    <div class="file-grid">
-                        @foreach (var pic in pictures)
+                    <div class="sub-hd">@grp.Key <span style="font-weight:500;font-size:10.5px;opacity:.7">(@grp.Count())</span></div>
+                    <div class="file-grid" style="margin-bottom:8px">
+                        @foreach (var pic in grp)
                         {
                             <div class="file-row">
                                 <div class="file-info">
                                     <div class="fn">@V(pic.FileName)</div>
-                                    <div class="fs">@V(pic.Subject) · @pic.UploadedAt.ToString("dd MMM yyyy")</div>
+                                    <div class="fs">@pic.UploadedAt.ToString("dd MMM yyyy")</div>
                                 </div>
                                 @if (!string.IsNullOrWhiteSpace(pic.FileUrl))
                                 {
@@ -1244,211 +1303,296 @@
                 }
             </div>
         </div>
+        }
 
         <!-- ══════════════════════════════════════════════════════════ -->
-        <!-- SECTION — UPLOADED DOCUMENTS                              -->
+        <!-- SECTION 12 — UNIVERSITY RECOGNITION & ACCREDITATION       -->
         <!-- ══════════════════════════════════════════════════════════ -->
+        @{
+            bool hasUraDocs = localRecognitionDocs.Any() || localAccreditationDocs.Any() || regionalAccreditationDocs.Any() || internationalAccreditationDocs.Any() || otherAccreditationDocs.Any();
+        }
+        @if (hasUraDocs)
+        {
         <div class="section-card" id="sec-documents">
             <div class="sec-hd">
-                <div class="sec-num"><i class="bi bi-file-earmark-text"></i></div>
+                <div class="sec-num">12</div>
                 <div>
-                    <h2>Uploaded Documents</h2>
-                    <p>Hospital contracts, lab documents and other supporting files</p>
+                    <h2>University Recognition and Accreditation</h2>
+                    <p>Local recognition and accreditation documents submitted by the university</p>
                 </div>
             </div>
             <div class="sec-bd">
                 @{
-                    bool hasDocs = hospDocs.Any() || labFiles.Any();
+                    var allAccredDocs = localAccreditationDocs
+                        .Concat(regionalAccreditationDocs)
+                        .Concat(internationalAccreditationDocs)
+                        .Concat(otherAccreditationDocs)
+                        .ToList();
                 }
-                @if (!hasDocs)
+
+                @if (localRecognitionDocs.Any())
                 {
-                    <div class="empty-state"><i class="bi bi-folder2-open"></i>No documents uploaded.</div>
-                }
-                @if (hospDocs.Any())
-                {
-                    <div class="sub-hd">Hospital Documents</div>
-                    <div class="file-grid">
-                        @foreach (var hd in hospDocs)
-                        {
-                            <div class="file-row">
-                                <div class="file-info">
-                                    <div class="fn">@V(hd.OriginalFileName)</div>
-                                    <div class="fs">@V(hd.DocumentType)</div>
-                                </div>
-                                @if (!string.IsNullOrWhiteSpace(hd.FileUrl))
+                    <div class="sub-hd">Local Recognition Files</div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead><tr><th>File Name</th><th style="width:160px;">Actions</th></tr></thead>
+                            <tbody>
+                                @foreach (var doc in localRecognitionDocs)
                                 {
-                                    <div style="display:flex;gap:6px">
-                                        <a class="btn-view" href="@hd.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
-                                        <a class="btn-view" href="@hd.FileUrl" download="@hd.OriginalFileName"><i class="bi bi-download"></i></a>
-                                    </div>
+                                    <tr>
+                                        <td>@V(doc.OriginalFileName)</td>
+                                        <td><div style="display:flex;gap:6px;flex-wrap:wrap;"><a class="btn-view" href="@doc.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a><a class="btn-view" href="@doc.FileUrl" download="@doc.OriginalFileName"><i class="bi bi-download"></i> Download</a></div></td>
+                                    </tr>
                                 }
-                            </div>
-                        }
+                            </tbody>
+                        </table>
                     </div>
                 }
-                @if (labFiles.Any())
+
+                @if (allAccredDocs.Any())
                 {
-                    <div class="sub-hd">Laboratory Documents</div>
-                    <div class="file-grid">
-                        @foreach (var lf in labFiles)
-                        {
-                            <div class="file-row">
-                                <div class="file-info">
-                                    <div class="fn">@V(lf.OriginalFileName)</div>
-                                    <div class="fs">@V(lf.Subject) · @lf.UploadedAt.ToString("dd MMM yyyy")</div>
-                                </div>
-                                @if (!string.IsNullOrWhiteSpace(lf.FileUrl))
+                    <div class="sub-hd" style="margin-top:16px">Accreditation Files</div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead><tr><th>File Name</th><th>Type</th><th style="width:160px;">Actions</th></tr></thead>
+                            <tbody>
+                                @foreach (var doc in allAccredDocs)
                                 {
-                                    <div style="display:flex;gap:6px">
-                                        <a class="btn-view" href="@lf.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
-                                        <a class="btn-view" href="@lf.FileUrl" download="@lf.OriginalFileName"><i class="bi bi-download"></i></a>
-                                    </div>
+                                    <tr>
+                                        <td>@V(doc.OriginalFileName)</td>
+                                        <td>@HospitalDocLabel(typedHospDocs.FirstOrDefault(x => x.Doc == doc)?.Type ?? "")</td>
+                                        <td><div style="display:flex;gap:6px;flex-wrap:wrap;"><a class="btn-view" href="@doc.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a><a class="btn-view" href="@doc.FileUrl" download="@doc.OriginalFileName"><i class="bi bi-download"></i> Download</a></div></td>
+                                    </tr>
                                 }
-                            </div>
-                        }
+                            </tbody>
+                        </table>
                     </div>
                 }
             </div>
         </div>
+        }
+
 
         <!-- ══════════════════════════════════════════════════════════ -->
-        <!-- SECTION — GLOBAL RANKINGS                                 -->
+        <!-- SECTION R — DOCTOR'S SUBMITTED RECOMMENDATION             -->
         <!-- ══════════════════════════════════════════════════════════ -->
-        <div class="section-card" id="sec-rankings">
-            <div class="sec-hd">
-                <div class="sec-num"><i class="bi bi-bar-chart-line"></i></div>
+        @if (showRec)
+        {
+        <div class="section-card" id="sec-recommendation">
+            <div class="sec-hd sec-hd-rec">
+                <div class="sec-num" style="background:rgba(255,255,255,.2)">R</div>
                 <div>
-                    <h2>Global Rankings</h2>
-                    <p>International university ranking positions</p>
+                    <h2>Doctor's Submitted Recommendation</h2>
+                    <p>Assessment and final recommendation submitted by the assigned reviewer</p>
                 </div>
             </div>
             <div class="sec-bd">
-                <div class="fg-4">
-                    <div class="field">
-                        <div class="lbl">ARWU</div>
-                        <div class="val">@(rankings.ArwuIsNa ? "N/A" : V(rankings.ArwuValue))</div>
-                    </div>
-                    <div class="field">
-                        <div class="lbl">QS World</div>
-                        <div class="val">@(rankings.QsIsNa ? "N/A" : V(rankings.QsValue))</div>
-                    </div>
-                    <div class="field">
-                        <div class="lbl">Times Higher Education</div>
-                        <div class="val">@(rankings.TheIsNa ? "N/A" : V(rankings.TheValue))</div>
-                    </div>
-                    <div class="field">
-                        <div class="lbl">Scopus / SJR</div>
-                        <div class="val">@(rankings.ScopusIsNa ? "N/A" : V(rankings.ScopusValue))</div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- ══════════════════════════════════════════════════════════ -->
-        <!-- SECTION — ASSESSMENT NOTES (Recognition Member Review)    -->
-        <!-- ══════════════════════════════════════════════════════════ -->
-        <div class="section-card" id="sec-assessment">
-            <div class="sec-hd">
-                <div class="sec-num"><i class="bi bi-clipboard2-check"></i></div>
-                <div>
-                    <h2>Assessment Notes</h2>
-                    <p>Evaluation notes entered by the assigned recognition member</p>
-                </div>
-            </div>
-            <div class="sec-bd">
-                @{
-                    string ApClass(string s) => s switch {
-                        "Compliant"       => "ap-compliant",
-                        "Needs Review"    => "ap-review",
-                        "Non-Compliant"   => "ap-noncomp",
-                        _                 => "ap-missing"
-                    };
-                    string ApIcon(string s) => s switch {
-                        "Compliant"     => "check-circle-fill",
-                        "Needs Review"  => "exclamation-circle-fill",
-                        "Non-Compliant" => "x-circle-fill",
-                        _               => "dash-circle"
-                    };
-                }
-
+                <div class="sub-hd">Reviewer</div>
                 <div class="fg-2">
                     <div class="field">
-                        <div class="lbl">Faculties Assessment</div>
-                        <div class="val">
-                            @{ var fs = Model.FacultiesAssessment ?? ""; }
-                            <span class="ap @ApClass(fs)"><i class="bi bi-@ApIcon(fs)"></i> @(string.IsNullOrWhiteSpace(fs) ? "Not Set" : fs)</span>
-                        </div>
+                        <div class="lbl">Reviewer Name</div>
+                        <div class="val">@reviewerName</div>
                     </div>
                     <div class="field">
-                        <div class="lbl">Hospitals Assessment</div>
+                        <div class="lbl">Submitted to Admin</div>
                         <div class="val">
-                            @{ var hs = Model.HospitalsAssessment ?? ""; }
-                            <span class="ap @ApClass(hs)"><i class="bi bi-@ApIcon(hs)"></i> @(string.IsNullOrWhiteSpace(hs) ? "Not Set" : hs)</span>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <div class="lbl">Laboratories &amp; Facilities Assessment</div>
-                        <div class="val">
-                            @{ var ls = Model.LaboratoriesFacilitiesAssessment ?? ""; }
-                            <span class="ap @ApClass(ls)"><i class="bi bi-@ApIcon(ls)"></i> @(string.IsNullOrWhiteSpace(ls) ? "Not Set" : ls)</span>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <div class="lbl">Library Assessment</div>
-                        <div class="val">
-                            @{ var libs = Model.LibraryAssessment ?? ""; }
-                            <span class="ap @ApClass(libs)"><i class="bi bi-@ApIcon(libs)"></i> @(string.IsNullOrWhiteSpace(libs) ? "Not Set" : libs)</span>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <div class="lbl">Hospital Environment Assessment</div>
-                        <div class="val">
-                            @{ var hes = Model.HospitalEnvironmentAssessment ?? ""; }
-                            <span class="ap @ApClass(hes)"><i class="bi bi-@ApIcon(hes)"></i> @(string.IsNullOrWhiteSpace(hes) ? "Not Set" : hes)</span>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <div class="lbl">Doctor Recommendation</div>
-                        <div class="val">
-                            @{
-                                var dr = Model.BasicInfoAssessmentDecision ?? "";
-                                var drClass = dr == "Approve" ? "ap-compliant" : dr.Contains("Conditional") ? "ap-review" : dr.Contains("Reject") ? "ap-noncomp" : "ap-missing";
+                            @if (Model.SubmittedToAdminAt.HasValue)
+                            {
+                                @Model.SubmittedToAdminAt.Value.ToString("dd MMM yyyy, HH:mm")
                             }
-                            <span class="ap @drClass">@(string.IsNullOrWhiteSpace(dr) ? "No Decision" : dr)</span>
+                            else
+                            {
+                                @:—
+                            }
                         </div>
                     </div>
                 </div>
 
-                @if (!string.IsNullOrWhiteSpace(Model.FacultiesAssessmentNote))
-                {
-                    <div class="note-box"><strong>Faculties Note:</strong> @Model.FacultiesAssessmentNote</div>
+                @{
+                    var recRankings = Model.GlobalRankings ?? new DTOs.GlobalRankingsDto();
+                    bool hasArwu   = recRankings.ArwuIsNa  || !string.IsNullOrWhiteSpace(recRankings.ArwuValue);
+                    bool hasQs     = recRankings.QsIsNa    || !string.IsNullOrWhiteSpace(recRankings.QsValue);
+                    bool hasThe    = recRankings.TheIsNa   || !string.IsNullOrWhiteSpace(recRankings.TheValue);
+                    bool hasScopus = recRankings.ScopusIsNa|| !string.IsNullOrWhiteSpace(recRankings.ScopusValue);
+                    bool hasRankings = hasArwu || hasQs || hasThe || hasScopus;
+                    string RankVal(string v, bool na) => na ? "Not Applicable" : string.IsNullOrWhiteSpace(v) ? "—" : v;
                 }
-                @if (!string.IsNullOrWhiteSpace(Model.HospitalsAssessmentNote))
+                @if (hasRankings)
                 {
-                    <div class="note-box"><strong>Hospitals Note:</strong> @Model.HospitalsAssessmentNote</div>
+                    <div class="sub-hd">Global University Rankings</div>
+                    <div class="fg-4" style="margin-bottom:4px">
+                        @if (hasArwu)
+                        {
+                            <div class="field">
+                                <div class="lbl">ARWU (Shanghai)</div>
+                                <div class="val">@RankVal(recRankings.ArwuValue, recRankings.ArwuIsNa)</div>
+                            </div>
+                        }
+                        @if (hasQs)
+                        {
+                            <div class="field">
+                                <div class="lbl">QS World Rankings</div>
+                                <div class="val">@RankVal(recRankings.QsValue, recRankings.QsIsNa)</div>
+                            </div>
+                        }
+                        @if (hasThe)
+                        {
+                            <div class="field">
+                                <div class="lbl">THE Rankings</div>
+                                <div class="val">@RankVal(recRankings.TheValue, recRankings.TheIsNa)</div>
+                            </div>
+                        }
+                        @if (hasScopus)
+                        {
+                            <div class="field">
+                                <div class="lbl">Scopus h-Index</div>
+                                <div class="val">@RankVal(recRankings.ScopusValue, recRankings.ScopusIsNa)</div>
+                            </div>
+                        }
+                    </div>
                 }
-                @if (!string.IsNullOrWhiteSpace(Model.HospitalEnvironmentAssessmentNote))
+
+                @{
+                    var A2 = Model.AcademicInfo ?? new DTOs.AcademicInfoDto();
+                    var md2 = Model.MedicineDentistry ?? new DTOs.MedicineDentistryDto();
+
+                    var profFT   = A2.StaffProfessorFullTimeCount ?? 0;
+                    var assocFT  = A2.StaffAssociateProfessorFullTimeCount ?? 0;
+                    var assistFT = A2.StaffAssistantProfessorFullTimeCount ?? 0;
+                    var teachFT  = A2.StaffTeacherFullTimeCount ?? 0;
+                    var resFT    = A2.StaffResearcherFullTimeCount ?? 0;
+                    var assisTFT = A2.StaffAssistantTeacherFullTimeCount ?? 0;
+                    var totalFacFT = profFT + assocFT + assistFT + teachFT + resFT + assisTFT + (A2.StaffOthersFullTimeCount ?? 0);
+                    var phdHolders = profFT + assocFT + assistFT + teachFT;
+                    var docPct2 = totalFacFT > 0 ? (int)Math.Floor(((decimal)phdHolders * 100m) / totalFacFT) : 0;
+                    string docComp2 = totalFacFT == 0 ? "Not Assessed" : docPct2 >= 50 ? "Compliant" : "Not Compliant";
+
+                    var ratioVal = A2.StudentsToFacultyRatio ?? 0m;
+                    var selCats  = (A2.CollegeCategoriesCsv ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var catRatio = new Dictionary<string,decimal>(StringComparer.OrdinalIgnoreCase) { ["Scientific"]=20m, ["Humanities"]=35m, ["Medical"]=25m, ["Applied"]=20m };
+                    var avgRatio = selCats.Where(k => catRatio.ContainsKey(k)).Select(k => catRatio[k]).DefaultIfEmpty(0m).Average();
+                    string ratioComp;
+                    if (ratioVal <= 0 || avgRatio <= 0) ratioComp = "Not Assessed";
+                    else { var tol = avgRatio * 1.25m; ratioComp = ratioVal <= avgRatio ? "Compliant" : ratioVal <= tol ? "Needs Review" : "Not Compliant"; }
+
+                    string clinComp;
+                    if (!md2.Med_StudentFacultyRatio.HasValue && !md2.Den_StudentFacultyRatio.HasValue) clinComp = "Needs Review";
+                    else {
+                        var mc = !md2.Med_StudentFacultyRatio.HasValue ? "" : md2.Med_StudentFacultyRatio.Value <= 4 ? "green" : md2.Med_StudentFacultyRatio.Value <= 5 ? "orange" : "red";
+                        var dc = !md2.Den_StudentFacultyRatio.HasValue ? "" : md2.Den_StudentFacultyRatio.Value <= 4 ? "green" : md2.Den_StudentFacultyRatio.Value <= 5 ? "orange" : "red";
+                        clinComp = (mc=="red"||dc=="red") ? "Not Compliant" : (mc=="orange"||dc=="orange"||mc==""||dc=="") ? "Needs Review" : "Compliant";
+                    }
+
+                    var p1 = string.IsNullOrWhiteSpace(Model.AccreditationStatus) ? "Not Assessed" : Model.AccreditationStatus;
+                    var envAll2 = new[] { EnvMap(Model.FacultiesAssessment), EnvMap(Model.HospitalsAssessment), EnvMap(Model.LaboratoriesFacilitiesAssessment), EnvMap(Model.LibraryAssessment) };
+                    string envOverall2 = envAll2.Any(s => s=="Not Compliant") ? "Not Compliant" : envAll2.Any(s=>s=="Needs Review") ? "Needs Review" : envAll2.All(s=>s=="Compliant") ? "Compliant" : "Not Assessed";
+                }
+
+                <div class="sub-hd">5-Point Compliance Assessment</div>
+                <div class="score-grid">
+                    <div class="score-cell">
+                        <div class="score-num-r">1</div>
+                        <div class="score-name">Accreditation</div>
+                        <span class="badge @BadgeCss(p1)">@p1</span>
+                        @if (!string.IsNullOrWhiteSpace(Model.AccreditationNote)) { <div style="font-size:11px;color:#888;margin-top:6px;">@Model.AccreditationNote</div> }
+                    </div>
+                    <div class="score-cell">
+                        <div class="score-num-r">2</div>
+                        <div class="score-name">Faculty Ratio</div>
+                        <span class="badge @BadgeCss(ratioComp)">@ratioComp</span>
+                        @if (ratioVal > 0) { <div style="font-size:11px;color:#888;margin-top:6px;">1:@((int)ratioVal)</div> }
+                    </div>
+                    <div class="score-cell">
+                        <div class="score-num-r">3</div>
+                        <div class="score-name">Doctorate %</div>
+                        <span class="badge @BadgeCss(docComp2)">@docComp2</span>
+                        @if (totalFacFT > 0) { <div style="font-size:11px;color:#888;margin-top:6px;">@docPct2%</div> }
+                    </div>
+                    <div class="score-cell">
+                        <div class="score-num-r">4</div>
+                        <div class="score-name">Clinical Capacity</div>
+                        <span class="badge @BadgeCss(clinComp)">@clinComp</span>
+                    </div>
+                    <div class="score-cell">
+                        <div class="score-num-r">5</div>
+                        <div class="score-name">Environment</div>
+                        <span class="badge @BadgeCss(envOverall2)">@envOverall2</span>
+                    </div>
+                </div>
+
+                @{
+                    bool hasEnv = !string.IsNullOrWhiteSpace(Model.FacultiesAssessment)
+                               || !string.IsNullOrWhiteSpace(Model.HospitalsAssessment)
+                               || !string.IsNullOrWhiteSpace(Model.HospitalEnvironmentAssessment)
+                               || !string.IsNullOrWhiteSpace(Model.LaboratoriesFacilitiesAssessment)
+                               || !string.IsNullOrWhiteSpace(Model.LibraryAssessment);
+                }
+                @if (hasEnv)
                 {
-                    <div class="note-box"><strong>Hospital Environment Note:</strong> @Model.HospitalEnvironmentAssessmentNote</div>
+                    <div class="sub-hd">Environment Assessment Detail</div>
+                    <div class="env-grid">
+                        @if (!string.IsNullOrWhiteSpace(Model.FacultiesAssessment))
+                        {
+                            <div class="env-row">
+                                <div><div class="env-label">Colleges / Faculties</div>@if (!string.IsNullOrWhiteSpace(Model.FacultiesAssessmentNote)) { <div class="env-note">@Model.FacultiesAssessmentNote</div> }</div>
+                                <span class="badge @BadgeCss(EnvMap(Model.FacultiesAssessment))">@EnvMap(Model.FacultiesAssessment)</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.HospitalsAssessment))
+                        {
+                            <div class="env-row">
+                                <div><div class="env-label">Hospitals (General)</div>@if (!string.IsNullOrWhiteSpace(Model.HospitalsAssessmentNote)) { <div class="env-note">@Model.HospitalsAssessmentNote</div> }</div>
+                                <span class="badge @BadgeCss(EnvMap(Model.HospitalsAssessment))">@EnvMap(Model.HospitalsAssessment)</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.HospitalEnvironmentAssessment))
+                        {
+                            <div class="env-row">
+                                <div><div class="env-label">Hospital Environment</div>@if (!string.IsNullOrWhiteSpace(Model.HospitalEnvironmentAssessmentNote)) { <div class="env-note">@Model.HospitalEnvironmentAssessmentNote</div> }</div>
+                                <span class="badge @BadgeCss(EnvMap(Model.HospitalEnvironmentAssessment))">@EnvMap(Model.HospitalEnvironmentAssessment)</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.LaboratoriesFacilitiesAssessment))
+                        {
+                            <div class="env-row">
+                                <div><div class="env-label">Laboratories</div>@if (!string.IsNullOrWhiteSpace(Model.LaboratoriesFacilitiesAssessmentNote)) { <div class="env-note">@Model.LaboratoriesFacilitiesAssessmentNote</div> }</div>
+                                <span class="badge @BadgeCss(EnvMap(Model.LaboratoriesFacilitiesAssessment))">@EnvMap(Model.LaboratoriesFacilitiesAssessment)</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.LibraryAssessment))
+                        {
+                            <div class="env-row">
+                                <div><div class="env-label">Library</div>@if (!string.IsNullOrWhiteSpace(Model.LibraryAssessmentNote)) { <div class="env-note">@Model.LibraryAssessmentNote</div> }</div>
+                                <span class="badge @BadgeCss(EnvMap(Model.LibraryAssessment))">@EnvMap(Model.LibraryAssessment)</span>
+                            </div>
+                        }
+                    </div>
                 }
-                @if (!string.IsNullOrWhiteSpace(Model.LaboratoriesFacilitiesAssessmentNote))
+
+                <div class="sub-hd">Final Recommendation Decision</div>
+                @if (!string.IsNullOrWhiteSpace(recDecision))
                 {
-                    <div class="note-box"><strong>Laboratories Note:</strong> @Model.LaboratoriesFacilitiesAssessmentNote</div>
+                    <span class="dec-badge @DecCss(recDecision)"><i class="bi @DecIcon(recDecision)"></i> @recDecision</span>
                 }
-                @if (!string.IsNullOrWhiteSpace(Model.LibraryAssessmentNote))
+                else
                 {
-                    <div class="note-box"><strong>Library Note:</strong> @Model.LibraryAssessmentNote</div>
+                    <span class="dec-badge dec-na"><i class="bi bi-dash-circle"></i> Not Submitted Yet</span>
                 }
+
+                <div class="sub-hd">Justification / Notes</div>
                 @if (!string.IsNullOrWhiteSpace(Model.BasicInfoAssessmentReason))
                 {
-                    <div class="note-box"><strong>Doctor Justification:</strong> @Model.BasicInfoAssessmentReason</div>
+                    <div class="note-box">@Model.BasicInfoAssessmentReason</div>
                 }
-                @if (!string.IsNullOrWhiteSpace(Model.AccreditationNote))
+                else
                 {
-                    <div class="note-box"><strong>Accreditation Note:</strong> @Model.AccreditationNote</div>
+                    <div class="note-box empty">No justification note provided.</div>
                 }
+
             </div>
         </div>
+        }
 
         <!-- Footer -->
         <div style="text-align:center;padding:24px 0;color:#aaa;font-size:11.5px;">
@@ -1456,6 +1600,28 @@
         </div>
 
     </main>
+</div>
+
+<!-- ── Bottom action bar ── -->
+<div class="bottom-bar">
+    @if (backId > 0)
+    {
+        <a class="btn-bar" href="/Home/SessionDashboard?id=@backId"><i class="bi bi-arrow-left"></i> Back to Meeting</a>
+    }
+    else if (showRec)
+    {
+        <a class="btn-bar" href="/Home/SubmittedUniversities"><i class="bi bi-arrow-left"></i> Back to Submitted Universities</a>
+    }
+    else
+    {
+        <a class="btn-bar" href="/Home/Requests"><i class="bi bi-arrow-left"></i> Back</a>
+    }
+    @if (backId > 0)
+    {
+        <a class="btn-bar btn-bar-decision" href="/Home/MeetingDecision?meetingId=@backId&requestId=@Model.Id">
+            <i class="bi bi-check2-circle"></i> Final Decision
+        </a>
+    }
 </div>
 
 <script>

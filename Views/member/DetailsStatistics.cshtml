@@ -448,19 +448,20 @@
                     </div>
 
                     @{
-                        var allProgCount  = Model?.Programs?.Count ?? 0;
+                        var allProgCount  = (Model?.Programs ?? new System.Collections.Generic.List<DTOs.ProgramRowDto>())
+                            .Count(p => string.Equals((p.DegreeAwarded ?? "").Trim(), "Bachelor", StringComparison.OrdinalIgnoreCase));
                         var avgPhDPerProg = allProgCount > 0
                             ? Math.Floor((double)totalPhdHolders / allProgCount)
                             : 0.0;
                         string dppStatus  = avgPhDPerProg >= 1.0 ? "green" : (avgPhDPerProg > 0 ? "orange" : "");
                     }
-                    <!-- Avg PhD per Program -->
+                    <!-- Avg PhD per Bachelor Program -->
                     <div class="rp-metric-card rp-metric-card--@dppStatus">
                         <div class="rp-metric-hd">
                             <div class="rp-metric-icon">🎓</div>
                             <div>
-                                <div class="rp-metric-title">PhD Doctors per Program <button class="eq-info-btn" onclick="openEqModal('modal-dpp')" title="How is this calculated?"><i class="bi bi-info-circle-fill"></i></button></div>
-                                <div class="rp-metric-sub">Average full-time PhD faculty per submitted program</div>
+                                <div class="rp-metric-title">PhD Doctors per Bachelor Program <button class="eq-info-btn" onclick="openEqModal('modal-dpp')" title="How is this calculated?"><i class="bi bi-info-circle-fill"></i></button></div>
+                                <div class="rp-metric-sub">Average full-time PhD faculty per submitted Bachelor program</div>
                             </div>
                         </div>
 
@@ -471,7 +472,7 @@
                         <div class="rp-benchmark">
                             <span class="rp-benchmark-lbl">Total PhD Faculty</span>
                             <span class="rp-benchmark-val">@totalPhdHolders</span>
-                            <span class="rp-benchmark-sub">÷ @allProgCount programs</span>
+                            <span class="rp-benchmark-sub">÷ @allProgCount bachelor programs</span>
                         </div>
                     </div>
 

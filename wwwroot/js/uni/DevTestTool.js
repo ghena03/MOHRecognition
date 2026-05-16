@@ -30,20 +30,20 @@
     ];
 
     const HOSPITALS = [
-        { spec: 'Medicine',  name: 'King Hussein Medical Center',     major: 'Internal Medicine' },
-        { spec: 'Medicine',  name: 'Jordan University Hospital',      major: 'General Surgery'   },
-        { spec: 'Dentistry', name: 'Royal Medical Services - Dental', major: 'Orthodontics'      },
+        { spec: 'Medicine',  name: 'King Hussein Medical Center',     beds: '300', dental: null  },
+        { spec: 'Medicine',  name: 'Jordan University Hospital',      beds: '250', dental: null  },
+        { spec: 'Dentistry', name: 'Royal Medical Services - Dental', beds: null,  dental: '80'  },
     ];
 
     const LABS = [
-        { computers: '45', workshops: '8', labs: '12' },
-        { computers: '30', workshops: '5', labs: '8'  },
+        { computers: '45', labs: '12' },
+        { computers: '30', labs: '8'  },
     ];
 
     const ACCREDITATION_BODIES = [
         { name: 'ABET – Accreditation Board for Engineering and Technology', type: 'International' },
         { name: 'WASC Senior College and University Commission',             type: 'International' },
-        { name: 'National Accreditation Commission',                        type: 'National'      },
+        { name: 'National Accreditation Commission',                        type: 'Local'         },
     ];
 
     const PICTURE_CARDS = ['library', 'hospital', 'faculties', 'laboratories', 'facilities'];
@@ -163,6 +163,12 @@
         if (typeEl) setVal(typeEl, 'Private');
 
         ['DegreeBSC', 'DegreeHigherDiploma', 'DegreeMaster'].forEach(n => {
+            const cb = sec.querySelector(`[name="${n}"]`);
+            if (cb && !cb.checked) cb.click();
+        });
+
+        // Educational systems
+        ['SystemCreditHours', 'SystemSemesterProgram'].forEach(n => {
             const cb = sec.querySelector(`[name="${n}"]`);
             if (cb && !cb.checked) cb.click();
         });
@@ -339,7 +345,6 @@
         for (const row of LABS) {
             setVal('lab_facultyId',    firstOption('lab_facultyId'));
             setVal('lab_computers',    row.computers);
-            setVal('lab_workshops',    row.workshops);
             setVal('lab_laboratories', row.labs);
 
             const btn = document.getElementById('lab_addBtn');
@@ -357,8 +362,7 @@
 
         setVal('lib_area',               '1200');
         setVal('lib_capacity',           '500');
-        setVal('lib_arabicBooks',        '8000');
-        setVal('lib_englishBooks',       '12000');
+        setVal('lib_numberOfBooks',      '20000');
         setVal('lib_paperJournals',      '350');
         setVal('lib_electronicBooks',    '5000');
         setVal('lib_electronicJournals', '1200');
@@ -391,20 +395,22 @@
         const c = document.getElementById('hospitalsContainer');
         if (!c) { log('⚠ hospitalsContainer not found'); return; }
 
-        setVal('hosp_cap_specialization', 'Medicine');
-        document.getElementById('hosp_cap_specialization')
-            ?.dispatchEvent(new Event('change', { bubbles: true }));
-        if (window.HospCapacityToggleLabel) window.HospCapacityToggleLabel();
-        await delay(200);
-        setVal('hosp_cap_value', '300');
-        const mut0 = waitMutation(c);
-        if (window.HospSaveCapacity) window.HospSaveCapacity();
-        await mut0;
-
         for (const fac of HOSPITALS) {
-            setVal('hosp_fac_specialization', fac.spec);
-            setVal('hosp_fac_name',           fac.name);
-            setVal('hosp_fac_major',          fac.major);
+            // Set specialization and trigger capacity field visibility
+            const specEl = document.getElementById('hosp_fac_specialization');
+            if (specEl) {
+                setVal(specEl, fac.spec);
+                specEl.dispatchEvent(new Event('change', { bubbles: true }));
+                if (window.HospFacilityToggleCapacity) window.HospFacilityToggleCapacity();
+            }
+            await delay(150);
+
+            setVal('hosp_fac_name', fac.name);
+
+            // Set capacity based on specialization
+            if (fac.beds)   setVal('hosp_fac_beds',   fac.beds);
+            if (fac.dental) setVal('hosp_fac_dental', fac.dental);
+
             attachFile(document.getElementById('hosp_fac_agreement_files'), pdf('hospital_agreement.pdf'));
 
             const mut = waitMutation(c);
@@ -417,6 +423,7 @@
                 last.setAttribute('data-test-row', 'true');
                 Object.assign(last.style, { outline: '2px dashed #f59e0b', background: '#fffbeb' });
             }
+            await delay(300);
         }
     }
 
