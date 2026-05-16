@@ -716,3 +716,137 @@ html, body {
 :is(table, .modern-table) tbody tr:last-child td {
     border-bottom: none !important;
 }
+
+/* ================================
+   ADD EDUCATIONAL INSTITUTION PAGE
+================================ */
+
+/* PAGE WRAPPER */
+.page {
+    padding: 40px;
+    background: #f7f8fa;
+    min-height: 100vh;
+}
+
+/* CARD */
+.card {
+    background: #ffffff;
+    max-width: 1000px;
+    margin: auto;
+    padding: 35px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    border: 1px solid #ececec;
+}
+
+/* TITLE */
+.card-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2a44;
+    margin-bottom: 28px;
+}
+
+/* SUCCESS BOX */
+.success-box {
+    background: #ecfdf3;
+    color: #027a48;
+    border: 1px solid #abefc6;
+    padding: 16px 18px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+/* GRID */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+/* FIELD */
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+    .field label {
+        font-size: 15px;
+        font-weight: 600;
+        color: #344054;
+    }
+
+    /* INPUTS */
+    .field input,
+    .field select {
+        width: 100%;
+        height: 52px;
+        border: 1px solid #d0d5dd;
+        border-radius: 12px;
+        padding: 0 16px;
+        font-size: 15px;
+        background: white;
+        transition: 0.2s ease;
+    }
+
+        /* FOCUS */
+        .field input:focus,
+        .field select:focus {
+            outline: none;
+            border-color: #8b1e1e;
+            box-shadow: 0 0 0 4px rgba(139, 30, 30, 0.12);
+        }
+
+/* BUTTON AREA */
+.actions {
+    margin-top: 32px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* BUTTON */
+.submit-btn {
+    border: none;
+    background: #8b1e1e;
+    color: white;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: 0.25s ease;
+}
+
+    .submit-btn:hover {
+        background: #6d1616;
+        transform: translateY(-2px);
+    }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page {
+        padding: 20px;
+    }
+
+    .card {
+        padding: 24px;
+    }
+
+    .title-box h1 {
+        font-size: 34px;
+    }
+
+    .title-box p {
+        font-size: 15px;
+    }
+}

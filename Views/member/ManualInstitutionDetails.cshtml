@@ -1,0 +1,282 @@
+﻿@model MOHRecognition.Services.RecognitionRequestRecord
+@{
+    Layout = null;
+    ViewData["Title"] = "Institution Details";
+    var currentMember = ViewBag.CurrentRecognitionMember as string ?? "Recognition Member";
+    var isBachelor = string.Equals(Model.InstitutionType, "Bachelor", StringComparison.OrdinalIgnoreCase);
+    var isPostgraduate = string.Equals(Model.InstitutionType, "Postgraduate", StringComparison.OrdinalIgnoreCase);
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/ElectronicRequests.css" asp-append-version="true" />
+
+    <style>
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .detail-item label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 6px;
+        }
+
+        .detail-item span {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1a1a2e;
+        }
+
+        .type-banner {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 2px solid;
+        }
+
+            .type-banner.bachelor {
+                background: #eef6ff;
+                border-color: #3b82f6;
+                color: #1d4ed8;
+            }
+
+            .type-banner.postgraduate {
+                background: #fdf4ff;
+                border-color: #a855f7;
+                color: #7c3aed;
+            }
+
+            .type-banner i {
+                font-size: 28px;
+            }
+
+        .type-banner-text h3 {
+            margin: 0 0 4px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .type-banner-text p {
+            margin: 0;
+            font-size: 13px;
+            opacity: .8;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+            .action-btn.bachelor {
+                background: #3b82f6;
+                color: #fff;
+            }
+
+                .action-btn.bachelor:hover {
+                    background: #2563eb;
+                    color: #fff;
+                }
+
+            .action-btn.postgraduate {
+                background: #a855f7;
+                color: #fff;
+            }
+
+                .action-btn.postgraduate:hover {
+                    background: #7c3aed;
+                    color: #fff;
+                }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-completed {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+            .back-link:hover {
+                color: #1a1a2e;
+            }
+    </style>
+</head>
+
+<body class="rm-page">
+
+    <header class="rm-header">
+        <div class="rm-brandbar"></div>
+        <div class="rm-top">
+            <div class="rm-top-inner">
+                <div class="rm-brand">
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+                </div>
+                <div class="rm-user">
+                    <div class="rm-userpill">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Welcome, <b>@currentMember</b></span>
+                    </div>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="rm-shell">
+
+        @await Html.PartialAsync("_MemberSidebar")
+
+        <main class="rm-main">
+
+            <a class="back-link" href="@Url.Action("ManualInstitutionRequests", "Home")">
+                <i class="bi bi-arrow-left"></i> Back to Manual Requests
+            </a>
+
+            <!-- Institution Type Banner + Fill Button -->
+            @if (isBachelor)
+            {
+                <div class="type-banner bachelor">
+                    <i class="bi bi-mortarboard-fill"></i>
+                    <div class="type-banner-text">
+                        <h3>Bachelor Program</h3>
+                        <p>This institution is assigned for Bachelor recognition. Fill the full application below.</p>
+                    </div>
+                    <a class="action-btn bachelor"
+                       href="@Url.Action("UniDashboard", "Home")">
+                        <i class="bi bi-pencil-square"></i>
+                        Fill Bachelor Application
+                    </a>
+                </div>
+            }
+            else if (isPostgraduate)
+            {
+                <div class="type-banner postgraduate">
+                    <i class="bi bi-journal-bookmark-fill"></i>
+                    <div class="type-banner-text">
+                        <h3>Postgraduate Program</h3>
+                        <p>This institution is assigned for Postgraduate recognition. Fill the postgraduate form below.</p>
+                    </div>
+                    <a class="action-btn postgraduate"
+                       href="@Url.Action("UniPostgraduateInstructions", "Home")">
+                        <i class="bi bi-pencil-square"></i>
+                        Fill Postgraduate Application
+                    </a>
+                </div>
+            }
+
+            <!-- Details Card -->
+            <section class="rm-card">
+
+                <div class="rm-card-hd row" style="margin-bottom:24px;">
+                    <div>
+                        <h2>@Model.UniversityName</h2>
+                        <p>Reference: <b>@Model.ReferenceNumber</b></p>
+                    </div>
+                    <span class="badge-pending">@Model.Status</span>
+                </div>
+
+                <div class="detail-grid">
+
+                    <div class="detail-item">
+                        <label>Institution Name</label>
+                        <span>@Model.UniversityName</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <label>Country</label>
+                        <span>@Model.Country</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <label>Reference Number</label>
+                        <span>@Model.ReferenceNumber</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <label>Institution Type</label>
+                        <span>@Model.InstitutionType</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <label>Assigned Member</label>
+                        <span>@currentMember</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <label>Submitted On</label>
+                        <span>@Model.SubmittedAt.ToString("yyyy-MM-dd")</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <label>Status</label>
+                        <span>
+                            @if (Model.Status == "Completed")
+                            {
+                                <span class="badge-completed">@Model.Status</span>
+                            }
+                            else
+                            {
+                                <span class="badge-pending">@Model.Status</span>
+                            }
+                        </span>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+    </div>
+
+</body>
+</html>

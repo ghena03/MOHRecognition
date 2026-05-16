@@ -50,7 +50,8 @@ namespace MOHRecognition.Controllers
 
             return _citiesCache;
         }
-
+        private static List<RecognitionRequestRecord> _manualInstitutionRequests
+    = new List<RecognitionRequestRecord>();
         public HomeController(IWebHostEnvironment env, IRecognitionRequestService recognitionRequestService)
         {
             _env = env;
@@ -3917,10 +3918,71 @@ namespace MOHRecognition.Controllers
         }
         //###################################################
 
+        public IActionResult AddEducationalInstitution()
+        {
+            return View("~/Views/admin/AddEducationalInstitution.cshtml");
+        }
+        [HttpPost]
+        public IActionResult AddEducationalInstitution(
+      string InstitutionName,
+      string Country,
+      string City,
+      string InstitutionType,
+      string AssignedMember)
+        {
+            var normalizedMember = NormalizeRecognitionMemberIdentity(AssignedMember);
 
+            var request = new RecognitionRequestRecord
+            {
+                Id = Guid.NewGuid().GetHashCode(),
+                ReferenceNumber = "MAN-" + Guid.NewGuid().ToString().Substring(0, 6),
+                UniversityName = InstitutionName,
+                Country = Country,
+                InstitutionType = InstitutionType,   // ← save it
+                AssignedMember = normalizedMember,
+                Status = "Pending",
+                SubmittedAt = DateTime.Now
+            };
 
+            _manualInstitutionRequests.Add(request);
+            TempData["SuccessMessage"] = "Educational institution assigned successfully.";
+            return RedirectToAction("AddEducationalInstitution");
+        }
+        [HttpGet]
+        public IActionResult ManualInstitutionDetails(string referenceNumber)
+        {
+            var currentMember = GetCurrentRecognitionMember();
 
+            var request = _manualInstitutionRequests
+                .FirstOrDefault(x =>
+                    string.Equals(x.ReferenceNumber, referenceNumber, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase));
 
+            if (request == null)
+                return RedirectToAction("ManualInstitutionRequests");
+
+            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
+            return View("~/Views/member/ManualInstitutionDetails.cshtml", request);
+        }
+        [HttpGet]
+        public IActionResult ManualInstitutionRequests()
+        {
+            var currentMember = GetCurrentRecognitionMember();
+
+            var model = _manualInstitutionRequests
+                .Where(x => string.Equals(
+                    x.AssignedMember,
+                    currentMember,
+                    StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            ViewBag.CurrentRecognitionMember =
+                GetRecognitionMemberDisplayName(currentMember);
+
+            return View(
+                "~/Views/member/ManualInstitutionRequests.cshtml",
+                model);
+        }
         ///////////////////////NewUniAccount/////////
         [HttpGet]
         public IActionResult NewUniAccount()
@@ -4452,19 +4514,20 @@ namespace MOHRecognition.Controllers
             return hasWorkStarted ? "In Progress" : "Not Reviewed";
         }
 
+       
+        
         [HttpGet]
-        public IActionResult ElectronicRequests()
+       public IActionResult ElectronicRequests()
         {
             var currentMember = GetCurrentRecognitionMember();
             var model = _recognitionRequestService
-                .GetAll()
-                .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+              .GetAll()
+              .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
+              .ToList();
 
             ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
             return View("~/Views/member/ElectronicRequests.cshtml", model);
         }
-
         [HttpGet]
         public IActionResult DetailsBasicInfo(int? id)
         {

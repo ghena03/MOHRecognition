@@ -31,12 +31,13 @@
 
     <main class="wrap">
         <section class="card" aria-label="Choose role">
-            <h1 class="h1">Sign In</h1>
-            <p class="lead">Choose your role then continue.</p>
+            <h1 class="h1">Government Staff Portal</h1>
+            <p class="lead">Select your government role to access the system.</p>
 
             <div class="box">
-                <div class="box__title">I am signing in as</div>
-
+                <div class="box__title">
+                    Government Staff Access
+                </div>
                 <div class="choices" role="radiogroup" aria-label="Role selection">
                     <!-- Admin -->
                     <input type="radio" name="role" id="roleAdmin" class="r" checked>
@@ -51,24 +52,7 @@
                             <div class="name">Admin</div>
                             <div class="desc">Manage users & applications</div>
                         </div>
-                    </label>
-
-                    <!-- University -->
-                    <input type="radio" name="role" id="roleUni" class="r">
-                    <label for="roleUni" class="choice">
-                        <div class="icon" aria-hidden="true">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 3l10 5-10 5L2 8l10-5z"
-                                      stroke="currentColor" stroke-width="1.7" />
-                                <path d="M6 10v5c0 2 3 4 6 4s6-2 6-4v-5"
-                                      stroke="currentColor" stroke-width="1.7" />
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="name">University</div>
-                            <div class="desc">Submit & track requests</div>
-                        </div>
-                    </label>
+                    </label>              
 
                     <!-- ✅ Recognition Member (NEW) -->
                     <input type="radio" name="role" id="roleRec" class="r">
@@ -102,20 +86,20 @@
     </main>
 
     <script>
-        const UNI_PAGE = '@Url.Action("UniversityEntry", "Home")';
         const STAFF_ADMIN = '@Url.Action("StaffLogIn", "Home", new { role = "admin" })';
-        const STAFF_REC   = '@Url.Action("StaffLogIn", "Home", new { role = "recognition" })';
 
-        document.getElementById("continueBtn").addEventListener("click", () => {
-            if (document.getElementById("roleUni").checked) {
-                window.location.href = UNI_PAGE;
-                return;
-            }
+        const STAFF_REC = '@Url.Action("StaffLogIn", "Home", new { role = "recognition" })';
+
+        document.getElementById("continueBtn")
+            .addEventListener("click", () => {
+
             if (document.getElementById("roleRec").checked) {
+
                 window.location.href = STAFF_REC;
                 return;
             }
-            window.location.href = STAFF_ADMIN; // default admin
+
+            window.location.href = STAFF_ADMIN;
         });
     </script>
 
