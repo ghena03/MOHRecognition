@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType mixed="true">
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SITE / HEADER
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Site_Name" xml:space="preserve"><value>بوابة الاعتراف - وزارة الصحة</value></data>
+  <data name="Site_Copyright" xml:space="preserve"><value>© 2026 بوابة الوزارة • جميع الحقوق محفوظة</value></data>
+  <data name="Site_Privacy" xml:space="preserve"><value>الخصوصية</value></data>
+  <data name="Site_MinistryWebsite" xml:space="preserve"><value>الموقع الرسمي للوزارة</value></data>
+  <data name="Site_Instructions" xml:space="preserve"><value>التعليمات</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LANGUAGE SWITCHER
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Lang_English" xml:space="preserve"><value>English</value></data>
+  <data name="Lang_Arabic" xml:space="preserve"><value>العربية</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ROLE SELECTION PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Role_PageTitle" xml:space="preserve"><value>اختيار الدور</value></data>
+  <data name="Role_SignIn" xml:space="preserve"><value>تسجيل الدخول</value></data>
+  <data name="Role_ChooseRole" xml:space="preserve"><value>اختر دورك ثم تابع.</value></data>
+  <data name="Role_SigningAs" xml:space="preserve"><value>أنا أسجّل الدخول بصفتي</value></data>
+  <data name="Role_Admin" xml:space="preserve"><value>مدير النظام</value></data>
+  <data name="Role_AdminDesc" xml:space="preserve"><value>إدارة المستخدمين والطلبات</value></data>
+  <data name="Role_University" xml:space="preserve"><value>جامعة</value></data>
+  <data name="Role_UniversityDesc" xml:space="preserve"><value>تقديم الطلبات ومتابعتها</value></data>
+  <data name="Role_RecognitionMember" xml:space="preserve"><value>عضو لجنة الاعتراف</value></data>
+  <data name="Role_RecognitionMemberDesc" xml:space="preserve"><value>مراجعة ومعالجة ملفات الاعتراف</value></data>
+  <data name="Role_Continue" xml:space="preserve"><value>متابعة</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       STAFF LOGIN PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Login_AdminTitle" xml:space="preserve"><value>تسجيل دخول مدير النظام</value></data>
+  <data name="Login_AdminDesc" xml:space="preserve"><value>يمكن للمديرين المخوّلين تسجيل الدخول لإدارة طلبات الاعتراف</value></data>
+  <data name="Login_MemberTitle" xml:space="preserve"><value>تسجيل دخول عضو لجنة الاعتراف</value></data>
+  <data name="Login_MemberDesc" xml:space="preserve"><value>يمكن لأعضاء لجنة الاعتراف تسجيل الدخول لمراجعة الملفات ومعالجتها</value></data>
+  <data name="Login_SignIn" xml:space="preserve"><value>تسجيل الدخول</value></data>
+  <data name="Login_AdminEmail" xml:space="preserve"><value>البريد الإلكتروني للمدير</value></data>
+  <data name="Login_MemberEmail" xml:space="preserve"><value>البريد الإلكتروني للعضو</value></data>
+  <data name="Login_Password" xml:space="preserve"><value>كلمة المرور</value></data>
+  <data name="Login_Language" xml:space="preserve"><value>اللغة</value></data>
+  <data name="Login_CaptchaHint" xml:space="preserve"><value>✓ أدخل الرمز أعلاه</value></data>
+  <data name="Login_CaptchaPlaceholder" xml:space="preserve"><value>أدخل الرمز أعلاه</value></data>
+  <data name="Login_RememberMe" xml:space="preserve"><value>تذكّرني</value></data>
+  <data name="Login_Submit" xml:space="preserve"><value>دخول</value></data>
+  <data name="Login_ForgotPassword" xml:space="preserve"><value>نسيت كلمة المرور</value></data>
+  <data name="Login_CreateAccount" xml:space="preserve"><value>إنشاء حساب جديد</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FORGOT PASSWORD PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Forgot_Title" xml:space="preserve"><value>نسيت كلمة المرور</value></data>
+  <data name="Forgot_Subtitle" xml:space="preserve"><value>أعد التعيين عبر البريد الإلكتروني أو الهاتف، ثم أدخل رمز التحقق</value></data>
+  <data name="Forgot_Verification" xml:space="preserve"><value>التحقق</value></data>
+  <data name="Forgot_Subtext" xml:space="preserve"><value>اختر طريقة، ثم أدخل الرمز المكوّن من 6 أرقام الذي سنرسله إليك.</value></data>
+  <data name="Forgot_Email" xml:space="preserve"><value>البريد الإلكتروني</value></data>
+  <data name="Forgot_Phone" xml:space="preserve"><value>الهاتف</value></data>
+  <data name="Forgot_EmailPlaceholder" xml:space="preserve"><value>عنوان البريد الإلكتروني</value></data>
+  <data name="Forgot_PhonePlaceholder" xml:space="preserve"><value>رقم الهاتف (مثال: 079xxxxxxx)</value></data>
+  <data name="Forgot_SendCode" xml:space="preserve"><value>إرسال الرمز</value></data>
+  <data name="Forgot_CodeTitle" xml:space="preserve"><value>رمز التحقق</value></data>
+  <data name="Forgot_Resend" xml:space="preserve"><value>لم تستلمه؟ إعادة الإرسال</value></data>
+  <data name="Forgot_VerifyContinue" xml:space="preserve"><value>تحقق ومتابعة</value></data>
+  <data name="Forgot_BackToLogin" xml:space="preserve"><value>→ العودة إلى تسجيل الدخول</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       RESET PASSWORD PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Reset_Title" xml:space="preserve"><value>إعادة تعيين كلمة المرور</value></data>
+  <data name="Reset_Subtitle" xml:space="preserve"><value>أنشئ كلمة مرور جديدة لحسابك</value></data>
+  <data name="Reset_NewPassword" xml:space="preserve"><value>كلمة المرور الجديدة</value></data>
+  <data name="Reset_NewPasswordPlaceholder" xml:space="preserve"><value>أدخل كلمة المرور الجديدة</value></data>
+  <data name="Reset_ConfirmPassword" xml:space="preserve"><value>تأكيد كلمة المرور</value></data>
+  <data name="Reset_ConfirmPasswordPlaceholder" xml:space="preserve"><value>أعد إدخال كلمة المرور الجديدة</value></data>
+  <data name="Reset_PasswordHint" xml:space="preserve"><value>8 أحرف على الأقل • حرف كبير واحد • حرف خاص (!@#$%^&amp;*)</value></data>
+  <data name="Reset_PasswordTip" xml:space="preserve"><value>يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، وحرف كبير، وحرف خاص.</value></data>
+  <data name="Reset_ConfirmHint" xml:space="preserve"><value>يجب أن تتطابق تماماً.</value></data>
+  <data name="Reset_UpdateButton" xml:space="preserve"><value>تحديث كلمة المرور</value></data>
+  <data name="Reset_BackToLogin" xml:space="preserve"><value>العودة إلى تسجيل الدخول</value></data>
+  <data name="Reset_Show" xml:space="preserve"><value>إظهار</value></data>
+  <data name="Reset_Hide" xml:space="preserve"><value>إخفاء</value></data>
+  <data name="Reset_Tip" xml:space="preserve"><value>تنبيه</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       UNIVERSITY ENTRY PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="UniEntry_PageTitle" xml:space="preserve"><value>بوابة الاعتراف الجامعي</value></data>
+  <data name="UniEntry_Heading" xml:space="preserve"><value>بوابة الاعتراف الجامعي</value></data>
+  <data name="UniEntry_ExistingRequest" xml:space="preserve"><value>طلب مقدّم مسبقاً</value></data>
+  <data name="UniEntry_NewSubmission" xml:space="preserve"><value>تقديم جديد</value></data>
+  <data name="UniEntry_EmailPlaceholder" xml:space="preserve"><value>البريد الإلكتروني للجامعة</value></data>
+  <data name="UniEntry_PasswordPlaceholder" xml:space="preserve"><value>كلمة المرور</value></data>
+  <data name="UniEntry_RecognitionNumber" xml:space="preserve"><value>رقم طلب الاعتراف</value></data>
+  <data name="UniEntry_Proceed" xml:space="preserve"><value>متابعة</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       NEW UNIVERSITY ACCOUNT PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="NewUni_Title" xml:space="preserve"><value>إنشاء حساب جامعة</value></data>
+  <data name="NewUni_Institution" xml:space="preserve"><value>اسم المؤسسة</value></data>
+  <data name="NewUni_Country" xml:space="preserve"><value>الدولة</value></data>
+  <data name="NewUni_City" xml:space="preserve"><value>المدينة</value></data>
+  <data name="NewUni_Email" xml:space="preserve"><value>البريد الإلكتروني للجامعة</value></data>
+  <data name="NewUni_Password" xml:space="preserve"><value>كلمة المرور</value></data>
+  <data name="NewUni_ConfirmPassword" xml:space="preserve"><value>تأكيد كلمة المرور</value></data>
+  <data name="NewUni_Agree" xml:space="preserve"><value>أقرّ بأن جميع المعلومات المقدّمة صحيحة ودقيقة</value></data>
+  <data name="NewUni_Submit" xml:space="preserve"><value>إنشاء الحساب</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       UNIVERSITY STATUS PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="UniStatus_PageTitle" xml:space="preserve"><value>لوحة الحساب</value></data>
+  <data name="UniStatus_Portal" xml:space="preserve"><value>بوابة طلبات الاعتراف</value></data>
+  <data name="UniStatus_ActiveRequest" xml:space="preserve"><value>لديك طلب نشط</value></data>
+  <data name="UniStatus_NoRequest" xml:space="preserve"><value>لا توجد طلبات نشطة في الوقت الحالي</value></data>
+  <data name="UniStatus_Steps" xml:space="preserve"><value>خطوات التقديم</value></data>
+  <data name="UniStatus_GoToPortal" xml:space="preserve"><value>الذهاب إلى بوابة التقديم</value></data>
+  <data name="UniStatus_FAQs" xml:space="preserve"><value>الأسئلة الشائعة</value></data>
+  <data name="UniStatus_Logout" xml:space="preserve"><value>تسجيل الخروج</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       UNIVERSITY DASHBOARD — SIDEBAR
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Dash_Welcome" xml:space="preserve"><value>مرحباً بك في نظام التقديم</value></data>
+  <data name="Dash_StartPublicInfo" xml:space="preserve"><value>ابدأ بالمعلومات العامة</value></data>
+  <data name="Dash_SideInstructions" xml:space="preserve"><value>التعليمات</value></data>
+  <data name="Dash_SidePublicInfo" xml:space="preserve"><value>المعلومات العامة</value></data>
+  <data name="Dash_SideAcademicInfo" xml:space="preserve"><value>المعلومات الأكاديمية</value></data>
+  <data name="Dash_SideAdmission" xml:space="preserve"><value>شروط القبول ومدة الدراسة</value></data>
+  <data name="Dash_SideColleges" xml:space="preserve"><value>الكليات</value></data>
+  <data name="Dash_SidePrograms" xml:space="preserve"><value>البرامج</value></data>
+  <data name="Dash_SideMedicineColleges" xml:space="preserve"><value>كليات الطب</value></data>
+  <data name="Dash_SideHospitals" xml:space="preserve"><value>المستشفيات</value></data>
+  <data name="Dash_SideInfrastructure" xml:space="preserve"><value>البنية التحتية</value></data>
+  <data name="Dash_SideLaboratories" xml:space="preserve"><value>المختبرات</value></data>
+  <data name="Dash_SideLibrary" xml:space="preserve"><value>المكتبة</value></data>
+  <data name="Dash_SidePhotos" xml:space="preserve"><value>الصور / الوسائط</value></data>
+  <data name="Dash_SideAccreditation" xml:space="preserve"><value>هيئات الاعتماد</value></data>
+  <data name="Dash_SideSubmit" xml:space="preserve"><value>إنهاء وتقديم الطلب</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FORM SECTIONS — PUBLIC INFO
+  ═══════════════════════════════════════════════════════ -->
+  <data name="PubInfo_Heading" xml:space="preserve"><value>المعلومات العامة</value></data>
+  <data name="PubInfo_InstitutionName" xml:space="preserve"><value>اسم المؤسسة</value></data>
+  <data name="PubInfo_OversightEntity" xml:space="preserve"><value>الجهة الرسمية المنوط بها حق الإشراف</value></data>
+  <data name="PubInfo_FoundingDate" xml:space="preserve"><value>تاريخ التأسيس</value></data>
+  <data name="PubInfo_EstablishmentDate" xml:space="preserve"><value>تاريخ الإنشاء</value></data>
+  <data name="PubInfo_ModeOfStudy" xml:space="preserve"><value>نظام الدراسة</value></data>
+  <data name="PubInfo_LanguageOfInstruction" xml:space="preserve"><value>لغة التدريس</value></data>
+  <data name="PubInfo_StartOfTeaching" xml:space="preserve"><value>بداية التدريس</value></data>
+  <data name="PubInfo_MailingAddress" xml:space="preserve"><value>العنوان البريدي الكامل</value></data>
+  <data name="PubInfo_DirectPhone" xml:space="preserve"><value>رقم الهاتف المباشر</value></data>
+  <data name="PubInfo_Email" xml:space="preserve"><value>عنوان البريد الإلكتروني</value></data>
+  <data name="PubInfo_Website" xml:space="preserve"><value>الموقع الإلكتروني للمؤسسة</value></data>
+  <data name="PubInfo_Save" xml:space="preserve"><value>حفظ المعلومات العامة</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FORM SECTIONS — ACADEMIC INFO
+  ═══════════════════════════════════════════════════════ -->
+  <data name="AcadInfo_Heading" xml:space="preserve"><value>المعلومات الأكاديمية</value></data>
+  <data name="AcadInfo_InstitutionType" xml:space="preserve"><value>نوع المؤسسة الأكاديمية</value></data>
+  <data name="AcadInfo_Degrees" xml:space="preserve"><value>الدرجات العلمية في المؤسسة</value></data>
+  <data name="AcadInfo_Recognition" xml:space="preserve"><value>هل هناك اعتراف رسمي في الدولة الأم؟</value></data>
+  <data name="AcadInfo_Accreditation" xml:space="preserve"><value>هل هناك اعتماد رسمي وضمان جودة في الدولة الأم؟</value></data>
+  <data name="AcadInfo_JordanianStudents" xml:space="preserve"><value>عدد الطلاب الأردنيين</value></data>
+  <data name="AcadInfo_TotalStudents" xml:space="preserve"><value>إجمالي عدد الطلاب</value></data>
+  <data name="AcadInfo_LocalStudents" xml:space="preserve"><value>الطلاب المحليون</value></data>
+  <data name="AcadInfo_ForeignStudents" xml:space="preserve"><value>الطلاب الأجانب</value></data>
+  <data name="AcadInfo_Professor" xml:space="preserve"><value>أستاذ</value></data>
+  <data name="AcadInfo_AssociateProfessor" xml:space="preserve"><value>أستاذ مشارك</value></data>
+  <data name="AcadInfo_AssistantProfessor" xml:space="preserve"><value>أستاذ مساعد</value></data>
+  <data name="AcadInfo_LabAssistant" xml:space="preserve"><value>مساعد مختبر</value></data>
+  <data name="AcadInfo_FullTime" xml:space="preserve"><value>دوام كامل</value></data>
+  <data name="AcadInfo_PartTime" xml:space="preserve"><value>دوام جزئي</value></data>
+  <data name="AcadInfo_Count" xml:space="preserve"><value>العدد</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ADMIN DASHBOARD
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Admin_Title" xml:space="preserve"><value>لوحة تحكم المدير</value></data>
+  <data name="Admin_Overview" xml:space="preserve"><value>نظرة عامة</value></data>
+  <data name="Admin_Requests" xml:space="preserve"><value>الطلبات</value></data>
+  <data name="Admin_Assignments" xml:space="preserve"><value>التعيينات</value></data>
+  <data name="Admin_Employees" xml:space="preserve"><value>الموظفون</value></data>
+  <data name="Admin_AuditLog" xml:space="preserve"><value>سجل المراجعة</value></data>
+  <data name="Admin_Logout" xml:space="preserve"><value>تسجيل الخروج</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       RECOGNITION MEMBER DASHBOARD
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Member_Directorate" xml:space="preserve"><value>مديرية الاعتراف ومعادلة الشهادات</value></data>
+  <data name="Member_Dashboard" xml:space="preserve"><value>طلباتي المعيّنة</value></data>
+  <data name="Member_RequestsToReview" xml:space="preserve"><value>طلبات للمراجعة</value></data>
+  <data name="Member_AssignedRequests" xml:space="preserve"><value>الطلبات المعيّنة</value></data>
+  <data name="Member_ElectronicRequests" xml:space="preserve"><value>الطلبات الإلكترونية</value></data>
+  <data name="Member_Archive" xml:space="preserve"><value>الأرشيف</value></data>
+  <data name="Member_Logout" xml:space="preserve"><value>تسجيل الخروج</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SHARED TABLE HEADERS
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Table_Reference" xml:space="preserve"><value>الرقم المرجعي</value></data>
+  <data name="Table_University" xml:space="preserve"><value>الجامعة</value></data>
+  <data name="Table_Country" xml:space="preserve"><value>الدولة</value></data>
+  <data name="Table_Status" xml:space="preserve"><value>الحالة</value></data>
+  <data name="Table_Submitted" xml:space="preserve"><value>تاريخ التقديم</value></data>
+  <data name="Table_Action" xml:space="preserve"><value>إجراء</value></data>
+  <data name="Table_AssignedTo" xml:space="preserve"><value>معيّن إلى</value></data>
+  <data name="Table_Year" xml:space="preserve"><value>السنة</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       STATUS BADGES
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Status_Pending" xml:space="preserve"><value>قيد الانتظار</value></data>
+  <data name="Status_Approved" xml:space="preserve"><value>مقبول</value></data>
+  <data name="Status_Rejected" xml:space="preserve"><value>مرفوض</value></data>
+  <data name="Status_MissingDocs" xml:space="preserve"><value>مستندات ناقصة</value></data>
+  <data name="Status_UnderReview" xml:space="preserve"><value>قيد المراجعة</value></data>
+  <data name="Status_Assigned" xml:space="preserve"><value>تم التعيين</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       COMMON ACTIONS / BUTTONS
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Btn_Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="Btn_Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="Btn_Delete" xml:space="preserve"><value>حذف</value></data>
+  <data name="Btn_Edit" xml:space="preserve"><value>تعديل</value></data>
+  <data name="Btn_Add" xml:space="preserve"><value>إضافة</value></data>
+  <data name="Btn_View" xml:space="preserve"><value>عرض</value></data>
+  <data name="Btn_Download" xml:space="preserve"><value>تنزيل</value></data>
+  <data name="Btn_Upload" xml:space="preserve"><value>رفع</value></data>
+  <data name="Btn_Submit" xml:space="preserve"><value>تقديم</value></data>
+  <data name="Btn_Back" xml:space="preserve"><value>رجوع</value></data>
+  <data name="Btn_Next" xml:space="preserve"><value>التالي</value></data>
+  <data name="Btn_Confirm" xml:space="preserve"><value>تأكيد</value></data>
+  <data name="Btn_Apply" xml:space="preserve"><value>تطبيق</value></data>
+  <data name="Btn_Clear" xml:space="preserve"><value>مسح</value></data>
+  <data name="Btn_Preview" xml:space="preserve"><value>معاينة</value></data>
+  <data name="Btn_SendToAdmin" xml:space="preserve"><value>إرسال إلى المدير للمراجعة</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       COMMON MESSAGES
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Msg_Success" xml:space="preserve"><value>تمت العملية بنجاح.</value></data>
+  <data name="Msg_Error" xml:space="preserve"><value>حدث خطأ. يرجى المحاولة مجدداً.</value></data>
+  <data name="Msg_Required" xml:space="preserve"><value>هذا الحقل مطلوب.</value></data>
+  <data name="Msg_NoData" xml:space="preserve"><value>لا توجد بيانات متاحة.</value></data>
+  <data name="Msg_ConfirmDelete" xml:space="preserve"><value>هل أنت متأكد من حذف هذا العنصر؟</value></data>
+  <data name="Msg_Unauthorized" xml:space="preserve"><value>ليس لديك صلاحية لتنفيذ هذا الإجراء.</value></data>
+  <data name="Msg_Saving" xml:space="preserve"><value>جارٍ الحفظ...</value></data>
+  <data name="Msg_Saved" xml:space="preserve"><value>تم الحفظ بنجاح.</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       REQUEST DETAILS PAGES
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Details_RequestDetails" xml:space="preserve"><value>تفاصيل الطلب</value></data>
+  <data name="Details_BasicInfo" xml:space="preserve"><value>مراجعة معلومات المؤسسة</value></data>
+  <data name="Details_AcademicInfo" xml:space="preserve"><value>المعلومات الأكاديمية</value></data>
+  <data name="Details_AdmissionDuration" xml:space="preserve"><value>شروط القبول ومدة الدراسة</value></data>
+  <data name="Details_Infrastructure" xml:space="preserve"><value>تقييم البنية التحتية</value></data>
+  <data name="Details_Recommendation" xml:space="preserve"><value>التوصية النهائية</value></data>
+  <data name="Details_AccreditationBodies" xml:space="preserve"><value>هيئات الاعتماد والتصنيفات</value></data>
+  <data name="Details_Statistics" xml:space="preserve"><value>الإحصاءات</value></data>
+
+</root>

@@ -1,18 +1,63 @@
 ﻿@{
     Layout = null;
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Choose Role</title>
+    <title>@S["Role_PageTitle"]</title>
 
     <link rel="stylesheet" href="~/css/Role.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
+    <style>
+        /* Fix language switcher size and position */
+        .header__inner {
+            position: relative;
+        }
+
+        .lang-switcher-wrap {
+            position: absolute;
+            top: 50%;
+            right: 16px;
+            transform: translateY(-50%);
+        }
+
+        [dir="rtl"] .lang-switcher-wrap {
+            right: unset;
+            left: 16px;
+        }
+
+        .lang-switcher {
+            background: rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 6px;
+            padding: 3px 6px;
+        }
+
+        .lang-btn {
+            color: #333;
+            font-size: 0.75rem;
+            padding: 2px 7px;
+        }
+
+        .lang-btn--active {
+            background: rgba(0,0,0,0.12);
+        }
+
+        .lang-divider {
+            color: #999;
+        }
+    </style>
 </head>
 
-<body>
-    <!-- Header with TWO thick red lines -->
+<body class="@(isRtl ? "rtl-body" : "ltr-body")">
     <header class="header">
         <div class="header__line header__line--top"></div>
 
@@ -23,7 +68,10 @@
                 <img class="header__logo" src="~/images/mohelogo.png" alt="Portal Logo" />
             </div>
 
-            <a class="header__link" href="#">Privacy</a>
+            @* Language switcher — compact, positioned at edge *@
+            <div class="lang-switcher-wrap">
+                @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+            </div>
         </div>
 
         <div class="header__line header__line--bottom"></div>
@@ -31,14 +79,15 @@
 
     <main class="wrap">
         <section class="card" aria-label="Choose role">
-            <h1 class="h1">Government Staff Portal</h1>
-            <p class="lead">Select your government role to access the system.</p>
+            <h1 class="h1">@S["Role_SignIn"]</h1>
+            <p class="lead">@S["Role_ChooseRole"]</p>
 
             <div class="box">
                 <div class="box__title">
-                    Government Staff Access
+                    @S["Role_SigningAs"]
                 </div>
                 <div class="choices" role="radiogroup" aria-label="Role selection">
+
                     <!-- Admin -->
                     <input type="radio" name="role" id="roleAdmin" class="r" checked>
                     <label for="roleAdmin" class="choice">
@@ -49,12 +98,12 @@
                             </svg>
                         </div>
                         <div>
-                            <div class="name">Admin</div>
-                            <div class="desc">Manage users & applications</div>
+                            <div class="name">@S["Role_Admin"]</div>
+                            <div class="desc">@S["Role_AdminDesc"]</div>
                         </div>
-                    </label>              
+                    </label>
 
-                    <!-- ✅ Recognition Member (NEW) -->
+                    <!-- Recognition Member -->
                     <input type="radio" name="role" id="roleRec" class="r">
                     <label for="roleRec" class="choice">
                         <div class="icon" aria-hidden="true">
@@ -68,39 +117,35 @@
                             </svg>
                         </div>
                         <div>
-                            <div class="name">Recognition Member</div>
-                            <div class="desc">Review & process recognition files</div>
+                            <div class="name">@S["Role_RecognitionMember"]</div>
+                            <div class="desc">@S["Role_RecognitionMemberDesc"]</div>
                         </div>
                     </label>
                 </div>
 
                 <div class="actions">
-                    <button class="btn" id="continueBtn" type="button">Continue</button>
+                    <button class="btn" id="continueBtn" type="button">@S["Role_Continue"]</button>
                 </div>
             </div>
 
             <footer class="footer">
-                © 2026 Ministry Portal • All rights reserved
+                @S["Site_Copyright"]
             </footer>
         </section>
     </main>
 
     <script>
         const STAFF_ADMIN = '@Url.Action("StaffLogIn", "Home", new { role = "admin" })';
-
-        const STAFF_REC = '@Url.Action("StaffLogIn", "Home", new { role = "recognition" })';
+        const STAFF_REC   = '@Url.Action("StaffLogIn", "Home", new { role = "recognition" })';
 
         document.getElementById("continueBtn")
             .addEventListener("click", () => {
-
-            if (document.getElementById("roleRec").checked) {
-
-                window.location.href = STAFF_REC;
-                return;
-            }
-
-            window.location.href = STAFF_ADMIN;
-        });
+                if (document.getElementById("roleRec").checked) {
+                    window.location.href = STAFF_REC;
+                    return;
+                }
+                window.location.href = STAFF_ADMIN;
+            });
     </script>
 
 </body>

@@ -1,0 +1,139 @@
+﻿@using System.Globalization
+
+@{
+    // Detect the currently active culture
+    var currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName; // "en" or "ar"
+    var isArabic = currentCulture == "ar";
+
+    // The page the user is currently on — we return them here after switching
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+}
+
+@*
+    ─────────────────────────────────────────────────────────────────────────
+    LANGUAGE SWITCHER PARTIAL
+    ─────────────────────────────────────────────────────────────────────────
+    Usage — add ONE line to any view's header:
+        @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+
+    What it renders:
+        [ EN ]  [ AR ]   — two toggle buttons, active one is highlighted
+    
+    How it works:
+        Each button submits a tiny form to POST /Language/Set
+        The controller writes the culture cookie and redirects back here
+    ─────────────────────────────────────────────────────────────────────────
+*@
+
+<div class="lang-switcher" role="navigation" aria-label="Language switcher">
+
+    @* English button *@
+    <form asp-controller="Language" asp-action="Set" method="post" class="lang-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="culture" value="en" />
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+        <button type="submit"
+                class="lang-btn @(!isArabic ? "lang-btn--active" : "")"
+                aria-current="@(!isArabic ? "true" : "false")"
+                title="Switch to English">
+            EN
+        </button>
+    </form>
+
+    <span class="lang-divider" aria-hidden="true">|</span>
+
+    @* Arabic button *@
+    <form asp-controller="Language" asp-action="Set" method="post" class="lang-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="culture" value="ar" />
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+        <button type="submit"
+                class="lang-btn @(isArabic ? "lang-btn--active" : "")"
+                aria-current="@(isArabic ? "true" : "false")"
+                title="التبديل إلى العربية">
+            AR
+        </button>
+    </form>
+
+</div>
+
+@* ─────────────────────────────────────────────────────────────────────────
+   SCOPED CSS — self-contained, no extra .css file needed.
+   Uses logical CSS properties so it looks right in both LTR and RTL.
+   ───────────────────────────────────────────────────────────────────────── *@
+<style>
+    .lang-switcher {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 6px;
+        padding: 3px 5px;
+    }
+
+    .lang-form {
+        margin: 0;
+        padding: 0;
+        display: inline;
+    }
+
+    .lang-btn {
+        background: transparent;
+        border: none;
+        color: inherit;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        padding: 3px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.18s, color 0.18s;
+        opacity: 0.65;
+        line-height: 1.4;
+    }
+
+        .lang-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+    .lang-btn--active {
+        background: rgba(255, 255, 255, 0.28);
+        opacity: 1;
+        color: inherit;
+    }
+
+    .lang-divider {
+        font-size: 0.7rem;
+        opacity: 0.35;
+        user-select: none;
+        padding: 0 1px;
+    }
+
+    /* ── Dark header variant (white text on dark bg) ── */
+    .header--dark .lang-switcher,
+    .rm-header .lang-switcher,
+    .admin-header .lang-switcher {
+        border-color: rgba(255,255,255,0.3);
+        color: #fff;
+    }
+
+    /* ── Light header variant (dark text on white/light bg) ── */
+    .header--light .lang-switcher,
+    .header__inner .lang-switcher {
+        background: rgba(0,0,0,0.05);
+        border-color: rgba(0,0,0,0.15);
+        color: #333;
+    }
+
+    .header--light .lang-btn:hover,
+    .header__inner .lang-btn:hover {
+        background: rgba(0,0,0,0.10);
+    }
+
+    .header--light .lang-btn--active,
+    .header__inner .lang-btn--active {
+        background: rgba(0,0,0,0.12);
+    }
+</style>
