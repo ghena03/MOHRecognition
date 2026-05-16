@@ -1,0 +1,537 @@
+﻿/* ==========================================================================
+   rtl.css — Global RTL Override Stylesheet
+   MOHRecognition Portal
+   ==========================================================================
+
+   HOW THIS FILE WORKS:
+   ─────────────────────────────────────────────────────────────────────────
+   Every standalone view sets <body class="... rtl-body"> when the user
+   picks Arabic. This file scopes ALL RTL rules under .rtl-body so they
+   only fire in Arabic mode — English is completely untouched.
+
+   SECTIONS:
+     1.  Base — font, direction, text alignment
+     2.  Layout — flex/grid direction flips
+     3.  Sidebar (Admin + Member dashboards)
+     4.  Header / Navbar
+     5.  Tables
+     6.  Forms & Inputs
+     7.  Buttons & Icons
+     8.  Cards & Stat blocks
+     9.  Language switcher (already self-contained but positioned here)
+    10.  Utility overrides
+    11.  Logical CSS properties reference (modern approach)
+   ========================================================================== */
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   1.  BASE — Arabic font + direction
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.rtl-body {
+    direction: rtl;
+    text-align: right;
+    /* Arabic-optimized font stack */
+    font-family: 'Segoe UI', /* Windows Arabic support  */
+    'Tahoma', /* broad Arabic coverage   */
+    'Arial Unicode MS', sans-serif;
+}
+
+    /* All text containers default to right-aligned in RTL */
+    .rtl-body p,
+    .rtl-body h1,
+    .rtl-body h2,
+    .rtl-body h3,
+    .rtl-body h4,
+    .rtl-body h5,
+    .rtl-body h6,
+    .rtl-body label,
+    .rtl-body span,
+    .rtl-body li {
+        text-align: right;
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════════════
+   2.  LAYOUT — Flex row direction flip
+   ══════════════════════════════════════════════════════════════════════════ */
+
+    /* Any explicit LTR row should flip in RTL */
+    .rtl-body .d-flex:not(.flex-column),
+    .rtl-body .flex-row {
+        flex-direction: row-reverse;
+    }
+
+    /* Header inner rows */
+    .rtl-body .header__inner,
+    .rtl-body .header-left,
+    .rtl-body .rm-top-inner,
+    .rtl-body .hdr-grid {
+        flex-direction: row-reverse;
+    }
+
+    /* Breadcrumbs, nav lists */
+    .rtl-body .nav,
+    .rtl-body .navbar-nav {
+        flex-direction: row-reverse;
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════════════
+   3.  SIDEBAR — Admin & Member dashboards
+   ══════════════════════════════════════════════════════════════════════════ */
+
+    /* Admin sidebar: was on the left, move to right */
+    .rtl-body .sidebar {
+        left: unset;
+        right: 0;
+        border-right: none;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Admin main content: was pushed right via margin-left, now push left */
+    .rtl-body .main-content {
+        margin-left: unset;
+        margin-right: 240px; /* matches sidebar width */
+    }
+
+    /* Member sidebar (rm-sidebar) */
+    .rtl-body .rm-sidebar {
+        left: unset;
+        right: 0;
+        border-right: none;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .rtl-body .rm-main {
+        margin-left: unset;
+        margin-right: var(--sidebar-w, 240px);
+    }
+
+    /* Nav items: icon then text — flip so text comes first */
+    .rtl-body .rm-navitem,
+    .rtl-body .nav-item-inner {
+        flex-direction: row-reverse;
+    }
+
+        /* Active indicator border: was on left, flip to right */
+        .rtl-body .rm-navitem.active,
+        .rtl-body .nav-active-indicator {
+            border-left: none;
+            border-right: 4px solid var(--brand, #7f1627);
+        }
+
+    /* University dashboard sidebar */
+    .rtl-body .uni-sidebar {
+        left: unset;
+        right: 0;
+    }
+
+    .rtl-body .uni-main {
+        margin-left: unset;
+        margin-right: var(--sidebar-w, 260px);
+    }
+
+    /* Sidebar nav items padding */
+    .rtl-body .sidebar-link,
+    .rtl-body .rm-navitem,
+    .rtl-body .nav-link {
+        padding-left: unset;
+        padding-right: 18px;
+        text-align: right;
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════════════
+   4.  HEADER / NAVBAR
+   ══════════════════════════════════════════════════════════════════════════ */
+
+    /* Role page header */
+    .rtl-body .header__inner {
+        flex-direction: row-reverse;
+    }
+
+    .rtl-body .header__link {
+        margin-left: unset;
+        margin-right: auto;
+    }
+
+    /* Staff login header */
+    .rtl-body .admin-header {
+        flex-direction: row-reverse;
+        text-align: right;
+    }
+
+    /* Member header top bar */
+    .rtl-body .rm-top {
+        flex-direction: row-reverse;
+    }
+
+    .rtl-body .rm-brandbar {
+        right: unset;
+        left: 0;
+    }
+
+    /* Admin header */
+    .rtl-body .header {
+        flex-direction: row-reverse;
+    }
+
+    /* University entry header row */
+    .rtl-body .inner.headerRow {
+        flex-direction: row-reverse;
+    }
+
+    /* Language switcher — ensure it stays visually at the end (left in RTL) */
+    .rtl-body .lang-switcher {
+        margin-left: unset;
+        margin-right: auto;
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════════════
+   5.  TABLES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+    .rtl-body table {
+        direction: rtl;
+    }
+
+    .rtl-body th,
+    .rtl-body td {
+        text-align: right;
+    }
+
+    /* Table border that was on the right (separator) moves to left */
+    .rtl-body td,
+    .rtl-body th {
+        border-right: none;
+        border-left: 1px solid #cfd8dc;
+    }
+
+        /* First cell loses left border (was last cell losing right border) */
+        .rtl-body td:first-child,
+        .rtl-body th:first-child {
+            border-left: none;
+        }
+
+    /* Status badge cells */
+    .rtl-body .badge {
+        float: right;
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════════════
+   6.  FORMS & INPUTS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+    .rtl-body input,
+    .rtl-body textarea,
+    .rtl-body select {
+        direction: rtl;
+        text-align: right;
+    }
+
+    /* Input group icons/addons */
+    .rtl-body .input-group {
+        flex-direction: row-reverse;
+    }
+
+    .rtl-body .input-group-text {
+        border-radius: 0 6px 6px 0;
+    }
+
+    .rtl-body .input-group input {
+        border-radius: 6px 0 0 6px;
+    }
+
+    /* Form labels */
+    .rtl-body .form-label,
+    .rtl-body label {
+        display: block;
+        text-align: right;
+    }
+
+    /* Checkbox / radio — label after input becomes label before in RTL */
+    .rtl-body .form-check {
+        padding-left: unset;
+        padding-right: 1.5em;
+        text-align: right;
+    }
+
+    .rtl-body .form-check-input {
+        float: right;
+        margin-left: unset;
+        margin-right: -1.5em;
+    }
+
+    /* Form section headings */
+    .rtl-body .form-section-title,
+    .rtl-body .section-label {
+        text-align: right;
+        border-left: none;
+        border-right: 4px solid var(--brand, #7f1627);
+        padding-left: unset;
+        padding-right: 10px;
+    }
+
+    /* Select dropdown arrow — reposition for RTL */
+    .rtl-body select {
+        background-position: left 12px center;
+        padding-left: 36px;
+        padding-right: 12px;
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════════════
+   7.  BUTTONS & ICONS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+    /* Buttons with icons: icon + text → flip order */
+    .rtl-body .btn i,
+    .rtl-body button i {
+        margin-left: 6px;
+        margin-right: unset;
+    }
+
+    /* Back arrow button: flip direction */
+    .rtl-body .btn-back::before {
+        content: '→'; /* was ← in LTR */
+    }
+
+    /* Action button rows */
+    .rtl-body .action-row,
+    .rtl-body .btn-group {
+        flex-direction: row-reverse;
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════════════
+   8.  CARDS & STAT BLOCKS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+    .rtl-body .card {
+        text-align: right;
+    }
+
+    .rtl-body .card-header,
+    .rtl-body .card-body,
+    .rtl-body .card-footer {
+        text-align: right;
+    }
+
+    /* Stat cards (admin overview) */
+    .rtl-body .stat-card {
+        flex-direction: row-reverse;
+    }
+
+    .rtl-body .stat-label,
+    .rtl-body .stat-value {
+        text-align: right;
+    }
+
+    /* Role selection cards */
+    .rtl-body .role-card {
+        text-align: right;
+    }
+
+        .rtl-body .role-card .name,
+        .rtl-body .role-card .desc {
+            text-align: right;
+        }
+
+
+    /* ══════════════════════════════════════════════════════════════════════════
+   9.  ROLE SELECTION PAGE (Role.cshtml)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+    .rtl-body .wrap {
+        direction: rtl;
+    }
+
+    .rtl-body .card .lead,
+    .rtl-body .card .h1 {
+        text-align: right;
+    }
+
+    .rtl-body .roles {
+        direction: rtl;
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════════════
+   10.  LOGIN / AUTH PAGES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+    .rtl-body .login-box,
+    .rtl-body .auth-card,
+    .rtl-body .admin-login-card {
+        text-align: right;
+        direction: rtl;
+    }
+
+        .rtl-body .login-box input,
+        .rtl-body .auth-card input {
+            text-align: right;
+        }
+
+    /* Forgot password steps */
+    .rtl-body .step-row {
+        flex-direction: row-reverse;
+    }
+
+    .rtl-body .back-link {
+        /* "← Back" becomes "Back →" in Arabic */
+        direction: rtl;
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════════════
+   11.  MEMBER DETAILS PAGES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+    .rtl-body .details-section,
+    .rtl-body .review-block {
+        text-align: right;
+        direction: rtl;
+    }
+
+    .rtl-body .info-row {
+        flex-direction: row-reverse;
+    }
+
+    .rtl-body .info-label {
+        text-align: right;
+        border-left: none;
+        border-right: 3px solid var(--brand, #7f1627);
+        padding-left: unset;
+        padding-right: 8px;
+    }
+
+    /* Recommendation / assessment panels */
+    .rtl-body .assess-panel,
+    .rtl-body .recommendation-box {
+        text-align: right;
+        direction: rtl;
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════════════
+   12.  UTILITY OVERRIDES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+    /* Override any hardcoded text-align: left */
+    .rtl-body .text-left {
+        text-align: right !important;
+    }
+
+    .rtl-body .text-right {
+        text-align: left !important;
+    }
+
+    /* Bootstrap margin utilities flip */
+    .rtl-body .ms-auto {
+        margin-left: unset !important;
+        margin-right: auto !important;
+    }
+
+    .rtl-body .me-auto {
+        margin-right: unset !important;
+        margin-left: auto !important;
+    }
+
+    .rtl-body .ms-1 {
+        margin-left: unset !important;
+        margin-right: 0.25rem !important;
+    }
+
+    .rtl-body .ms-2 {
+        margin-left: unset !important;
+        margin-right: 0.5rem !important;
+    }
+
+    .rtl-body .ms-3 {
+        margin-left: unset !important;
+        margin-right: 1rem !important;
+    }
+
+    .rtl-body .me-1 {
+        margin-right: unset !important;
+        margin-left: 0.25rem !important;
+    }
+
+    .rtl-body .me-2 {
+        margin-right: unset !important;
+        margin-left: 0.5rem !important;
+    }
+
+    .rtl-body .me-3 {
+        margin-right: unset !important;
+        margin-left: 1rem !important;
+    }
+
+    /* Bootstrap padding utilities flip */
+    .rtl-body .ps-1 {
+        padding-left: unset !important;
+        padding-right: 0.25rem !important;
+    }
+
+    .rtl-body .ps-2 {
+        padding-left: unset !important;
+        padding-right: 0.5rem !important;
+    }
+
+    .rtl-body .ps-3 {
+        padding-left: unset !important;
+        padding-right: 1rem !important;
+    }
+
+    .rtl-body .pe-1 {
+        padding-right: unset !important;
+        padding-left: 0.25rem !important;
+    }
+
+    .rtl-body .pe-2 {
+        padding-right: unset !important;
+        padding-left: 0.5rem !important;
+    }
+
+    .rtl-body .pe-3 {
+        padding-right: unset !important;
+        padding-left: 1rem !important;
+    }
+
+    /* Float utilities */
+    .rtl-body .float-start {
+        float: right !important;
+    }
+
+    .rtl-body .float-end {
+        float: left !important;
+    }
+
+    /* Scrollbars — subtle RTL scrollbar on left */
+    .rtl-body ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   13.  ANIMATIONS — disable slide-from-left, use slide-from-right in RTL
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(40px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.rtl-body .animate-slide {
+    animation: slideInFromRight 0.3s ease;
+}

@@ -9,17 +9,17 @@
     Layout = null;
 
     var role = (ViewBag.Role as string ?? "admin").ToLower();
-    var title = role == "recognition" ? "Recognition Member Portal Login" : "Admin Portal Login";
-    var desc = role == "recognition"
-        ? "Recognition committee members can log in to review and process recognition files"
-        : "Authorized administrators can log in to manage recognition requests";
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
 
-    var emailPlaceholder = role == "recognition" ? "Member Email" : "Admin Email";
+    var title = role == "recognition" ? S["Login_MemberTitle"].Value : S["Login_AdminTitle"].Value;
+    var desc = role == "recognition" ? S["Login_MemberDesc"].Value : S["Login_AdminDesc"].Value;
+    var emailPlaceholder = role == "recognition" ? S["Login_MemberEmail"].Value : S["Login_AdminEmail"].Value;
 }
 
-
 <!doctype html>
-<html lang="en">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <title>@title</title>
@@ -27,10 +27,85 @@
 
     <link rel="stylesheet" href="~/css/StaffLogIn.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
+    <style>
+        /* ── RTL fixes specific to this page ── */
+
+        /* Card: image is on left in LTR, flip to right in RTL */
+        [dir="rtl"] .card {
+            flex-direction: row-reverse;
+        }
+
+        /* Sign image keeps its natural size — no flip needed */
+        [dir="rtl"] .sign {
+            border-left: none;
+            border-right: 1px solid rgba(0,0,0,0.08);
+        }
+
+        /* Panel text aligns right */
+        [dir="rtl"] .panel {
+            text-align: right;
+        }
+
+        /* Input rows: icon on right, input fills left */
+        [dir="rtl"] .row {
+            flex-direction: row-reverse;
+        }
+
+        /* Password toggle button stays on the correct side */
+        [dir="rtl"] .pass-toggle {
+            right: unset;
+            left: 10px;
+        }
+
+        /* Admin header */
+        [dir="rtl"] .admin-header {
+            text-align: right;
+        }
+
+        /* Remember me row */
+        [dir="rtl"] .remember-row {
+            flex-direction: row-reverse;
+        }
+
+        /* Links */
+        [dir="rtl"] .links {
+            text-align: right;
+        }
+
+        /* Language switcher position */
+        .lang-switcher-wrap {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+        }
+
+        [dir="rtl"] .lang-switcher-wrap {
+            right: unset;
+            left: 16px;
+        }
+
+        .lang-switcher {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .lang-btn {
+            color: #fff;
+        }
+    </style>
 </head>
 
-<body>
-    <div class="page">
+<body class="@(isRtl ? "rtl-body" : "ltr-body")">
+    <div class="page" style="position:relative;">
+
+        @* Language switcher — top corner *@
+        <div class="lang-switcher-wrap">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+        </div>
 
         <div class="admin-header">
             <h2>@title</h2>
@@ -43,7 +118,7 @@
             </div>
 
             <div class="panel">
-                <h1>Sign In</h1>
+                <h1>@S["Login_SignIn"]</h1>
 
                 @if (!ViewData.ModelState.IsValid)
                 {
@@ -54,8 +129,6 @@
                     @Html.AntiForgeryToken()
 
                     <input type="hidden" name="role" value="@role" />
-
-                    <!-- 🔥 مهم -->
                     <input type="hidden" name="GeneratedCaptcha" id="generatedCaptcha" />
 
                     <!-- EMAIL -->
@@ -68,35 +141,27 @@
                     <!-- PASSWORD -->
                     <div class="row pass-row">
                         <span class="icon"><i class="fa-solid fa-lock"></i></span>
-                        <input asp-for="Password" type="password" id="loginPassword" placeholder="Password" />
+                        <input asp-for="Password" type="password" id="loginPassword" placeholder="@S["Login_Password"]" />
                         <button type="button" class="pass-toggle" id="toggleLoginPassword">
                             <i class="fa-regular fa-eye"></i>
                         </button>
                     </div>
                     <span class="field-error" asp-validation-for="Password"></span>
 
-                    <!-- LANGUAGE -->
-                    <div class="row">
-                        <span class="icon">☷</span>
-                        <select asp-for="Language">
-                            <option value="en">English</option>
-                            <option value="ar">العربية</option>
-                        </select>
-                    </div>
+                
 
                     <!-- CAPTCHA -->
                     <div class="captcha">
                         <canvas id="captchaCanvas" width="200" height="50"></canvas>
-
                         <button type="button" class="refresh" id="refreshCaptcha">
                             <i class="fa-solid fa-rotate"></i>
                         </button>
                     </div>
 
-                    <div class="hint">✓ Enter the code above</div>
+                    <div class="hint">@S["Login_CaptchaHint"]</div>
 
                     <div class="row">
-                        <input asp-for="Captcha" id="captchaInput" type="text" placeholder="Enter the code above" />
+                        <input asp-for="Captcha" id="captchaInput" type="text" placeholder="@S["Login_CaptchaPlaceholder"]" />
                     </div>
                     <span class="field-error" asp-validation-for="Captcha"></span>
 
@@ -104,20 +169,20 @@
                     <div class="remember-row">
                         <label class="remember">
                             <input asp-for="RememberMe" type="checkbox" />
-                            <span>Remember me</span>
+                            <span>@S["Login_RememberMe"]</span>
                         </label>
                     </div>
 
-                    <button class="login" type="submit">Login</button>
+                    <button class="login" type="submit">@S["Login_Submit"]</button>
 
                     <div class="links">
                         <a asp-controller="Home" asp-action="ForgetPassword" asp-route-role="@role">
-                            Forgot Password
+                            @S["Login_ForgotPassword"]
                         </a>
                     </div>
 
                     <div class="links">
-                        <a href="#">Create New Account</a>
+                        <a href="#">@S["Login_CreateAccount"]</a>
                     </div>
                 </form>
             </div>
@@ -133,7 +198,6 @@
         toggleButton.addEventListener("click", function () {
             const isHidden = passwordInput.type === "password";
             passwordInput.type = isHidden ? "text" : "password";
-
             toggleButton.innerHTML = isHidden
                 ? '<i class="fa-regular fa-eye-slash"></i>'
                 : '<i class="fa-regular fa-eye"></i>';
@@ -158,11 +222,9 @@
             const ctx = canvas.getContext("2d");
 
             generatedCaptcha = randomText(6);
-
             document.getElementById("generatedCaptcha").value = generatedCaptcha;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             ctx.font = "28px Arial";
             ctx.fillStyle = "#7a2d2a";
 
@@ -170,7 +232,6 @@
                 const x = 20 + i * 25;
                 const y = 30 + Math.random() * 5;
                 const angle = (Math.random() - 0.5) * 0.5;
-
                 ctx.save();
                 ctx.translate(x, y);
                 ctx.rotate(angle);
@@ -178,7 +239,6 @@
                 ctx.restore();
             }
 
-            // noise lines
             for (let i = 0; i < 5; i++) {
                 ctx.strokeStyle = "rgba(0,0,0,0.2)";
                 ctx.beginPath();
@@ -187,7 +247,6 @@
                 ctx.stroke();
             }
 
-            // dots
             for (let i = 0; i < 30; i++) {
                 ctx.fillStyle = "rgba(0,0,0,0.2)";
                 ctx.beginPath();

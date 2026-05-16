@@ -31,6 +31,7 @@ namespace MOHRecognition.Services
     public class RecognitionRequestRecord
     {
         public int Id { get; set; }
+        public string InstitutionType { get; set; } = "";
 
         public string ReferenceNumber { get; set; } = string.Empty;
 
@@ -123,5 +124,8 @@ namespace MOHRecognition.Services
         public string AccreditationStatus { get; set; } = string.Empty;
 
         public string AccreditationNote { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+
+        public string RecognitionType { get; set; } = string.Empty;
     }
 }

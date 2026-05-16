@@ -16,7 +16,7 @@ namespace MOHRecognition.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly IRecognitionRequestService _recognitionRequestService;
         private Dictionary<string, List<string>>? _citiesCache;
-
+        private static PostgraduateApplicationDto _latestPostgraduateRequest;
         private static List<EmployeeDto> employees = new List<EmployeeDto>
 {
     new EmployeeDto { Id = 1,  Name = "H.E. the Minister of Higher Education and Scientific Research, Prof. Azmi Mahafazah",                           Workplace = "Ministry of Higher Education and Scientific Research" },
@@ -49,7 +49,8 @@ namespace MOHRecognition.Controllers
 
             return _citiesCache;
         }
-
+        private static List<RecognitionRequestRecord> _manualInstitutionRequests
+    = new List<RecognitionRequestRecord>();
         public HomeController(IWebHostEnvironment env, IRecognitionRequestService recognitionRequestService)
         {
             _env = env;
@@ -3916,10 +3917,71 @@ namespace MOHRecognition.Controllers
         }
         //###################################################
 
+        public IActionResult AddEducationalInstitution()
+        {
+            return View("~/Views/admin/AddEducationalInstitution.cshtml");
+        }
+        [HttpPost]
+        public IActionResult AddEducationalInstitution(
+      string InstitutionName,
+      string Country,
+      string City,
+      string InstitutionType,
+      string AssignedMember)
+        {
+            var normalizedMember = NormalizeRecognitionMemberIdentity(AssignedMember);
 
+            var request = new RecognitionRequestRecord
+            {
+                Id = Guid.NewGuid().GetHashCode(),
+                ReferenceNumber = "MAN-" + Guid.NewGuid().ToString().Substring(0, 6),
+                UniversityName = InstitutionName,
+                Country = Country,
+                InstitutionType = InstitutionType,   // ← save it
+                AssignedMember = normalizedMember,
+                Status = "Pending",
+                SubmittedAt = DateTime.Now
+            };
 
+            _manualInstitutionRequests.Add(request);
+            TempData["SuccessMessage"] = "Educational institution assigned successfully.";
+            return RedirectToAction("AddEducationalInstitution");
+        }
+        [HttpGet]
+        public IActionResult ManualInstitutionDetails(string referenceNumber)
+        {
+            var currentMember = GetCurrentRecognitionMember();
 
+            var request = _manualInstitutionRequests
+                .FirstOrDefault(x =>
+                    string.Equals(x.ReferenceNumber, referenceNumber, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase));
 
+            if (request == null)
+                return RedirectToAction("ManualInstitutionRequests");
+
+            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
+            return View("~/Views/member/ManualInstitutionDetails.cshtml", request);
+        }
+        [HttpGet]
+        public IActionResult ManualInstitutionRequests()
+        {
+            var currentMember = GetCurrentRecognitionMember();
+
+            var model = _manualInstitutionRequests
+                .Where(x => string.Equals(
+                    x.AssignedMember,
+                    currentMember,
+                    StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            ViewBag.CurrentRecognitionMember =
+                GetRecognitionMemberDisplayName(currentMember);
+
+            return View(
+                "~/Views/member/ManualInstitutionRequests.cshtml",
+                model);
+        }
         ///////////////////////NewUniAccount/////////
         [HttpGet]
         public IActionResult NewUniAccount()
@@ -3940,7 +4002,7 @@ namespace MOHRecognition.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult NewUniAccount(string Institution, string Country, string City, string CityOther, string Email, string Password, string ConfirmPassword, bool Agree)
+        public IActionResult NewUniAccount(string Institution, string Country, string City, string CityOther, string InstitutionType, string Email, string Password, string ConfirmPassword, bool Agree)
         {
             var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "countries.json");
             var countries = new List<string>();
@@ -3983,7 +4045,7 @@ namespace MOHRecognition.Controllers
 
             HttpContext.Session.SetString("SignupCountry", Country ?? "");
             HttpContext.Session.SetString("SignupCity", resolvedCity);
-
+            HttpContext.Session.SetString("InstitutionType", InstitutionType ?? "");
             return RedirectToAction("UniStatus", "Home");
         }
 
@@ -4473,6 +4535,20 @@ namespace MOHRecognition.Controllers
             return hasWorkStarted ? "In Progress" : "Not Reviewed";
         }
 
+       
+        
+        [HttpGet]
+       public IActionResult ElectronicRequests()
+        {
+            var currentMember = GetCurrentRecognitionMember();
+            var model = _recognitionRequestService
+              .GetAll()
+              .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
+              .ToList();
+
+            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
+            return View("~/Views/member/ElectronicRequests.cshtml", model);
+        }
         [HttpGet]
         public IActionResult DetailsBasicInfo(int? id)
         {
@@ -4985,6 +5061,7 @@ namespace MOHRecognition.Controllers
         private static Dictionary<(int meetingId, int requestId), MeetingDecisionDto> meetingDecisions = new();
         private static Dictionary<(int meetingId, int employeeId), bool> meetingAttendance = new();
 
+
         // ===================== MEETINGS LIST =====================
         public IActionResult Meetings()
         {
@@ -5290,73 +5367,36 @@ namespace MOHRecognition.Controllers
         [HttpPost]
         public async Task<IActionResult> SavePostgraduatePrograms(PostgraduateApplicationDto dto)
         {
-            // uploads folder path
-            var uploadsFolder = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                 "wwwroot/uploads/postgraduate"
-            );
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/postgraduate");
 
-            // create uploads folder if it doesn't exist
             if (!Directory.Exists(uploadsFolder))
-            {
                 Directory.CreateDirectory(uploadsFolder);
-            }
-
-            // ================= MASTER FILE =================
 
             if (dto.MasterFile != null)
             {
-                var masterPath = Path.Combine(
-                    uploadsFolder,
-                    dto.MasterFile.FileName
-                );
-
-                using (var stream = new FileStream(masterPath, FileMode.Create))
-                {
+                using (var stream = new FileStream(Path.Combine(uploadsFolder, dto.MasterFile.FileName), FileMode.Create))
                     await dto.MasterFile.CopyToAsync(stream);
-                }
+                dto.MasterFileName = dto.MasterFile.FileName;
             }
-
-            // ================= PHD FILE =================
 
             if (dto.PhDFile != null)
             {
-                var phdPath = Path.Combine(
-                    uploadsFolder,
-                    dto.PhDFile.FileName
-                );
-
-                using (var stream = new FileStream(phdPath, FileMode.Create))
-                {
+                using (var stream = new FileStream(Path.Combine(uploadsFolder, dto.PhDFile.FileName), FileMode.Create))
                     await dto.PhDFile.CopyToAsync(stream);
-                }
+                dto.PhDFileName = dto.PhDFile.FileName;
             }
-
-            // ================= DIPLOMA FILE =================
 
             if (dto.DiplomaFile != null)
             {
-                var diplomaPath = Path.Combine(
-                    uploadsFolder,
-                    dto.DiplomaFile.FileName
-                );
-
-                using (var stream = new FileStream(diplomaPath, FileMode.Create))
-                {
+                using (var stream = new FileStream(Path.Combine(uploadsFolder, dto.DiplomaFile.FileName), FileMode.Create))
                     await dto.DiplomaFile.CopyToAsync(stream);
-                }
+                dto.DiplomaFileName = dto.DiplomaFile.FileName;
             }
 
-            // DEBUG
-            Console.WriteLine(dto.Name);
-            Console.WriteLine(dto.Email);
-            Console.WriteLine(dto.MasterStudents);
+            _latestPostgraduateRequest = dto;
 
-            TempData["Success"] = "Application submitted successfully.";
-
-            return RedirectToAction("UniPostgraduateInstructions");
+            return RedirectToAction("UniStatus", "Home");
         }
-
         private static string NormalizeMeetingStatus(string? value)
         {
             var status = (value ?? string.Empty).Trim();
@@ -5378,6 +5418,12 @@ namespace MOHRecognition.Controllers
                 return NotFound();
 
             return View("~/Views/Admin/AdminRequestDetails.cshtml", request);
+        }
+
+        public IActionResult DetailsPostgraduateRequest(int id)
+        {
+            var model = _latestPostgraduateRequest ?? new PostgraduateApplicationDto();
+            return View("~/Views/member/DetailsPostgraduateRequest.cshtml", model);
         }
 
         public IActionResult AdminFullApplicationView(int id, int? meetingId)

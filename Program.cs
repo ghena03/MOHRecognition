@@ -1,11 +1,26 @@
+﻿using Microsoft.AspNetCore.Localization;
+using System.Globalization;
 using MOHRecognition.Services;
-using System.Diagnostics;
-using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+// ─────────────────────────────────────────────────────────────────────────────
+// OCALIZATION SERVICES
+// ─────────────────────────────────────────────────────────────────────────────
+builder.Services.AddLocalization(options =>
+{
+    options.ResourcesPath = "Resources";
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MVC — wire up view localization + data annotation localization
+// ─────────────────────────────────────────────────────────────────────────────
+builder.Services
+    .AddControllersWithViews()
+    .AddViewLocalization()
+    .AddDataAnnotationsLocalization();
+
+
 builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddSession(options =>
@@ -15,13 +30,35 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Shared in-memory submitted requests store
+
 builder.Services.AddSingleton<IRecognitionRequestService, InMemoryRecognitionRequestService>();
+
+// ─────────────────────────────────────────────────────────────────────────────
+//    "en" = English (LTR)  — default
+//    "ar" = Arabic  (RTL)
+// ─────────────────────────────────────────────────────────────────────────────
+var supportedCultures = new[]
+{
+    new CultureInfo("en"),
+    new CultureInfo("ar"),
+};
+
+
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("en"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures,
+};
+
+
+localizationOptions.RequestCultureProviders.Insert(0, new QueryStringRequestCultureProvider());
 
 var app = builder.Build();
 
-
-// Configure the HTTP request pipeline.
+// ─────────────────────────────────────────────────────────────────────────────
+//  HTTP PIPELINE
+// ─────────────────────────────────────────────────────────────────────────────
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -29,6 +66,9 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseRequestLocalization(localizationOptions);
+
 app.UseRouting();
 app.UseSession();
 app.UseAuthorization();

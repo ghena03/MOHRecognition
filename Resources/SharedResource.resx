@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType mixed="true">
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SITE / HEADER
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Site_Name" xml:space="preserve"><value>MOH Recognition Portal</value></data>
+  <data name="Site_Copyright" xml:space="preserve"><value>© 2026 Ministry Portal • All rights reserved</value></data>
+  <data name="Site_Privacy" xml:space="preserve"><value>Privacy</value></data>
+  <data name="Site_MinistryWebsite" xml:space="preserve"><value>Ministry Website</value></data>
+  <data name="Site_Instructions" xml:space="preserve"><value>Instructions</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LANGUAGE SWITCHER
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Lang_English" xml:space="preserve"><value>English</value></data>
+  <data name="Lang_Arabic" xml:space="preserve"><value>العربية</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ROLE SELECTION PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Role_PageTitle" xml:space="preserve"><value>Choose Role</value></data>
+  <data name="Role_SignIn" xml:space="preserve"><value>Sign In</value></data>
+  <data name="Role_ChooseRole" xml:space="preserve"><value>Choose your role then continue.</value></data>
+  <data name="Role_SigningAs" xml:space="preserve"><value>I am signing in as</value></data>
+  <data name="Role_Admin" xml:space="preserve"><value>Admin</value></data>
+  <data name="Role_AdminDesc" xml:space="preserve"><value>Manage users &amp; applications</value></data>
+  <data name="Role_University" xml:space="preserve"><value>University</value></data>
+  <data name="Role_UniversityDesc" xml:space="preserve"><value>Submit &amp; track requests</value></data>
+  <data name="Role_RecognitionMember" xml:space="preserve"><value>Recognition Member</value></data>
+  <data name="Role_RecognitionMemberDesc" xml:space="preserve"><value>Review &amp; process recognition files</value></data>
+  <data name="Role_Continue" xml:space="preserve"><value>Continue</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       STAFF LOGIN PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Login_AdminTitle" xml:space="preserve"><value>Admin Portal Login</value></data>
+  <data name="Login_AdminDesc" xml:space="preserve"><value>Authorized administrators can log in to manage recognition requests</value></data>
+  <data name="Login_MemberTitle" xml:space="preserve"><value>Recognition Member Portal Login</value></data>
+  <data name="Login_MemberDesc" xml:space="preserve"><value>Recognition committee members can log in to review and process recognition files</value></data>
+  <data name="Login_SignIn" xml:space="preserve"><value>Sign In</value></data>
+  <data name="Login_AdminEmail" xml:space="preserve"><value>Admin Email</value></data>
+  <data name="Login_MemberEmail" xml:space="preserve"><value>Member Email</value></data>
+  <data name="Login_Password" xml:space="preserve"><value>Password</value></data>
+  <data name="Login_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Login_CaptchaHint" xml:space="preserve"><value>✓ Enter the code above</value></data>
+  <data name="Login_CaptchaPlaceholder" xml:space="preserve"><value>Enter the code above</value></data>
+  <data name="Login_RememberMe" xml:space="preserve"><value>Remember me</value></data>
+  <data name="Login_Submit" xml:space="preserve"><value>Login</value></data>
+  <data name="Login_ForgotPassword" xml:space="preserve"><value>Forgot Password</value></data>
+  <data name="Login_CreateAccount" xml:space="preserve"><value>Create New Account</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FORGOT PASSWORD PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Forgot_Title" xml:space="preserve"><value>Forgot Password</value></data>
+  <data name="Forgot_Subtitle" xml:space="preserve"><value>Reset using Email or Phone, then enter the verification code</value></data>
+  <data name="Forgot_Verification" xml:space="preserve"><value>Verification</value></data>
+  <data name="Forgot_Subtext" xml:space="preserve"><value>Choose a method, then enter the 6-digit code we send you.</value></data>
+  <data name="Forgot_Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Forgot_Phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="Forgot_EmailPlaceholder" xml:space="preserve"><value>Email address</value></data>
+  <data name="Forgot_PhonePlaceholder" xml:space="preserve"><value>Phone number (e.g. 079xxxxxxx)</value></data>
+  <data name="Forgot_SendCode" xml:space="preserve"><value>Send Code</value></data>
+  <data name="Forgot_CodeTitle" xml:space="preserve"><value>Verification Code</value></data>
+  <data name="Forgot_Resend" xml:space="preserve"><value>Didn't get it? Resend</value></data>
+  <data name="Forgot_VerifyContinue" xml:space="preserve"><value>Verify &amp; Continue</value></data>
+  <data name="Forgot_BackToLogin" xml:space="preserve"><value>← Back to Login</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       RESET PASSWORD PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Reset_Title" xml:space="preserve"><value>Reset Password</value></data>
+  <data name="Reset_Subtitle" xml:space="preserve"><value>Create a new password for your account</value></data>
+  <data name="Reset_NewPassword" xml:space="preserve"><value>New Password</value></data>
+  <data name="Reset_NewPasswordPlaceholder" xml:space="preserve"><value>Enter new password</value></data>
+  <data name="Reset_ConfirmPassword" xml:space="preserve"><value>Confirm Password</value></data>
+  <data name="Reset_ConfirmPasswordPlaceholder" xml:space="preserve"><value>Re-enter new password</value></data>
+  <data name="Reset_PasswordHint" xml:space="preserve"><value>8+ chars • 1 uppercase • 1 special (!@#$%^&amp;*)</value></data>
+  <data name="Reset_PasswordTip" xml:space="preserve"><value>Password must be 8+ chars, include 1 uppercase, and 1 special character.</value></data>
+  <data name="Reset_ConfirmHint" xml:space="preserve"><value>Must match exactly.</value></data>
+  <data name="Reset_UpdateButton" xml:space="preserve"><value>Update Password</value></data>
+  <data name="Reset_BackToLogin" xml:space="preserve"><value>Back to Login</value></data>
+  <data name="Reset_Show" xml:space="preserve"><value>Show</value></data>
+  <data name="Reset_Hide" xml:space="preserve"><value>Hide</value></data>
+  <data name="Reset_Tip" xml:space="preserve"><value>Tip</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       UNIVERSITY ENTRY PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="UniEntry_PageTitle" xml:space="preserve"><value>University Recognition Portal</value></data>
+  <data name="UniEntry_Heading" xml:space="preserve"><value>University Recognition Portal</value></data>
+  <data name="UniEntry_ExistingRequest" xml:space="preserve"><value>Previously Submitted Request</value></data>
+  <data name="UniEntry_NewSubmission" xml:space="preserve"><value>New Submission</value></data>
+  <data name="UniEntry_EmailPlaceholder" xml:space="preserve"><value>University Email Address</value></data>
+  <data name="UniEntry_PasswordPlaceholder" xml:space="preserve"><value>Password</value></data>
+  <data name="UniEntry_RecognitionNumber" xml:space="preserve"><value>Recognition Request Number</value></data>
+  <data name="UniEntry_Proceed" xml:space="preserve"><value>Proceed</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       NEW UNIVERSITY ACCOUNT PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="NewUni_Title" xml:space="preserve"><value>Create University Account</value></data>
+  <data name="NewUni_Institution" xml:space="preserve"><value>Institution Name</value></data>
+  <data name="NewUni_Country" xml:space="preserve"><value>Country</value></data>
+  <data name="NewUni_City" xml:space="preserve"><value>City</value></data>
+  <data name="NewUni_Email" xml:space="preserve"><value>University Email</value></data>
+  <data name="NewUni_Password" xml:space="preserve"><value>Password</value></data>
+  <data name="NewUni_ConfirmPassword" xml:space="preserve"><value>Confirm Password</value></data>
+  <data name="NewUni_Agree" xml:space="preserve"><value>I confirm that all information provided is accurate and valid</value></data>
+  <data name="NewUni_Submit" xml:space="preserve"><value>Create Account</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       UNIVERSITY STATUS PAGE
+  ═══════════════════════════════════════════════════════ -->
+  <data name="UniStatus_PageTitle" xml:space="preserve"><value>Account Dashboard</value></data>
+  <data name="UniStatus_Portal" xml:space="preserve"><value>Recognition Request Portal</value></data>
+  <data name="UniStatus_ActiveRequest" xml:space="preserve"><value>You Have an Active Request</value></data>
+  <data name="UniStatus_NoRequest" xml:space="preserve"><value>No Active Requests at the Moment</value></data>
+  <data name="UniStatus_Steps" xml:space="preserve"><value>Submission Steps</value></data>
+  <data name="UniStatus_GoToPortal" xml:space="preserve"><value>Go to Submission Portal</value></data>
+  <data name="UniStatus_FAQs" xml:space="preserve"><value>FAQs</value></data>
+  <data name="UniStatus_Logout" xml:space="preserve"><value>Logout</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       UNIVERSITY DASHBOARD (SUBMISSION FORM) — SIDEBAR
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Dash_Welcome" xml:space="preserve"><value>Welcome to the Submission System</value></data>
+  <data name="Dash_StartPublicInfo" xml:space="preserve"><value>Start with Public Info</value></data>
+  <data name="Dash_SideInstructions" xml:space="preserve"><value>Instructions</value></data>
+  <data name="Dash_SidePublicInfo" xml:space="preserve"><value>Public Info</value></data>
+  <data name="Dash_SideAcademicInfo" xml:space="preserve"><value>Academic Info</value></data>
+  <data name="Dash_SideAdmission" xml:space="preserve"><value>Admission Requirements and Study Duration</value></data>
+  <data name="Dash_SideColleges" xml:space="preserve"><value>Colleges</value></data>
+  <data name="Dash_SidePrograms" xml:space="preserve"><value>Programs</value></data>
+  <data name="Dash_SideMedicineColleges" xml:space="preserve"><value>Medicine Colleges</value></data>
+  <data name="Dash_SideHospitals" xml:space="preserve"><value>Hospitals</value></data>
+  <data name="Dash_SideInfrastructure" xml:space="preserve"><value>Infrastructure</value></data>
+  <data name="Dash_SideLaboratories" xml:space="preserve"><value>Laboratories</value></data>
+  <data name="Dash_SideLibrary" xml:space="preserve"><value>Library</value></data>
+  <data name="Dash_SidePhotos" xml:space="preserve"><value>Photos / Media</value></data>
+  <data name="Dash_SideAccreditation" xml:space="preserve"><value>Accreditation Bodies</value></data>
+  <data name="Dash_SideSubmit" xml:space="preserve"><value>Finish &amp; Submit</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FORM SECTIONS — PUBLIC INFO
+  ═══════════════════════════════════════════════════════ -->
+  <data name="PubInfo_Heading" xml:space="preserve"><value>Public Info</value></data>
+  <data name="PubInfo_InstitutionName" xml:space="preserve"><value>Name of Institution</value></data>
+  <data name="PubInfo_OversightEntity" xml:space="preserve"><value>Official Entity Possessing Oversight Rights</value></data>
+  <data name="PubInfo_FoundingDate" xml:space="preserve"><value>Founding Date</value></data>
+  <data name="PubInfo_EstablishmentDate" xml:space="preserve"><value>Date of Establishment</value></data>
+  <data name="PubInfo_ModeOfStudy" xml:space="preserve"><value>Mode of Study</value></data>
+  <data name="PubInfo_LanguageOfInstruction" xml:space="preserve"><value>Language of Instruction</value></data>
+  <data name="PubInfo_StartOfTeaching" xml:space="preserve"><value>Start of Teaching</value></data>
+  <data name="PubInfo_MailingAddress" xml:space="preserve"><value>Mailing Full Address</value></data>
+  <data name="PubInfo_DirectPhone" xml:space="preserve"><value>Direct Phone Number</value></data>
+  <data name="PubInfo_Email" xml:space="preserve"><value>Email Address</value></data>
+  <data name="PubInfo_Website" xml:space="preserve"><value>Institutional Web Address</value></data>
+  <data name="PubInfo_Save" xml:space="preserve"><value>Save Public Info</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FORM SECTIONS — ACADEMIC INFO
+  ═══════════════════════════════════════════════════════ -->
+  <data name="AcadInfo_Heading" xml:space="preserve"><value>Academic Info</value></data>
+  <data name="AcadInfo_InstitutionType" xml:space="preserve"><value>Type of Academic Institution</value></data>
+  <data name="AcadInfo_Degrees" xml:space="preserve"><value>Degrees in institution</value></data>
+  <data name="AcadInfo_Recognition" xml:space="preserve"><value>Has there been Official Recognition in Home Country?</value></data>
+  <data name="AcadInfo_Accreditation" xml:space="preserve"><value>Has there been Official Accreditation &amp; Quality Assurance in Home Country?</value></data>
+  <data name="AcadInfo_JordanianStudents" xml:space="preserve"><value>Jordanian Student Population</value></data>
+  <data name="AcadInfo_TotalStudents" xml:space="preserve"><value>Total Student Population</value></data>
+  <data name="AcadInfo_LocalStudents" xml:space="preserve"><value>Local Student Population</value></data>
+  <data name="AcadInfo_ForeignStudents" xml:space="preserve"><value>Foreign Student Population</value></data>
+  <data name="AcadInfo_Professor" xml:space="preserve"><value>Professor</value></data>
+  <data name="AcadInfo_AssociateProfessor" xml:space="preserve"><value>Associate Professor</value></data>
+  <data name="AcadInfo_AssistantProfessor" xml:space="preserve"><value>Assistant Professor</value></data>
+  <data name="AcadInfo_LabAssistant" xml:space="preserve"><value>Lab Assistant</value></data>
+  <data name="AcadInfo_FullTime" xml:space="preserve"><value>Full-Time</value></data>
+  <data name="AcadInfo_PartTime" xml:space="preserve"><value>Part-Time</value></data>
+  <data name="AcadInfo_Count" xml:space="preserve"><value>Count</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ADMIN DASHBOARD
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Admin_Title" xml:space="preserve"><value>Admin Dashboard</value></data>
+  <data name="Admin_Overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="Admin_Requests" xml:space="preserve"><value>Requests</value></data>
+  <data name="Admin_Assignments" xml:space="preserve"><value>Assignments</value></data>
+  <data name="Admin_Employees" xml:space="preserve"><value>Employees</value></data>
+  <data name="Admin_AuditLog" xml:space="preserve"><value>Audit Log</value></data>
+  <data name="Admin_Logout" xml:space="preserve"><value>Logout</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       RECOGNITION MEMBER DASHBOARD
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Member_Directorate" xml:space="preserve"><value>Directorate of Recognition &amp; Certificate Equivalency</value></data>
+  <data name="Member_Dashboard" xml:space="preserve"><value>My Assigned Requests</value></data>
+  <data name="Member_RequestsToReview" xml:space="preserve"><value>Requests To Review</value></data>
+  <data name="Member_AssignedRequests" xml:space="preserve"><value>Assigned Requests</value></data>
+  <data name="Member_ElectronicRequests" xml:space="preserve"><value>Electronic Requests</value></data>
+  <data name="Member_Archive" xml:space="preserve"><value>Archive</value></data>
+  <data name="Member_Logout" xml:space="preserve"><value>Logout</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SHARED TABLE HEADERS
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Table_Reference" xml:space="preserve"><value>Reference</value></data>
+  <data name="Table_University" xml:space="preserve"><value>University</value></data>
+  <data name="Table_Country" xml:space="preserve"><value>Country</value></data>
+  <data name="Table_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Table_Submitted" xml:space="preserve"><value>Submitted</value></data>
+  <data name="Table_Action" xml:space="preserve"><value>Action</value></data>
+  <data name="Table_AssignedTo" xml:space="preserve"><value>Assigned To</value></data>
+  <data name="Table_Year" xml:space="preserve"><value>Year</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       STATUS BADGES
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Status_Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="Status_Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="Status_Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="Status_MissingDocs" xml:space="preserve"><value>Missing Docs</value></data>
+  <data name="Status_UnderReview" xml:space="preserve"><value>Under Review</value></data>
+  <data name="Status_Assigned" xml:space="preserve"><value>Assigned</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       COMMON ACTIONS / BUTTONS
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Btn_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Btn_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Btn_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Btn_Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Btn_Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Btn_View" xml:space="preserve"><value>View</value></data>
+  <data name="Btn_Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Btn_Upload" xml:space="preserve"><value>Upload</value></data>
+  <data name="Btn_Submit" xml:space="preserve"><value>Submit</value></data>
+  <data name="Btn_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Btn_Next" xml:space="preserve"><value>Next</value></data>
+  <data name="Btn_Confirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="Btn_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Btn_Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="Btn_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="Btn_SendToAdmin" xml:space="preserve"><value>Send to Admin for Review</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       COMMON MESSAGES
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Msg_Success" xml:space="preserve"><value>Operation completed successfully.</value></data>
+  <data name="Msg_Error" xml:space="preserve"><value>An error occurred. Please try again.</value></data>
+  <data name="Msg_Required" xml:space="preserve"><value>This field is required.</value></data>
+  <data name="Msg_NoData" xml:space="preserve"><value>No data available.</value></data>
+  <data name="Msg_ConfirmDelete" xml:space="preserve"><value>Are you sure you want to delete this item?</value></data>
+  <data name="Msg_Unauthorized" xml:space="preserve"><value>You are not authorized to perform this action.</value></data>
+  <data name="Msg_Saving" xml:space="preserve"><value>Saving...</value></data>
+  <data name="Msg_Saved" xml:space="preserve"><value>Saved successfully.</value></data>
+
+  <!-- ═══════════════════════════════════════════════════════
+       REQUEST DETAILS PAGES
+  ═══════════════════════════════════════════════════════ -->
+  <data name="Details_RequestDetails" xml:space="preserve"><value>Request Details</value></data>
+  <data name="Details_BasicInfo" xml:space="preserve"><value>Institution Information Review</value></data>
+  <data name="Details_AcademicInfo" xml:space="preserve"><value>Academic Information</value></data>
+  <data name="Details_AdmissionDuration" xml:space="preserve"><value>Admission Requirements &amp; Study Duration</value></data>
+  <data name="Details_Infrastructure" xml:space="preserve"><value>Infrastructure Assessment</value></data>
+  <data name="Details_Recommendation" xml:space="preserve"><value>Final Recommendation</value></data>
+  <data name="Details_AccreditationBodies" xml:space="preserve"><value>Accreditation Bodies &amp; Rankings</value></data>
+  <data name="Details_Statistics" xml:space="preserve"><value>Statistics</value></data>
+
+</root>

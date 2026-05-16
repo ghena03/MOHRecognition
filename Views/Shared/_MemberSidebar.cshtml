@@ -10,6 +10,11 @@
         <a class="rm-navitem@(active == "requests" ? " active" : "")" href="@Url.Action("ElectronicRequests", "Home")">
             <i class="bi bi-journal-check"></i><span>My Assigned Requests</span>
         </a>
+        <a class="rm-navitem@(active == "manualrequests" ? " active" : "")"
+           href="@Url.Action("ManualInstitutionRequests", "Home")">
+            <i class="bi bi-building-add"></i>
+            <span>Manual Institution Requests</span>
+        </a>
         <a class="rm-navitem@(active == "archive" ? " active" : "")" href="@Url.Action("Archive", "Home")">
             <i class="bi bi-inboxes"></i><span>Requests Archive</span>
         </a>

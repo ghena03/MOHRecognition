@@ -137,10 +137,10 @@ body {
     margin-bottom: 14px;
 }
 
-/* ✅ 3 columns now */
+/* 2 columns now */
 .choices {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 14px;
 }
 
@@ -192,7 +192,6 @@ body {
 
 /* ✅ Selected state for all 3 */
 #roleAdmin:checked + label,
-#roleUni:checked + label,
 #roleRec:checked + label {
     border-color: rgba(176,0,0,0.60);
     background: linear-gradient(135deg, var(--accentSoft), #ffffff);

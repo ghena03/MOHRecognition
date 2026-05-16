@@ -19,5 +19,6 @@
         public int Year { get; set; }
 
         public DateTime SubmittedAt { get; set; }
+       
     }
 }

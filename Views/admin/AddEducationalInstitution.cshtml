@@ -1,0 +1,176 @@
+﻿@model MOHRecognition.DTOs.ManualInstitutionRequestDto
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Add Educational Institution";
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>@ViewData["Title"]</title>
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
+    <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" asp-append-version="true" />
+
+</head>
+
+<body>
+
+    <div class="top-line"></div>
+
+    <!-- 🔴 TOP BAR -->
+    <div class="top-bar"></div>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-left">
+            <img src="/images/mohelogo.png" class="logo" />
+            <div class="divider"></div>
+
+            <div class="title-box">
+                <h1>
+                    Add Educational Institution
+                </h1>
+                <p>Create a manual recognition request and assign it to a recognition member.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+
+        <div class="card">
+
+            <div class="card-title">
+                Institution Information
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="success-box">
+
+                    @TempData["SuccessMessage"]
+
+                </div>
+            }
+
+            <form method="post"
+                  asp-controller="Home"
+                  asp-action="AddEducationalInstitution">
+
+                <div class="form-grid">
+
+                    <div class="field">
+
+                        <label>
+                            Institution Name
+                        </label>
+
+                        <input type="text"
+                               name="InstitutionName"
+                               required />
+
+                    </div>
+
+                    <div class="field">
+
+                        <label>
+                            Country
+                        </label>
+
+                        <input type="text"
+                               name="Country"
+                               required />
+
+                    </div>
+
+                    <div class="field">
+
+                        <label>
+                            City
+                        </label>
+
+                        <input type="text"
+                               name="City"
+                               required />
+
+                    </div>
+
+                    <div class="field">
+
+                        <label>
+                            Institution Type
+                        </label>
+
+                        <select name="InstitutionType"
+                                required>
+
+                            <option value="">
+                                Select Type
+                            </option>
+
+                            <option>
+                                Bachelor
+                            </option>
+
+                            <option>
+                                Postgraduate
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="field">
+
+                        <label>
+                            Assign Recognition Member
+                        </label>
+
+                        <select name="AssignedMember" required>
+                            <option value="">Select Member</option>
+                            <option value="member1@mohe.local">Recognition Member 1</option>
+                            <option value="member2@mohe.local">Recognition Member 2</option>
+                            <option value="member3@mohe.local">Recognition Member 3</option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="actions">
+
+                    <button type="submit"
+                            class="submit-btn">
+
+                        <i class="bi bi-building-add"></i>
+
+                        Create Request
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
