@@ -181,7 +181,8 @@
                     <p>All submitted recognition certificates, accreditation documents, and university-hospital agreements.</p>
                 </div>
 
-                @if (typedHospitalDocuments.Any())
+                @{ var accredDocs = typedHospitalDocuments.Where(x => !x.Type.Equals("HospitalAgreement", StringComparison.OrdinalIgnoreCase)).ToList(); }
+                @if (accredDocs.Any())
                 {
                     <div class="clean-table-wrap" style="margin-top:14px;">
                         <table class="clean-review-table">
@@ -195,7 +196,7 @@
                             </thead>
                             <tbody>
                                 @{ var di = 1; }
-                                @foreach (var item in typedHospitalDocuments)
+                                @foreach (var item in accredDocs)
                                 {
                                     var f = item.Doc;
                                     <tr>
@@ -336,6 +337,13 @@
                         </div>
                     </div>
 
+                    @if (!adminReadOnly)
+                    {
+                        <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+                            <button class="rm-btn rm-btn-primary" type="submit"><i class="bi bi-save"></i> Save</button>
+                        </div>
+                    }
+
                 </form>
             </section>
 
@@ -357,6 +365,14 @@
         </main>
     </div>
 
+    <div id="rank-toast" style="
+        position:fixed; bottom:28px; right:28px; z-index:9999;
+        background:#2d6a4f; color:#fff; padding:12px 22px; border-radius:10px;
+        font-size:15px; font-weight:500; box-shadow:0 4px 18px rgba(0,0,0,0.18);
+        display:none; align-items:center; gap:10px;">
+        <i class="bi bi-check-circle-fill"></i> <span id="rank-toast-msg">Saved successfully.</span>
+    </div>
+
     <script>
         (function () {
             const pairs = ["arwu", "qs", "the", "scopus"];
@@ -364,27 +380,38 @@
             function syncPair(key) {
                 const input = document.querySelector(`[data-rank-input="${key}"]`);
                 const check = document.querySelector(`[data-rank-na="${key}"]`);
-
                 if (!input || !check) return;
-
                 input.disabled = check.checked;
-
-                if (check.checked) {
-                    input.value = "";
-                }
+                if (check.checked) input.value = "";
             }
 
             pairs.forEach(function (key) {
                 const check = document.querySelector(`[data-rank-na="${key}"]`);
-
                 if (!check) return;
-
-                check.addEventListener("change", function () {
-                    syncPair(key);
-                });
-
+                check.addEventListener("change", function () { syncPair(key); });
                 syncPair(key);
             });
+
+            function showToast(msg) {
+                var t = document.getElementById('rank-toast');
+                document.getElementById('rank-toast-msg').textContent = msg;
+                t.style.display = 'flex';
+                clearTimeout(t._hide);
+                t._hide = setTimeout(function () { t.style.display = 'none'; }, 3000);
+            }
+
+            var rankForm = document.querySelector('form[action*="SaveGlobalRankings"]');
+            if (rankForm) {
+                rankForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    try {
+                        await fetch(rankForm.action, { method: 'POST', body: new FormData(rankForm) });
+                        showToast('Research & Global Rankings saved successfully.');
+                    } catch (_) {
+                        showToast('Unable to save. Please try again.');
+                    }
+                });
+            }
         })();
     </script>
 </body>

@@ -7,6 +7,7 @@
     ViewData["Title"] = "Application Review File";
 
     int meetingId = ViewBag.MeetingId ?? 0;
+    bool hideFinalDecision = ViewBag.HideFinalDecision ?? false;
     var requestId = Model.Id;
     var inst = Model.UniversityName ?? "—";
 
@@ -195,7 +196,50 @@
         _               => "Insufficient data to calculate the doctorate holders percentage."
     };
 
-    string backUrl = meetingId > 0 ? $"/Home/MeetingRequests?meetingId={meetingId}" : "/Home/Meetings";
+    string backUrl = hideFinalDecision ? "/Home/SubmittedUniversities"
+                   : meetingId > 0    ? $"/Home/MeetingRequests?meetingId={meetingId}"
+                   :                    "/Home/Meetings";
+
+    // ── Tab 5: Recognition & Accreditation helpers (mirrors DetailsAccreditationBodies)
+    string T5NormalizeType(string? raw) {
+        var t = (raw ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(t)) return string.Empty;
+        if (t.Equals("LocalRecognition", StringComparison.OrdinalIgnoreCase))         return "LocalRecognition";
+        if (t.Equals("LocalAccreditation", StringComparison.OrdinalIgnoreCase))       return "LocalAccreditation";
+        if (t.Equals("RegionalAccreditation", StringComparison.OrdinalIgnoreCase))    return "RegionalAccreditation";
+        if (t.Equals("InternationalAccreditation", StringComparison.OrdinalIgnoreCase)) return "InternationalAccreditation";
+        if (t.Equals("OtherAccreditation", StringComparison.OrdinalIgnoreCase))       return "OtherAccreditation";
+        if (t.Equals("HospitalAgreement", StringComparison.OrdinalIgnoreCase))        return "HospitalAgreement";
+        if (t.Equals("University-Hospital Agreement", StringComparison.OrdinalIgnoreCase)) return "HospitalAgreement";
+        if (t.Equals("Local Recognition Document", StringComparison.OrdinalIgnoreCase)) return "LocalRecognition";
+        if (t.Equals("Recognition Document", StringComparison.OrdinalIgnoreCase))     return "LocalRecognition";
+        if (t.StartsWith("Recognition Document (", StringComparison.OrdinalIgnoreCase)) return "LocalRecognition";
+        if (t.StartsWith("Accreditation Document (", StringComparison.OrdinalIgnoreCase)) {
+            var inner = t.Substring(t.IndexOf('(')+1, t.LastIndexOf(')')-t.IndexOf('(')-1).Trim();
+            if (inner.Equals("Local", StringComparison.OrdinalIgnoreCase))            return "LocalAccreditation";
+            if (inner.Equals("Regional", StringComparison.OrdinalIgnoreCase))         return "RegionalAccreditation";
+            if (inner.Equals("International", StringComparison.OrdinalIgnoreCase))    return "InternationalAccreditation";
+            return "OtherAccreditation";
+        }
+        if (t.Equals("Accreditation Document", StringComparison.OrdinalIgnoreCase))   return "OtherAccreditation";
+        return t;
+    }
+    string T5DocLabel(string n) => n switch {
+        "LocalRecognition"          => "Local Recognition",
+        "LocalAccreditation"        => "Local Accreditation",
+        "RegionalAccreditation"     => "Regional Accreditation",
+        "InternationalAccreditation"=> "International Accreditation",
+        "OtherAccreditation"        => "Other Accreditation",
+        "HospitalAgreement"         => "University-Hospital Agreement",
+        _ => string.IsNullOrWhiteSpace(n) ? "—" : n
+    };
+    var t5Docs = hospDocs
+        .Where(x => !string.IsNullOrWhiteSpace(x.FileUrl))
+        .Select(x => new { Doc = x, Type = T5NormalizeType(x.DocumentType) })
+        .Where(x => !string.IsNullOrWhiteSpace(x.Type) && !x.Type.Equals("HospitalAgreement", StringComparison.OrdinalIgnoreCase))
+        .OrderBy(x => x.Type).ThenByDescending(x => x.Doc.UploadedAt ?? DateTime.MinValue)
+        .ThenBy(x => x.Doc.OriginalFileName)
+        .ToList();
 }
 <!doctype html>
 <html lang="en" dir="ltr">
@@ -252,21 +296,65 @@
         .rec-big-badge.reject     { background: #fef2f2; color: #991b1b; border: 2px solid #fca5a5; }
 
         /* Committee Decision form (t8) */
+        /* Committee Decision form (t8) */
         .cd-form-group { margin-bottom: 20px; }
         .cd-form-group label { display: block; font-weight: 700; color: #444; margin-bottom: 6px; font-size: 0.92em; }
         .cd-form-group select,
-        .cd-form-group textarea {
-            width: 100%; padding: 10px 12px;
-            border: 1.5px solid #d0b0bb; border-radius: 7px;
-            font-size: 0.95em; color: #333; background: #fff;
-            box-sizing: border-box; font-family: inherit;
-        }
+        .cd-form-group textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #d0b0bb; border-radius: 7px; font-size: 0.95em; color: #333; background: #fff; box-sizing: border-box; font-family: inherit; }
         .cd-form-group select:focus,
         .cd-form-group textarea:focus { outline: none; border-color: #7f1627; box-shadow: 0 0 0 2px rgba(127,22,39,.12); }
         .cd-btn-row { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
         .cd-btn-save { padding: 10px 32px; border-radius: 7px; font-size: 0.95em; font-weight: 700; border: none; cursor: pointer; background: #7f1627; color: #fff; }
         .cd-btn-save:hover { background: #6a1020; }
         .cd-saved-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 8px; background: #e8f5ea; color: #166534; font-size: 12px; font-weight: 700; border: 1.5px solid #86efac; }
+        /* Final Decision nav item distinct styling */
+        .fd-divider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0 6px;
+        }
+        .fd-divider-line { flex: 1; height: 1px; background: #e2c9cb; }
+        .fd-divider-label {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: #9b2335;
+            white-space: nowrap;
+        }
+        .rm-navitem.final-decision-nav {
+            background: linear-gradient(135deg, #7f1627 0%, #a02030 100%);
+            color: #fff !important;
+            font-weight: 800;
+            border: none;
+            border-radius: 10px;
+            padding: 11px 12px;
+            box-shadow: 0 4px 14px rgba(127,22,39,0.35);
+            transition: box-shadow 0.2s, transform 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+        .rm-navitem.final-decision-nav::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .rm-navitem.final-decision-nav i { color: #fff; }
+        .rm-navitem.final-decision-nav:hover {
+            box-shadow: 0 6px 20px rgba(127,22,39,0.5);
+            transform: translateY(-1px);
+        }
+        .rm-navitem.final-decision-nav.active {
+            background: linear-gradient(135deg, #5e0f1b 0%, #7f1627 100%) !important;
+            box-shadow: 0 2px 8px rgba(127,22,39,0.5);
+        }
+        /* Rankings read-only display */
+        .rank-ro-val { padding: 10px 0 2px; }
+        .rank-na-badge { display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; color: #64748b; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 7px 16px; font-size: 0.88em; font-weight: 700; }
+        .rank-na-badge::before { content: "— "; color: #94a3b8; }
     </style>
 </head>
 <body class="rm-page">
@@ -288,10 +376,7 @@
                         <i class="bi bi-person-circle"></i>
                         <span>Application Review File — <b>#@requestId</b></span>
                     </div>
-                    <button class="rm-btn rm-btn-light" onclick="window.print()">
-                        <i class="bi bi-printer"></i> Print
-                    </button>
-                    <a class="rm-btn rm-btn-light" href="@backUrl">
+<a class="rm-btn rm-btn-light" href="@backUrl">
                         <i class="bi bi-arrow-left"></i> Back to Meeting
                     </a>
                 </div>
@@ -326,9 +411,17 @@
                 <button class="rm-navitem" onclick="showTab('t7',this)">
                     <i class="bi bi-clipboard2-check"></i><span>Doctors Recommendation</span>
                 </button>
-                <button class="rm-navitem" onclick="showTab('t8',this)">
-                    <i class="bi bi-check2-circle"></i><span>Final Decision</span>
-                </button>
+                @if (!hideFinalDecision)
+                {
+                    <div class="fd-divider">
+                        <div class="fd-divider-line"></div>
+                        <span class="fd-divider-label">Final Action</span>
+                        <div class="fd-divider-line"></div>
+                    </div>
+                    <button class="rm-navitem final-decision-nav" onclick="showTab('t8',this)">
+                        <i class="bi bi-shield-check"></i><span>Final Decision</span>
+                    </button>
+                }
             </nav>
         </aside>
 
@@ -514,24 +607,116 @@
                 </section>
 
                 <section class="rm-card rd-card">
-                    <div class="rd-card-hd"><h2>Ratios &amp; Percentages</h2><p>Submitted ratios from the university.</p></div>
-                    <div class="rd-grid2">
-                        <div class="rd-field doctorate-field @(docStatus == "green" ? "green" : docStatus == "red" ? "red" : "")">
-                            <label>Doctorate Holders (%)</label>
-                            <input type="number" value="@docPct.ToString("0")" readonly />
+                    <div class="rd-card-hd"><h2>Ratios &amp; Percentages</h2><p>Auto-calculated from submitted academic staff and student data.</p></div>
+
+                    <div class="rp-metrics-grid">
+
+                        <!-- Doctorate Holders (%) -->
+                        <div class="rp-metric-card rp-metric-card--@docStatus">
+                            <div class="rp-metric-hd">
+                                <div class="rp-metric-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                                <div>
+                                    <div class="rp-metric-title">Doctorate Holders</div>
+                                    <div class="rp-metric-sub">Full-time faculty holding a PhD or equivalent</div>
+                                </div>
+                            </div>
+                            <div class="rp-metric-value-row">
+                                <span class="rp-metric-value">@docPct.ToString("0")%</span>
+                                @{
+                                    string t2DocBadgeClass = docStatus == "green" ? "rp-badge--green" : docStatus == "red" ? "rp-badge--red" : "rp-badge--na";
+                                    string t2DocBadgeText  = docStatus == "green" ? "Acceptable" : docStatus == "red" ? "Below Threshold" : "No Data";
+                                }
+                                <span class="rp-status-badge @t2DocBadgeClass">@t2DocBadgeText</span>
+                            </div>
+                            @if (ftForDoc > 0)
+                            {
+                                var t2ProgW = Math.Min((double)docPct, 100);
+                                <div class="rp-progress-wrap">
+                                    <div class="rp-progress-track">
+                                        <div class="rp-progress-fill rp-fill--@docStatus" style="width:@t2ProgW.ToString("0", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+                                        <div class="rp-progress-marker" title="Min. 50%"></div>
+                                    </div>
+                                    <div class="rp-progress-labels"><span>0%</span><span>Min: 50%</span><span>100%</span></div>
+                                </div>
+                            }
                         </div>
-                        <div class="rd-field ratio-field @(ratioStatus == "green" ? "green" : ratioStatus == "orange" ? "orange" : ratioStatus == "red" ? "red" : "")">
-                            <label>Students to Faculty Ratio</label>
-                            <input type="text" value="@(ratioValue > 0 ? $"1:{ratioValue:0}" : "")" readonly />
+
+                        <!-- Doctor-to-Student Capacity Ratio -->
+                        <div class="rp-metric-card rp-metric-card--@ratioStatus">
+                            <div class="rp-metric-hd">
+                                <div class="rp-metric-icon"><i class="bi bi-people-fill"></i></div>
+                                <div>
+                                    <div class="rp-metric-title">Doctor-to-Student Capacity Ratio</div>
+                                    <div class="rp-metric-sub">Student count relative to weighted doctor capacity</div>
+                                </div>
+                            </div>
+                            <div class="rp-metric-value-row">
+                                <span class="rp-metric-value">@(ratioValue > 0 ? $"1 : {ratioValue:0}" : "—")</span>
+                                @{
+                                    string t2RatioBadgeClass = ratioStatus == "green" ? "rp-badge--green" : ratioStatus == "orange" ? "rp-badge--orange" : ratioStatus == "red" ? "rp-badge--red" : "rp-badge--na";
+                                    string t2RatioBadgeText  = ratioStatus == "green" ? "Within Average" : ratioStatus == "orange" ? "Within 25% Tolerance" : ratioStatus == "red" ? "Exceeds Tolerance" : "No Data";
+                                }
+                                <span class="rp-status-badge @t2RatioBadgeClass">@t2RatioBadgeText</span>
+                            </div>
+                            @if (avg > 0)
+                            {
+                                <div class="rp-benchmark">
+                                    <span class="rp-benchmark-lbl">Benchmark</span>
+                                    <span class="rp-benchmark-val">1 : @avg.ToString("0")</span>
+                                    <span class="rp-benchmark-sub">selected college average</span>
+                                </div>
+                            }
+                        </div>
+
+                        @{
+                            var t2BachCount = programs.Count(p => string.Equals((p.DegreeAwarded ?? "").Trim(), "Bachelor", StringComparison.OrdinalIgnoreCase));
+                            var t2AvgPhd    = t2BachCount > 0 ? Math.Floor((double)totalPhd / t2BachCount) : 0.0;
+                            string t2DppSt  = t2AvgPhd >= 1.0 ? "green" : (t2AvgPhd > 0 ? "orange" : "");
+                        }
+                        <!-- PhD Doctors per Bachelor Program -->
+                        <div class="rp-metric-card rp-metric-card--@t2DppSt">
+                            <div class="rp-metric-hd">
+                                <div class="rp-metric-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                                <div>
+                                    <div class="rp-metric-title">PhD Doctors per Bachelor Program</div>
+                                    <div class="rp-metric-sub">Average full-time PhD faculty per submitted Bachelor program</div>
+                                </div>
+                            </div>
+                            <div class="rp-metric-value-row">
+                                <span class="rp-metric-value">@t2AvgPhd.ToString("0")</span>
+                            </div>
+                            <div class="rp-benchmark">
+                                <span class="rp-benchmark-lbl">Total PhD Faculty</span>
+                                <span class="rp-benchmark-val">@totalPhd</span>
+                                <span class="rp-benchmark-sub">÷ @t2BachCount bachelor programs</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="rp-legend">
+                        <div class="rp-legend-hd">Legend</div>
+                        <div class="rp-legend-grid">
+                            <div class="rp-legend-section">
+                                <div class="rp-legend-title">Students to Faculty Ratio</div>
+                                <div class="rp-legend-item"><span class="rd-dot green"></span>Within the selected college average</div>
+                                <div class="rp-legend-item"><span class="rd-dot orange"></span>Above average but within 25% tolerance</div>
+                                <div class="rp-legend-item"><span class="rd-dot red"></span>Exceeds the 25% tolerance</div>
+                            </div>
+                            <div class="rp-legend-section">
+                                <div class="rp-legend-title">Doctorate Holders (%)</div>
+                                <div class="rp-legend-item"><span class="rd-dot green"></span>50% or more of full-time faculty are doctorate holders</div>
+                                <div class="rp-legend-item"><span class="rd-dot red"></span>Less than 50% of full-time faculty are doctorate holders</div>
+                            </div>
                         </div>
                     </div>
+
                     @if (!string.IsNullOrWhiteSpace(A.IntakeCapacityNotes))
                     {
-                        <div class="ratios-extra-row">
-                            <div class="intake-notes">
-                                <label>Intake Capacity Notes</label>
-                                <div class="ro-textarea">@A.IntakeCapacityNotes</div>
-                            </div>
+                        <div class="rp-notes-wrap">
+                            <div class="rp-notes-label">Intake Capacity Notes</div>
+                            <textarea rows="3" class="rd-note" readonly>@A.IntakeCapacityNotes</textarea>
                         </div>
                     }
                 </section>
@@ -670,18 +855,6 @@
 
                 <section id="sec-hospitals" class="rm-card rd-card">
                     <div class="rd-card-hd"><h2><i class="bi bi-hospital"></i> Hospitals</h2><p>Submitted hospital data and supporting documents.</p></div>
-                    <div class="rd-card-hd" style="margin-top:10px;"><h2 style="font-size:18px;"><i class="bi bi-building"></i> University Submitted Hospital Data</h2></div>
-                    <div class="clean-table-wrap" style="margin-bottom:12px;">
-                        <table class="clean-review-table">
-                            <thead><tr><th>Medicine Capacity</th><th>Dentistry Capacity</th></tr></thead>
-                            <tbody>
-                                <tr>
-                                    <td>@(hosp.MedicineCapacity.HasValue ? $"Beds: {hosp.MedicineCapacity.Value}" : "—")</td>
-                                    <td>@(hosp.DentistryCapacity.HasValue ? $"Dental Chairs: {hosp.DentistryCapacity.Value}" : "—")</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
                     <div class="clean-table-wrap">
                         <table class="clean-review-table">
                             <thead><tr><th style="width:72px;">#</th><th>Specialization</th><th>Name</th><th>Beds</th><th>Dental Chairs</th><th>Agreement Files</th></tr></thead>
@@ -716,52 +889,6 @@
                         </table>
                     </div>
 
-                    <div class="rd-card-hd" style="margin-top:14px;"><h2 style="font-size:18px;"><i class="bi bi-file-earmark-text"></i> Hospital Documents</h2></div>
-                    @{
-                        var orderedHospDocs = hospDocs.Where(x => !string.IsNullOrWhiteSpace(x.FileUrl)).OrderBy(x => x.DocumentType).ThenBy(x => x.OriginalFileName).ToList();
-                    }
-                    @if (orderedHospDocs.Any())
-                    {
-                        <div class="clean-table-wrap">
-                            <table class="clean-review-table table-attachments">
-                                <thead><tr><th style="width:72px;">#</th><th>Document Type</th><th>File</th><th style="width:180px;">Actions</th></tr></thead>
-                                <tbody>
-                                    @for (var i = 0; i < orderedHospDocs.Count; i++)
-                                    {
-                                        var f = orderedHospDocs[i];
-                                        <tr>
-                                            <td class="cell-index">@(i+1)</td>
-                                            <td>@(string.IsNullOrWhiteSpace(f.DocumentType) ? "Hospital Document" : f.DocumentType)</td>
-                                            <td class="file-cell">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
-                                            <td class="cell-actions"><div class="table-actions"><a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">Open</a><a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a></div></td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else if (attachments.Any())
-                    {
-                        var ordered = attachments.OrderByDescending(x => x.UploadedAt).ToList();
-                        <div class="clean-table-wrap">
-                            <table class="clean-review-table table-attachments">
-                                <thead><tr><th style="width:72px;">#</th><th>Subject</th><th>File</th><th style="width:180px;">Actions</th></tr></thead>
-                                <tbody>
-                                    @for (var i = 0; i < ordered.Count; i++)
-                                    {
-                                        var f = ordered[i];
-                                        <tr>
-                                            <td class="cell-index">@(i+1)</td>
-                                            <td class="cell-subject">@(string.IsNullOrWhiteSpace(f.Subject) ? "—" : f.Subject)</td>
-                                            <td class="file-cell">@f.FileName</td>
-                                            <td class="cell-actions"><div class="table-actions"><a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">Open</a><a class="rm-mini" href="@f.FileUrl" download="@f.FileName">Download</a></div></td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else { <div class="rd-field"><input type="text" value="No hospital documents were submitted." readonly /></div> }
                 </section>
 
                 <section id="sec-doctors-colleges" class="rm-card rd-card doctors-review-section">
@@ -856,34 +983,36 @@
                 </section>
 
                 <section class="rm-card rd-card">
-                    <div class="rd-card-hd"><h2>Accreditation Bodies</h2><p>Accreditation bodies recognized by the institution.</p></div>
-                    @if (accBod.Any())
+                    <div class="rd-card-hd"><h2>Recognition and Accreditation</h2><p>All submitted recognition certificates and accreditation documents.</p></div>
+                    @if (t5Docs.Any())
                     {
-                        <div class="clean-table-wrap">
-                            <table class="clean-review-table table-accreditation">
+                        <div class="clean-table-wrap" style="margin-top:14px;">
+                            <table class="clean-review-table">
                                 <thead>
-                                    <tr><th style="width:90px;">#</th><th>Accreditation Body</th><th>Accreditation Type</th><th>Uploaded PDF</th><th style="width:220px;">Actions</th></tr>
+                                    <tr>
+                                        <th style="width:44px;">#</th>
+                                        <th>File Name</th>
+                                        <th style="width:220px;">Category</th>
+                                        <th style="width:180px;">Actions</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    @for (var i = 0; i < accBod.Count; i++)
+                                    @{ var t5di = 1; }
+                                    @foreach (var item in t5Docs)
                                     {
-                                        var row = accBod[i];
+                                        var f = item.Doc;
                                         <tr>
-                                            <td class="cell-index">@(i+1)</td>
-                                            <td class="cell-subject">@(string.IsNullOrWhiteSpace(row.AccreditationBodyName) ? "—" : row.AccreditationBodyName)</td>
-                                            <td>@(string.IsNullOrWhiteSpace(row.AccreditationType) ? "—" : row.AccreditationType)</td>
-                                            <td class="file-cell">@(string.IsNullOrWhiteSpace(row.PdfOriginalFileName) ? "—" : row.PdfOriginalFileName)</td>
+                                            <td>@t5di</td>
+                                            <td class="file-cell" style="word-break:break-all;">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
+                                            <td><span class="hosp-spec-tag" style="white-space:nowrap;">@T5DocLabel(item.Type)</span></td>
                                             <td class="cell-actions">
-                                                @if (!string.IsNullOrWhiteSpace(row.PdfFileUrl))
-                                                {
-                                                    <div class="table-actions">
-                                                        <a class="rm-mini" href="@row.PdfFileUrl" target="_blank" rel="noopener">Open</a>
-                                                        <a class="rm-mini" href="@row.PdfFileUrl" download="@row.PdfOriginalFileName">Download</a>
-                                                    </div>
-                                                }
-                                                else { <span>—</span> }
+                                                <div class="table-actions">
+                                                    <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">View</a>
+                                                    <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
+                                                </div>
                                             </td>
                                         </tr>
+                                        t5di++;
                                     }
                                 </tbody>
                             </table>
@@ -891,31 +1020,59 @@
                     }
                     else
                     {
-                        <div class="rd-grid2">
-                            <div class="rd-field"><label>Accreditation Bodies</label><input type="text" value="@A.AccreditationBodies" readonly /></div>
-                            <div class="rd-field"><label>Accreditation Type</label><input type="text" value="@A.AccreditationBodiesType" readonly /></div>
-                        </div>
+                        <div class="infra-empty" style="margin-top:14px;">No recognition or accreditation documents submitted.</div>
                     }
                 </section>
 
                 <section class="rm-card rd-card">
-                    <div class="rd-card-hd"><h2>Research &amp; Global Rankings</h2><p>University ranking information submitted for the request.</p></div>
+                    <div class="rd-card-hd"><h2>Research &amp; Global Rankings</h2><p>University ranking information submitted by the recognition member.</p></div>
+                    @{
+                        string RankVal(string? val, bool isNa) => isNa ? "" : (val ?? "—");
+                    }
                     <div class="rank-stack">
                         <div class="rd-field">
                             <label>Academic Ranking of World Universities (ARWU)</label>
-                            <input type="text" value="@(rankings.ArwuIsNa ? "N/A" : rankings.ArwuValue ?? "")" readonly />
+                            @if (rankings.ArwuIsNa)
+                            {
+                                <div class="rank-ro-val"><span class="rank-na-badge">N/A — Not Applicable</span></div>
+                            }
+                            else
+                            {
+                                <input type="text" value="@(string.IsNullOrWhiteSpace(rankings.ArwuValue) ? "—" : rankings.ArwuValue)" readonly />
+                            }
                         </div>
                         <div class="rd-field">
                             <label>QS - World University Ranking</label>
-                            <input type="text" value="@(rankings.QsIsNa ? "N/A" : rankings.QsValue ?? "")" readonly />
+                            @if (rankings.QsIsNa)
+                            {
+                                <div class="rank-ro-val"><span class="rank-na-badge">N/A — Not Applicable</span></div>
+                            }
+                            else
+                            {
+                                <input type="text" value="@(string.IsNullOrWhiteSpace(rankings.QsValue) ? "—" : rankings.QsValue)" readonly />
+                            }
                         </div>
                         <div class="rd-field">
                             <label>THE - World University Ranking (Times)</label>
-                            <input type="text" value="@(rankings.TheIsNa ? "N/A" : rankings.TheValue ?? "")" readonly />
+                            @if (rankings.TheIsNa)
+                            {
+                                <div class="rank-ro-val"><span class="rank-na-badge">N/A — Not Applicable</span></div>
+                            }
+                            else
+                            {
+                                <input type="text" value="@(string.IsNullOrWhiteSpace(rankings.TheValue) ? "—" : rankings.TheValue)" readonly />
+                            }
                         </div>
                         <div class="rd-field">
                             <label>Scopus Ranking</label>
-                            <input type="text" value="@(rankings.ScopusIsNa ? "N/A" : rankings.ScopusValue ?? "")" readonly />
+                            @if (rankings.ScopusIsNa)
+                            {
+                                <div class="rank-ro-val"><span class="rank-na-badge">N/A — Not Applicable</span></div>
+                            }
+                            else
+                            {
+                                <input type="text" value="@(string.IsNullOrWhiteSpace(rankings.ScopusValue) ? "—" : rankings.ScopusValue)" readonly />
+                            }
                         </div>
                     </div>
                 </section>
@@ -958,7 +1115,7 @@
                         {
                             <div class="infra-table-wrap">
                                 <table class="infra-table">
-                                    <thead><tr><th style="width:60px;">#</th><th>College</th><th>Computers</th><th>Workshops</th><th>Laboratories</th></tr></thead>
+                                    <thead><tr><th style="width:60px;">#</th><th>College</th><th>Computers</th><th>Laboratories</th></tr></thead>
                                     <tbody>
                                         @{ var idx = 1; }
                                         @foreach (var row in labRows)
@@ -967,7 +1124,6 @@
                                                 <td>@idx</td>
                                                 <td>@(string.IsNullOrWhiteSpace(row.FacultyName) ? "—" : row.FacultyName)</td>
                                                 <td>@(row.Computers?.ToString() ?? "—")</td>
-                                                <td>@(row.Workshops?.ToString() ?? "—")</td>
                                                 <td>@(row.Laboratories?.ToString() ?? "—")</td>
                                             </tr>
                                             idx++;
@@ -977,6 +1133,22 @@
                             </div>
                         }
                         else { <div class="infra-empty">No laboratories rows were submitted.</div> }
+                    </div>
+                </section>
+
+                <!-- Library of the University -->
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd">
+                        <h2><i class="bi bi-book"></i> Library of the University</h2>
+                        <p>Submitted library resources and capacity information.</p>
+                    </div>
+                    <div class="infra-summary-grid">
+                        <div class="infra-summary-item"><span>Area (m²)</span><b>@(library.Area.HasValue ? library.Area.Value.ToString("N0") : "—")</b></div>
+                        <div class="infra-summary-item"><span>Total Student Capacity</span><b>@(library.TotalStudentCapacity.HasValue ? library.TotalStudentCapacity.Value.ToString("N0") : "—")</b></div>
+                        <div class="infra-summary-item"><span>Number of Books</span><b>@(library.NumberOfBooks.HasValue ? library.NumberOfBooks.Value.ToString("N0") : "—")</b></div>
+                        <div class="infra-summary-item"><span>Number of Paper Journals</span><b>@(library.NumberOfPaperJournals.HasValue ? library.NumberOfPaperJournals.Value.ToString("N0") : "—")</b></div>
+                        <div class="infra-summary-item"><span>Number of Electronic Books</span><b>@(library.NumberOfElectronicBooks.HasValue ? library.NumberOfElectronicBooks.Value.ToString("N0") : "—")</b></div>
+                        <div class="infra-summary-item"><span>Number of Electronic Journals</span><b>@(library.NumberOfElectronicJournals.HasValue ? library.NumberOfElectronicJournals.Value.ToString("N0") : "—")</b></div>
                     </div>
                 </section>
 
@@ -1140,19 +1312,92 @@
                     }
                 </section>
 
+                <!-- Students to Faculty Ratio (mirrors DetailsRecommendation Point 2) -->
+                @{
+                    string t7RatioColor = ratioStatus switch { "green" => "green", "orange" => "orange", "red" => "red", _ => "neutral" };
+                }
                 <section class="rm-card rd-card">
-                    <div class="rd-card-hd"><h2>Doctorate Holders Breakdown</h2></div>
-                    <div class="rd-grid2">
-                        <div class="rd-field doctorate-field @(doctorateColorStatus == "green" ? "green" : doctorateColorStatus == "red" ? "red" : "")">
-                            <label>Doctorate Holders (%)</label>
-                            <input type="number" value="@docPct.ToString("0")" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Status</label>
-                            <span class="fa-compliance-badge @CssClass(docCompliance)" style="margin-top:6px;display:inline-flex;"><i class="bi @CssIcon(docCompliance)"></i> @DisplayLabel(docCompliance)</span>
+                    <div class="rd-card-hd">
+                        <div class="rd-card-hd-row">
+                            <div>
+                                <h2><i class="bi bi-person-lines-fill"></i> 2. Students to Faculty Ratio</h2>
+                                <p>Automatically calculated from submitted Academic Info data.</p>
+                            </div>
+                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
                         </div>
                     </div>
-                    <p style="font-size:12.5px;color:#6b7280;margin-top:8px;">@DocExp(docCompliance)</p>
+                    <div class="fa-metrics" style="margin-bottom:16px;">
+                        <div class="fa-metric-tile primary">
+                            <div class="fa-metric-lbl">Calculated Ratio</div>
+                            <div class="fa-metric-val @t7RatioColor">@ratioDisplay</div>
+                        </div>
+                        <div class="fa-metric-tile">
+                            <div class="fa-metric-lbl">Compliance Status</div>
+                            <span class="fa-compliance-badge @CssClass(ratioCompliance)" style="margin-top:4px;">
+                                <i class="bi @CssIcon(ratioCompliance)"></i> @DisplayLabel(ratioCompliance)
+                            </span>
+                        </div>
+                        @if (avg > 0)
+                        {
+                            <div class="fa-metric-tile">
+                                <div class="fa-metric-lbl">Benchmark</div>
+                                <div class="fa-metric-val neutral">1:@avg.ToString("0")</div>
+                            </div>
+                        }
+                    </div>
+                    <div class="fa-note" style="margin-bottom:12px;">
+                        <i class="bi bi-info-circle"></i>
+                        <span>@RatioExp(ratioCompliance)</span>
+                    </div>
+                    @if (selectedCategories.Any())
+                    {
+                        <div class="fa-tags">
+                            @foreach (var cat in selectedCategories) { <span class="fa-tag">@cat</span> }
+                        </div>
+                    }
+                </section>
+
+                <!-- Doctorate Holders (mirrors DetailsRecommendation Point 3) -->
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd">
+                        <div class="rd-card-hd-row">
+                            <div>
+                                <h2><i class="bi bi-mortarboard"></i> 3. Doctorate Holders Percentage</h2>
+                                <p>Automatically calculated from submitted Academic Info data.</p>
+                            </div>
+                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                        </div>
+                    </div>
+                    <div class="fa-metrics" style="margin-bottom:16px;">
+                        <div class="fa-metric-tile primary">
+                            <div class="fa-metric-lbl">Doctorate Holders</div>
+                            <div class="fa-metric-val @doctorateColorStatus">@docPct.ToString("0")%</div>
+                            @if (hasFacultyData)
+                            {
+                                <div class="fa-progress-wrap">
+                                    <div class="fa-progress-labels"><span>0%</span><span>Minimum: 50%</span><span>100%</span></div>
+                                    <div class="fa-progress-track">
+                                        <div class="fa-progress-fill @doctorateColorStatus" style="width:@docProgressWidth%"></div>
+                                        <div class="fa-progress-marker"></div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="fa-metric-tile">
+                            <div class="fa-metric-lbl">Compliance Status</div>
+                            <span class="fa-compliance-badge @CssClass(docCompliance)" style="margin-top:4px;">
+                                <i class="bi @CssIcon(docCompliance)"></i> @DisplayLabel(docCompliance)
+                            </span>
+                        </div>
+                        <div class="fa-metric-tile">
+                            <div class="fa-metric-lbl">Minimum Required</div>
+                            <div class="fa-metric-val neutral">50%</div>
+                        </div>
+                    </div>
+                    <div class="fa-note">
+                        <i class="bi bi-info-circle"></i>
+                        <span>@DocExp(docCompliance)</span>
+                    </div>
                 </section>
 
                 <section class="rm-card rd-card">
@@ -1232,14 +1477,19 @@
                     }
                 </section>
 
-                <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-                    <button class="cd-btn-save" id="btn-goto-t8" style="padding:12px 32px;font-size:1em;display:inline-flex;align-items:center;gap:8px;">
-                        <i class="bi bi-check2-circle"></i> Proceed to Final Decision
-                    </button>
-                </div>
+                @if (!hideFinalDecision)
+                {
+                    <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+                        <button class="cd-btn-save" id="btn-goto-t8" style="padding:12px 32px;font-size:1em;display:inline-flex;align-items:center;gap:8px;">
+                            <i class="bi bi-check2-circle"></i> Proceed to Final Decision
+                        </button>
+                    </div>
+                }
 
             </div>
 
+            @if (!hideFinalDecision)
+            {
             <div id="t8" class="tab-panel">
 
                 <section class="rm-card rd-head">
@@ -1298,6 +1548,7 @@
                 </section>
 
             </div>
+            }
 
         </main>
     </div>
@@ -1319,7 +1570,8 @@
             }
         })();
         // "Proceed to Final Decision" button at bottom of Tab 7
-        document.getElementById('btn-goto-t8').addEventListener('click', function () {
+        var _gotoT8 = document.getElementById('btn-goto-t8');
+        if (_gotoT8) _gotoT8.addEventListener('click', function () {
             var t8btn = document.querySelector('[onclick="showTab(\'t8\',this)"]');
             if (t8btn) showTab('t8', t8btn);
         });
@@ -1331,6 +1583,9 @@
             body.style.display = isOpen ? 'none' : 'grid';
             if (chevron) chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
         }
+
     </script>
+
+
 </body>
 </html>

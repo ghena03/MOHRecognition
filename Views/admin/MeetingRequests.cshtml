@@ -240,6 +240,57 @@
         }
         .btn-decide-edit:hover { background: #fdf0f2; }
 
+        /* ── Close Meeting button ── */
+        .btn-close-meeting {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #fff; color: #7f1627;
+            border: 2px solid #7f1627; border-radius: 9px;
+            padding: 9px 20px; font-size: 13px; font-weight: 700;
+            cursor: pointer; font-family: inherit;
+            transition: background .15s, color .15s;
+        }
+        .btn-close-meeting:hover { background: #7f1627; color: #fff; }
+        .btn-close-meeting:disabled { opacity: .45; cursor: not-allowed; }
+
+        /* ── Confirm modal ── */
+        .cm-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.45); z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .cm-overlay.show { display: flex; }
+        .cm-box {
+            background: #fff; border-radius: 16px;
+            box-shadow: 0 12px 48px rgba(0,0,0,.22);
+            padding: 36px 40px; max-width: 440px; width: 90%;
+            text-align: center;
+        }
+        .cm-icon {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: #fde8e8; color: #7f1627;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; margin: 0 auto 18px;
+        }
+        .cm-title { font-size: 20px; font-weight: 800; color: #1a1a1a; margin-bottom: 10px; }
+        .cm-desc  { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 24px; }
+        .cm-warn  {
+            background: #fff8e1; border: 1px solid #ffe082;
+            border-radius: 8px; padding: 10px 14px;
+            font-size: 12.5px; color: #7a5900; font-weight: 600;
+            margin-bottom: 24px; text-align: left;
+        }
+        .cm-actions { display: flex; gap: 12px; justify-content: center; }
+        .cm-btn-cancel {
+            padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 700;
+            border: 1.5px solid #ddd; background: #fff; color: #555; cursor: pointer;
+        }
+        .cm-btn-cancel:hover { background: #f5f5f5; }
+        .cm-btn-confirm {
+            padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 700;
+            border: none; background: #7f1627; color: #fff; cursor: pointer;
+        }
+        .cm-btn-confirm:hover { background: #6a1020; }
+
         /* ── Empty state ── */
         .empty-wrap {
             background: #fff;
@@ -276,6 +327,55 @@
             <div class="hd-text">
                 <h1>Session Agenda</h1>
                 <p>Committee Working Area — Phase 2</p>
+            </div>
+        </div>
+        @if (meeting.Status != "Closed")
+        {
+            <button class="btn-close-meeting" onclick="document.getElementById('cmOverlay').classList.add('show')"
+                    @(pending > 0 ? "" : "")>
+                <i class="bi bi-lock-fill"></i> Close Meeting
+            </button>
+        }
+        else
+        {
+            <span style="background:rgba(255,255,255,.15);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">
+                <i class="bi bi-lock-fill"></i> Meeting Closed
+            </span>
+        }
+    </div>
+
+    <!-- Confirmation modal -->
+    <div class="cm-overlay" id="cmOverlay">
+        <div class="cm-box">
+            <div class="cm-icon"><i class="bi bi-lock-fill"></i></div>
+            <div class="cm-title">Close This Meeting?</div>
+            <div class="cm-desc">
+                You are about to close <strong>Session #@meeting.SessionNumber</strong>.<br>
+                This action will finalise all decisions and cannot be undone.
+            </div>
+            @if (pending > 0)
+            {
+                <div class="cm-warn">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>@pending</strong> @(pending == 1 ? "university has" : "universities have") no decision recorded yet.
+                    You can still close, but those requests will be marked as incomplete.
+                </div>
+            }
+            else
+            {
+                <div class="cm-warn" style="background:#e8f5ea;border-color:#a7f3d0;color:#166534;">
+                    <i class="bi bi-check-circle-fill"></i>
+                    All @total @(total == 1 ? "university has" : "universities have") a recorded decision. Safe to close.
+                </div>
+            }
+            <div class="cm-actions">
+                <button class="cm-btn-cancel" onclick="document.getElementById('cmOverlay').classList.remove('show')">Cancel</button>
+                <form method="post" action="/Home/CloseMeeting?id=@meetingId" style="margin:0;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="cm-btn-confirm">
+                        <i class="bi bi-lock-fill"></i> Yes, Close Meeting
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -437,5 +537,10 @@
         }
 
     </div>
+    <script>
+        document.getElementById('cmOverlay').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('show');
+        });
+    </script>
 </body>
 </html>

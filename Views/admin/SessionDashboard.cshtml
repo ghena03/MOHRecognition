@@ -270,13 +270,6 @@
         </a>
     </div>
 
-    <div class="breadcrumb-bar">
-        <a class="bc-item" href="/Home/AdminDashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
-        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <a class="bc-item" href="/Home/SessionWorkflow"><i class="bi bi-calendar3"></i> إدارة الجلسات</a>
-        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <span class="bc-item bc-current"><i class="bi bi-journal-text"></i> Meeting #@Model.SessionNumber</span>
-    </div>
 
     <!-- Meeting Info Banner -->
     <div class="info-banner">
@@ -390,21 +383,6 @@
                                     <a class="btn-action btn-view-app" href="/Home/AdminMeetingApplicationView?requestId=@r.Id&meetingId=@meetingId">
                                         <i class="bi bi-eye"></i> View Application
                                     </a>
-
-                                    @if (hasDecision)
-                                    {
-                                        <a class="btn-action btn-edit-dec"
-                                           href="/Home/MeetingDecision?meetingId=@meetingId&requestId=@r.Id">
-                                            <i class="bi bi-pencil"></i> Edit Decision
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        <a class="btn-action btn-decide"
-                                           href="/Home/MeetingDecision?meetingId=@meetingId&requestId=@r.Id">
-                                            <i class="bi bi-check2-circle"></i> Final Decision
-                                        </a>
-                                    }
                                 </div>
                             </div>
                         </div>

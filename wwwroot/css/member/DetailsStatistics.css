@@ -196,10 +196,16 @@
 }
 
 .rp-metric-icon {
-    font-size: 22px;
-    line-height: 1;
+    width: 38px;
+    height: 38px;
     flex-shrink: 0;
-    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(127, 22, 39, 0.10);
+    border-radius: 10px;
+    color: #7f1627;
+    font-size: 18px;
 }
 
 .rp-metric-title {

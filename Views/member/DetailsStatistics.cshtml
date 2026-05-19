@@ -217,6 +217,7 @@
 
     <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/DetailsStatistics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/DetailsAcademicInfo.css" asp-append-version="true" />
 </head>
 
 <body class="rm-page">
@@ -379,7 +380,7 @@
                     <!-- Doctorate Holders (%) -->
                     <div class="rp-metric-card rp-metric-card--@doctorateStatus">
                         <div class="rp-metric-hd">
-                            <div class="rp-metric-icon">🎓</div>
+                            <div class="rp-metric-icon"><i class="bi bi-mortarboard-fill"></i></div>
                             <div>
                                 <div class="rp-metric-title">Doctorate Holders <button class="eq-info-btn" onclick="openEqModal('modal-doctorate')" title="How is this calculated?"><i class="bi bi-info-circle-fill"></i></button></div>
                                 <div class="rp-metric-sub">Full-time faculty holding a PhD or equivalent</div>
@@ -416,7 +417,7 @@
                     <!-- Students to Faculty Ratio -->
                     <div class="rp-metric-card rp-metric-card--@ratioStatus">
                         <div class="rp-metric-hd">
-                            <div class="rp-metric-icon">👥</div>
+                            <div class="rp-metric-icon"><i class="bi bi-people-fill"></i></div>
                             <div>
                                 <div class="rp-metric-title">Doctor-to-Student Capacity Ratio <button class="eq-info-btn" onclick="openEqModal('modal-sfr')" title="This ratio shows how many students are supported by one weighted doctor capacity. It is calculated using full-time PhD holders, a 10% PhD capacity bonus, and capped MSc support."><i class="bi bi-info-circle-fill"></i></button></div>
                                 <div class="rp-metric-sub">Student count relative to weighted doctor capacity</div>
@@ -458,7 +459,7 @@
                     <!-- Avg PhD per Bachelor Program -->
                     <div class="rp-metric-card rp-metric-card--@dppStatus">
                         <div class="rp-metric-hd">
-                            <div class="rp-metric-icon">🎓</div>
+                            <div class="rp-metric-icon"><i class="bi bi-mortarboard-fill"></i></div>
                             <div>
                                 <div class="rp-metric-title">PhD Doctors per Bachelor Program <button class="eq-info-btn" onclick="openEqModal('modal-dpp')" title="How is this calculated?"><i class="bi bi-info-circle-fill"></i></button></div>
                                 <div class="rp-metric-sub">Average full-time PhD faculty per submitted Bachelor program</div>

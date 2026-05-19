@@ -69,7 +69,7 @@
                 <form class="rm-filters" method="get" asp-action="RecognitionMemberDashboard" asp-controller="Home">
                     <div class="rm-field">
                         <label for="sessionNo">Session No.</label>
-                        <select id="sessionNo" name="sessionNo">
+                        <select id="sessionNo" name="sessionNo" onchange="this.form.submit()">
                             @foreach (var s in Model.AvailableSessions)
                             {
                                 if (Model.SessionNo == s)
@@ -85,7 +85,7 @@
                     </div>
                     <div class="rm-field">
                         <label for="year">Year</label>
-                        <select id="year" name="year">
+                        <select id="year" name="year" onchange="this.form.submit()">
                             @foreach (var y in Model.AvailableYears)
                             {
                                 if (Model.Year == y)
@@ -99,9 +99,6 @@
                             }
                         </select>
                     </div>
-                    <button class="rm-btn rm-btn-ghost" type="submit">
-                        <i class="bi bi-funnel"></i> Apply
-                    </button>
                 </form>
             </section>
 
@@ -140,177 +137,138 @@
                 </article>
             </section>
 
-            <div class="rm-lower">
-                <div class="ws-stack">
-                    @{
-                        int wsTotal     = Model.AssignedReviewsCount;
-                        int wsCompleted = Model.SubmittedRecommendationsCount;
-                        int wsPending   = Model.NotReviewedCount + Model.InProgressCount;
-                        int wsPct       = wsTotal > 0 ? (int)Math.Round((double)wsCompleted / wsTotal * 100) : 0;
+            @{
+                int wsTotal     = Model.AssignedReviewsCount;
+                int wsCompleted = Model.SubmittedRecommendationsCount;
+                int wsPct       = wsTotal > 0 ? (int)Math.Round((double)wsCompleted / wsTotal * 100) : 0;
+            }
+            <!-- 3-column lower grid -->
+            <div class="db-lower-grid">
 
-                        var firstPending = Model.Applications
-                            .FirstOrDefault(a => a.ReviewStatus != "Recommendation Submitted");
-
-                        var latestRec = Model.Applications
-                            .Where(a => a.ReviewStatus == "Recommendation Submitted")
-                            .OrderByDescending(a => a.LastActivityDate)
-                            .FirstOrDefault();
-                    }
-
-                    <!-- A) Main Summary Card -->
-                    <div class="rm-card ws-main-card">
-                        <div class="ws-main-icon-wrap">
-                            <i class="bi bi-journal-check"></i>
-                        </div>
-                        <div class="ws-main-body">
-                            <h2 class="ws-main-title">Today's Review Workspace</h2>
-                            <p class="ws-main-desc">
-                                You have <strong>@wsTotal</strong> assigned application@(wsTotal == 1 ? "" : "s") in this session.
-                                <strong>@wsCompleted</strong> recommendation@(wsCompleted == 1 ? "" : "s") submitted.
-                            </p>
-                            <div class="ws-main-actions">
-                                <a class="rm-btn rm-btn-primary" href="@Url.Action("ElectronicRequests", "Home")">
-                                    <i class="bi bi-folder2-open"></i> My Assigned Requests
-                                </a>
-                                <a class="rm-btn" href="@Url.Action("Archive", "Home")">
-                                    <i class="bi bi-archive"></i> Requests Archive
-                                </a>
-                            </div>
+                <!-- 1. Session Status card -->
+                <div class="rm-card db-session-card">
+                    <div class="db-sc-hd">
+                        <div class="db-sc-icon"><i class="bi bi-clipboard2-pulse-fill"></i></div>
+                        <div>
+                            <div class="db-sc-title">Session Status</div>
+                            <div class="db-sc-sub">Session @(Model.SessionNo?.ToString() ?? "—") &nbsp;·&nbsp; @(Model.Year?.ToString() ?? "—")</div>
                         </div>
                     </div>
 
-                    <!-- B/C/D) Three-column row -->
-                    <div class="ws-row">
+                    <div class="db-sc-rows">
+                        <div class="db-sc-row">
+                            <span class="db-sc-dot" style="background:#2563eb;"></span>
+                            <span class="db-sc-lbl">Not Reviewed</span>
+                            <span class="db-sc-val">@Model.NotReviewedCount</span>
+                        </div>
+                        <div class="db-sc-row">
+                            <span class="db-sc-dot" style="background:#c2410c;"></span>
+                            <span class="db-sc-lbl">In Progress</span>
+                            <span class="db-sc-val">@Model.InProgressCount</span>
+                        </div>
+                        <div class="db-sc-row">
+                            <span class="db-sc-dot" style="background:#059669;"></span>
+                            <span class="db-sc-lbl">Submitted</span>
+                            <span class="db-sc-val">@Model.SubmittedRecommendationsCount</span>
+                        </div>
+                        <div class="db-sc-row db-sc-row-total">
+                            <span class="db-sc-dot" style="background:var(--brand);"></span>
+                            <span class="db-sc-lbl">Total Assigned</span>
+                            <span class="db-sc-val">@Model.AssignedReviewsCount</span>
+                        </div>
+                    </div>
 
-                        <!-- B) Next Action -->
-                        <div class="rm-card ws-sub-card">
-                            <div class="ws-sub-icon @(wsPending > 0 ? "ws-icon-warn" : "ws-icon-ok")">
-                                <i class="bi bi-@(wsPending > 0 ? "exclamation-circle-fill" : "check-circle-fill")"></i>
-                            </div>
-                            @if (wsPending > 0)
+                    <div class="db-sc-prog-wrap">
+                        <div class="ws-prog-track">
+                            <div class="ws-prog-fill" style="width:@wsPct%"></div>
+                        </div>
+                        <div class="db-sc-prog-label">
+                            <span>Completion</span>
+                            <span style="font-weight:800; color:@(wsPct==100 ? "#059669" : "var(--brand)");">@wsPct%</span>
+                        </div>
+                    </div>
+
+                    <a class="db-sc-cta" href="@Url.Action("ElectronicRequests", "Home")">
+                        <i class="bi bi-folder2-open"></i> Open My Requests
+                    </a>
+                </div>
+
+                <!-- 2. Meetings card -->
+                <div class="rm-card db-meetings-card">
+                    <div class="db-mc-hd">
+                        <div class="db-sc-icon db-mc-icon"><i class="bi bi-calendar2-week-fill"></i></div>
+                        <div>
+                            <div class="db-sc-title">Upcoming Meetings</div>
+                            <div class="db-sc-sub">Committee sessions for your cases</div>
+                        </div>
+                    </div>
+                    @if (Model.Meetings.Any())
+                    {
+                        <div class="db-meeting-list">
+                            @foreach (var meeting in Model.Meetings)
                             {
-                                <div class="ws-sub-title">Next Action Required</div>
-                                <p class="ws-sub-desc">You have <strong>@wsPending</strong> application@(wsPending == 1 ? "" : "s") waiting for review.</p>
-                                <a class="rm-btn rm-btn-primary rm-btn-block ws-cta"
-                                   href="@(firstPending != null ? Url.Action("DetailsBasicInfo", "Home", new { id = firstPending.Id }) : Url.Action("ElectronicRequests", "Home"))">
-                                    <i class="bi bi-play-circle-fill"></i> Start Review
-                                </a>
-                            }
-                            else if (wsTotal == 0)
-                            {
-                                <div class="ws-sub-title">No Applications Yet</div>
-                                <p class="ws-sub-desc">No applications have been assigned to you for this session.</p>
-                                <a class="rm-btn rm-btn-block ws-cta" href="@Url.Action("ElectronicRequests", "Home")">
-                                    <i class="bi bi-folder2-open"></i> View Requests
-                                </a>
-                            }
-                            else
-                            {
-                                <div class="ws-sub-title">All Reviews Complete</div>
-                                <p class="ws-sub-desc">All assigned applications for this session are completed.</p>
-                                <a class="rm-btn rm-btn-block ws-cta" href="@Url.Action("Archive", "Home")">
-                                    <i class="bi bi-archive"></i> View Archive
+                                <a class="db-meeting-row" href="@Url.Action("MeetingDetails", "Home", new { id = meeting.Id, from = "member" })">
+                                    <div class="db-meeting-date-box">
+                                        <span class="db-meeting-day">@meeting.MeetingDate.ToString("dd")</span>
+                                        <span class="db-meeting-mon">@meeting.MeetingDate.ToString("MMM")</span>
+                                    </div>
+                                    <div class="db-meeting-info">
+                                        <div class="db-meeting-sess">Session @meeting.SessionNo</div>
+                                        @if (!string.IsNullOrWhiteSpace(meeting.Notes))
+                                        {
+                                            <div class="db-meeting-note">@meeting.Notes</div>
+                                        }
+                                    </div>
+                                    <i class="bi bi-chevron-right db-app-chevron"></i>
                                 </a>
                             }
                         </div>
-
-                        <!-- C) Review Progress -->
-                        <div class="rm-card ws-sub-card">
-                            <div class="ws-sub-icon ws-icon-brand">
-                                <i class="bi bi-bar-chart-fill"></i>
-                            </div>
-                            <div class="ws-sub-title">Review Progress</div>
-                            <div class="ws-prog-nums">
-                                <span class="ws-prog-big">@wsCompleted</span>
-                                <span class="ws-prog-label">of @wsTotal completed</span>
-                            </div>
-                            <div class="ws-prog-track">
-                                <div class="ws-prog-fill" style="width:@wsPct%"></div>
-                            </div>
-                            <div class="ws-prog-pct">@wsPct% complete</div>
+                    }
+                    else
+                    {
+                        <div class="db-mc-empty">
+                            <i class="bi bi-calendar-x"></i>
+                            <p>No meetings scheduled yet.</p>
                         </div>
+                    }
+                    <a class="db-sc-cta db-mc-cta" href="@Url.Action("RecognitionMemberMeetings", "Home")">
+                        <i class="bi bi-calendar2-week"></i> View All Meetings
+                    </a>
+                </div>
 
-                        <!-- D) Latest Recommendation -->
-                        <div class="rm-card ws-sub-card">
-                            <div class="ws-sub-icon ws-icon-ok">
-                                <i class="bi bi-patch-check-fill"></i>
-                            </div>
-                            <div class="ws-sub-title">Latest Recommendation</div>
-                            @if (latestRec != null)
-                            {
-                                <div class="ws-latest-ref">@latestRec.ReferenceNo</div>
-                                <div class="ws-latest-uni">@latestRec.UniversityName</div>
-                                <div class="ws-latest-date"><i class="bi bi-calendar3"></i> @latestRec.LastActivityDate.ToString("dd MMM yyyy")</div>
-                                <a class="rm-btn rm-btn-block ws-cta"
-                                   href="@Url.Action("DetailsRecommendation", "Home", new { id = latestRec.Id })">
-                                    <i class="bi bi-eye"></i> View Recommendation
-                                </a>
-                            }
-                            else
-                            {
-                                <p class="ws-sub-desc ws-empty-note">No recommendations submitted yet for this session.</p>
-                            }
+                <!-- 3. Quick links card -->
+                <div class="rm-card db-links-card">
+                    <div class="db-sc-hd" style="margin-bottom:16px;">
+                        <div class="db-sc-icon db-links-icon"><i class="bi bi-grid-fill"></i></div>
+                        <div>
+                            <div class="db-sc-title">Quick Access</div>
+                            <div class="db-sc-sub">Navigate your workspace</div>
                         </div>
-
+                    </div>
+                    <div class="db-links-list">
+                        <a class="db-link-row db-link-primary" href="@Url.Action("ElectronicRequests", "Home")">
+                            <i class="bi bi-folder2-open"></i>
+                            <span>My Assigned Requests</span>
+                            <i class="bi bi-arrow-right-short db-link-arrow"></i>
+                        </a>
+                        <a class="db-link-row" href="@Url.Action("Archive", "Home")">
+                            <i class="bi bi-archive"></i>
+                            <span>Requests Archive</span>
+                            <i class="bi bi-arrow-right-short db-link-arrow"></i>
+                        </a>
+                        <a class="db-link-row" href="@Url.Action("RecognitionMemberMeetings", "Home")">
+                            <i class="bi bi-calendar2-week"></i>
+                            <span>My Meetings</span>
+                            <i class="bi bi-arrow-right-short db-link-arrow"></i>
+                        </a>
+                        <a class="db-link-row" href="@Url.Action("ManualInstitutionRequests", "Home")">
+                            <i class="bi bi-building-add"></i>
+                            <span>Manual Institution Requests</span>
+                            <i class="bi bi-arrow-right-short db-link-arrow"></i>
+                        </a>
                     </div>
                 </div>
 
-                <aside class="rm-aside-cards">
-                    <section class="rm-card" id="meetings-section">
-                        <div class="rm-card-hd">
-                            <div class="rm-card-hd-left">
-                                <h2><i class="bi bi-calendar2-week rm-hd-icon"></i> Meetings</h2>
-                                <p>Meetings linked to your assigned applications.</p>
-                            </div>
-                        </div>
-                        @if (Model.Meetings.Any())
-                        {
-                            <div class="rm-meeting-list">
-                                @foreach (var meeting in Model.Meetings)
-                                {
-                                    <a class="rm-meeting-row" href="@Url.Action("MeetingDetails", "Home", new { id = meeting.Id, from = "member" })">
-                                        <div class="rm-meeting-top">
-                                            <span class="rm-meeting-session">Session @meeting.SessionNo</span>
-                                            <span class="rm-meeting-date">@meeting.MeetingDate.ToString("dd MMM yyyy")</span>
-                                        </div>
-                                        @if (!string.IsNullOrWhiteSpace(meeting.Notes))
-                                        {
-                                            <div class="rm-meeting-note">@meeting.Notes</div>
-                                        }
-                                    </a>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="rm-empty-side">No meetings assigned to your applications yet.</div>
-                        }
-                    </section>
-
-                    <section class="rm-card">
-                        <div class="rm-card-hd">
-                            <div class="rm-card-hd-left">
-                                <h2><i class="bi bi-clock-history rm-hd-icon"></i> Recent Reviewer Activity</h2>
-                            </div>
-                        </div>
-                        @if (Model.RecentActivities.Any())
-                        {
-                            <div class="rm-activity-list">
-                                @foreach (var act in Model.RecentActivities)
-                                {
-                                    <div class="rm-activity-row">
-                                        <div class="rm-activity-text">@act.Description</div>
-                                        <div class="rm-activity-date">@act.ActivityDate.ToString("dd MMM yyyy")</div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="rm-empty-side">No recent reviewer activity for the selected session.</div>
-                        }
-                    </section>
-                </aside>
             </div>
         </main>
     </div>

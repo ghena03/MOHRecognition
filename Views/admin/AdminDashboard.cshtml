@@ -118,7 +118,7 @@
             <div class="overview-cards">
                 <div class="overview-card">
                     <p>Total Requests</p>
-                    <h2>@Model.Count(x => x.Status != "Meeting Closed")</h2>
+                    <h2>@Model.Count()</h2>
                 </div>
                 <div class="overview-card">
                     <p>Pending</p>
@@ -126,7 +126,7 @@
                 </div>
                 <div class="overview-card">
                     <p>Assigned</p>
-                    <h2>@Model.Count(x => x.AssignedMember != "Unassigned" && x.Status != "Meeting Closed")</h2>
+                    <h2>@Model.Count(x => x.AssignedMember != "Unassigned")</h2>
                 </div>
                 <div class="overview-card">
                     <p>Needs Review</p>

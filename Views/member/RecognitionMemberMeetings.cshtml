@@ -60,31 +60,52 @@
                                 <th>Date</th>
                                 <th>Time</th>
                                 <th>Location / Platform</th>
+                                <th>Status</th>
                                 <th>Actions</th>
-                            </tr> 
+                            </tr>
                         </thead>
                         <tbody>
                             @if (Model.Meetings.Any())
                             {
                                 @foreach (var item in Model.Meetings)
                                 {
-                                    <tr>
+                                    var isClosed = string.Equals(item.Status, "Closed", StringComparison.OrdinalIgnoreCase);
+                                    var statusStyle = item.Status switch {
+                                        "Closed"    => "background:#f0f0f0;color:#777;border:1px solid #ccc;",
+                                        "Open"      => "background:#e8f5ea;color:#1a7a34;border:1px solid #a7f3d0;",
+                                        "Scheduled" => "background:#e8f0fe;color:#1a56db;border:1px solid #c5d8f8;",
+                                        _           => "background:#fff3cd;color:#856404;border:1px solid #ffe082;"
+                                    };
+                                    <tr style="@(isClosed ? "opacity:0.75;" : "")">
                                         <td>@item.SessionNumber</td>
                                         <td>@item.MeetingDate.ToString("yyyy-MM-dd")</td>
                                         <td>@(string.IsNullOrWhiteSpace(item.MeetingTime) ? "—" : item.MeetingTime)</td>
                                         <td>@(string.IsNullOrWhiteSpace(item.LocationOrPlatform) ? "—" : item.LocationOrPlatform)</td>
                                         <td>
+                                            <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;@statusStyle">
+                                                @if (isClosed)
+                                                {
+                                                    <i class="bi bi-lock-fill"></i>
+                                                }
+                                                else
+                                                {
+                                                    <span style="width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;"></span>
+                                                }
+                                                @item.Status
+                                            </span>
+                                        </td>
+                                        <td>
                                             <a href="/Home/MeetingDetails?id=@item.Id&from=member" class="action-btn">
                                                 View
                                             </a>
                                         </td>
-                                    </tr> 
+                                    </tr>
                                 }
                             }
                             else
                             {
                                 <tr>
-                                    <td colspan="5" class="meeting-empty">No meetings yet</td>
+                                    <td colspan="6" class="meeting-empty">No meetings yet</td>
                                 </tr>
                             }
                         </tbody>
