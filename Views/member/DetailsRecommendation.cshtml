@@ -723,12 +723,15 @@
                 try {
                     var res  = await fetch(form.action, { method: 'POST', body: new FormData(form) });
                     var html = await res.text();
-                    if (html.includes('Final assessment decision saved successfully'))
+                    if (res.url.includes('ElectronicRequests')) {
                         showToast('Decision saved successfully.', 'success');
-                    else if (html.includes('Please select a valid accreditation status'))
+                        setTimeout(function () { window.location.href = res.url; }, 900);
+                    } else if (html.includes('Please select a valid accreditation status'))
                         showToast('Please select a valid accreditation status for Point 1.', 'error');
                     else if (html.includes('Please provide a final justification'))
                         showToast('Please provide a final justification note.', 'error');
+                    else if (html.includes('Unable to save recommendation decision'))
+                        showToast('Unable to save decision. Please try again.', 'error');
                     else
                         showToast('Unable to save decision. Please try again.', 'error');
                 } catch (_) {

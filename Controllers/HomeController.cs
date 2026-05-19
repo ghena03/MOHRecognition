@@ -4101,13 +4101,22 @@ namespace MOHRecognition.Controllers
         [HttpGet]
         public IActionResult AdminDashboard()
         {
-            var model = _recognitionRequestService.GetAll();
+            var closedRequestIds = meetings
+                .Where(m => string.Equals(m.Status, "Closed", StringComparison.OrdinalIgnoreCase))
+                .SelectMany(m => m.RequestIds)
+                .ToHashSet();
+
+            var model = _recognitionRequestService.GetAll()
+                .Where(r => !closedRequestIds.Contains(r.Id))
+                .ToList();
+
             ViewBag.RecognizedCount    = meetingDecisions.Count(kvp => kvp.Value.Decision == "Recognized");
             ViewBag.NonRecognizedCount = meetingDecisions.Count(kvp => kvp.Value.Decision == "Not Recognized");
             ViewBag.PendingCount       = meetingDecisions.Count(kvp => kvp.Value.Decision == "Needs More Information");
             ViewBag.SubmittedUniversitiesCount = _recognitionRequestService
                 .GetAll()
-                .Count(x => string.Equals(x.Status, "Requires Admin Review", StringComparison.OrdinalIgnoreCase));
+                .Count(x => string.Equals(x.Status, "Requires Admin Review", StringComparison.OrdinalIgnoreCase)
+                         && !closedRequestIds.Contains(x.Id));
             ViewBag.AllUniversitiesCount = meetingDecisions.Count(kvp => !string.IsNullOrWhiteSpace(kvp.Value.Decision));
             return View("~/Views/admin/AdminDashboard.cshtml", model);
         }
@@ -4206,9 +4215,15 @@ namespace MOHRecognition.Controllers
 
         private List<RecognitionRequestRecord> GetSubmittedUniversitiesForMeetings()
         {
+            var closedRequestIds = meetings
+                .Where(m => string.Equals(m.Status, "Closed", StringComparison.OrdinalIgnoreCase))
+                .SelectMany(m => m.RequestIds)
+                .ToHashSet();
+
             return _recognitionRequestService
                 .GetAll()
-                .Where(x => string.Equals(x.Status, "Requires Admin Review", StringComparison.OrdinalIgnoreCase))
+                .Where(x => string.Equals(x.Status, "Requires Admin Review", StringComparison.OrdinalIgnoreCase)
+                         && !closedRequestIds.Contains(x.Id))
                 .OrderByDescending(x => x.SubmittedToAdminAt ?? x.SubmittedAt)
                 .ToList();
         }
@@ -4256,13 +4271,11 @@ namespace MOHRecognition.Controllers
             var request = _recognitionRequestService.GetById(id.Value);
             if (request == null) return RedirectToAction("SubmittedUniversities");
 
-            var linkedMeeting = meetings.FirstOrDefault(m => m.RequestIds.Contains(request.Id));
-            ViewBag.ShowRecommendation  = true;
-            ViewBag.IsInMeeting         = linkedMeeting != null;
-            ViewBag.MeetingId           = linkedMeeting?.Id ?? 0;
-            ViewBag.ReviewerDisplayName = GetRecognitionMemberDisplayName(request.AssignedMember);
+            ViewBag.MeetingId = 0;
+            ViewBag.ExistingDecision = null;
+            ViewBag.HideFinalDecision = true;
 
-            return View("~/Views/Admin/AdminFullApplicationView.cshtml", request);
+            return View("~/Views/AdminMeetings/ApplicationView.cshtml", request);
         }
 
         [HttpGet]
@@ -4851,6 +4864,44 @@ namespace MOHRecognition.Controllers
             return RedirectToAction("DetailsAccreditationBodies", new { id });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AdminSaveGlobalRankings(
+            int id,
+            int meetingId,
+            string arwuValue,
+            bool arwuIsNa,
+            string qsValue,
+            bool qsIsNa,
+            string theValue,
+            bool theIsNa,
+            string scopusValue,
+            bool scopusIsNa)
+        {
+            var request = _recognitionRequestService.GetById(id);
+            if (request == null)
+                return RedirectToAction("Meetings");
+
+            var model = new GlobalRankingsDto
+            {
+                ArwuIsNa = arwuIsNa,
+                ArwuValue = arwuIsNa ? string.Empty : (arwuValue ?? string.Empty).Trim(),
+                QsIsNa = qsIsNa,
+                QsValue = qsIsNa ? string.Empty : (qsValue ?? string.Empty).Trim(),
+                TheIsNa = theIsNa,
+                TheValue = theIsNa ? string.Empty : (theValue ?? string.Empty).Trim(),
+                ScopusIsNa = scopusIsNa,
+                ScopusValue = scopusIsNa ? string.Empty : (scopusValue ?? string.Empty).Trim()
+            };
+
+            _recognitionRequestService.SaveGlobalRankings(id, model);
+
+            TempData["RankingsSaved"] = "Rankings saved successfully.";
+            if (meetingId > 0)
+                return Redirect($"/Home/ApplicationView?requestId={id}&meetingId={meetingId}#t5");
+            return Redirect($"/Home/ApplicationView?requestId={id}#t5");
+        }
+
         [HttpGet]
         public IActionResult DetailsAccreditationBodies(int? id)
         {
@@ -5057,8 +5108,13 @@ namespace MOHRecognition.Controllers
 
         public IActionResult Requests()
         {
+            var closedRequestIds = meetings
+                .Where(m => string.Equals(m.Status, "Closed", StringComparison.OrdinalIgnoreCase))
+                .SelectMany(m => m.RequestIds)
+                .ToHashSet();
+
             var requests = _recognitionRequestService.GetAll()
-                .Where(r => !string.Equals(r.Status, "Meeting Closed", StringComparison.OrdinalIgnoreCase))
+                .Where(r => !closedRequestIds.Contains(r.Id))
                 .ToList();
             return View("~/Views/Admin/Requests.cshtml", requests);
         }
@@ -5184,12 +5240,8 @@ namespace MOHRecognition.Controllers
         {
             var meeting = meetings.FirstOrDefault(m => m.Id == id);
             if (meeting != null)
-            {
                 meeting.Status = "Closed";
-                foreach (var requestId in meeting.RequestIds)
-                    _recognitionRequestService.UpdateStatus(requestId, "Meeting Closed");
-            }
-            return RedirectToAction("SessionDashboard", new { id });
+            return RedirectToAction("SessionWorkflow");
         }
 
         // ===================== SESSION WORKFLOW HUB (GET) =====================
@@ -5297,7 +5349,7 @@ namespace MOHRecognition.Controllers
             if (string.Equals(from, "committee", StringComparison.OrdinalIgnoreCase))
                 return Redirect($"/Home/CommitteeApplicationView?requestId={requestId}&meetingId={meetingId}#t8");
 
-            return Redirect($"/Home/MeetingDecision?meetingId={meetingId}&requestId={requestId}");
+            return RedirectToAction("MeetingRequests", new { meetingId });
         }
 
         // ===================== DETAILS =====================
@@ -5433,6 +5485,19 @@ namespace MOHRecognition.Controllers
 
             if (request == null)
                 return NotFound();
+
+            var allRequests = _recognitionRequestService.GetAll();
+            var members = new[]
+            {
+                new { Email = "member1@mohe.local", Name = "Recognition Member 1" },
+                new { Email = "member2@mohe.local", Name = "Recognition Member 2" },
+                new { Email = "member3@mohe.local", Name = "Recognition Member 3" },
+            };
+            ViewBag.MemberLoads = members.Select(m => new
+            {
+                m.Name,
+                Count = allRequests.Count(r => string.Equals(r.AssignedMember, m.Email, StringComparison.OrdinalIgnoreCase))
+            }).ToList();
 
             return View("~/Views/Admin/AdminRequestDetails.cshtml", request);
         }

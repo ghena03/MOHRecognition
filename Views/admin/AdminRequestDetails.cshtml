@@ -44,6 +44,22 @@
                 <div><strong>Applicant:</strong> @Model.ApplicantName</div>
                 <div><strong>Email:</strong> @Model.ApplicantEmail</div>
                 <div><strong>Status:</strong> @Model.Status</div>
+                @if (ViewBag.MemberLoads != null)
+                {
+                    <div style="grid-column:1/-1; margin-top:12px; margin-bottom:4px;">
+                        <strong style="display:block; margin-bottom:8px;">Member Workload</strong>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            @foreach (var m in ViewBag.MemberLoads)
+                            {
+                                <div style="display:flex; align-items:center; gap:8px; background:#f5f5f5; border:1px solid #ddd; border-radius:8px; padding:8px 14px; min-width:190px;">
+                                    <span style="font-size:13px; color:#555;">@m.Name</span>
+                                    <span style="margin-left:auto; background:#8b1a1a; color:#fff; border-radius:12px; padding:2px 10px; font-size:13px; font-weight:700;">@m.Count</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
                 <form asp-controller="Home"
                       asp-action="AssignToMember"
                       method="post"
