@@ -4228,29 +4228,96 @@ namespace MOHRecognition.Controllers
                 .ToList();
         }
 
-        public IActionResult CommitteeDecisions(string status = "Recognized")
+        public IActionResult CommitteeDecisions(
+     string status = "",
+     int? year = null,
+     int? session = null,
+     string country = "",
+     string search = "")
         {
-            var statusKey = (status ?? "Recognized").Trim().ToLowerInvariant();
+            var statusKey = (status ?? "").Trim().ToLowerInvariant();
+
             var normalizedStatus = statusKey switch
             {
+                "recognized" => "Recognized",
                 "not recognized" => "Not Recognized",
                 "nonrecognized" => "Not Recognized",
                 "non-recognized" => "Not Recognized",
                 "needs more information" => "Needs More Information",
                 "pending" => "Needs More Information",
-                _ => "Recognized"
+                _ => ""
             };
 
-            ViewBag.ActiveStatus = normalizedStatus;
-            ViewBag.Items = GetDecisionItems(normalizedStatus);
-            ViewBag.TotalDecisions = meetingDecisions.Count(kvp => !string.IsNullOrWhiteSpace(kvp.Value.Decision));
-            ViewBag.RecognizedCount = meetingDecisions.Count(kvp => kvp.Value.Decision == "Recognized");
-            ViewBag.NonRecognizedCount = meetingDecisions.Count(kvp => kvp.Value.Decision == "Not Recognized");
-            ViewBag.PendingCount = meetingDecisions.Count(kvp => kvp.Value.Decision == "Needs More Information");
+            var items = GetDecisionItems(
+                string.IsNullOrWhiteSpace(normalizedStatus)
+                ? "Recognized"
+                : normalizedStatus
+            );
+
+            /* FILTERS */
+
+            if (year.HasValue)
+            {
+                items = items
+                    .Where(x => x.MeetingDate.Year == year.Value)
+                    .ToList();
+            }
+
+            if (session.HasValue)
+            {
+                items = items
+                    .Where(x => x.SessionNumber == session.Value)
+                    .ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(country))
+            {
+                items = items
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x.Country) &&
+                        x.Country.Contains(country,
+                        StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                items = items
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x.UniversityName) &&
+                        x.UniversityName.Contains(search,
+                        StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            ViewBag.Items = items;
+
+            ViewBag.TotalDecisions = meetingDecisions.Count(kvp =>
+                !string.IsNullOrWhiteSpace(kvp.Value.Decision));
+
+            ViewBag.RecognizedCount = meetingDecisions.Count(kvp =>
+                kvp.Value.Decision == "Recognized");
+
+            ViewBag.NonRecognizedCount = meetingDecisions.Count(kvp =>
+                kvp.Value.Decision == "Not Recognized");
+
+            ViewBag.PendingCount = meetingDecisions.Count(kvp =>
+                kvp.Value.Decision == "Needs More Information");
+
+            ViewBag.Years = meetings
+                .Select(x => x.MeetingDate.Year)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .ToList();
+
+            ViewBag.Sessions = meetings
+                .Select(x => x.SessionNumber)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
 
             return View("~/Views/Admin/CommitteeDecisions.cshtml");
         }
-
         [HttpGet]
         public IActionResult SubmittedUniversities()
         {

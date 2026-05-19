@@ -850,3 +850,176 @@ html, body {
         font-size: 15px;
     }
 }
+/* =========================================
+   ALL UNIVERSITIES PAGE
+========================================= */
+
+.modern-header {
+    background: #f5f2ed;
+    border-top: 10px solid #7d1128;
+    padding: 30px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.header-logo {
+    width: 120px;
+}
+
+.header-divider {
+    width: 1px;
+    height: 85px;
+    background: #d6d3d1;
+}
+
+.header-text h1 {
+    font-size: 56px;
+    font-weight: 800;
+    color: #132c5b;
+    margin-bottom: 10px;
+}
+
+.header-text p {
+    font-size: 28px;
+    color: #64748b;
+}
+
+.admin-card {
+    background: white;
+    border-radius: 22px;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    border: 1px solid #e7ded2;
+    min-width: 340px;
+}
+
+.admin-avatar {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: #991b1b;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.admin-info h4 {
+    font-size: 24px;
+    margin-bottom: 4px;
+    color: #111827;
+}
+
+.admin-info span {
+    color: #6b7280;
+    font-size: 18px;
+}
+
+.page-container {
+    max-width: 1500px;
+    margin: auto;
+    padding: 0 40px 60px;
+}
+
+.top-card {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 26px;
+    border-left: 6px solid #8b1e1e;
+    border: 1px solid #8b1e1e;
+}
+
+    .top-card h2 {
+        font-size: 44px;
+        color: #8b1e1e;
+        
+        margin-bottom: 8px;
+        font-weight: 800;
+    }
+
+    .top-card p {
+        color: #64748b;
+        font-size: 22px;
+    }
+
+.table-card {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,.05);
+}
+
+.table-header {
+    padding: 24px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f0ebe5;
+}
+
+    .table-header h3 {
+        font-size: 34px;
+        font-weight: 800;
+    }
+
+.count-pill {
+    background: #eef2ff;
+    color: #4338ca;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.uni-name {
+    font-weight: 800;
+    color: #111827;
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.status-green {
+    background: #e8f7ec;
+    color: #157347;
+}
+
+.status-red {
+    background: #fdecec;
+    color: #b42318;
+}
+
+.status-amber {
+    background: #fff7e6;
+    color: #d97706;
+}
+
+.btn-view {
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+    padding: 10px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+    .btn-view:hover {
+        background: #dfe6ff;
+    }

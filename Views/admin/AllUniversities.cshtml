@@ -4,7 +4,7 @@
     Layout = null;
     var items = ViewBag.Items as List<DecisionItemDto> ?? new List<DecisionItemDto>();
 }
-
+<link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
@@ -25,8 +25,22 @@
         .btn-back { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.35); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; text-decoration: none; transition: background .15s; white-space: nowrap; }
         .btn-back:hover { background: rgba(255,255,255,.25); }
         .pg-body { max-width: 1180px; margin: 0 auto; padding: 34px 24px 72px; }
-        .top-card { background: #fff; border: 1px solid #c7d2fe; border-left: 5px solid #4338ca; border-radius: 8px; padding: 20px 22px; margin-bottom: 16px; }
-        .top-card h2 { font-size: 22px; color: #4338ca; font-weight: 900; }
+
+        .top-card {
+            background: #fff;
+            border: 1px solid #c7d2fe;
+            border-left: 5px solid #8b1e1e;
+            border-radius: 8px;
+            padding: 20px 22px;
+            margin-bottom: 16px;
+        }
+            .top-card h2 {
+                font-size: 22px;
+                color: #8b1e1e;
+               ;
+                font-weight: 900;
+            }
+
         .top-card p { margin-top: 5px; color: #666; font-size: 13.5px; }
         .tbl-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 24px rgba(0,0,0,.07); overflow: hidden; }
         .tbl-top { padding: 18px 22px; border-bottom: 1px solid #f0ebe4; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -34,7 +48,19 @@
         .count-pill { display: inline-flex; align-items: center; gap: 6px; background: #eef2ff; color: #4338ca; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 800; }
         .table-wrap { overflow-x: auto; }
         table { width: 100%; min-width: 980px; border-collapse: collapse; }
-        thead th { background: #f8f8ff; color: #4338ca; font-size: 11px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; padding: 13px 18px; text-align: left; border-bottom: 2px solid #e0e7ff; white-space: nowrap; }
+
+        thead th {
+            background: #f8f8ff;
+            color: #8b1e1e;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+            padding: 13px 18px;
+            text-align: left;
+            border-bottom: 2px solid #e0e7ff;
+            white-space: nowrap;
+        }
         tbody tr { border-bottom: 1px solid #f5f0eb; }
         tbody tr:last-child { border-bottom: none; }
         tbody tr:hover { background: #fdfdff; }
@@ -53,18 +79,19 @@
     </style>
 </head>
 <body>
-    <div class="ministry-bar"><i class="bi bi-bank2"></i> Ministry of Higher Education and Scientific Research - Hashemite Kingdom of Jordan</div>
-    <div class="pg-header">
-        <div class="hd-left">
-            <img src="/images/mohelogo.png" alt="Logo" />
-            <div class="hd-sep"></div>
-            <div class="hd-text">
+    <!-- HEADER -->
+    <div class="top-bar"></div>
+    <div class="header">
+        <div class="header-left">
+            <img src="/images/mohelogo.png" class="logo" />
+            <div class="divider"></div>
+            <div class="title-box">
                 <h1>All Universities</h1>
                 <p>Final recognition outcomes after committee decisions</p>
             </div>
         </div>
-        <a href="/Home/AdminDashboard" class="btn-back"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
     </div>
+
 
     <main class="pg-body">
 

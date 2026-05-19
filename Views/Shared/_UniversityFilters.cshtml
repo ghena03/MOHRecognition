@@ -44,6 +44,47 @@
 
                 <select name="SelectedCountry" class="filter-select">
                     <option value="">All Countries</option>
+
+                    <option value="Jordan">Jordan</option>
+                    <option value="Saudi Arabia">Saudi Arabia</option>
+                    <option value="United Arab Emirates">United Arab Emirates</option>
+                    <option value="Qatar">Qatar</option>
+                    <option value="Kuwait">Kuwait</option>
+                    <option value="Bahrain">Bahrain</option>
+                    <option value="Oman">Oman</option>
+
+                    <option value="Egypt">Egypt</option>
+                    <option value="Iraq">Iraq</option>
+                    <option value="Syria">Syria</option>
+                    <option value="Lebanon">Lebanon</option>
+                    <option value="Palestine">Palestine</option>
+
+                    <option value="Turkey">Turkey</option>
+                    <option value="Malaysia">Malaysia</option>
+                    <option value="India">India</option>
+                    <option value="Pakistan">Pakistan</option>
+                    <option value="China">China</option>
+
+                    <option value="United Kingdom">United Kingdom</option>
+                    <option value="United States">United States</option>
+                    <option value="Canada">Canada</option>
+                    <option value="Germany">Germany</option>
+                    <option value="France">France</option>
+                    <option value="Italy">Italy</option>
+                    <option value="Spain">Spain</option>
+
+                    <option value="Russia">Russia</option>
+                    <option value="Ukraine">Ukraine</option>
+                    <option value="Azerbaijan">Azerbaijan</option>
+                    <option value="Georgia">Georgia</option>
+
+                    <option value="Australia">Australia</option>
+                    <option value="New Zealand">New Zealand</option>
+
+                    <option value="Sudan">Sudan</option>
+                    <option value="Algeria">Algeria</option>
+                    <option value="Morocco">Morocco</option>
+                    <option value="Tunisia">Tunisia</option>
                 </select>
             </div>
 
@@ -51,7 +92,11 @@
                 <label>University Type:</label>
 
                 <select class="filter-select">
-                    <option>All</option>
+                    <option value="">All</option>
+                    <option value="Governmental">Governmental</option>
+                    <option value="PrivateProfit">Private Profit</option>
+                    <option value="PrivateNonProfit">Private Nonprofit</option>
+                    <option value="Other">Other</option>
                 </select>
             </div>
 
@@ -64,7 +109,12 @@
                 <label>Traditional Education:</label>
 
                 <select class="filter-select">
-                    <option>All</option>
+                    <option value="">All</option>
+                    <option value="Recognized">Recognition</option>
+                    <option value="NotRecognized">No Recognition</option>
+                    <option value="Delayed">Recognition Delay</option>
+                    <option value="Confirmed">Decision Confirmation</option>
+                    <option value="Withdrawn">Recognition Withdrawal</option>
                 </select>
             </div>
 
@@ -72,7 +122,12 @@
                 <label>Distance Education:</label>
 
                 <select class="filter-select">
-                    <option>All</option>
+                    <option value="">All</option>
+                    <option value="Recognized">Recognition</option>
+                    <option value="NotRecognized">No Recognition</option>
+                    <option value="Delayed">Recognition Delay</option>
+                    <option value="Confirmed">Decision Confirmation</option>
+                    <option value="Withdrawn">Recognition Withdrawal</option>
                 </select>
             </div>
 
@@ -80,7 +135,10 @@
                 <label>Medical Colleges:</label>
 
                 <select class="filter-select">
-                    <option>All</option>
+                    <option value="">All</option>
+                    <option value="FullMedical">Full Medical Recognition</option>
+                    <option value="HumanMedicine">Human Medicine</option>
+                    <option value="Dentistry">Dentistry</option>
                 </select>
             </div>
 
@@ -98,8 +156,7 @@
 
         <!-- Buttons -->
         <div class="filter-actions">
-
-            <button type="submit" class="filter-btn search-btn">
+            <button type="button" onclick="applyFilters()">
                 Search
             </button>
 

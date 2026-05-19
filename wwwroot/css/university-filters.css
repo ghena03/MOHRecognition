@@ -39,7 +39,7 @@
     height: 48px;
     border: 1px solid #d7cfc7;
     border-radius: 12px;
-    padding: 0 14px;
+    
     background: white;
     font-size: 15px;
     color: #2b2b2b;
@@ -106,3 +106,27 @@
         width: 100%;
     }
 }
+/* SEARCH BUTTON */
+
+.search-btn {
+    background: #8b1e1e;
+    color: white;
+    border: none;
+    padding: 16px 42px;
+    border-radius: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.25s ease;
+    box-shadow: 0 6px 18px rgba(139, 30, 30, 0.18);
+}
+
+    .search-btn:hover {
+        background: #6f1717;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(139, 30, 30, 0.24);
+    }
+
+    .search-btn:active {
+        transform: scale(0.98);
+    }
