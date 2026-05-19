@@ -4270,6 +4270,22 @@ namespace MOHRecognition.Controllers
         {
             var items = GetDecisionItems();
             ViewBag.Items = items;
+            ViewBag.Sessions = meetings
+    .Select(m => m.SessionNumber)
+    .Distinct()
+    .OrderBy(x => x)
+    .ToList();
+
+            ViewBag.Years = meetings
+                .Select(m => m.MeetingDate.Year)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .ToList();
+
+            ViewBag.Statuses = meetings
+                .Select(m => m.Status)
+                .Distinct()
+                .ToList();
             return View("~/Views/Admin/AllUniversities.cshtml");
         }
 
@@ -4533,22 +4549,8 @@ namespace MOHRecognition.Controllers
                 !string.IsNullOrWhiteSpace(request.LibraryAssessment);
 
             return hasWorkStarted ? "In Progress" : "Not Reviewed";
-        }
+        }        
 
-       
-        
-        [HttpGet]
-       public IActionResult ElectronicRequests()
-        {
-            var currentMember = GetCurrentRecognitionMember();
-            var model = _recognitionRequestService
-              .GetAll()
-              .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
-              .ToList();
-
-            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
-            return View("~/Views/member/ElectronicRequests.cshtml", model);
-        }
         [HttpGet]
         public IActionResult DetailsBasicInfo(int? id)
         {
@@ -4603,6 +4605,10 @@ namespace MOHRecognition.Controllers
             request.StudyDuration ??= new StudyDurationDto();
 
             return View("~/Views/member/DetailsAdmissionDuration.cshtml", request);
+        }
+        public IActionResult Profile()
+        {
+            return View("~/Views/member/Profile.cshtml");
         }
 
         [HttpGet]
@@ -5347,6 +5353,17 @@ namespace MOHRecognition.Controllers
                 .Where(m => !selectedYear.HasValue || m.MeetingDate.Year == selectedYear.Value)
                 .OrderBy(m => m.MeetingDate)
                 .ThenBy(m => m.SessionNumber)
+                .ToList();
+            ViewBag.Sessions = meetings
+    .Select(m => m.SessionNumber)
+    .Distinct()
+    .OrderBy(x => x)
+    .ToList();
+
+            ViewBag.Years = meetings
+                .Select(m => m.MeetingDate.Year)
+                .Distinct()
+                .OrderByDescending(x => x)
                 .ToList();
 
             var model = new RecognitionMemberMeetingsViewModel

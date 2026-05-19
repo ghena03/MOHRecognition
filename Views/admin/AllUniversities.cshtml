@@ -67,10 +67,14 @@
     </div>
 
     <main class="pg-body">
+
         <section class="top-card">
             <h2>All Universities</h2>
             <p>View all universities with their final recognition status.</p>
         </section>
+
+        <partial name="_UniversityFilters"
+                 model="new MOHRecognition.Models.UniversityFilterViewModel()" />
 
         <section class="tbl-card">
             <div class="tbl-top">

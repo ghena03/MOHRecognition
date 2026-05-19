@@ -1,0 +1,116 @@
+﻿@model MOHRecognition.Models.UniversityFilterViewModel
+
+<link rel="stylesheet" href="~/css/university-filters.css" />
+
+<section class="mohe-filter-card">
+
+    <form method="get" class="mohe-filter-form">
+
+        <!-- Row 1 -->
+        <div class="filter-row">
+
+            <div class="filter-item">
+                <label>Year:</label>
+
+                <select class="filter-select">
+                    <option>All</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+
+                <label class="filter-label">Session:</label>
+
+                <select name="sessionNo" class="filter-select">
+
+                    <option value="">All</option>
+
+                    @if (ViewBag.Sessions != null)
+                    {
+                        foreach (var s in ViewBag.Sessions)
+                        {
+                            <option value="@s">
+                                Meeting #@s
+                            </option>
+                        }
+                    }
+
+                </select>
+
+            </div>
+
+            <div class="filter-item">
+                <label>Country:</label>
+
+                <select name="SelectedCountry" class="filter-select">
+                    <option value="">All Countries</option>
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <label>University Type:</label>
+
+                <select class="filter-select">
+                    <option>All</option>
+                </select>
+            </div>
+
+        </div>
+
+        <!-- Row 2 -->
+        <div class="filter-row">
+
+            <div class="filter-item">
+                <label>Traditional Education:</label>
+
+                <select class="filter-select">
+                    <option>All</option>
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <label>Distance Education:</label>
+
+                <select class="filter-select">
+                    <option>All</option>
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <label>Medical Colleges:</label>
+
+                <select class="filter-select">
+                    <option>All</option>
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <label>University Name:</label>
+
+                <input type="text"
+                       name="SearchTerm"
+                       value="@Model?.SearchTerm"
+                       class="filter-input"
+                       placeholder="Search..." />
+            </div>
+
+        </div>
+
+        <!-- Buttons -->
+        <div class="filter-actions">
+
+            <button type="submit" class="filter-btn search-btn">
+                Search
+            </button>
+
+            <a asp-action="AllUniversities"
+               asp-controller="Home"
+               class="filter-btn reset-btn">
+                Reset
+            </a>
+
+        </div>
+
+    </form>
+
+</section>
