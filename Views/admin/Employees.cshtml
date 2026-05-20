@@ -1,9 +1,11 @@
 @using MOHRecognition.DTOs
-@model List<EmployeeDto>
+@model IReadOnlyList<AdvisorDto>
 
 @{
-    ViewData["Title"] = "Committee Members";
+    ViewData["Title"] = "Advisors";
     Layout = null;
+    var recognitionMembers = Model.Where(a => a.Type == AdvisorType.RecognitionMember).ToList();
+    var ministryAdvisors   = Model.Where(a => a.Type == AdvisorType.MinistryAdvisor).ToList();
 }
 <!doctype html>
 <html lang="en" dir="ltr">
@@ -11,563 +13,533 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f5f0e8;
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            color: #111;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 48px 24px 64px;
-            color: #1a1a1a;
         }
 
-        .doc-wrap {
-            width: 100%;
-            max-width: 960px;
+        .top-bar { height: 4px; background: #7f1627; }
+
+        /* ── Header ── */
+        .site-header {
             background: #fff;
-            border: 1px solid #d4c9b8;
-            box-shadow: 0 4px 32px rgba(0,0,0,.12);
-            padding: 48px 56px 56px;
+            border-bottom: 1px solid #ebebeb;
+            padding: 0 48px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
         }
-
-        /* Title */
-        .title-area {
-            position: relative;
-            text-align: center;
-            padding: 12px 0 36px;
-            margin-bottom: 8px;
-        }
-
-        .doc-title {
-            position: relative;
-            font-size: 22px;
-            font-weight: 900;
-            color: #7f1627;
-            letter-spacing: .3px;
-            line-height: 1.5;
-        }
-
-        /* Top action bar */
-        .action-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 24px;
-        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .logo { height: 40px; }
+        .h-sep { width: 1px; height: 30px; background: #e0e0e0; }
+        .h-title { font-size: 15px; font-weight: 700; color: #111; }
+        .h-sub   { font-size: 12px; color: #aaa; margin-top: 1px; }
 
         .btn-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            background: #fff;
-            color: #555;
-            border: 1.5px solid #c8bfb0;
-            border-radius: 7px;
-            padding: 9px 20px;
-            font-size: 14px;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
-            text-decoration: none;
-            transition: border-color .15s, color .15s;
+            font-size: 13px; font-weight: 600; color: #555;
+            text-decoration: none; border: 1.5px solid #e0e0e0;
+            border-radius: 8px; padding: 8px 18px; background: #fff;
+            display: inline-flex; align-items: center; gap: 6px;
+            transition: all .15s;
+        }
+        .btn-back:hover { color: #7f1627; border-color: #7f1627; }
+
+        /* ── Page title ── */
+        .page-intro { padding: 36px 48px 0; }
+        .page-intro h1 { font-size: 22px; font-weight: 800; color: #111; }
+        .page-intro p  { font-size: 13px; color: #888; margin-top: 4px; }
+
+        /* ── Body ── */
+        .page-body { padding: 28px 48px 80px; }
+
+        /* ── Section ── */
+        .section { margin-bottom: 48px; }
+
+        .section-head {
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 16px;
+        }
+        .section-left { display: flex; align-items: center; gap: 12px; }
+
+        .section-label {
+            font-size: 13px; font-weight: 700; color: #111;
+            text-transform: uppercase; letter-spacing: .5px;
+        }
+        .section-count {
+            font-size: 12px; font-weight: 600; color: #888;
+            background: #f3f3f3; border-radius: 20px;
+            padding: 2px 10px; border: 1px solid #e8e8e8;
         }
 
-        .btn-back:hover {
-            border-color: #7f1627;
-            color: #7f1627;
-        }
-
-        .btn-add-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            background: #7f1627;
-            color: #fff;
-            border: none;
-            border-radius: 7px;
-            padding: 9px 20px;
-            font-size: 14px;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
+        .btn-add {
+            font-size: 13px; font-weight: 700; color: #fff;
+            background: #7f1627; border: none; border-radius: 8px;
+            padding: 9px 18px; cursor: pointer; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 6px;
             transition: background .15s;
         }
+        .btn-add:hover { background: #641320; }
 
-        .btn-add-toggle:hover {
-            background: #6a1020;
-        }
-
-        /* Table */
-        .tbl-wrap { overflow-x: auto; }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            border-spacing: 0;
-            font-size: 14.5px;
-        }
-
-        thead tr th {
-            background: #7f1627;
-            color: #fff;
-            font-weight: 800;
-            font-size: 15px;
-            padding: 14px 20px;
-            text-align: left;
-            border: 1px solid #6a1020;
-            white-space: nowrap;
-        }
-
-        thead tr th:first-child { text-align: center; width: 60px; }
-        thead tr th:nth-child(4) { width: 220px; }
-        thead tr th:last-child { text-align: center; width: 90px; }
-
-        tbody tr:nth-child(odd)  td { background: #fdf8f0; }
-        tbody tr:nth-child(even) td { background: #ffffff; }
-        tbody tr:hover td { background: #f5ede0; }
-
-        tbody tr td {
-            padding: 13px 20px;
-            border: 1px solid #ddd5c8;
-            vertical-align: middle;
-            font-weight: 600;
-            color: #1a1a1a;
-            line-height: 1.5;
-        }
-
-        tbody tr td:first-child {
-            text-align: center;
-            font-weight: 800;
-            color: #7f1627;
-            font-size: 15px;
-            width: 60px;
-        }
-
-        tbody tr td:last-child { text-align: center; width: 90px; }
-
-        .empty-row td {
-            text-align: center;
-            color: #888;
-            font-style: italic;
-            padding: 32px;
-        }
-
-        .btn-remove {
-            background: none;
-            border: 1.5px solid #c0392b;
-            color: #c0392b;
-            border-radius: 6px;
-            padding: 5px 12px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background .15s, color .15s;
-            white-space: nowrap;
-            font-family: inherit;
-        }
-
-        .btn-remove:hover {
-            background: #c0392b;
-            color: #fff;
-        }
-
-        /* Bottom bar */
-        .bottom-bar {
-            margin-top: 36px;
-            border-top: 2px solid #e8ddd0;
-            padding-top: 24px;
-        }
-
-        /* Add form panel */
-        .add-panel {
-            display: none;
-            margin-bottom: 28px;
-            border-bottom: 2px solid #e8ddd0;
-            padding-bottom: 28px;
-        }
-
-        .add-panel.open { display: block; }
-
-        .add-panel h2 {
-            font-size: 16px;
-            font-weight: 800;
-            color: #7f1627;
-            margin-bottom: 20px;
-        }
-
-        .add-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .add-field-full { grid-column: 1 / -1; }
-
-        .add-field { display: flex; flex-direction: column; gap: 6px; }
-
-        .add-field label { font-size: 13px; font-weight: 700; color: #444; }
-
-        .add-field input {
-            border: 1.5px solid #c8bfb0;
-            border-radius: 7px;
-            padding: 10px 14px;
-            font-size: 14px;
-            font-family: inherit;
-            color: #1a1a1a;
-            background: #fdf8f0;
-            transition: border-color .15s, background .15s;
-        }
-
-        .add-field input:focus {
-            outline: none;
-            border-color: #7f1627;
+        /* ── Card / Table ── */
+        .card {
+            border: 1px solid #ebebeb;
+            border-radius: 12px; overflow: hidden;
             background: #fff;
         }
 
-        .add-footer {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 20px;
+        table { width: 100%; border-collapse: collapse; }
+
+        thead tr { border-bottom: 1px solid #f0f0f0; }
+        thead th {
+            padding: 10px 20px;
+            font-size: 11px; font-weight: 600; color: #aaa;
+            text-transform: uppercase; letter-spacing: .5px;
+            text-align: left; white-space: nowrap; background: #fafafa;
+        }
+        thead th:first-child { width: 44px; text-align: center; }
+
+        tbody tr:not(:last-child) td { border-bottom: 1px solid #f5f5f5; }
+        tbody tr:hover td { background: #fafafa; }
+        tbody td { padding: 14px 20px; vertical-align: middle; font-size: 13.5px; }
+        tbody td:first-child { text-align: center; font-size: 12px; color: #bbb; font-weight: 600; }
+
+        /* ── Person ── */
+        .person { display: flex; align-items: center; gap: 11px; }
+        .av {
+            width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+            background: #f0f0f0; color: #555; font-size: 12px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .p-name { font-weight: 600; color: #111; font-size: 13.5px; }
+        .p-sub  { font-size: 12px; color: #aaa; margin-top: 1px; }
+
+        .c-main { font-size: 13px; color: #333; }
+        .c-sub  { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+        /* ── Row actions ── */
+        .actions { display: flex; gap: 7px; }
+        .btn-edit {
+            font-size: 12px; font-weight: 600; color: #555;
+            border: 1.5px solid #e0e0e0; border-radius: 7px;
+            padding: 6px 13px; background: #fff; cursor: pointer;
+            font-family: inherit; display: inline-flex; align-items: center; gap: 5px;
+            transition: all .15s;
+        }
+        .btn-edit:hover { border-color: #555; color: #111; }
+        .btn-del {
+            font-size: 12px; font-weight: 600; color: #c0392b;
+            border: 1.5px solid #eac8c5; border-radius: 7px;
+            padding: 6px 13px; background: #fff; cursor: pointer;
+            font-family: inherit; display: inline-flex; align-items: center; gap: 5px;
+            transition: all .15s;
+        }
+        .btn-del:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
+
+        .empty { text-align: center; padding: 48px; color: #bbb; font-size: 14px; }
+        .empty i { font-size: 32px; display: block; margin-bottom: 8px; }
+
+        /* ── Divider between sections ── */
+        .section-divider {
+            border: none; border-top: 1px solid #ebebeb; margin: 0 0 40px;
         }
 
-        .btn-submit {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            background: #7f1627;
-            color: #fff;
-            border: none;
-            border-radius: 7px;
-            padding: 11px 28px;
-            font-size: 14px;
-            font-weight: 800;
-            font-family: inherit;
-            cursor: pointer;
-            transition: background .15s;
+        /* ══════ MODALS ══════ */
+        .modal-bg {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.3); z-index: 9000;
+            align-items: center; justify-content: center;
+        }
+        .modal-bg.open { display: flex; }
+
+        .modal {
+            background: #fff; border-radius: 14px;
+            padding: 28px 30px 26px; width: 100%; max-width: 500px;
+            box-shadow: 0 8px 40px rgba(0,0,0,.12);
+            border: 1px solid #ebebeb;
+            animation: mIn .18s ease both;
+        }
+        @@keyframes mIn {
+            from { opacity:0; transform:translateY(8px); }
+            to   { opacity:1; transform:none; }
         }
 
-        .btn-submit:hover { background: #6a1020; }
-
-        /* ── Confirm Modal ── */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, .45);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+        .modal-hd {
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 20px;
         }
-
-        .modal-overlay.open {
-            display: flex;
+        .modal-title { font-size: 15px; font-weight: 800; color: #111; }
+        .modal-x {
+            width: 28px; height: 28px; border: none; background: #f3f3f3;
+            border-radius: 6px; cursor: pointer; color: #888; font-size: 13px;
+            display: flex; align-items: center; justify-content: center;
         }
+        .modal-x:hover { background: #e8e8e8; }
 
-        .modal-box {
-            background: #fff;
-            border: 1px solid #d4c9b8;
-            border-radius: 12px;
-            box-shadow: 0 8px 40px rgba(0,0,0,.22);
-            padding: 36px 40px 32px;
-            width: 100%;
-            max-width: 420px;
-            text-align: center;
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .ff { grid-column: 1/-1; }
+        .fld { display: flex; flex-direction: column; gap: 5px; }
+        .flabel { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .4px; }
+        .finput {
+            border: 1.5px solid #e8e8e8; border-radius: 8px;
+            padding: 9px 12px; font-size: 13.5px; font-family: inherit;
+            color: #111; background: #fff; transition: border-color .15s;
         }
+        .finput:focus { outline: none; border-color: #7f1627; }
 
-        .modal-icon {
-            width: 52px;
-            height: 52px;
-            background: #fde8eb;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 18px;
-            font-size: 22px;
-            color: #7f1627;
+        .modal-foot { display: flex; gap: 9px; justify-content: flex-end; margin-top: 20px; }
+        .btn-mcancel {
+            font-size: 13px; font-weight: 600; color: #666;
+            border: 1.5px solid #e0e0e0; border-radius: 8px;
+            padding: 8px 18px; background: #fff; cursor: pointer; font-family: inherit;
         }
-
-        .modal-title {
-            font-size: 17px;
-            font-weight: 800;
-            color: #1a1a1a;
-            margin-bottom: 8px;
+        .btn-mcancel:hover { border-color: #999; }
+        .btn-msave {
+            font-size: 13px; font-weight: 700; color: #fff;
+            background: #7f1627; border: none; border-radius: 8px;
+            padding: 8px 20px; cursor: pointer; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 6px;
         }
+        .btn-msave:hover { background: #641320; }
 
-        .modal-body {
-            font-size: 14px;
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 28px;
+        /* ── Delete confirm ── */
+        .modal-sm { max-width: 380px; text-align: center; }
+        .del-ico {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: #fdf0ee; border: 1px solid #f5cac5;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 14px; font-size: 20px; color: #c0392b;
         }
-
-        .modal-body b {
-            color: #1a1a1a;
+        .del-ttl { font-size: 15px; font-weight: 800; margin-bottom: 7px; }
+        .del-body { font-size: 13px; color: #888; line-height: 1.65; margin-bottom: 20px; }
+        .del-foot { display: flex; gap: 9px; }
+        .btn-dc {
+            flex:1; font-size:13px; font-weight:600; color:#555;
+            border:1.5px solid #e0e0e0; border-radius:8px; padding:9px 0;
+            background:#fff; cursor:pointer; font-family:inherit;
         }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
+        .btn-dc:hover { border-color:#999; }
+        .btn-dd {
+            flex:1; font-size:13px; font-weight:700; color:#fff;
+            background:#c0392b; border:none; border-radius:8px; padding:9px 0;
+            cursor:pointer; font-family:inherit;
+            display:inline-flex; align-items:center; justify-content:center; gap:5px;
         }
-
-        .btn-modal-cancel {
-            flex: 1;
-            background: #fff;
-            color: #555;
-            border: 1.5px solid #c8bfb0;
-            border-radius: 7px;
-            padding: 10px 0;
-            font-size: 14px;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
-            transition: border-color .15s, color .15s;
-        }
-
-        .btn-modal-cancel:hover {
-            border-color: #7f1627;
-            color: #7f1627;
-        }
-
-        .btn-modal-confirm {
-            flex: 1;
-            background: #7f1627;
-            color: #fff;
-            border: none;
-            border-radius: 7px;
-            padding: 10px 0;
-            font-size: 14px;
-            font-weight: 800;
-            font-family: inherit;
-            cursor: pointer;
-            transition: background .15s;
-        }
-
-        .btn-modal-confirm:hover { background: #6a1020; }
+        .btn-dd:hover { background:#a93226; }
     </style>
 </head>
 <body>
-    <div class="doc-wrap">
+<div class="top-bar"></div>
 
-        <div class="title-area">
-            <h1 class="doc-title">Members of the Recognition Committee for Non-Jordanian Higher Education Institutions</h1>
+<header class="site-header">
+    <div class="header-left">
+        <img src="/images/mohelogo.png" class="logo" alt="MOHE" />
+        <div class="h-sep"></div>
+        <div>
+            <div class="h-title">Advisors</div>
+            <div class="h-sub">Ministry of Higher Education</div>
         </div>
+    </div>
+    <a class="btn-back" href="@Url.Action("AdminDashboard","Home")">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+</header>
 
-        <div class="action-bar">
-            <a class="btn-back" href="@Url.Action("AdminDashboard", "Home")">
-                <i class="bi bi-arrow-left"></i> Back
-            </a>
+<div class="page-intro">
+    <h1>Advisors Management</h1>
+    <p>Recognition Members and Ministry Advisors — manage assignments, expertise, and contact details.</p>
+</div>
+
+<div class="page-body">
+
+    <!-- ── Recognition Members ── -->
+    <div class="section">
+        <div class="section-head">
+            <div class="section-left">
+                <span class="section-label">Recognition Members</span>
+                <span class="section-count">@recognitionMembers.Count</span>
+            </div>
+            <button class="btn-add" type="button" onclick="openAdd('RecognitionMember')">
+                <i class="bi bi-plus-lg"></i> Add Member
+            </button>
         </div>
-
-        <div class="tbl-wrap" id="tbl">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Workplace</th>
-                        <th>Email</th>
-                        <th>Remove</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Count > 0)
-                    {
-                        foreach (var emp in Model)
+        <div class="card">
+            @if (recognitionMembers.Any())
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Workplace</th>
+                            <th>Contact</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int rn = 1; }
+                        @foreach (var a in recognitionMembers)
                         {
-                            <tr data-row-id="@emp.Id">
-                                <td>@emp.Id</td>
-                                <td>@emp.Name</td>
-                                <td>@emp.Workplace</td>
-                                <td>@(string.IsNullOrWhiteSpace(emp.Email) ? "—" : emp.Email)</td>
+                            <tr>
+                                <td>@(rn++)</td>
                                 <td>
-                                    <button type="button" class="btn-remove"
-                                            data-id="@emp.Id"
-                                            data-name="@emp.Name"
-                                            onclick="openConfirm(this)">
-                                        <i class="bi bi-trash"></i> Remove
-                                    </button>
+                                    <div class="person">
+                                        <div class="av">@(a.FullName.Length > 0 ? a.FullName[0].ToString() : "?")</div>
+                                        <div>
+                                            <div class="p-name">@a.FullName</div>
+                                            <div class="p-sub">@a.Specialization</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><div class="c-main">@a.Workplace</div></td>
+                                <td>
+                                    <div class="c-main">@a.Email</div>
+                                    <div class="c-sub">@a.Phone</div>
+                                </td>
+                                <td>
+                                    <div class="actions">
+                                        <button class="btn-edit" type="button"
+                                                onclick="openEdit(@a.Id,'@Html.Raw(a.FullName.Replace("'","\\'"  ))','@a.Email','@a.Phone','@Html.Raw(a.Specialization.Replace("'","\\'"  ))','@Html.Raw(a.Workplace.Replace("'","\\'"  ))','RecognitionMember')">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                        <button class="btn-del" type="button"
+                                                onclick="openDelete(@a.Id,'@Html.Raw(a.FullName.Replace("'","\\'"  ))')">
+                                            <i class="bi bi-trash3"></i> Delete
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         }
-                    }
-                    else
-                    {
-                        <tr class="empty-row">
-                            <td colspan="5">No committee members found.</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty"><i class="bi bi-person-x"></i>No recognition members yet.</div>
+            }
         </div>
+    </div>
 
-        <div class="bottom-bar">
-            <div class="add-panel" id="addPanel">
-                <h2>Add New Member</h2>
-                <form method="post" asp-action="AddEmployee" asp-controller="Home">
-                    @Html.AntiForgeryToken()
-                    <div class="add-grid">
-                        <div class="add-field add-field-full">
-                            <label>Full Name</label>
-                            <input type="text" name="name" placeholder="Enter full name" required />
-                        </div>
-                        <div class="add-field">
-                            <label>Workplace</label>
-                            <input type="text" name="workplace" placeholder="Enter workplace" />
-                        </div>
-                        <div class="add-field">
-                            <label>Email</label>
-                            <input type="email" name="email" placeholder="Enter email address" />
-                        </div>
-                    </div>
-                    <div class="add-footer">
-                        <button type="submit" class="btn-submit">
-                            <i class="bi bi-person-plus"></i> Add Member
-                        </button>
-                    </div>
-                </form>
+    <hr class="section-divider" />
+
+    <!-- ── Ministry Advisors ── -->
+    <div class="section">
+        <div class="section-head">
+            <div class="section-left">
+                <span class="section-label">Ministry Advisors / Presidents</span>
+                <span class="section-count">@ministryAdvisors.Count</span>
             </div>
-
-            <button class="btn-add-toggle" id="btnToggleAdd" type="button">
-                <i class="bi bi-plus-lg"></i> Add
+            <button class="btn-add" type="button" onclick="openAdd('MinistryAdvisor')">
+                <i class="bi bi-plus-lg"></i> Add Advisor
             </button>
         </div>
-
-    </div>
-
-    <!-- Confirm Remove Modal -->
-    <div class="modal-overlay" id="confirmModal">
-        <div class="modal-box">
-            <div class="modal-icon">
-                <i class="bi bi-trash3"></i>
-            </div>
-            <div class="modal-title">Remove Member</div>
-            <div class="modal-body">
-                Are you sure you want to remove<br><b id="modalMemberName"></b>?<br>This action cannot be undone.
-            </div>
-            <div class="modal-actions">
-                <button class="btn-modal-cancel" type="button" onclick="closeConfirm()">Cancel</button>
-                <button class="btn-modal-confirm" type="button" onclick="submitRemove()">Remove</button>
-            </div>
+        <div class="card">
+            @if (ministryAdvisors.Any())
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name / Position</th>
+                            <th>Workplace</th>
+                            <th>Contact</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int mn = 1; }
+                        @foreach (var a in ministryAdvisors)
+                        {
+                            <tr>
+                                <td>@(mn++)</td>
+                                <td>
+                                    <div class="person">
+                                        <div class="av">@(a.FullName.Length > 0 ? a.FullName[0].ToString() : "?")</div>
+                                        <div>
+                                            <div class="p-name">@a.FullName</div>
+                                            <div class="p-sub">@a.Specialization</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><div class="c-main">@a.Workplace</div></td>
+                                <td>
+                                    <div class="c-main">@a.Email</div>
+                                    <div class="c-sub">@a.Phone</div>
+                                </td>
+                                <td>
+                                    <div class="actions">
+                                        <button class="btn-edit" type="button"
+                                                onclick="openEdit(@a.Id,'@Html.Raw(a.FullName.Replace("'","\\'"  ))','@a.Email','@a.Phone','@Html.Raw(a.Specialization.Replace("'","\\'"  ))','@Html.Raw(a.Workplace.Replace("'","\\'"  ))','MinistryAdvisor')">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                        <button class="btn-del" type="button"
+                                                onclick="openDelete(@a.Id,'@Html.Raw(a.FullName.Replace("'","\\'"  ))')">
+                                            <i class="bi bi-trash3"></i> Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty"><i class="bi bi-building-x"></i>No ministry advisors yet.</div>
+            }
         </div>
     </div>
 
-    <!-- Hidden remove form -->
-    <form id="removeForm" method="post" asp-action="RemoveEmployee" asp-controller="Home" style="display:none;">
-        @Html.AntiForgeryToken()
-        <input type="hidden" id="removeId" name="id" value="" />
-    </form>
+</div>
 
-    <script>
-        function esc(s) {
-            return String(s)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
-        }
+<!-- ADD MODAL -->
+<div class="modal-bg" id="addModal">
+    <div class="modal">
+        <div class="modal-hd">
+            <div class="modal-title" id="addTitle">Add Recognition Member</div>
+            <button class="modal-x" onclick="closeAdd()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <form method="post" asp-action="AddAdvisor" asp-controller="Home">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="type" id="addType" value="RecognitionMember" />
+            <div class="form-grid">
+                <div class="fld ff">
+                    <label class="flabel">Full Name / Position *</label>
+                    <input class="finput" type="text" name="fullName" placeholder="e.g. Prof. Ahmad Al-Hassan" required />
+                </div>
+                <div class="fld">
+                    <label class="flabel">Email</label>
+                    <input class="finput" type="email" name="email" placeholder="name@example.com" />
+                </div>
+                <div class="fld">
+                    <label class="flabel">Phone</label>
+                    <input class="finput" type="text" name="phone" placeholder="07xxxxxxxx" />
+                </div>
+                <div class="fld ff">
+                    <label class="flabel">Specialization</label>
+                    <input class="finput" type="text" name="specialization" placeholder="e.g. PhD in Computer Science" />
+                </div>
+                <div class="fld ff">
+                    <label class="flabel">Workplace</label>
+                    <input class="finput" type="text" name="workplace" placeholder="e.g. The University of Jordan" />
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-mcancel" type="button" onclick="closeAdd()">Cancel</button>
+                <button class="btn-msave" type="submit"><i class="bi bi-person-plus"></i> Add</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        // ── Add toggle ──
-        document.getElementById('btnToggleAdd').addEventListener('click', function () {
-            var panel = document.getElementById('addPanel');
-            panel.classList.toggle('open');
-            this.innerHTML = panel.classList.contains('open')
-                ? '<i class="bi bi-dash-lg"></i> Cancel'
-                : '<i class="bi bi-plus-lg"></i> Add';
+<!-- EDIT MODAL -->
+<div class="modal-bg" id="editModal">
+    <div class="modal">
+        <div class="modal-hd">
+            <div class="modal-title">Edit Advisor</div>
+            <button class="modal-x" onclick="closeEdit()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <form method="post" asp-action="EditAdvisor" asp-controller="Home">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id"   id="editId" />
+            <input type="hidden" name="type" id="editType" />
+            <div class="form-grid">
+                <div class="fld ff">
+                    <label class="flabel">Full Name / Position *</label>
+                    <input class="finput" type="text" name="fullName" id="editName" required />
+                </div>
+                <div class="fld">
+                    <label class="flabel">Email</label>
+                    <input class="finput" type="email" name="email" id="editEmail" />
+                </div>
+                <div class="fld">
+                    <label class="flabel">Phone</label>
+                    <input class="finput" type="text" name="phone" id="editPhone" />
+                </div>
+                <div class="fld ff">
+                    <label class="flabel">Specialization</label>
+                    <input class="finput" type="text" name="specialization" id="editSpec" />
+                </div>
+                <div class="fld ff">
+                    <label class="flabel">Workplace</label>
+                    <input class="finput" type="text" name="workplace" id="editWork" />
+                </div>
+                <div class="fld ff">
+                    <label class="flabel">Section</label>
+                    <select class="finput" name="type" id="editTypeSel">
+                        <option value="RecognitionMember">Recognition Member</option>
+                        <option value="MinistryAdvisor">Ministry Advisor / President</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-mcancel" type="button" onclick="closeEdit()">Cancel</button>
+                <button class="btn-msave" type="submit"><i class="bi bi-check-lg"></i> Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- DELETE CONFIRM -->
+<div class="modal-bg" id="delModal">
+    <div class="modal modal-sm">
+        <div class="del-ico"><i class="bi bi-trash3"></i></div>
+        <div class="del-ttl">Delete Advisor</div>
+        <div class="del-body">
+            Permanently delete <strong id="delName"></strong>?<br>This cannot be undone.
+        </div>
+        <form method="post" asp-action="DeleteAdvisor" asp-controller="Home">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="delId" />
+            <div class="del-foot">
+                <button type="button" class="btn-dc" onclick="closeDel()">Cancel</button>
+                <button type="submit" class="btn-dd"><i class="bi bi-trash3"></i> Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAdd(t) {
+        document.getElementById('addType').value = t;
+        document.getElementById('addTitle').textContent =
+            t === 'MinistryAdvisor' ? 'Add Ministry Advisor / President' : 'Add Recognition Member';
+        document.getElementById('addModal').classList.add('open');
+    }
+    function closeAdd() { document.getElementById('addModal').classList.remove('open'); }
+
+    function openEdit(id, name, email, phone, spec, work, type) {
+        document.getElementById('editId').value       = id;
+        document.getElementById('editName').value     = name;
+        document.getElementById('editEmail').value    = email;
+        document.getElementById('editPhone').value    = phone;
+        document.getElementById('editSpec').value     = spec;
+        document.getElementById('editWork').value     = work;
+        document.getElementById('editType').value     = type;
+        document.getElementById('editTypeSel').value  = type;
+        document.getElementById('editModal').classList.add('open');
+    }
+    function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
+
+    function openDelete(id, name) {
+        document.getElementById('delId').value          = id;
+        document.getElementById('delName').textContent  = name;
+        document.getElementById('delModal').classList.add('open');
+    }
+    function closeDel() { document.getElementById('delModal').classList.remove('open'); }
+
+    ['addModal','editModal','delModal'].forEach(function(id) {
+        document.getElementById(id).addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('open');
         });
-
-        // ── Add Member (AJAX) ──
-        document.querySelector('#addPanel form').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            var name      = this.elements['name'].value.trim();
-            var workplace = this.elements['workplace'].value.trim();
-            var email     = this.elements['email'].value.trim();
-            if (!name) return;
-
-            var tbody = document.querySelector('tbody');
-
-            // Remove empty-state row if present
-            var emptyRow = tbody.querySelector('.empty-row');
-            if (emptyRow) emptyRow.remove();
-
-            // Compute next display ID
-            var maxId = 0;
-            tbody.querySelectorAll('tr[data-row-id]').forEach(function (r) {
-                maxId = Math.max(maxId, parseInt(r.dataset.rowId) || 0);
-            });
-            var newId = maxId + 1;
-
-            // Insert new row into DOM
-            var tr = document.createElement('tr');
-            tr.dataset.rowId = newId;
-            tr.innerHTML =
-                '<td>' + newId + '</td>' +
-                '<td>' + esc(name) + '</td>' +
-                '<td>' + esc(workplace) + '</td>' +
-                '<td>' + (email ? esc(email) : '—') + '</td>' +
-                '<td><button type="button" class="btn-remove" ' +
-                    'data-id="' + newId + '" ' +
-                    'data-name="' + esc(name) + '" ' +
-                    'onclick="openConfirm(this)">' +
-                    '<i class="bi bi-trash"></i> Remove</button></td>';
-            tbody.appendChild(tr);
-
-            // Fire POST in background (persist to server)
-            fetch(this.action, { method: 'POST', body: new FormData(this) });
-
-            // Reset and close panel
-            this.reset();
-            var panel = document.getElementById('addPanel');
-            panel.classList.remove('open');
-            document.getElementById('btnToggleAdd').innerHTML = '<i class="bi bi-plus-lg"></i> Add';
-        });
-
-        // ── Confirm modal ──
-        function openConfirm(btn) {
-            document.getElementById('removeId').value   = btn.dataset.id;
-            document.getElementById('modalMemberName').textContent = btn.dataset.name;
-            document.getElementById('confirmModal').classList.add('open');
-        }
-
-        function closeConfirm() {
-            document.getElementById('confirmModal').classList.remove('open');
-        }
-
-        // ── Remove Member (AJAX) ──
-        function submitRemove() {
-            var id   = document.getElementById('removeId').value;
-            var form = document.getElementById('removeForm');
-
-            // Remove row from DOM instantly
-            var row = document.querySelector('tr[data-row-id="' + id + '"]');
-            if (row) row.remove();
-
-            // Show empty state if table is now empty
-            var tbody = document.querySelector('tbody');
-            if (!tbody.querySelector('tr')) {
-                var tr = document.createElement('tr');
-                tr.className = 'empty-row';
-                tr.innerHTML = '<td colspan="5">No committee members found.</td>';
-                tbody.appendChild(tr);
-            }
-
-            closeConfirm();
-
-            // Fire POST in background
-            fetch(form.action, { method: 'POST', body: new FormData(form) });
-        }
-
-        // Close modal on backdrop click
-        document.getElementById('confirmModal').addEventListener('click', function (e) {
-            if (e.target === this) closeConfirm();
-        });
-    </script>
+    });
+</script>
 </body>
 </html>

@@ -1,4 +1,5 @@
-﻿@model MOHRecognition.DTOs.ManualInstitutionRequestDto
+﻿@using MOHRecognition.DTOs
+@model MOHRecognition.DTOs.ManualInstitutionRequestDto
 
 @{
     Layout = null;
@@ -144,9 +145,13 @@
 
                         <select name="AssignedMember" required>
                             <option value="">Select Member</option>
-                            <option value="member1@mohe.local">Recognition Member 1</option>
-                            <option value="member2@mohe.local">Recognition Member 2</option>
-                            <option value="member3@mohe.local">Recognition Member 3</option>
+                            @if (ViewBag.RecognitionMembers != null)
+                            {
+                                foreach (var rm in (IReadOnlyList<AdvisorDto>)ViewBag.RecognitionMembers)
+                                {
+                                    <option value="@rm.Email">@rm.FullName</option>
+                                }
+                            }
                         </select>
 
                     </div>

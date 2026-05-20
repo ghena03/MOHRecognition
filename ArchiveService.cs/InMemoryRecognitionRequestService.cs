@@ -162,17 +162,13 @@ namespace MOHRecognition.Services
 
         private static string NormalizeAssignedMember(string? memberName)
         {
-            var value = (memberName ?? "").Trim().ToLowerInvariant();
+            var value = (memberName ?? "").Trim();
 
-            return value switch
-            {
-                "" => "Unassigned",
-                "unassigned" => "Unassigned",
-                "member1@mohe.local" => "member1@mohe.local",
-                "member2@mohe.local" => "member2@mohe.local",
-                "member3@mohe.local" => "member3@mohe.local",
-                _ => "Unassigned"
-            };
+            if (string.IsNullOrWhiteSpace(value) ||
+                value.Equals("unassigned", StringComparison.OrdinalIgnoreCase))
+                return "Unassigned";
+
+            return value;
         }
 
         private static string NormalizeStatusForAssignment(string? currentStatus, string assignedMember)

@@ -1,3 +1,4 @@
+@using MOHRecognition.DTOs
 @model MOHRecognition.Services.RecognitionRequestRecord
 
 @{
@@ -52,7 +53,7 @@
                             @foreach (var m in ViewBag.MemberLoads)
                             {
                                 <div style="display:flex; align-items:center; gap:8px; background:#f5f5f5; border:1px solid #ddd; border-radius:8px; padding:8px 14px; min-width:190px;">
-                                    <span style="font-size:13px; color:#555;">@m.Name</span>
+                                    <span style="font-size:13px; color:#555;">@m.FullName</span>
                                     <span style="margin-left:auto; background:#8b1a1a; color:#fff; border-radius:12px; padding:2px 10px; font-size:13px; font-weight:700;">@m.Count</span>
                                 </div>
                             }
@@ -72,10 +73,17 @@
                     <label style="font-weight:600;">Assign to:</label>
 
                     <select name="assignedMember" class="mini-select">
-                        <option value="Unassigned" selected="@(Model.AssignedMember == "Unassigned")">Unassigned</option>
-                        <option value="member1@mohe.local" selected="@(Model.AssignedMember == "member1@mohe.local")">Recognition Member 1</option>
-                        <option value="member2@mohe.local" selected="@(Model.AssignedMember == "member2@mohe.local")">Recognition Member 2</option>
-                        <option value="member3@mohe.local" selected="@(Model.AssignedMember == "member3@mohe.local")">Recognition Member 3</option>
+                        <option value="Unassigned" selected="@(Model.AssignedMember == "Unassigned" || string.IsNullOrWhiteSpace(Model.AssignedMember))">Unassigned</option>
+                        @if (ViewBag.RecognitionMembers != null)
+                        {
+                            foreach (var rm in (IReadOnlyList<AdvisorDto>)ViewBag.RecognitionMembers)
+                            {
+                                <option value="@rm.Email"
+                                        selected="@(string.Equals(Model.AssignedMember, rm.Email, StringComparison.OrdinalIgnoreCase))">
+                                    @rm.FullName
+                                </option>
+                            }
+                        }
                     </select>
 
                     <button type="submit" class="mini-save-btn">Assign</button>

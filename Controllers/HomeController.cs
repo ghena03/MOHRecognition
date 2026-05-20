@@ -15,6 +15,7 @@ namespace MOHRecognition.Controllers
     {
         private readonly IWebHostEnvironment _env;
         private readonly IRecognitionRequestService _recognitionRequestService;
+        private readonly IAdvisorService _advisorService;
         private Dictionary<string, List<string>>? _citiesCache;
         private static PostgraduateApplicationDto _latestPostgraduateRequest;
         private static List<EmployeeDto> employees = new List<EmployeeDto>
@@ -51,10 +52,11 @@ namespace MOHRecognition.Controllers
         }
         private static List<RecognitionRequestRecord> _manualInstitutionRequests
     = new List<RecognitionRequestRecord>();
-        public HomeController(IWebHostEnvironment env, IRecognitionRequestService recognitionRequestService)
+        public HomeController(IWebHostEnvironment env, IRecognitionRequestService recognitionRequestService, IAdvisorService advisorService)
         {
             _env = env;
             _recognitionRequestService = recognitionRequestService;
+            _advisorService = advisorService;
         }
         [HttpPost]
         public IActionResult GetCitiesByCountry([FromBody] CountryRequest request)
@@ -3919,6 +3921,7 @@ namespace MOHRecognition.Controllers
 
         public IActionResult AddEducationalInstitution()
         {
+            ViewBag.RecognitionMembers = _advisorService.GetRecognitionMembers();
             return View("~/Views/admin/AddEducationalInstitution.cshtml");
         }
         [HttpPost]
@@ -4148,32 +4151,73 @@ namespace MOHRecognition.Controllers
 
             _recognitionRequestService.AssignMember(id, assignedMember ?? "Unassigned");
 
-            return Redirect("/Home/AdminDashboard#assignments");
+            return RedirectToAction("AdminRequestDetails", new { id });
         }
 
         public IActionResult Employees()
         {
-            return View("~/Views/Admin/Employees.cshtml", employees);
+            return View("~/Views/Admin/Employees.cshtml", _advisorService.GetAll());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult AddEmployee(string name, string workplace, string email)
+        public IActionResult AddAdvisor(string fullName, string email, string phone,
+            string specialization, string workplace, string type)
         {
-            if (!string.IsNullOrWhiteSpace(name))
+            if (!string.IsNullOrWhiteSpace(fullName))
             {
-                var nextId = employees.Count > 0 ? employees.Max(e => e.Id) + 1 : 1;
-                employees.Add(new EmployeeDto { Id = nextId, Name = name.Trim(), Workplace = workplace?.Trim() ?? "", Email = email?.Trim() ?? "" });
+                var advisorType = type == "MinistryAdvisor"
+                    ? AdvisorType.MinistryAdvisor
+                    : AdvisorType.RecognitionMember;
+
+                _advisorService.Add(new AdvisorDto
+                {
+                    FullName       = fullName.Trim(),
+                    Email          = email?.Trim() ?? "",
+                    Phone          = phone?.Trim() ?? "",
+                    Specialization = specialization?.Trim() ?? "",
+                    Workplace      = workplace?.Trim() ?? "",
+                    Type           = advisorType
+                });
             }
-            return Redirect(Url.Action("Employees", "Home") + "#tbl");
+            return RedirectToAction("Employees");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult EditAdvisor(int id, string fullName, string email, string phone,
+            string specialization, string workplace, string type)
+        {
+            var existing = _advisorService.GetById(id);
+            if (existing != null)
+            {
+                existing.FullName       = fullName?.Trim() ?? existing.FullName;
+                existing.Email          = email?.Trim() ?? existing.Email;
+                existing.Phone          = phone?.Trim() ?? existing.Phone;
+                existing.Specialization = specialization?.Trim() ?? existing.Specialization;
+                existing.Workplace      = workplace?.Trim() ?? existing.Workplace;
+                existing.Type           = type == "MinistryAdvisor"
+                    ? AdvisorType.MinistryAdvisor
+                    : AdvisorType.RecognitionMember;
+                _advisorService.Update(existing);
+            }
+            return RedirectToAction("Employees");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteAdvisor(int id)
+        {
+            _advisorService.Remove(id);
+            return RedirectToAction("Employees");
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult RemoveEmployee(int id)
         {
-            employees.RemoveAll(e => e.Id == id);
-            return Redirect(Url.Action("Employees", "Home") + "#tbl");
+            _advisorService.Remove(id);
+            return RedirectToAction("Employees");
         }
         public IActionResult Decisions()
         {
@@ -5554,17 +5598,14 @@ namespace MOHRecognition.Controllers
                 return NotFound();
 
             var allRequests = _recognitionRequestService.GetAll();
-            var members = new[]
-            {
-                new { Email = "member1@mohe.local", Name = "Recognition Member 1" },
-                new { Email = "member2@mohe.local", Name = "Recognition Member 2" },
-                new { Email = "member3@mohe.local", Name = "Recognition Member 3" },
-            };
+            var members = _advisorService.GetRecognitionMembers();
             ViewBag.MemberLoads = members.Select(m => new
             {
-                m.Name,
+                m.FullName,
+                m.Email,
                 Count = allRequests.Count(r => string.Equals(r.AssignedMember, m.Email, StringComparison.OrdinalIgnoreCase))
             }).ToList();
+            ViewBag.RecognitionMembers = members;
 
             return View("~/Views/Admin/AdminRequestDetails.cshtml", request);
         }
@@ -5637,30 +5678,21 @@ namespace MOHRecognition.Controllers
             );
         }
 
-        private static string NormalizeRecognitionMemberIdentity(string? value)
+        private string NormalizeRecognitionMemberIdentity(string? value)
         {
-            var normalized = (value ?? "").Trim().ToLowerInvariant();
-
-            return normalized switch
-            {
-                "member1@mohe.local" => "member1@mohe.local",
-                "member2@mohe.local" => "member2@mohe.local",
-                "member3@mohe.local" => "member3@mohe.local",
-                _ => ""
-            };
+            var trimmed = (value ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(trimmed)) return "";
+            var advisor = _advisorService.FindByEmail(trimmed);
+            if (advisor == null || advisor.Type != AdvisorType.RecognitionMember) return "";
+            return advisor.Email.Trim();
         }
 
-        private static string GetRecognitionMemberDisplayName(string? value)
+        private string GetRecognitionMemberDisplayName(string? value)
         {
-            var normalized = NormalizeRecognitionMemberIdentity(value);
-
-            return normalized switch
-            {
-                "member1@mohe.local" => "Recognition Member 1",
-                "member2@mohe.local" => "Recognition Member 2",
-                "member3@mohe.local" => "Recognition Member 3",
-                _ => "Recognition Member"
-            };
+            var trimmed = (value ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(trimmed)) return "Recognition Member";
+            var advisor = _advisorService.FindByEmail(trimmed);
+            return advisor?.FullName ?? "Recognition Member";
         }
 
         private static (bool ok, bool hasFile, string fileName, string fileContentBase64, string error) TryReadSamplePdfUpload(IFormFile? file)

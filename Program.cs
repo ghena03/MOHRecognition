@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Localization;
 using System.Globalization;
+using MOHRecognition.DTOs;
 using MOHRecognition.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +33,7 @@ builder.Services.AddSession(options =>
 
 
 builder.Services.AddSingleton<IRecognitionRequestService, InMemoryRecognitionRequestService>();
+builder.Services.AddSingleton<IAdvisorService, InMemoryAdvisorService>();
 
 // ─────────────────────────────────────────────────────────────────────────────
 //    "en" = English (LTR)  — default
