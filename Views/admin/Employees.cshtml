@@ -429,7 +429,170 @@
                 padding-right: 24px;
             }
         }
+        /* =========================================================
+           MODALS
+        ========================================================= */
 
+        .modal-bg {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+            .modal-bg.open {
+                display: flex;
+            }
+
+        .modal {
+            background: white;
+            width: 100%;
+            max-width: 520px;
+            border-radius: 28px;
+            padding: 30px;
+            box-shadow: 0 25px 60px rgba(0,0,0,.15);
+            animation: modalIn .2s ease;
+        }
+
+        @@keyframes modalIn {
+           
+
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-sm {
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .modal-hd {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .modal-x {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 14px;
+            background: #f3f4f6;
+            cursor: pointer;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .ff {
+            grid-column: 1/-1;
+        }
+
+        .fld {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .flabel {
+            font-size: 12px;
+            font-weight: 700;
+            color: #6b7280;
+        }
+
+        .finput {
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 14px 16px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+            .finput:focus {
+                outline: none;
+                border-color: #7f1627;
+                box-shadow: 0 0 0 4px rgba(127,22,39,.08);
+            }
+
+        .modal-foot {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .btn-cancel {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 16px;
+            padding: 12px 18px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #7f1627, #a51d35);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 12px 18px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 12px 18px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .delete-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: #fff1f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc2626;
+            font-size: 28px;
+        }
+
+        .delete-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .delete-text {
+            font-size: 15px;
+            color: #6b7280;
+            line-height: 1.7;
+        }
     </style>
 </head>
 
@@ -819,6 +982,407 @@
         <hr class="section-divider" />
 
     </div>
+    <!-- EDIT MODAL -->
+
+    <div class="modal-bg" id="editModal">
+
+        <div class="modal">
+
+            <div class="modal-hd">
+
+                <div class="modal-title">
+                    Edit Advisor
+                </div>
+
+                <button class="modal-x"
+                        onclick="closeEdit()">
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
+
+            </div>
+
+            <form method="post"
+                  asp-action="EditAdvisor"
+                  asp-controller="Home">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       id="editId" />
+
+                <input type="hidden"
+                       name="type"
+                       id="editType" />
+
+                <div class="form-grid">
+
+                    <div class="fld ff">
+
+                        <label class="flabel">
+                            Full Name
+                        </label>
+
+                        <input class="finput"
+                               type="text"
+                               name="fullName"
+                               id="editName"
+                               required />
+
+                    </div>
+
+                    <div class="fld">
+
+                        <label class="flabel">
+                            Email
+                        </label>
+
+                        <input class="finput"
+                               type="email"
+                               name="email"
+                               id="editEmail" />
+
+                    </div>
+
+                    <div class="fld">
+
+                        <label class="flabel">
+                            Phone
+                        </label>
+
+                        <input class="finput"
+                               type="text"
+                               name="phone"
+                               id="editPhone" />
+
+                    </div>
+
+                    <div class="fld ff">
+
+                        <label class="flabel">
+                            Specialization
+                        </label>
+
+                        <input class="finput"
+                               type="text"
+                               name="specialization"
+                               id="editSpec" />
+
+                    </div>
+
+                    <div class="fld ff">
+
+                        <label class="flabel">
+                            Workplace
+                        </label>
+
+                        <input class="finput"
+                               type="text"
+                               name="workplace"
+                               id="editWork" />
+
+                    </div>
+
+                </div>
+
+                <div class="modal-foot">
+
+                    <button type="button"
+                            class="btn-cancel"
+                            onclick="closeEdit()">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="submit"
+                            class="btn-save">
+
+                        <i class="bi bi-check-lg"></i>
+
+                        Save Changes
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+    <!-- DELETE MODAL -->
+
+    <div class="modal-bg" id="delModal">
+
+        <div class="modal modal-sm">
+
+            <div class="delete-icon">
+
+                <i class="bi bi-trash3"></i>
+
+            </div>
+
+            <div class="delete-title">
+                Delete Advisor
+            </div>
+
+            <div class="delete-text">
+
+                Are you sure you want to delete
+                <strong id="delName"></strong> ?
+
+            </div>
+
+            <form method="post"
+                  asp-action="DeleteAdvisor"
+                  asp-controller="Home">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       id="delId" />
+
+                <div class="modal-foot">
+
+                    <button type="button"
+                            class="btn-cancel"
+                            onclick="closeDelete()">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="submit"
+                            class="btn-danger">
+
+                        <i class="bi bi-trash3"></i>
+
+                        Delete
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+    <!-- ADD MODAL -->
+
+    <div class="modal-bg" id="addModal">
+
+        <div class="modal">
+
+            <div class="modal-hd">
+
+                <div class="modal-title"
+                     id="addTitle">
+
+                    Add Advisor
+
+                </div>
+
+                <button class="modal-x"
+                        onclick="closeAdd()">
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
+
+            </div>
+
+            <form method="post"
+                  asp-action="AddAdvisor"
+                  asp-controller="Home">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="type"
+                       id="addType"
+                       value="RecognitionMember" />
+
+                <div class="form-grid">
+
+                    <div class="fld ff">
+
+                        <label class="flabel">
+                            Full Name / Position
+                        </label>
+
+                        <input class="finput"
+                               type="text"
+                               name="fullName"
+                               required />
+
+                    </div>
+
+                    <div class="fld">
+
+                        <label class="flabel">
+                            Email
+                        </label>
+
+                        <input class="finput"
+                               type="email"
+                               name="email" />
+
+                    </div>
+
+                    <div class="fld">
+
+                        <label class="flabel">
+                            Phone
+                        </label>
+
+                        <input class="finput"
+                               type="text"
+                               name="phone" />
+
+                    </div>
+
+                    <div class="fld ff">
+
+                        <label class="flabel">
+                            Specialization
+                        </label>
+
+                        <input class="finput"
+                               type="text"
+                               name="specialization" />
+
+                    </div>
+
+                    <div class="fld ff">
+
+                        <label class="flabel">
+                            Workplace
+                        </label>
+
+                        <input class="finput"
+                               type="text"
+                               name="workplace" />
+
+                    </div>
+
+                </div>
+
+                <div class="modal-foot">
+
+                    <button type="button"
+                            class="btn-cancel"
+                            onclick="closeAdd()">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="submit"
+                            class="btn-save">
+
+                        <i class="bi bi-plus-lg"></i>
+
+                        Add Advisor
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        /* =========================================================
+           EDIT
+        ========================================================= */
+
+        function openEdit(id, name, email, phone, spec, work, type) {
+
+            document.getElementById('editId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editPhone').value = phone;
+            document.getElementById('editSpec').value = spec;
+            document.getElementById('editWork').value = work;
+            document.getElementById('editType').value = type;
+
+            document.getElementById('editModal')
+                .classList.add('open');
+        }
+
+        function closeEdit() {
+
+            document.getElementById('editModal')
+                .classList.remove('open');
+        }
+
+        /* =========================================================
+           DELETE
+        ========================================================= */
+
+        function openDelete(id, name) {
+
+            document.getElementById('delId').value = id;
+
+            document.getElementById('delName').innerText = name;
+
+            document.getElementById('delModal')
+                .classList.add('open');
+        }
+
+        function closeDelete() {
+
+            document.getElementById('delModal')
+                .classList.remove('open');
+        }
+
+        /* =========================================================
+           CLOSE WHEN CLICKING OUTSIDE
+        ========================================================= */
+
+        ['addModal', 'editModal', 'delModal'].forEach(function (id) {
+
+            document.getElementById(id)
+                .addEventListener('click', function (e) {
+
+                    if (e.target === this) {
+
+                        this.classList.remove('open');
+                    }
+                });
+        });
+
+                /* =======================          ADD
+        ====================== */
+
+        function openAdd(type) {
+
+            document.getElementById('addType').value = type;
+
+            document.getElementById('addTitle').innerText =
+                type === 'MinistryAdvisor'
+                ? 'Add Ministry Advisor'
+                : 'Add Recognition Member';
+
+            document.getElementById('addModal')
+                .classList.add('open');
+        }
+
+        function closeAdd() {
+
+            document.getElementById('addModal')
+                .classList.remove('open');
+        }
+    </script>
 
 </body>
 </html>
