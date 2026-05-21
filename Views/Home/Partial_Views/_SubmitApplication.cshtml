@@ -20,21 +20,42 @@
     <div class="submitapp-grid">
         <div class="field">
             <label>Applicant Name <span class="req">*</span></label>
-            <input id="subapp_name" type="text" maxlength="200" value="@(Model?.ApplicantName ?? "")" />
+            <input id="subapp_name" name="ApplicantName" type="text" maxlength="200" value="@(Model?.ApplicantName ?? "")" />
         </div>
 
         <div class="field">
             <label>Work Place <span class="req">*</span></label>
-            <input id="subapp_workplace" type="text" maxlength="200" value="@(Model?.WorkPlace ?? "")" />
+            <input id="subapp_workplace" name="WorkPlace" type="text" maxlength="200" value="@(Model?.WorkPlace ?? "")" />
         </div>
     </div>
 
-    <label class="submitapp-check">
-        <input id="subapp_ack" type="checkbox" @(Model != null && Model.IsAcknowledged ? "checked" : "") />
+    <label class="submitapp-check" style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+        <input id="subapp_ack" name="IsAcknowledged" type="checkbox" @(Model != null && Model.IsAcknowledged ? "checked" : "") />
         <span>I acknowledge that all data are correct.</span>
     </label>
 
-    <div style="display:flex; justify-content:flex-start; margin-top:18px;">
+    <!-- Postgraduate continuation question (hidden until acknowledgment checked) -->
+    <div id="subapp_postgrad_question" style="display:none; margin-top:12px;">
+        <label style="font-weight:600; display:block; margin-bottom:6px;">
+            Would you like to continue to postgraduate recognition?
+        </label>
+
+        <label style="margin-right:12px;">
+            <input type="radio" id="subapp_continue_yes" name="subapp_continue_postgrad" value="yes" /> Yes
+        </label>
+
+        <label>
+            <input type="radio" id="subapp_continue_no" name="subapp_continue_postgrad" value="no" checked /> No
+        </label>
+    </div>
+
+    <div style="display:flex; justify-content:flex-start; margin-top:18px; gap:12px;">
+        <!-- Default submit (shown when user chooses No OR when question hidden) -->
         <button type="button" id="btnSubmitApplication" class="btn-primary">Submit</button>
+
+        <!-- Shown only when user chooses Yes -->
+        <button type="button" id="btnSaveAndApplyPostgraduate" class="btn-primary" style="display:none;">
+            Save &amp; Apply for Postgraduate
+        </button>
     </div>
 </div>

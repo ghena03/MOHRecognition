@@ -1120,56 +1120,6 @@
 
                     <div class="card-bd">
 
-                        <!-- Postgraduate Future Question -->
-                        <div class="postgraduate-question" style="margin-bottom:25px;">
-
-                            <label style="font-size:20px; font-weight:700; color:#7a1232;">
-                                Would you like to apply for postgraduate recognition in the future?
-                            </label>
-
-                            <div class="pg-options" style="margin-top:12px; display:flex; gap:20px;">
-
-                                <label style="font-size:17px;">
-                                    <input type="radio"
-                                           name="FuturePostgraduateOption"
-                                           value="Yes">
-
-                                    Yes
-                                </label>
-
-                                <label style="font-size:17px;">
-                                    <input type="radio"
-                                           name="FuturePostgraduateOption"
-                                           value="No">
-
-                                    No
-                                </label>
-
-                            </div>
-
-                            <div id="pgMessage"
-                                 style="
-                    display:none;
-                    margin-top:15px;
-                    background:#fff4e5;
-                    border-left:5px solid #b3003c;
-                    padding:16px;
-                    border-radius:10px;
-                    color:#5c1b1b;
-                    line-height:1.8;
-                    font-size:15px;">
-
-                                Postgraduate applications become available only after
-                                the institution receives bachelor recognition approval.
-
-                                <br /><br />
-
-                                An email notification will be sent once your institution
-                                becomes eligible to submit postgraduate recognition requests.
-
-                            </div>
-
-                        </div>
 
                         <!-- Submit Application -->
                         <div id="submitApplicationContainer"
@@ -1218,7 +1168,7 @@
         }
     </script>
 
-    <!-- ✅ NEW: Students refresh helper (so dropdown always gets latest programs) -->
+    
     <script>
         async function refreshStudentsNumbersNoJump() {
           const container = document.getElementById("studentsNumbersContainer");
@@ -1233,7 +1183,7 @@
             const html = await res.text();
             container.innerHTML = html;
 
-            // ✅ VERY IMPORTANT: re-init students JS after replacing HTML
+           
             if (window.initStudentsNumbers) {
               window.initStudentsNumbers();
             }

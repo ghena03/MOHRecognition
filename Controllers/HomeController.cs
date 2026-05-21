@@ -4612,7 +4612,10 @@ namespace MOHRecognition.Controllers
 
             return View("~/Views/member/RecognitionMemberDashboard.cshtml", model);
         }
-
+        public IActionResult OnlineSystem()
+        {
+            return View("~/Views/uni/OnlineSystem.cshtml");
+        }
         private static RecognitionMemberDashboardApplicationItem MapDashboardItem(RecognitionRequestRecord request)
         {
             var reviewStatus = ResolveReviewStatus(request);

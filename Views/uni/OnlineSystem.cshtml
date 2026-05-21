@@ -1,0 +1,565 @@
+﻿@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Online System</title>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/uni/UniDashboard.css"
+          asp-append-version="true" />
+</head>
+
+<body class="submitapp-page ltr">
+
+    <!-- HEADER -->
+    <header class="top-header en">
+
+        <div class="hdr-grid">
+
+            <div></div>
+
+            <nav class="hdr-nav">
+                <a class="hdr-link"
+                   href="@Url.Action("UniDashboard", "Home")">
+                    ← Back
+                </a>
+
+                <a class="hdr-link"
+                   href="https://www.mohe.gov.jo/"
+                   target="_blank">
+                    Ministry Website
+                </a>
+            </nav>
+
+            <div class="hdr-logo">
+                <img class="rm-logo"
+                     src="~/images/mohelogo.png" />
+            </div>
+
+        </div>
+
+        <div class="brand-bar"></div>
+
+    </header>
+
+    <div class="layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <a href="#"
+               class="side-user">
+
+                <div class="user-avatar">
+                    ON
+                </div>
+
+                <div class="user-info">
+                    <span class="user-name">
+                        Online System
+                    </span>
+
+                    <span class="user-link">
+                        Education Portal
+                    </span>
+                </div>
+
+            </a>
+
+            <a class="side-item"
+               href="#sec-duration">
+                Study Duration
+            </a>
+
+            <a class="side-item"
+               href="#sec-communication">
+                Communication
+            </a>
+
+            <a class="side-item"
+               href="#sec-exams">
+                Examination System
+            </a>
+
+            <a class="side-item"
+               href="#sec-platform">
+                Learning Platform
+            </a>
+
+            <div class="side-footer">
+                <a class="logout"
+                   href="@Url.Action("Logout", "Home")">
+                    Logout
+                </a>
+            </div>
+
+        </aside>
+
+        <!-- MAIN -->
+        <main class="content">
+
+            <!-- WELCOME -->
+            <section class="welcome">
+
+                <div class="welcome-card">
+
+                    <div class="welcome-icon">
+                        🌐
+                    </div>
+
+                    <h1 class="welcome-title">
+                        Online Learning System
+                    </h1>
+
+                    <p class="welcome-text">
+                        Please provide complete information
+                        about the online education system,
+                        examinations, communication methods,
+                        and learning platform.
+                    </p>
+
+                </div>
+
+            </section>
+
+            <!-- FORM -->
+            <form method="post">
+
+                <!-- ================= STUDY DURATION ================= -->
+
+                <section class="card"
+                         id="sec-duration">
+
+                    <div class="card-hd">
+                        <h2>Study Duration</h2>
+
+                        <p>
+                            Enter the official duration for each degree.
+                        </p>
+                    </div>
+
+                    <div class="card-bd">
+
+                        <div class="grid-2">
+
+                            <div class="field">
+                                <label>
+                                    Bachelor Degree Duration
+                                </label>
+
+                                <input type="text"
+                                       name="BachelorDuration"
+                                       placeholder="Example: 4 Years" />
+                            </div>
+
+                            <div class="field">
+                                <label>
+                                    Master Degree Duration
+                                </label>
+
+                                <input type="text"
+                                       name="MasterDuration"
+                                       placeholder="Example: 2 Years" />
+                            </div>
+
+                            <div class="field">
+                                <label>
+                                    PhD Degree Duration
+                                </label>
+
+                                <input type="text"
+                                       name="PhDDuration"
+                                       placeholder="Example: 3 Years" />
+                            </div>
+
+                            <div class="field">
+                                <label>
+                                    Higher Diploma Duration
+                                </label>
+
+                                <input type="text"
+                                       name="HigherDiplomaDuration"
+                                       placeholder="Example: 1 Year" />
+                            </div>
+
+                            <div class="field">
+                                <label>
+                                    Intermediate Diploma Duration
+                                </label>
+
+                                <input type="text"
+                                       name="IntermediateDiplomaDuration"
+                                       placeholder="Example: 2 Years" />
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+                <!-- ================= COMMUNICATION ================= -->
+
+                <section class="card"
+                         id="sec-communication">
+
+                    <div class="card-hd">
+                        <h2>Student & Supervisor Communication</h2>
+
+                        <p>
+                            Please specify the communication methods
+                            used between students and supervisors.
+                        </p>
+                    </div>
+
+                    <div class="card-bd">
+
+                        <!-- Communication Type -->
+
+                        <div class="subhead">
+                            Communication Type
+                        </div>
+
+                        <div class="degree-options">
+
+                            <label class="degree-pill">
+                                <input type="radio"
+                                       name="CommunicationType"
+                                       value="Fully Online"
+                                       hidden />
+                                <span>Fully Online</span>
+                            </label>
+
+                            <label class="degree-pill">
+                                <input type="radio"
+                                       name="CommunicationType"
+                                       value="Partially Online"
+                                       hidden />
+                                <span>Partially Online</span>
+                            </label>                          
+
+                        </div>
+
+                        <!-- Communication Methods -->
+
+                        <div class="subhead"
+                             style="margin-top:30px;">
+                            Communication Methods
+                        </div>
+
+                        <div class="degree-options">
+
+                            <label class="degree-pill">
+                                <input type="checkbox"
+                                       name="CommunicationMethods"
+                                       value="Video Meetings"
+                                       hidden />
+                                <span>Video Meetings</span>
+                            </label>
+
+                            <label class="degree-pill">
+                                <input type="checkbox"
+                                       name="CommunicationMethods"
+                                       value="Email"
+                                       hidden />
+                                <span>Email</span>
+                            </label>
+
+                            <label class="degree-pill">
+                                <input type="checkbox"
+                                       name="CommunicationMethods"
+                                       value="Live Sessions"
+                                       hidden />
+                                <span>Live Sessions</span>
+                            </label>                       
+
+                        </div>
+
+                    </div>
+
+                </section>
+                <!-- ================= EXAMINATION SYSTEM ================= -->
+
+                <section class="card"
+                         id="sec-exams">
+
+                    <div class="card-hd">
+                        <h2>Examination System</h2>
+
+                        <p>
+                            Please provide information about examinations
+                            and monitoring methods.
+                        </p>
+                    </div>
+
+                    <div class="card-bd">
+
+                        <!-- Exam Type -->
+
+                        <div class="subhead">
+                            Examination Type
+                        </div>
+
+                        <div class="degree-options">
+
+                            <label class="degree-pill">
+                                <input type="radio"
+                                       name="ExamType"
+                                       value="Online"
+                                       id="examOnline"
+                                       hidden />
+                                <span>Online Exams</span>
+                            </label>
+
+                            <label class="degree-pill">
+                                <input type="radio"
+                                       name="ExamType"
+                                       value="OnCampus"
+                                       id="examCampus"
+                                       hidden />
+                                <span>On-Campus Exams</span>
+                            </label>
+
+                            <label class="degree-pill">
+                                <input type="radio"
+                                       name="ExamType"
+                                       value="Hybrid"
+                                       id="examHybrid"
+                                       hidden />
+                                <span>Hybrid Exams</span>
+                            </label>
+
+                        </div>
+
+                        <!-- Exam Locations -->
+
+                        <div style="margin-top:30px;">
+
+                            <div class="subhead">
+                                Examination Locations
+                            </div>
+
+                            <div class="field">
+
+                                <label>
+                                    Please enter examination centers
+                                    and locations
+                                </label>
+
+                                <textarea name="ExamLocations"
+                                          rows="5"
+                                          placeholder="Example:
+Amman - Jordan
+Dubai - UAE
+Istanbul - Turkey"></textarea>
+
+                            </div>
+
+                        </div>
+
+                        <!-- ONLINE PROCTORING -->
+
+                        <div id="proctoringSection"
+                             style="display:none; margin-top:30px;">
+
+                            <div class="subhead">
+                                Online Examination Monitoring
+                            </div>
+
+                            <div class="degree-options">
+
+                                <label class="degree-pill">
+                                    <input type="checkbox"
+                                           name="ProctoringMethods"
+                                           value="Live Human Proctoring"
+                                           hidden />
+                                    <span>Live Human Proctoring</span>
+                                </label>
+
+                                <label class="degree-pill">
+                                    <input type="checkbox"
+                                           name="ProctoringMethods"
+                                           value="AI Monitoring"
+                                           hidden />
+                                    <span>AI Monitoring</span>
+                                </label>
+
+                                <label class="degree-pill">
+                                    <input type="checkbox"
+                                           name="ProctoringMethods"
+                                           value="Camera Monitoring"
+                                           hidden />
+                                    <span>Camera Monitoring</span>
+                                </label>
+
+                                <label class="degree-pill">
+                                    <input type="checkbox"
+                                           name="ProctoringMethods"
+                                           value="Screen Monitoring"
+                                           hidden />
+                                    <span>Screen Monitoring</span>
+                                </label>
+
+                                <label class="degree-pill">
+                                    <input type="checkbox"
+                                           name="ProctoringMethods"
+                                           value="Browser Lockdown"
+                                           hidden />
+                                    <span>Browser Lockdown</span>
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+                <!-- ================= LEARNING PLATFORM ================= -->
+
+                <section class="card"
+                         id="sec-platform">
+
+                    <div class="card-hd">
+
+                        <h2>Learning Platform</h2>
+
+                        <p>
+                            Please provide the online learning platform information.
+                        </p>
+
+                    </div>
+
+                    <div class="card-bd">
+
+                        <!-- HAS PLATFORM -->
+
+                        <div class="subhead">
+                            Online Learning Platform
+                        </div>
+
+                        <div class="degree-options">
+
+                            <label class="degree-pill">
+
+                                <input type="radio"
+                                       name="HasPlatform"
+                                       value="Yes"
+                                       id="hasPlatformYes"
+                                       hidden />
+
+                                <span>Yes</span>
+
+                            </label>
+
+                            <label class="degree-pill">
+
+                                <input type="radio"
+                                       name="HasPlatform"
+                                       value="No"
+                                       id="hasPlatformNo"
+                                       hidden />
+
+                                <span>No</span>
+
+                            </label>
+
+                        </div>
+
+                        <!-- PLATFORM DETAILS -->
+
+                        <div id="platformDetails"
+                             style="display:none; margin-top:30px;">
+
+                            <div class="grid-2">
+
+                                <div class="field">
+
+                                    <label>
+                                        Platform Name
+                                    </label>
+
+                                    <input type="text"
+                                           name="PlatformName"
+                                           placeholder="Example: Moodle" />
+
+                                </div>
+
+                                <div class="field">
+
+                                    <label>
+                                        Platform Website
+                                    </label>
+
+                                    <input type="url"
+                                           name="PlatformUrl"
+                                           placeholder="https://..." />
+
+                                </div>
+
+                                <div class="field">
+
+                                    <label>
+                                        Test Username
+                                    </label>
+
+                                    <input type="text"
+                                           name="PlatformUsername"
+                                           placeholder="Enter username" />
+
+                                </div>
+
+                                <div class="field">
+
+                                    <label>
+                                        Test Email
+                                    </label>
+
+                                    <input type="email"
+                                           name="PlatformEmail"
+                                           placeholder="example@email.com" />
+
+                                </div>
+
+                                <div class="field">
+
+                                    <label>
+                                        Test Password
+                                    </label>
+
+                                    <input type="text"
+                                           name="PlatformPassword"
+                                           placeholder="Enter password" />
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+            </form>
+
+            <footer class="foot">
+                © Ministry of Higher Education
+            </footer>
+
+        </main>
+
+    </div>
+    <script src="~/js/uni/OnlineSys.js"
+            asp-append-version="true"></script>
+</body>
+
+</html>
