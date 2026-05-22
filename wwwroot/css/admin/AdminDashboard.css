@@ -1023,3 +1023,14 @@ html, body {
     .btn-view:hover {
         background: #dfe6ff;
     }
+.profile-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    color: inherit;
+}
+
+    .profile-link:hover {
+        opacity: .9;
+    }

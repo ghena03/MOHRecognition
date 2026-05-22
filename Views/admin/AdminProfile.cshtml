@@ -1,0 +1,124 @@
+﻿@{
+    ViewData["Title"] = "Admin Profile";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Admin Profile</title>
+
+    <link rel="stylesheet"
+          href="~/css/admin/AdminProfile.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+</head>
+
+<body>
+
+    <div class="profile-container">
+
+        <div class="profile-header">
+
+            <div class="profile-avatar">
+                A
+            </div>
+
+            <div class="profile-name">
+                <h1>Admin User</h1>
+                <p>System Administrator</p>
+            </div>
+
+        </div>
+
+        <div class="profile-grid">
+
+            <div class="profile-card">
+
+                <h3>Account Information</h3>
+
+                <div class="info-row">
+                    <div class="info-label">Username</div>
+                    <div class="info-value">admin</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Email</div>
+                    <div class="info-value">admin@mohe.gov.jo</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Role</div>
+                    <div class="info-value">System Administrator</div>
+                </div>
+
+            </div>
+
+            <div class="profile-card">
+
+                <h3>System Information</h3>
+
+                <div class="info-row">
+                    <div class="info-label">Access Level</div>
+                    <div class="info-value">Full Access</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Department</div>
+                    <div class="info-value">Recognition Committee</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Status</div>
+                    <div class="info-value">Active</div>
+                </div>
+
+            </div>
+            <div class="profile-card">
+
+                <h3>Change Password</h3>
+
+                <div class="info-row">
+                    <div class="info-label">Current Password</div>
+                    <input type="password" class="profile-input" />
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">New Password</div>
+                    <input type="password" class="profile-input" />
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">Confirm Password</div>
+                    <input type="password" class="profile-input" />
+                </div>
+
+                <button class="save-btn">
+                    <i class="bi bi-check-circle"></i>
+                    Update Password
+                </button>
+
+            </div>
+
+        </div>
+
+        <a asp-controller="Home"
+           asp-action="AdminDashboard"
+           class="back-btn">
+
+            <i class="bi bi-arrow-left"></i>
+            Back to Dashboard
+
+        </a>
+
+    </div>
+
+</body>
+</html>

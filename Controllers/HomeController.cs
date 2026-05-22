@@ -1750,7 +1750,7 @@ namespace MOHRecognition.Controllers
             dto.Programs = programsDto?.Rows ?? new List<ProgramRowDto>();
             return dto;
         }
-
+      
         [HttpGet]
         public IActionResult StudentsNumbersPartial()
         {
@@ -3924,6 +3924,10 @@ namespace MOHRecognition.Controllers
         {
             ViewBag.RecognitionMembers = _advisorService.GetRecognitionMembers();
             return View("~/Views/admin/AddEducationalInstitution.cshtml");
+        }
+        public IActionResult AdminProfile()
+        {
+            return View("~/Views/admin/AdminProfile.cshtml");
         }
         [HttpPost]
         public IActionResult AddEducationalInstitution(
