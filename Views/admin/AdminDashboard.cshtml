@@ -105,11 +105,25 @@
                asp-action="AdminProfile"
                class="profile-link">
 
-                <div class="avatar">A</div>
+                <div class="avatar">
+
+                    @(Context.Session.GetString("AdminUsername")
+                                        ?.Substring(0, 1)
+                                        .ToUpper() ?? "A")
+
+                </div>
 
                 <div>
-                    <strong>Admin User</strong><br>
+
+                    <strong>
+
+                        @(Context.Session.GetString("AdminUsername")
+                                                ?? "Admin User")
+
+                    </strong><br>
+
                     <span>System Administrator</span>
+
                 </div>
 
             </a>

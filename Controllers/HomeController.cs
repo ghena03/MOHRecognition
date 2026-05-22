@@ -3925,9 +3925,84 @@ namespace MOHRecognition.Controllers
             ViewBag.RecognitionMembers = _advisorService.GetRecognitionMembers();
             return View("~/Views/admin/AddEducationalInstitution.cshtml");
         }
+     
+        
         public IActionResult AdminProfile()
         {
-            return View("~/Views/admin/AdminProfile.cshtml");
+            var model = new AdminProfileDto
+            {
+                Username =
+                    HttpContext.Session.GetString("AdminUsername")
+                    ?? "admin",
+
+                Email =
+                    HttpContext.Session.GetString("AdminEmail")
+                    ?? "admin@mohe.gov.jo",
+
+                PhoneNumber =
+                    HttpContext.Session.GetString("AdminPhone")
+                    ?? "+962 7XXXXXXXX"
+            };
+
+            return View("~/Views/admin/AdminProfile.cshtml",model);
+        }
+        [HttpPost]
+        public IActionResult SaveProfile(AdminProfileDto model)
+        {
+            HttpContext.Session.SetString(
+                "AdminUsername",
+                model.Username);
+
+            HttpContext.Session.SetString(
+                "AdminEmail",
+                model.Email);
+
+            HttpContext.Session.SetString(
+                "AdminPhone",
+                model.PhoneNumber);
+
+            TempData["ProfileSuccess"] =
+                "Profile updated successfully";
+
+            return RedirectToAction("AdminProfile");
+        }
+        [HttpPost]
+        public IActionResult UpdatePassword(
+    string currentPassword,
+    string newPassword,
+    string confirmPassword)
+        {
+            var savedPassword =
+                HttpContext.Session.GetString("AdminPassword")
+                ?? "admin123";
+
+            // check current password
+            if (currentPassword != savedPassword)
+            {
+                TempData["Error"] =
+                    "Current password is incorrect";
+
+                return RedirectToAction("AdminProfile");
+            }
+
+            // check confirm password
+            if (newPassword != confirmPassword)
+            {
+                TempData["Error"] =
+                    "Passwords do not match";
+
+                return RedirectToAction("AdminProfile");
+            }
+
+            // save new password
+            HttpContext.Session.SetString(
+                "AdminPassword",
+                newPassword);
+
+            TempData["Success"] =
+                "Password updated successfully";
+
+            return RedirectToAction("AdminProfile");
         }
         [HttpPost]
         public IActionResult AddEducationalInstitution(
