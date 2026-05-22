@@ -1,0 +1,980 @@
+﻿@model DTOs.OnlineSystemDto
+@{
+    Layout = null;
+}
+
+
+<!doctype html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Online System</title>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/uni/UniDashboard.css"
+          asp-append-version="true" />
+</head>
+
+<body class="submitapp-page ltr">
+
+    <!-- HEADER -->
+    <header class="top-header en">
+
+        <div class="hdr-grid">
+
+            <div></div>
+
+            <nav class="hdr-nav">
+                <a class="hdr-link"
+                   href="@Url.Action("UniDashboard", "Home")">
+                    ← Back
+                </a>
+
+                <a class="hdr-link"
+                   href="https://www.mohe.gov.jo/"
+                   target="_blank">
+                    Ministry Website
+                </a>
+            </nav>
+
+            <div class="hdr-logo">
+                <img class="rm-logo"
+                     src="~/images/mohelogo.png" />
+            </div>
+
+        </div>
+
+        <div class="brand-bar"></div>
+
+    </header>
+
+    <div class="layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <a href="#"
+               class="side-user">
+
+                <div class="user-avatar">
+                    ON
+                </div>
+
+                <div class="user-info">
+                    <span class="user-name">
+                        Online System
+                    </span>
+
+                    <span class="user-link">
+                        Education Portal
+                    </span>
+                </div>
+
+            </a>
+            <a class="side-item"
+               href="#sec-public">
+                Public Info
+            </a>
+
+            <a class="side-item"
+               href="#sec-duration">
+                Study Duration
+            </a>
+
+            <a class="side-item"
+               href="#sec-communication">
+                Communication
+            </a>
+            <a class="side-item" href="#sec-online-staff">
+                Online Academic Staff
+            </a>
+            <a class="side-item"
+               href="#sec-exams">
+                Examination System
+            </a>
+
+            <a class="side-item"
+               href="#sec-platform">
+                Learning Platform
+            </a>
+
+            <div class="side-footer">
+                <a class="logout"
+                   href="@Url.Action("Logout", "Home")">
+                    Logout
+                </a>
+            </div>
+
+        </aside>
+
+        <!-- MAIN -->
+        <main class="content">
+
+            <!-- WELCOME -->
+            <section class="welcome">
+
+                <div class="welcome-card">
+
+                    <div class="welcome-icon">
+                        🌐
+                    </div>
+
+                    <h1 class="welcome-title">
+                        Online Learning System
+                    </h1>
+
+                    <p class="welcome-text">
+                        Please provide complete information
+                        about the online education system,
+                        examinations, communication methods,
+                        and learning platform.
+                    </p>
+
+                </div>
+
+            </section>
+
+            <form id="onlineSystemForm"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                @Html.AntiForgeryToken()
+
+    <!-- ================= PUBLIC INFO ================= -->
+
+    <section class="card" id="sec-public">
+
+        <div class="card-hd">
+            <h2>Public Information</h2>
+            <p>Fields marked with (*) are required.</p>
+        </div>
+
+        <div class="card-bd">
+
+            <div class="grid-2">
+
+                <div class="field">
+                    <label>Name of Institution <span class="req">*</span></label>
+                    <input name="InstitutionName" />
+                </div>
+
+                <div class="field">
+                    <label>Official Entity Possessing Oversight Rights</label>
+
+                    <select name="OversightRightsEntity">
+
+                        <option value="">-- Choose --</option>
+                        <option>Ministry</option>
+                        <option>Accreditation Body</option>
+                        <option>Other</option>
+
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="grid-2">
+
+                <div class="field">
+                    <label>Founding Date <span class="req">*</span></label>
+                    <input name="FoundationDate" type="date" />
+                </div>
+
+                <div class="field">
+                    <label>Date of Establishment <span class="req">*</span></label>
+                    <input name="DateOfEstablishment" type="date" />
+                </div>
+
+                <div class="field">
+
+                    <label>Mode of Study <span class="req">*</span></label>
+
+                    <select name="ModeOfStudy">
+
+                        <option value="">-- Choose --</option>
+                        <option>On-campus</option>
+                        <option>Blended</option>
+                        <option selected>Online</option>
+
+                    </select>
+
+                </div>
+
+                <div class="field">
+                    <label>Language of Instruction <span class="req">*</span></label>
+                    <input type="text"
+                           name="LanguageOfInstruction"
+                           placeholder="Example: English" />
+                </div>
+
+                <div class="field">
+                    <label>Start of Teaching <span class="req">*</span></label>
+                    <input name="StartOfTeaching" type="date" />
+                </div>
+
+            </div>
+
+            <div class="subhead">
+                Information of President of Institution
+            </div>
+
+            <div class="grid-2">
+
+                <div class="field">
+                    <label>President Name</label>
+                    <input name="PresidentName" />
+                </div>
+
+            </div>
+
+            <div class="subhead">
+                Contact Information
+            </div>
+
+            <div class="grid-2">
+
+                <div class="field">
+                    <label>Mailing Full Address <span class="req">*</span></label>
+                    <input name="MailingFullAddress" />
+                </div>
+
+                <div class="field">
+                    <label>Direct Phone Number <span class="req">*</span></label>
+                    <input name="DirectPhoneNumber" inputmode="tel" />
+                </div>
+
+                <div class="field">
+                    <label>Email Address <span class="req">*</span></label>
+                    <input name="EmailAddress" type="email" />
+                </div>
+
+                <div class="field">
+                    <label>Institutional Web Address <span class="req">*</span></label>
+                    <input name="InstitutionalWebAddress"
+                           type="url"
+                           placeholder="https://..." />
+                </div>
+
+            </div>
+
+            <!-- SAVE BUTTON -->
+
+            <div class="actions"
+                 style="justify-content:center; margin-top:20px;">
+
+                            <button type="button"
+                                    class="btn-primary"
+                                    onclick="saveOnlineSystem('sec-duration')">
+
+                                Save Public Info →
+
+                            </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= STUDY DURATION ================= -->
+
+    <section class="card"
+             id="sec-duration">
+
+        <div class="card-hd">
+
+            <h2>Study Duration</h2>
+
+            <p>
+                Enter the official duration for each degree.
+            </p>
+
+        </div>
+
+        <div class="card-bd">
+
+            <div class="grid-2">
+
+                <div class="field">
+                    <label>Bachelor Degree Duration</label>
+                    <input type="text"
+                           name="BachelorDuration"
+                           placeholder="Example: 4 Years" />
+                </div>
+
+                <div class="field">
+                    <label>Master Degree Duration</label>
+                    <input type="text"
+                           name="MasterDuration"
+                           placeholder="Example: 2 Years" />
+                </div>
+
+                <div class="field">
+                    <label>PhD Degree Duration</label>
+                    <input type="text"
+                           name="PhDDuration"
+                           placeholder="Example: 3 Years" />
+                </div>
+
+                <div class="field">
+                    <label>Higher Diploma Duration</label>
+                    <input type="text"
+                           name="HigherDiplomaDuration"
+                           placeholder="Example: 1 Year" />
+                </div>
+
+                <div class="field">
+                    <label>Intermediate Diploma Duration</label>
+                    <input type="text"
+                           name="IntermediateDiplomaDuration"
+                           placeholder="Example: 2 Years" />
+                </div>
+
+            </div>
+
+            <!-- SAVE BUTTON -->
+
+            <div class="actions"
+                 style="justify-content:center; margin-top:20px;">
+
+                <button type="button"
+                        class="btn-primary"
+                        onclick="scrollToNext('sec-communication')">
+
+                    Save Study Duration →
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= COMMUNICATION ================= -->
+
+    <section class="card"
+             id="sec-communication">
+
+        <div class="card-hd">
+
+            <h2>Student & Supervisor Communication</h2>
+
+            <p>
+                Please specify the communication methods
+                used between students and supervisors.
+            </p>
+
+        </div>
+
+        <div class="card-bd">
+
+            <div class="subhead">
+                Communication Type
+            </div>
+
+            <div class="degree-options">
+
+                <label class="degree-pill">
+                    <input type="radio"
+                           name="CommunicationType"
+                           value="Fully Online"
+                           hidden />
+                    <span>Fully Online</span>
+                </label>
+
+                <label class="degree-pill">
+                    <input type="radio"
+                           name="CommunicationType"
+                           value="Partially Online"
+                           hidden />
+                    <span>Partially Online</span>
+                </label>
+
+            </div>
+
+            <div class="subhead"
+                 style="margin-top:30px;">
+
+                Communication Methods
+
+            </div>
+
+            <div class="degree-options">
+
+                <label class="degree-pill">
+                    <input type="checkbox"
+                           name="CommunicationMethods"
+                           value="Video Meetings"
+                           hidden />
+                    <span>Video Meetings</span>
+                </label>
+
+                <label class="degree-pill">
+                    <input type="checkbox"
+                           name="CommunicationMethods"
+                           value="Email"
+                           hidden />
+                    <span>Email</span>
+                </label>
+
+                <label class="degree-pill">
+                    <input type="checkbox"
+                           name="CommunicationMethods"
+                           value="Live Sessions"
+                           hidden />
+                    <span>Live Sessions</span>
+                </label>
+
+            </div>
+
+            <!-- SAVE BUTTON -->
+
+            <div class="actions"
+                 style="justify-content:center; margin-top:20px;">
+
+                <button type="button"
+                        class="btn-primary"
+                        onclick="scrollToNext('sec-exams')">
+
+                    Save Communication →
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+                <!-- ================= ONLINE ACADEMIC STAFF ================= -->
+
+                <section class="card"
+                         id="sec-online-staff">
+
+                    <div class="card-hd">
+
+                        <h2>Online Academic Staff</h2>
+
+                        <p>
+                            Please provide the number of online academic staff members.
+                        </p>
+
+                    </div>
+
+                    <div class="card-bd">
+
+                        <!-- ================= BACHELOR ================= -->
+
+                        <div class="faculty-modern-card">
+
+                            <div class="faculty-modern-head">
+
+                                <div class="faculty-head-left">
+
+                                    <div>
+
+                                        <h3>Bachelor Programs</h3>
+
+                                        <p>
+                                            Online academic staff assigned to bachelor programs.
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="faculty-modern-grid">
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Professor Full-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="BachelorProfessorFullTime"
+                                           min="0" />
+
+                                </div>
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Professor Part-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="BachelorProfessorPartTime"
+                                           min="0" />
+
+                                </div>
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Associate Professor Full-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="BachelorAssociateFullTime"
+                                           min="0" />
+
+                                </div>
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Associate Professor Part-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="BachelorAssociatePartTime"
+                                           min="0" />
+
+                                </div>
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Assistant Professor Full-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="BachelorAssistantFullTime"
+                                           min="0" />
+
+                                </div>
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Assistant Professor Part-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="BachelorAssistantPartTime"
+                                           min="0" />
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================= MASTER ================= -->
+
+                        <div class="faculty-modern-card"
+                             style="margin-top:25px;">
+
+                            <div class="faculty-modern-head">
+
+                                <div class="faculty-head-left">
+
+                                    <div>
+
+                                        <h3>Master Programs</h3>
+
+                                        <p>
+                                            Online academic staff assigned to master programs.
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="faculty-modern-grid">
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Professor Full-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="MasterProfessorFullTime"
+                                           min="0" />
+
+                                </div>
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Professor Part-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="MasterProfessorPartTime"
+                                           min="0" />
+
+                                </div>
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Associate Professor Full-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="MasterAssociateFullTime"
+                                           min="0" />
+
+                                </div>
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Associate Professor Part-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="MasterAssociatePartTime"
+                                           min="0" />
+
+                                </div>
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Assistant Professor Full-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="MasterAssistantFullTime"
+                                           min="0" />
+
+                                </div>
+
+                                <div class="faculty-input-box">
+
+                                    <label>
+                                        Assistant Professor Part-Time
+                                    </label>
+
+                                    <input type="number"
+                                           name="MasterAssistantPartTime"
+                                           min="0" />
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- SAVE BUTTON -->
+
+                        <div class="actions"
+                             style="justify-content:center; margin-top:20px;">
+
+                            <button type="button"
+                                    class="btn-primary"
+                                    onclick="saveOnlineSystem()">
+
+                                Save Online Academic Staff →
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
+    <!-- ================= EXAMINATION SYSTEM ================= -->
+
+    <section class="card"
+             id="sec-exams">
+
+        <div class="card-hd">
+
+            <h2>Examination System</h2>
+
+            <p>
+                Please provide information about examinations
+                and monitoring methods.
+            </p>
+
+        </div>
+
+        <div class="card-bd">
+
+            <div class="subhead">
+                Examination Type
+            </div>
+
+            <div class="degree-options">
+
+                <label class="degree-pill">
+
+                    <input type="radio"
+                           name="ExamType"
+                           value="Online"
+                           id="examOnline"
+                           hidden />
+
+                    <span>Online Exams</span>
+
+                </label>
+
+                <label class="degree-pill">
+
+                    <input type="radio"
+                           name="ExamType"
+                           value="OnCampus"
+                           id="examCampus"
+                           hidden />
+
+                    <span>On-Campus Exams</span>
+
+                </label>
+
+                <label class="degree-pill">
+
+                    <input type="radio"
+                           name="ExamType"
+                           value="Hybrid"
+                           id="examHybrid"
+                           hidden />
+
+                    <span>Hybrid Exams</span>
+
+                </label>
+
+            </div>
+
+            <div style="margin-top:30px;">
+
+                <div class="subhead">
+                    Examination Locations
+                </div>
+
+                <div class="field">
+
+                    <label>
+                        Please enter examination centers
+                        and locations
+                    </label>
+
+                    <textarea name="ExamLocations"
+                              rows="5"
+                              placeholder="Example:
+Amman - Jordan
+Dubai - UAE
+Istanbul - Turkey"></textarea>
+
+                </div>
+
+            </div>
+
+            <div id="proctoringSection"
+                 style="display:none; margin-top:30px;">
+
+                <div class="subhead">
+                    Online Examination Monitoring
+                </div>
+
+                <div class="degree-options">
+
+                    <label class="degree-pill">
+                        <input type="checkbox"
+                               name="ProctoringMethods"
+                               value="Live Human Proctoring"
+                               hidden />
+                        <span>Live Human Proctoring</span>
+                    </label>
+
+                    <label class="degree-pill">
+                        <input type="checkbox"
+                               name="ProctoringMethods"
+                               value="AI Monitoring"
+                               hidden />
+                        <span>AI Monitoring</span>
+                    </label>
+
+                    <label class="degree-pill">
+                        <input type="checkbox"
+                               name="ProctoringMethods"
+                               value="Camera Monitoring"
+                               hidden />
+                        <span>Camera Monitoring</span>
+                    </label>
+
+                </div>
+
+            </div>
+
+            <!-- SAVE BUTTON -->
+
+            <div class="actions"
+                 style="justify-content:center; margin-top:20px;">
+
+                <button type="button"
+                        class="btn-primary"
+                        onclick="scrollToNext('sec-platform')">
+
+                    Save Examination System →
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= LEARNING PLATFORM ================= -->
+
+    <section class="card"
+             id="sec-platform">
+
+        <div class="card-hd">
+
+            <h2>Learning Platform</h2>
+
+            <p>
+                Please provide the online learning platform information.
+            </p>
+
+        </div>
+
+        <div class="card-bd">
+
+            <div class="subhead">
+                Online Learning Platform
+            </div>
+
+            <div class="degree-options">
+
+                <label class="degree-pill">
+
+                    <input type="radio"
+                           name="HasPlatform"
+                           value="Yes"
+                           id="hasPlatformYes"
+                           hidden />
+
+                    <span>Yes</span>
+
+                </label>
+
+                <label class="degree-pill">
+
+                    <input type="radio"
+                           name="HasPlatform"
+                           value="No"
+                           id="hasPlatformNo"
+                           hidden />
+
+                    <span>No</span>
+
+                </label>
+
+            </div>
+
+            <div id="platformDetails"
+                 style="display:none; margin-top:30px;">
+
+                <div class="grid-2">
+
+                    <div class="field">
+
+                        <label>Platform Name</label>
+
+                        <input type="text"
+                               name="PlatformName"
+                               placeholder="Example: Moodle" />
+
+                    </div>
+
+                    <div class="field">
+
+                        <label>Platform Website</label>
+
+                        <input type="url"
+                               name="PlatformUrl"
+                               placeholder="https://..." />
+
+                    </div>
+
+                    <div class="field">
+
+                        <label>Test Username</label>
+
+                        <input type="text"
+                               name="PlatformUsername"
+                               placeholder="Enter username" />
+
+                    </div>
+
+                    <div class="field">
+
+                        <label>Test Email</label>
+
+                        <input type="email"
+                               name="PlatformEmail"
+                               placeholder="example@email.com" />
+
+                    </div>
+
+                    <div class="field">
+
+                        <label>Test Password</label>
+
+                        <input type="text"
+                               name="PlatformPassword"
+                               placeholder="Enter password" />
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- FINAL SUBMIT -->
+
+            <div class="submit-area"
+                 style="margin-top:35px;">
+
+                <button type="submit"
+                        class="submit-modern-btn">
+
+                    Submit Online System
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</form>
+          
+
+            <footer class="foot">
+                © Ministry of Higher Education
+            </footer>
+
+        </main>
+
+    </div>
+    <script src="~/js/uni/OnlineSys.js"
+            asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+
+</html>

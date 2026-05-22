@@ -8,6 +8,7 @@ using MOHRecognition.Services;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 namespace MOHRecognition.Controllers  
 {
    
@@ -4853,7 +4854,14 @@ namespace MOHRecognition.Controllers
             ViewBag.ScheduledMeetingsCount = meetings.Count(m => string.Equals(m.Status, "Scheduled", StringComparison.OrdinalIgnoreCase));
             return View("~/Views/member/RecognitionMemberDashboard.cshtml", model);
         }
+        public IActionResult OnlineSystem()
+        {
+            var model = new OnlineSystemDto();
 
+            return View("~/Views/uni/OnlineSystem.cshtml",
+        model);
+        }
+        
         private static RecognitionMemberDashboardApplicationItem MapDashboardItem(RecognitionRequestRecord request)
         {
             var reviewStatus = ResolveReviewStatus(request);
@@ -4934,7 +4942,34 @@ namespace MOHRecognition.Controllers
             SetMemberViewBag();
             return View("~/Views/member/DetailsBasicInfo.cshtml", request);
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SaveOnlineSystem(
+    [FromForm] OnlineSystemDto model)
+        {
+            try
+            {
+                var json =
+                    JsonSerializer.Serialize(model);
 
+                HttpContext.Session.SetString(
+                    "OnlineSystem",
+                    json
+                );
+
+                return Json(new
+                {
+                    success = true
+                });
+            }
+            catch
+            {
+                return Json(new
+                {
+                    success = false
+                });
+            }
+        }
         [HttpGet]
         public IActionResult DetailsStatistics(int? id)
         {

@@ -32,10 +32,12 @@
     }
 
     function collectData() {
+        const continueChoice = document.querySelector('input[name="subapp_continue_postgrad"]:checked');
         return {
             ApplicantName: document.getElementById("subapp_name")?.value?.trim() || "",
             WorkPlace: document.getElementById("subapp_workplace")?.value?.trim() || "",
-            IsAcknowledged: document.getElementById("subapp_ack")?.checked || false
+            IsAcknowledged: document.getElementById("subapp_ack")?.checked || false,
+            ContinueToPostgraduate: continueChoice ? (continueChoice.value === "yes") : false
         };
     }
 
@@ -44,11 +46,89 @@
             data.WorkPlace !== "";
     }
 
+    async function sendSaveRequest(data) {
+        const url = getUrl("data-save-url");
+        if (!url) {
+            showBanner("Save URL is missing.", true);
+            return null;
+        }
+
+        try {
+            const res = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                },
+                body: new URLSearchParams({
+                    ApplicantName: data.ApplicantName,
+                    WorkPlace: data.WorkPlace,
+                    IsAcknowledged: data.IsAcknowledged
+                }).toString()
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                showBanner(errorText || "Failed to submit application.", true);
+                return null;
+            }
+
+            const result = await res.json();
+            return result;
+        } catch (err) {
+            console.error(err);
+            showBanner("Something went wrong while submitting the application.", true);
+            return null;
+        }
+    }
+
+    function bindSubmitUI() {
+        // Setup UI toggles (ack -> show question; radio choice -> toggle buttons)
+        const ack = document.getElementById("subapp_ack");
+        const question = document.getElementById("subapp_postgrad_question");
+        const btnSubmit = document.getElementById("btnSubmitApplication");
+        const btnPostgrad = document.getElementById("btnSaveAndApplyPostgraduate");
+        const radioYes = document.getElementById("subapp_continue_yes");
+        const radioNo = document.getElementById("subapp_continue_no");
+
+        function updateVisibility() {
+            const acknowledged = ack?.checked || false;
+            if (question) question.style.display = acknowledged ? "block" : "none";
+
+            // if acknowledged is false, always show main submit and hide postgrad
+            if (!acknowledged) {
+                if (btnSubmit) btnSubmit.style.display = "inline-block";
+                if (btnPostgrad) btnPostgrad.style.display = "none";
+                return;
+            }
+
+            // acknowledged true -> check selection
+            const selected = document.querySelector('input[name="subapp_continue_postgrad"]:checked')?.value || "no";
+            if (selected === "yes") {
+                if (btnSubmit) btnSubmit.style.display = "none";
+                if (btnPostgrad) btnPostgrad.style.display = "inline-block";
+            } else {
+                if (btnSubmit) btnSubmit.style.display = "inline-block";
+                if (btnPostgrad) btnPostgrad.style.display = "none";
+            }
+        }
+
+        // attach events (use onclick/onchange to replace any previous handlers)
+        if (ack) {
+            ack.onchange = updateVisibility;
+        }
+
+        if (radioYes) radioYes.onchange = updateVisibility;
+        if (radioNo) radioNo.onchange = updateVisibility;
+
+        // initialize UI state
+        updateVisibility();
+    }
+
     function bindSubmitButton() {
         const btn = document.getElementById("btnSubmitApplication");
-        if (!btn) return;
+        const btnPost = document.getElementById("btnSaveAndApplyPostgraduate");
 
-        btn.onclick = async function () {
+        async function handleClick(overrideContinueToPostgraduate = null) {
             const data = collectData();
 
             if (!validate(data)) {
@@ -61,43 +141,36 @@
                 return;
             }
 
-            const url = getUrl("data-save-url");
-            if (!url) {
-                showBanner("Save URL is missing.", true);
+            // if caller passed override, use it (postgrad button); otherwise use collected value
+            const continueToPostgraduate = typeof overrideContinueToPostgraduate === "boolean"
+                ? overrideContinueToPostgraduate
+                : data.ContinueToPostgraduate;
+
+            const result = await sendSaveRequest(data);
+            if (!result) return;
+
+            // If user chose to continue to postgraduate, redirect to postgraduate instructions.
+            if (continueToPostgraduate) {
+                window.location.href = "/Home/UniPostgraduateInstructions";
                 return;
             }
 
-            try {
-                const res = await fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-                    },
-                    body: new URLSearchParams({
-                        ApplicantName: data.ApplicantName,
-                        WorkPlace: data.WorkPlace,
-                        IsAcknowledged: data.IsAcknowledged
-                    }).toString()
-                });
-
-                if (!res.ok) {
-                    const errorText = await res.text();
-                    showBanner(errorText || "Failed to submit application.", true);
-                    return;
-                }
-
-                const result = await res.json();
-
-                if (result.success && result.redirectUrl) {
-                    window.location.href = result.redirectUrl;
-                    return;
-                }
-
-                showBanner("Failed to submit application.", true);
-            } catch (err) {
-                showBanner("Something went wrong while submitting the application.", true);
+            // otherwise use server provided redirect if any
+            if (result.success && result.redirectUrl) {
+                window.location.href = result.redirectUrl;
+                return;
             }
-        };
+
+            showBanner("Failed to submit application.", true);
+        }
+
+        if (btn) {
+            btn.onclick = function () { handleClick(false); }; // explicit no
+        }
+
+        if (btnPost) {
+            btnPost.onclick = function () { handleClick(true); }; // explicit yes
+        }
     }
 
     async function loadPartial(showMessage = false, message = "", isError = false) {
@@ -108,6 +181,9 @@
             const res = await fetch(url, { cache: "no-store" });
             const html = await res.text();
             render(html);
+
+            // bind UI toggles and buttons after partial is injected
+            bindSubmitUI();
             bindSubmitButton();
 
             if (showMessage && message) {
