@@ -156,13 +156,6 @@
         </a>
     </div>
 
-    <div class="breadcrumb-bar">
-        <a class="bc-item" href="/Home/AdminDashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
-        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <a class="bc-item" href="/Home/Meetings"><i class="bi bi-calendar3"></i> Meetings</a>
-        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <span class="bc-item bc-cur"><i class="bi bi-calendar-plus"></i> New Meeting</span>
-    </div>
 
     <form method="post" action="/Home/CreateMeeting" id="mainForm">
 
@@ -239,14 +232,6 @@
                     </div>
                 </div>
 
-                <div class="picker-filters">
-                    <div class="search-wrap">
-                        <i class="bi bi-search"></i>
-                        <input class="search-input" type="text" id="searchBox" placeholder="Search by university name, country or reference..." />
-                    </div>
-                    <button type="button" class="btn-quick" onclick="selectAll()"><i class="bi bi-check-all"></i> All</button>
-                    <button type="button" class="btn-quick" onclick="clearAll()"><i class="bi bi-x-lg"></i> Clear</button>
-                </div>
 
                 <div class="uni-list" id="uniList">
                     @{

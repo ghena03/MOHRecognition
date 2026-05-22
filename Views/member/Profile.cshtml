@@ -1,6 +1,11 @@
 ﻿@{
     Layout = null;
     ViewData["Title"] = "Recognition Member Profile";
+    var memberName      = ViewBag.CurrentRecognitionMember as string ?? "Recognition Member";
+    var memberEmail     = ViewBag.CurrentMemberEmail     as string ?? "";
+    var memberPhone     = ViewBag.CurrentMemberPhone     as string ?? "";
+    var memberSpec      = ViewBag.CurrentMemberSpec      as string ?? "";
+    var memberWorkplace = ViewBag.CurrentMemberWorkplace as string ?? "";
 }
 
 <!doctype html>
@@ -34,31 +39,40 @@
                 </div>
 
                 <div>
-                    <h1>Recognition Member 2</h1>
-                    <p>Academic Recognition Department</p>
+                    <h1>@memberName</h1>
+                    <p>@(string.IsNullOrWhiteSpace(memberWorkplace) ? "Academic Recognition Department" : memberWorkplace)</p>
                 </div>
             </div>
 
             <div class="profile-info">
 
-                <div class="info-box">
-                    <span>Email</span>
-                    <strong>recognition.member@mohe.gov.jo</strong>
-                </div>
+                @if (!string.IsNullOrWhiteSpace(memberEmail))
+                {
+                    <div class="info-box">
+                        <span>Email</span>
+                        <strong>@memberEmail</strong>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(memberPhone))
+                {
+                    <div class="info-box">
+                        <span>Phone</span>
+                        <strong>@memberPhone</strong>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(memberSpec))
+                {
+                    <div class="info-box">
+                        <span>Specialization</span>
+                        <strong>@memberSpec</strong>
+                    </div>
+                }
 
                 <div class="info-box">
                     <span>Role</span>
                     <strong>Recognition Member</strong>
-                </div>
-
-                <div class="info-box">
-                    <span>Employee ID</span>
-                    <strong>RM-2026-001</strong>
-                </div>
-
-                <div class="info-box">
-                    <span>Last Login</span>
-                    <strong>16 May 2026</strong>
                 </div>
 
             </div>

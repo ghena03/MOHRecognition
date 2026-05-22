@@ -3,8 +3,10 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Basic Information";
-    ViewData["ActiveNav"] = "requests";
     var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
+    var memberViewOnly = (bool)(ViewBag.MemberViewOnly ?? false);
+    var readOnlyMode = adminReadOnly || memberViewOnly;
+    ViewData["ActiveNav"] = memberViewOnly ? "archive" : "requests";
     var adminMeetingId = (int)(ViewBag.AdminMeetingId ?? 0);
     var nextLink = adminReadOnly
         ? Url.Action("AdminDetailsStatistics", "Home", new { id = Model.Id, meetingId = adminMeetingId })
@@ -13,7 +15,10 @@
         ? (adminMeetingId > 0
             ? Url.Action("SessionDashboard", "Home", new { id = adminMeetingId })
             : Url.Action("AdminDashboard", "Home"))
-        : Url.Action("ElectronicRequests", "Home");
+        : (memberViewOnly
+            ? Url.Action("Archive", "Home")
+            : Url.Action("ElectronicRequests", "Home"));
+    var isManual = (bool)(ViewBag.IsManual ?? false);
     var p = Model.PublicInfo ?? new DTOs.PublicInfoDto();
     var a = Model.AcademicInfo ?? new DTOs.AcademicInfoDto();
     var selectedCollegeCategories = (a.CollegeCategoriesCsv ?? "")
@@ -65,7 +70,7 @@
                 <div class="rm-user">
                     <div class="rm-userpill">
                         <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>@(adminReadOnly ? "Admin Review" : "Recognition Member")</b></span>
+                        <span>Welcome, <b>@(adminReadOnly ? "Admin Review" : (ViewBag.CurrentRecognitionMember ?? "Recognition Member"))</b></span>
                     </div>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
                         <i class="bi bi-box-arrow-right"></i> Logout
@@ -100,160 +105,257 @@
                 </div>
             </section>
 
-            <section class="rm-card rd-card">
-                <div class="rd-card-hd">
-                    <h2>Institution Information Review</h2>
-                    <p>Submitted data for professional evaluation.</p>
-                </div>
+            @if (readOnlyMode)
+            {
+                <section class="rm-card" style="border:1px solid #fedf89; background:#fffaeb; color:#7a2e0e; font-weight:700;">
+                    <i class="bi bi-eye"></i> Read-only mode: this university is assigned to another member.
+                </section>
+            }
 
-                <!-- Essential Fields Section -->
-                <div class="info-section">
-                    <div class="section-title">Location & Contact Information</div>
-                    <div class="rd-grid4">
-                        <div class="rd-field">
-                            <label>Institution Name</label>
-                            <input type="text" value="@p.InstitutionName" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Official Entity Possessing Oversight Rights</label>
-                            <input type="text" value="@p.OversightRightsEntity" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Country</label>
-                            <input type="text" value="@Model.Country" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>City</label>
-                            <input type="text" value="@p.City" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Mailing Full Address</label>
-                            <input type="text" value="@p.MailingFullAddress" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Direct Phone Number</label>
-                            <input type="text" value="@p.DirectPhoneNumber" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Email Address</label>
-                            <input type="text" value="@p.EmailAddress" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Institutional Web Address</label>
-                            <input type="text" value="@p.InstitutionalWebAddress" readonly />
-                        </div>
-                    </div>
-                </div>
+            @if (isManual && !readOnlyMode)
+            {
+                <section class="rm-card" style="border:1px solid #bfdbfe; background:#eff6ff; color:#1e40af; font-weight:600; display:flex; align-items:center; gap:10px;">
+                    <i class="bi bi-pencil-square" style="font-size:1.1rem;"></i>
+                    Manual Request — Fill in the institution data below, then click <b style="margin-left:4px;">Save &amp; Continue</b>.
+                </section>
+            }
 
-                <!-- Important Dates Section -->
-                <div class="info-section" style="margin-top:18px;">
-                    <div class="section-title">Key Dates</div>
-                    <div class="rd-grid3">
-                        <div class="rd-field">
-                            <label>Founding Date</label>
-                            <input type="text" value="@p.FoundationDate" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Date of Establishment</label>
-                            <input type="text" value="@p.DateOfEstablishment" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Start of Teaching</label>
-                            <input type="text" value="@p.StartOfTeaching" readonly />
-                        </div>
-                    </div>
-                </div>
+            @if (TempData["ManualSaved"] != null)
+            {
+                <section class="rm-card" style="border:1px solid #bbf7d0; background:#f0fdf4; color:#166534; font-weight:600;">
+                    <i class="bi bi-check-circle-fill"></i> @TempData["ManualSaved"]
+                </section>
+            }
 
-                <!-- Institution Details Section -->
-                <div class="info-section" style="margin-top:18px;">
-                    <div class="section-title">Institution Profile</div>
-                    <div class="rd-grid3">
-                        <div class="rd-field">
-                            <label>Mode of Study</label>
-                            <input type="text" value="@p.ModeOfStudy" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Institution Type</label>
-                            <input type="text" value="@a.TypeOfAcademicInstitution" readonly />
-                        </div>
-                        <div class="rd-field">
-                            <label>Language of Instruction</label>
-                            <input type="text" value="@p.LanguageOfInstruction" readonly />
-                        </div>
-                    </div>
-                </div>
+            @if (isManual && !readOnlyMode)
+            {
+                <form method="post" action="@Url.Action("SaveManualBasicInfo", "Home")">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
 
-                <!-- College Categories -->
-                <div class="info-section" style="margin-top:18px;">
-                    <div class="section-title">College Categories</div>
-                    <div class="info-block">
-                        <div class="chip-list">
-                            @if (selectedCollegeCategories.Any())
-                            {
-                                @foreach (var c in selectedCollegeCategories)
+                    <section class="rm-card rd-card">
+                        <div class="rd-card-hd">
+                            <h2>Institution Information Entry</h2>
+                            <p>Fill in all institution details, then click Save &amp; Continue.</p>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="section-title">Location &amp; Contact Information</div>
+                            <div class="rd-grid4">
+                                <div class="rd-field"><label>Institution Name</label><input type="text" name="institutionName" value="@p.InstitutionName" /></div>
+                                <div class="rd-field"><label>Oversight Rights Entity</label><input type="text" name="oversightRightsEntity" value="@p.OversightRightsEntity" /></div>
+                                <div class="rd-field"><label>Country</label><input type="text" name="country" value="@Model.Country" /></div>
+                                <div class="rd-field"><label>City</label><input type="text" name="city" value="@(string.IsNullOrWhiteSpace(p.City) ? Model.City : p.City)" /></div>
+                                <div class="rd-field"><label>Mailing Full Address</label><input type="text" name="mailingFullAddress" value="@p.MailingFullAddress" /></div>
+                                <div class="rd-field"><label>Direct Phone Number</label><input type="text" name="directPhoneNumber" value="@p.DirectPhoneNumber" /></div>
+                                <div class="rd-field"><label>Email Address</label><input type="text" name="emailAddress" value="@p.EmailAddress" /></div>
+                                <div class="rd-field"><label>Institutional Web Address</label><input type="text" name="institutionalWebAddress" value="@p.InstitutionalWebAddress" /></div>
+                            </div>
+                        </div>
+
+                        <div class="info-section" style="margin-top:18px;">
+                            <div class="section-title">Key Dates</div>
+                            <div class="rd-grid3">
+                                <div class="rd-field"><label>Founding Date</label><input type="text" name="foundationDate" value="@p.FoundationDate" /></div>
+                                <div class="rd-field"><label>Date of Establishment</label><input type="text" name="dateOfEstablishment" value="@p.DateOfEstablishment" /></div>
+                                <div class="rd-field"><label>Start of Teaching</label><input type="text" name="startOfTeaching" value="@p.StartOfTeaching" /></div>
+                            </div>
+                        </div>
+
+                        <div class="info-section" style="margin-top:18px;">
+                            <div class="section-title">Institution Profile</div>
+                            <div class="rd-grid3">
+                                <div class="rd-field">
+                                    <label>Mode of Study</label>
+                                    <select name="modeOfStudy">
+                                        <option value="">Select…</option>
+                                        @{ var modeOptions = new[] { "Full-time", "Part-time", "Distance Learning", "Online", "Blended" }; }
+                                        @foreach (var opt in modeOptions)
+                                        {
+                                            if (p.ModeOfStudy == opt) { <option value="@opt" selected>@opt</option> }
+                                            else { <option value="@opt">@opt</option> }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="rd-field">
+                                    <label>Institution Type</label>
+                                    <select name="typeOfAcademicInstitution">
+                                        <option value="">Select…</option>
+                                        @{ var typeOptions = new[] { "University", "College", "Institute", "Academy", "School of Medicine" }; }
+                                        @foreach (var opt in typeOptions)
+                                        {
+                                            if (a.TypeOfAcademicInstitution == opt) { <option value="@opt" selected>@opt</option> }
+                                            else { <option value="@opt">@opt</option> }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="rd-field"><label>Language of Instruction</label><input type="text" name="languageOfInstruction" value="@p.LanguageOfInstruction" /></div>
+                            </div>
+                            <div class="rd-grid3" style="margin-top:12px;">
+                                <div class="rd-field">
+                                    <label>Official Recognition in Home Country</label>
+                                    <select name="officialRecognitionInHomeCountry">
+                                        <option value="">Select…</option>
+                                        @if (a.OfficialRecognitionInHomeCountry == "Yes") { <option value="Yes" selected>Yes</option> <option value="No">No</option> }
+                                        else if (a.OfficialRecognitionInHomeCountry == "No") { <option value="Yes">Yes</option> <option value="No" selected>No</option> }
+                                        else { <option value="Yes">Yes</option> <option value="No">No</option> }
+                                    </select>
+                                </div>
+                                <div class="rd-field">
+                                    <label>Official Accreditation / Quality in Home Country</label>
+                                    <select name="officialAccreditationQualityInHomeCountry">
+                                        <option value="">Select…</option>
+                                        @if (a.OfficialAccreditationQualityInHomeCountry == "Yes") { <option value="Yes" selected>Yes</option> <option value="No">No</option> }
+                                        else if (a.OfficialAccreditationQualityInHomeCountry == "No") { <option value="Yes">Yes</option> <option value="No" selected>No</option> }
+                                        else { <option value="Yes">Yes</option> <option value="No">No</option> }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-section" style="margin-top:18px;">
+                            <div class="section-title">College Categories</div>
+                            @{ var allCats = new[] { "Scientific", "Humanities", "Medical", "Applied" }; }
+                            <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;">
+                                @foreach (var cat in allCats)
                                 {
-                                    <span class="chip">@c</span>
+                                    var catChecked = selectedCollegeCategories.Contains(cat, StringComparer.OrdinalIgnoreCase);
+                                    <label style="display:flex; align-items:center; gap:6px; font-weight:500; cursor:pointer;">
+                                        @if (catChecked) { <input type="checkbox" name="collegeCategoriesCsv" value="@cat" checked style="width:16px;height:16px;" /> }
+                                        else { <input type="checkbox" name="collegeCategoriesCsv" value="@cat" style="width:16px;height:16px;" /> }
+                                        @cat
+                                    </label>
                                 }
-                            }
-                            else
-                            {
-                                <span class="chip muted">No college categories submitted</span>
-                            }
+                            </div>
+                        </div>
+
+                        <div class="info-section" style="margin-top:18px;">
+                            <div class="section-title">Information of President of Institution</div>
+                            <div class="rd-grid3">
+                                <div class="rd-field"><label>Name</label><input type="text" name="presidentName" value="@p.PresidentName" /></div>
+                            </div>
+                        </div>
+
+                        <div class="info-section" style="margin-top:18px;">
+                            <div class="section-title">Education &amp; Degrees</div>
+                            <div class="info-block">
+                                <label class="block-title">Degrees Offered</label>
+                                <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;">
+                                    @foreach (var (lbl, fld, chk) in new[] {
+                                        ("Diploma","degreeDiploma",a.DegreeDiploma),
+                                        ("Bachelor","degreeBSC",a.DegreeBSC),
+                                        ("Higher Diploma","degreeHigherDiploma",a.DegreeHigherDiploma),
+                                        ("Master","degreeMaster",a.DegreeMaster),
+                                        ("PhD","degreePhD",a.DegreePhD) })
+                                    {
+                                        <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;">
+                                            @if (chk) { <input type="checkbox" name="@fld" value="true" checked style="width:16px;height:16px;" /> }
+                                            else { <input type="checkbox" name="@fld" value="true" style="width:16px;height:16px;" /> }
+                                            @lbl
+                                        </label>
+                                    }
+                                </div>
+                            </div>
+                            <div class="info-block" style="margin-top:12px;">
+                                <label class="block-title">Educational System in Effect</label>
+                                <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;">
+                                    @foreach (var (lbl, fld, chk) in new[] {
+                                        ("Yearly Program","systemYearlyProgram",a.SystemYearlyProgram),
+                                        ("Semester Program","systemSemesterProgram",a.SystemSemesterProgram),
+                                        ("Credit Hours","systemCreditHours",a.SystemCreditHours),
+                                        ("ECTS","systemECTS",a.SystemECTS) })
+                                    {
+                                        <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;">
+                                            @if (chk) { <input type="checkbox" name="@fld" value="true" checked style="width:16px;height:16px;" /> }
+                                            else { <input type="checkbox" name="@fld" value="true" style="width:16px;height:16px;" /> }
+                                            @lbl
+                                        </label>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;">
+                            <button type="submit" name="nextAction" value="save" class="rm-btn rm-btn-light"><i class="bi bi-floppy"></i> Save</button>
+                            <button type="submit" name="nextAction" value="next" class="rm-btn rm-btn-primary"><i class="bi bi-arrow-right-circle"></i> Save &amp; Continue</button>
+                        </div>
+                    </section>
+                </form>
+            }
+            else
+            {
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd">
+                        <h2>Institution Information Review</h2>
+                        <p>Submitted data for professional evaluation.</p>
+                    </div>
+
+                    <div class="info-section">
+                        <div class="section-title">Location &amp; Contact Information</div>
+                        <div class="rd-grid4">
+                            <div class="rd-field"><label>Institution Name</label><input type="text" value="@p.InstitutionName" readonly /></div>
+                            <div class="rd-field"><label>Official Entity Possessing Oversight Rights</label><input type="text" value="@p.OversightRightsEntity" readonly /></div>
+                            <div class="rd-field"><label>Country</label><input type="text" value="@Model.Country" readonly /></div>
+                            <div class="rd-field"><label>City</label><input type="text" value="@p.City" readonly /></div>
+                            <div class="rd-field"><label>Mailing Full Address</label><input type="text" value="@p.MailingFullAddress" readonly /></div>
+                            <div class="rd-field"><label>Direct Phone Number</label><input type="text" value="@p.DirectPhoneNumber" readonly /></div>
+                            <div class="rd-field"><label>Email Address</label><input type="text" value="@p.EmailAddress" readonly /></div>
+                            <div class="rd-field"><label>Institutional Web Address</label><input type="text" value="@p.InstitutionalWebAddress" readonly /></div>
                         </div>
                     </div>
-                </div>
 
-                <!-- President Section -->
-                <div class="info-section" style="margin-top:18px;">
-                    <div class="section-title">Information of President of Institution</div>
-                    <div class="rd-grid3">
-                        <div class="rd-field">
-                            <label>Name</label>
-                            <input type="text" value="@p.PresidentName" readonly />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Education & Degrees Section -->
-                <div class="info-section" style="margin-top:18px;">
-                    <div class="section-title">Education & Degrees</div>
-                    
-                    <div class="info-block">
-                        <label class="block-title">Degrees Offered</label>
-                        <div class="chip-list">
-                            @if (degrees.Any())
-                            {
-                                @foreach (var d in degrees)
-                                {
-                                    <span class="chip">@d</span>
-                                }
-                            }
-                            else
-                            {
-                                <span class="chip muted">No degrees submitted</span>
-                            }
+                    <div class="info-section" style="margin-top:18px;">
+                        <div class="section-title">Key Dates</div>
+                        <div class="rd-grid3">
+                            <div class="rd-field"><label>Founding Date</label><input type="text" value="@p.FoundationDate" readonly /></div>
+                            <div class="rd-field"><label>Date of Establishment</label><input type="text" value="@p.DateOfEstablishment" readonly /></div>
+                            <div class="rd-field"><label>Start of Teaching</label><input type="text" value="@p.StartOfTeaching" readonly /></div>
                         </div>
                     </div>
 
-                    <div class="info-block" style="margin-top:12px;">
-                        <label class="block-title">Educational System in Effect</label>
-                        <div class="chip-list">
-                            @if (systems.Any())
-                            {
-                                @foreach (var s in systems)
-                                {
-                                    <span class="chip">@s</span>
-                                }
-                            }
-                            else
-                            {
-                                <span class="chip muted">No system submitted</span>
-                            }
+                    <div class="info-section" style="margin-top:18px;">
+                        <div class="section-title">Institution Profile</div>
+                        <div class="rd-grid3">
+                            <div class="rd-field"><label>Mode of Study</label><input type="text" value="@p.ModeOfStudy" readonly /></div>
+                            <div class="rd-field"><label>Institution Type</label><input type="text" value="@a.TypeOfAcademicInstitution" readonly /></div>
+                            <div class="rd-field"><label>Language of Instruction</label><input type="text" value="@p.LanguageOfInstruction" readonly /></div>
                         </div>
                     </div>
-                </div>
 
-            </section>
+                    <div class="info-section" style="margin-top:18px;">
+                        <div class="section-title">College Categories</div>
+                        <div class="info-block">
+                            <div class="chip-list">
+                                @if (selectedCollegeCategories.Any()) { foreach (var c in selectedCollegeCategories) { <span class="chip">@c</span> } }
+                                else { <span class="chip muted">No college categories submitted</span> }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-section" style="margin-top:18px;">
+                        <div class="section-title">Information of President of Institution</div>
+                        <div class="rd-grid3"><div class="rd-field"><label>Name</label><input type="text" value="@p.PresidentName" readonly /></div></div>
+                    </div>
+
+                    <div class="info-section" style="margin-top:18px;">
+                        <div class="section-title">Education &amp; Degrees</div>
+                        <div class="info-block">
+                            <label class="block-title">Degrees Offered</label>
+                            <div class="chip-list">
+                                @if (degrees.Any()) { foreach (var d in degrees) { <span class="chip">@d</span> } }
+                                else { <span class="chip muted">No degrees submitted</span> }
+                            </div>
+                        </div>
+                        <div class="info-block" style="margin-top:12px;">
+                            <label class="block-title">Educational System in Effect</label>
+                            <div class="chip-list">
+                                @if (systems.Any()) { foreach (var s in systems) { <span class="chip">@s</span> } }
+                                else { <span class="chip muted">No system submitted</span> }
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            }
 
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
@@ -261,9 +363,12 @@
                         <i class="bi bi-box-arrow-left"></i> @(adminReadOnly ? "Back to Meeting" : "Back to List")
                     </a>
                 </div>
-                <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@nextLink">Next</a>
-                </div>
+                @if (!isManual || readOnlyMode)
+                {
+                    <div class="rd-actions-right">
+                        <a class="rm-btn rm-btn-light" href="@nextLink">Next</a>
+                    </div>
+                }
             </section>
         </main>
     </div>

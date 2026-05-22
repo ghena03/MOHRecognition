@@ -1,8 +1,26 @@
 ﻿@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
+@using System
 
 @{
     Layout = null;
     ViewData["Title"] = "Requests";
+
+    var nameMap = ViewBag.MemberNameMap as Dictionary<string, string>
+                  ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    string MemberName(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email) || email == "Unassigned") return "Unassigned";
+        var key = email.Trim().ToLowerInvariant();
+        return nameMap.TryGetValue(key, out var n) ? n : email;
+    }
+
+    var assignmentRequests = Model
+        .Where(x => (string.IsNullOrWhiteSpace(x.AssignedMember) ||
+                     string.Equals(x.AssignedMember, "Unassigned", StringComparison.OrdinalIgnoreCase))
+                    && !string.IsNullOrWhiteSpace(x.AssignmentRequestBy))
+        .OrderByDescending(x => x.AssignmentRequestAt ?? DateTime.MinValue)
+        .ToList();
 }
 
 <!DOCTYPE html>
@@ -37,9 +55,78 @@
     <!-- MAIN -->
     <div class="main-container">
 
+        @if (assignmentRequests.Any())
+        {
+            <!-- ASSIGNMENT REQUESTS FROM RECOGNITION MEMBERS -->
+            <div class="page-head" style="display:flex;align-items:center;gap:12px;">
+                <h2>Assignment Requests</h2>
+                <span style="background:#7f1627;color:#fff;border-radius:20px;padding:2px 10px;font-size:13px;font-weight:700;">@assignmentRequests.Count</span>
+            </div>
+            <div class="table-box" style="margin-bottom:32px;border-left:4px solid #7f1627;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>University</th>
+                            <th>Country</th>
+                            <th>Requested By</th>
+                            <th>Requested At</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in assignmentRequests)
+                        {
+                            <tr>
+                                <td>@item.ReferenceNumber</td>
+                                <td>@item.UniversityName</td>
+                                <td>@item.Country</td>
+                                <td>@MemberName(item.AssignmentRequestBy)</td>
+                                <td>@(item.AssignmentRequestAt?.ToString("yyyy-MM-dd") ?? "—")</td>
+                                <td style="display:flex;gap:6px;align-items:center">
+                                    <a asp-controller="Home"
+                                       asp-action="AdminRequestDetails"
+                                       asp-route-id="@item.Id"
+                                       class="action-btn"
+                                       style="background:#7f1627;color:#fff;border-color:#7f1627">
+                                        Open & Assign
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
         <!-- TITLE ROW -->
         <div class="page-head">
             <h2>All Requests</h2>
+        </div>
+
+        <!-- FILTERS -->
+        <div class="table-box" style="padding:16px 20px;margin-bottom:0;border-bottom:none;border-radius:12px 12px 0 0;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px;">
+                    <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;">Search</label>
+                    <input id="req-search" type="text" placeholder="University, reference, country…"
+                           style="border:1px solid #ddd;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;" oninput="filterRequests()" />
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;min-width:140px;">
+                    <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;">Status</label>
+                    <select id="req-status" style="border:1px solid #ddd;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;" onchange="filterRequests()">
+                        <option value="">All Statuses</option>
+                        <option>Pending</option>
+                        <option>Assigned</option>
+                        <option>Requires Admin Review</option>
+                        <option>Under Review</option>
+                        <option>Approved</option>
+                        <option>Rejected</option>
+                    </select>
+                </div>
+                <button type="button" onclick="document.getElementById('req-search').value='';document.getElementById('req-status').value='';filterRequests();"
+                        class="action-btn" style="height:36px;">Clear</button>
+            </div>
         </div>
 
         <!-- TABLE -->
@@ -58,16 +145,17 @@
                     </tr>
                 </thead>
 
-                <tbody>
+                <tbody id="req-tbody">
                     @foreach (var item in Model)
                     {
-                        <tr>
+                        <tr data-search="@((item.ReferenceNumber + " " + item.UniversityName + " " + item.Country + " " + item.ApplicantName).ToLower())"
+                            data-status="@item.Status.ToLower()">
                             <td>@item.ReferenceNumber</td>
                             <td>@item.ApplicantName</td>
                             <td>@item.UniversityName</td>
                             <td>@item.Country</td>
                             <td>@item.Status</td>
-                            <td>@item.AssignedMember</td>
+                            <td>@MemberName(item.AssignedMember)</td>
 
                             <td style="display:flex;gap:6px;align-items:center">
                                 <a asp-controller="Home"
@@ -93,5 +181,17 @@
 
     </div>
 
+<script>
+    function filterRequests() {
+        var q = (document.getElementById('req-search').value || '').toLowerCase();
+        var s = (document.getElementById('req-status').value || '').toLowerCase();
+        document.querySelectorAll('#req-tbody tr').forEach(function (row) {
+            var search = (row.dataset.search || '').toLowerCase();
+            var status = (row.dataset.status || '').toLowerCase();
+            var show = (!q || search.includes(q)) && (!s || status === s);
+            row.style.display = show ? '' : 'none';
+        });
+    }
+</script>
 </body>
 </html>

@@ -2,7 +2,8 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Students Numbers";
-    ViewData["ActiveNav"] = "requests";
+    var memberViewOnly = (bool)(ViewBag.MemberViewOnly ?? false);
+    ViewData["ActiveNav"] = memberViewOnly ? "archive" : "requests";
     var requestId = ViewBag.RequestId ?? Model?.Id ?? 0;
     var inst = ViewBag.InstitutionName ?? Model?.UniversityName ?? "—";
     var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
@@ -81,6 +82,7 @@
     var ruleLevel = appliedRuleCorrect ? 0 : 2;
     var overallLevel = new[] { studentLevel, facultyLevel, rankLevel, doctorateLevel, ruleLevel }.Max();
 
+    var isManual = (bool)(ViewBag.IsManual ?? false);
     var ratioValue = A.StudentsToFacultyRatio ?? 0m;
 
     var selectedCollegeCategories = (A.CollegeCategoriesCsv ?? "")
@@ -231,7 +233,7 @@
                 <div class="rm-user">
                     <div class="rm-userpill">
                         <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>Dr. Khaled Ahmed</b></span>
+                        <span>Welcome, <b>@(ViewBag.CurrentRecognitionMember ?? "Recognition Member")</b></span>
                     </div>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
                         <i class="bi bi-box-arrow-right"></i> Logout
@@ -258,7 +260,83 @@
                 </div>
             </section>
 
-            @* Students numbers *@
+            @if (isManual && !memberViewOnly)
+            {
+                <section class="rm-card" style="border:1px solid #bfdbfe; background:#eff6ff; color:#1e40af; font-weight:600; display:flex; align-items:center; gap:10px;">
+                    <i class="bi bi-pencil-square" style="font-size:1.1rem;"></i>
+                    Manual Request — Enter academic staff counts and student numbers below.
+                </section>
+            }
+            @if (TempData["ManualSaved"] != null)
+            {
+                <section class="rm-card" style="border:1px solid #bbf7d0; background:#f0fdf4; color:#166534; font-weight:600;">
+                    <i class="bi bi-check-circle-fill"></i> @TempData["ManualSaved"]
+                </section>
+            }
+
+            @if (isManual && !memberViewOnly)
+            {
+                <form asp-controller="Home" asp-action="SaveManualAcademicData" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@(Model?.Id ?? 0)" />
+
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd">
+                        <h2>Academic Staff Entry</h2>
+                        <p>Enter full-time and part-time counts for each academic rank. These drive the ratio calculations.</p>
+                    </div>
+                    @{
+                        var editRanks = new[]
+                        {
+                            ("Professor",                     "staffProfessorFT",           "staffProfessorPT",           A.StaffProfessorFullTimeCount,            A.StaffProfessorPartTimeCount),
+                            ("Associate Professor",           "staffAssociateProfessorFT",  "staffAssociateProfessorPT",  A.StaffAssociateProfessorFullTimeCount,    A.StaffAssociateProfessorPartTimeCount),
+                            ("Assistant Professor",           "staffAssistantProfessorFT",  "staffAssistantProfessorPT",  A.StaffAssistantProfessorFullTimeCount,    A.StaffAssistantProfessorPartTimeCount),
+                            ("Lecturer (PhD Holders)",        "staffTeacherFT",             "staffTeacherPT",             A.StaffTeacherFullTimeCount,              A.StaffTeacherPartTimeCount),
+                            ("Lecturer (MSc Holders)",        "staffAssistantTeacherFT",    "staffAssistantTeacherPT",    A.StaffAssistantTeacherFullTimeCount,      A.StaffAssistantTeacherPartTimeCount),
+                            ("Asst. Lecturer (MSc Holders)",  "staffOthersFT",              "staffOthersPT",              A.StaffOthersFullTimeCount,               A.StaffOthersPartTimeCount),
+                            ("Asst. Lecturer (BSc Holders)",  "staffResearcherFT",          "staffResearcherPT",          A.StaffResearcherFullTimeCount,           A.StaffResearcherPartTimeCount),
+                            ("Practitioner (MSc)",            "staffPractitionerMscFT",     "staffPractitionerMscPT",     A.StaffPractitionerMscFullTimeCount,       A.StaffPractitionerMscPartTimeCount),
+                            ("Practitioner (BSc)",            "staffPractitionerPscFT",     "staffPractitionerPscPT",     A.StaffPractitionerPscFullTimeCount,       A.StaffPractitionerPscPartTimeCount)
+                        };
+                    }
+                    <div class="rd-tablewrap">
+                        <table class="rd-table">
+                            <thead>
+                                <tr><th>Academic Rank</th><th>Full-Time</th><th>Part-Time</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var (title, ftName, ptName, ftVal, ptVal) in editRanks)
+                                {
+                                    <tr>
+                                        <td style="font-weight:600;">@title</td>
+                                        <td><input type="number" name="@ftName" value="@(ftVal ?? 0)" min="0" style="width:90px;" /></td>
+                                        <td><input type="number" name="@ptName" value="@(ptVal ?? 0)" min="0" style="width:90px;" /></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="rd-grid4" style="margin-top:20px;">
+                        <div class="rd-field"><label>Total Students</label><input type="number" name="totalStudents" value="@(A.TotalStudentPopulation ?? 0)" min="0" /></div>
+                        <div class="rd-field"><label>Local Students</label><input type="number" name="localStudents" value="@(A.LocalStudentPopulation ?? 0)" min="0" /></div>
+                        <div class="rd-field"><label>Jordanian Students</label><input type="number" name="jordanianStudents" value="@(A.JordanianStudentPopulation ?? 0)" min="0" /></div>
+                        <div class="rd-field"><label>International Students</label><input type="number" name="foreignStudents" value="@(A.ForeignStudentPopulation ?? 0)" min="0" /></div>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; padding-top:16px; border-top:1px solid #e5e7eb;">
+                        <button type="submit" name="nextAction" value="save" class="rm-btn rm-btn-light">
+                            <i class="bi bi-floppy"></i> Save
+                        </button>
+                        <button type="submit" name="nextAction" value="next" class="rm-btn rm-btn-primary">
+                            <i class="bi bi-arrow-right-circle"></i> Save &amp; Continue
+                        </button>
+                    </div>
+                </section>
+                </form>
+            }
+
+            @* Students numbers (read-only display) *@
             <section id="sec-doctors-page" class="rm-card rd-card">
                 <div class="rd-card-hd">
                     <h2>Students Numbers</h2>
@@ -596,9 +674,12 @@
                 <div class="rd-actions-left">
                     <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsBasicInfo", "Home", new { id = requestId })">Previous</a>
                 </div>
-                <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAdmissionDuration", "Home", new { id = requestId })">Next</a>
-                </div>
+                @if (!isManual || memberViewOnly)
+                {
+                    <div class="rd-actions-right">
+                        <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsAdmissionDuration", "Home", new { id = requestId })">Next</a>
+                    </div>
+                }
             </section>
         </main>
     </div>

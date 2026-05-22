@@ -38,7 +38,7 @@
             <div class="rm-top-inner">
                 <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
                 <div class="rm-user">
-                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>Recognition Member</b></span></div>
+                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>@(ViewBag.CurrentRecognitionMember ?? "Recognition Member")</b></span></div>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </div>
             </div>

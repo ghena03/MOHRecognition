@@ -63,6 +63,27 @@ namespace MOHRecognition.Services
             }
         }
 
+        public bool RequestMemberAssignment(int id, string memberEmail)
+        {
+            lock (_lock)
+            {
+                var req = _requests.FirstOrDefault(x => x.Id == id);
+                if (req == null) return false;
+
+                if (!string.Equals(req.AssignedMember, "Unassigned", StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                var normalizedMember = NormalizeAssignedMember(memberEmail);
+                if (string.Equals(normalizedMember, "Unassigned", StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                req.AssignmentRequestBy = normalizedMember;
+                req.AssignmentRequestAt = DateTime.Now;
+                req.Status = "Assignment Requested";
+                return true;
+            }
+        }
+
         public bool SaveInfrastructureNotes(
             int id,
             string facultiesAssessment,
@@ -146,6 +167,113 @@ namespace MOHRecognition.Services
             }
         }
 
+        public bool SavePublicInfoSection(int id, PublicInfoDto publicInfo, AcademicInfoDto academicInfoPatch, string city, string country)
+        {
+            lock (_lock)
+            {
+                var req = _requests.FirstOrDefault(x => x.Id == id);
+                if (req == null) return false;
+
+                req.PublicInfo = publicInfo ?? new PublicInfoDto();
+                req.City = (city ?? string.Empty).Trim();
+                req.Country = (country ?? string.Empty).Trim();
+                req.UniversityName = (publicInfo?.InstitutionName ?? req.UniversityName ?? string.Empty).Trim();
+
+                if (academicInfoPatch != null)
+                {
+                    req.AcademicInfo.TypeOfAcademicInstitution = academicInfoPatch.TypeOfAcademicInstitution;
+                    req.AcademicInfo.TypeOfAcademicInstitutionOther = academicInfoPatch.TypeOfAcademicInstitutionOther;
+                    req.AcademicInfo.DegreeDiploma = academicInfoPatch.DegreeDiploma;
+                    req.AcademicInfo.DegreeBSC = academicInfoPatch.DegreeBSC;
+                    req.AcademicInfo.DegreeHigherDiploma = academicInfoPatch.DegreeHigherDiploma;
+                    req.AcademicInfo.DegreeMaster = academicInfoPatch.DegreeMaster;
+                    req.AcademicInfo.DegreePhD = academicInfoPatch.DegreePhD;
+                    req.AcademicInfo.SystemYearlyProgram = academicInfoPatch.SystemYearlyProgram;
+                    req.AcademicInfo.SystemSemesterProgram = academicInfoPatch.SystemSemesterProgram;
+                    req.AcademicInfo.SystemCreditHours = academicInfoPatch.SystemCreditHours;
+                    req.AcademicInfo.SystemECTS = academicInfoPatch.SystemECTS;
+                    req.AcademicInfo.CollegeCategoriesCsv = academicInfoPatch.CollegeCategoriesCsv;
+                    req.AcademicInfo.CollegesCount = academicInfoPatch.CollegesCount;
+                    req.AcademicInfo.CollegesNames = academicInfoPatch.CollegesNames;
+                    req.AcademicInfo.OfficialRecognitionInHomeCountry = academicInfoPatch.OfficialRecognitionInHomeCountry;
+                    req.AcademicInfo.OfficialAccreditationQualityInHomeCountry = academicInfoPatch.OfficialAccreditationQualityInHomeCountry;
+                    req.AcademicInfo.LanguageForDomesticStudents = academicInfoPatch.LanguageForDomesticStudents;
+                    req.AcademicInfo.LanguageForForeignStudents = academicInfoPatch.LanguageForForeignStudents;
+                }
+
+                return true;
+            }
+        }
+
+        public bool SaveAcademicStaffSection(int id, AcademicInfoDto staffData)
+        {
+            lock (_lock)
+            {
+                var req = _requests.FirstOrDefault(x => x.Id == id);
+                if (req == null || staffData == null) return false;
+
+                req.AcademicInfo.StaffProfessorFullTimeCount = staffData.StaffProfessorFullTimeCount;
+                req.AcademicInfo.StaffProfessorPartTimeCount = staffData.StaffProfessorPartTimeCount;
+                req.AcademicInfo.StaffAssociateProfessorFullTimeCount = staffData.StaffAssociateProfessorFullTimeCount;
+                req.AcademicInfo.StaffAssociateProfessorPartTimeCount = staffData.StaffAssociateProfessorPartTimeCount;
+                req.AcademicInfo.StaffAssistantProfessorFullTimeCount = staffData.StaffAssistantProfessorFullTimeCount;
+                req.AcademicInfo.StaffAssistantProfessorPartTimeCount = staffData.StaffAssistantProfessorPartTimeCount;
+                req.AcademicInfo.StaffResearcherFullTimeCount = staffData.StaffResearcherFullTimeCount;
+                req.AcademicInfo.StaffResearcherPartTimeCount = staffData.StaffResearcherPartTimeCount;
+                req.AcademicInfo.StaffTeacherFullTimeCount = staffData.StaffTeacherFullTimeCount;
+                req.AcademicInfo.StaffTeacherPartTimeCount = staffData.StaffTeacherPartTimeCount;
+                req.AcademicInfo.StaffAssistantTeacherFullTimeCount = staffData.StaffAssistantTeacherFullTimeCount;
+                req.AcademicInfo.StaffAssistantTeacherPartTimeCount = staffData.StaffAssistantTeacherPartTimeCount;
+                req.AcademicInfo.StaffOthersFullTimeCount = staffData.StaffOthersFullTimeCount;
+                req.AcademicInfo.StaffOthersPartTimeCount = staffData.StaffOthersPartTimeCount;
+                req.AcademicInfo.StaffPractitionerPscFullTimeCount = staffData.StaffPractitionerPscFullTimeCount;
+                req.AcademicInfo.StaffPractitionerPscPartTimeCount = staffData.StaffPractitionerPscPartTimeCount;
+                req.AcademicInfo.StaffPractitionerMscFullTimeCount = staffData.StaffPractitionerMscFullTimeCount;
+                req.AcademicInfo.StaffPractitionerMscPartTimeCount = staffData.StaffPractitionerMscPartTimeCount;
+                req.AcademicInfo.TotalStudentPopulation = staffData.TotalStudentPopulation;
+                req.AcademicInfo.LocalStudentPopulation = staffData.LocalStudentPopulation;
+                req.AcademicInfo.ForeignStudentPopulation = staffData.ForeignStudentPopulation;
+                req.AcademicInfo.JordanianStudentPopulation = staffData.JordanianStudentPopulation;
+                req.AcademicInfo.StudentsToFacultyRatio = staffData.StudentsToFacultyRatio;
+                req.AcademicInfo.DoctorateHoldersPercentage = staffData.DoctorateHoldersPercentage;
+
+                return true;
+            }
+        }
+
+        public bool SaveStudyDurationSection(int id, StudyDurationDto studyDuration)
+        {
+            lock (_lock)
+            {
+                var req = _requests.FirstOrDefault(x => x.Id == id);
+                if (req == null) return false;
+                req.StudyDuration = studyDuration ?? new StudyDurationDto();
+                return true;
+            }
+        }
+
+        public bool SetManualDataFilled(int id)
+        {
+            lock (_lock)
+            {
+                var req = _requests.FirstOrDefault(x => x.Id == id);
+                if (req == null) return false;
+                req.ManualDataFilled = true;
+                return true;
+            }
+        }
+
+        public bool UpdateManualRequestData(int id, Action<RecognitionRequestRecord> updater)
+        {
+            lock (_lock)
+            {
+                var req = _requests.FirstOrDefault(x => x.Id == id);
+                if (req == null) return false;
+                updater(req);
+                return true;
+            }
+        }
+
         public bool AssignMember(int id, string memberName)
         {
             lock (_lock)
@@ -155,6 +283,8 @@ namespace MOHRecognition.Services
 
                 req.AssignedMember = NormalizeAssignedMember(memberName);
                 req.Status = NormalizeStatusForAssignment(req.Status, req.AssignedMember);
+                req.AssignmentRequestBy = string.Empty;
+                req.AssignmentRequestAt = null;
 
                 return true;
             }

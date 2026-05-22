@@ -1,5 +1,6 @@
 @{
     var active = ViewData["ActiveNav"] as string ?? "";
+    var scheduledCount = (int)(ViewBag.ScheduledMeetingsCount ?? 0);
 }
 <aside class="rm-sidebar">
     <div class="rm-side-label">Workspace</div>
@@ -18,8 +19,22 @@
         <a class="rm-navitem@(active == "archive" ? " active" : "")" href="@Url.Action("Archive", "Home")">
             <i class="bi bi-inboxes"></i><span>Requests Archive</span>
         </a>
-        <a class="rm-navitem@(active == "meetings" ? " active" : "")" href="@Url.Action("RecognitionMemberMeetings", "Home")">
-            <i class="bi bi-calendar2-week"></i><span>Meetings</span>
+        <a class="rm-navitem@(active == "closedarchive" ? " active" : "")" href="@Url.Action("ClosedSessionsArchive", "Home")">
+            <i class="bi bi-archive-fill"></i><span>Closed Sessions</span>
+        </a>
+        <a class="rm-navitem@(active == "meetings" ? " active" : "")" href="@Url.Action("RecognitionMemberMeetings", "Home")"
+           style="position:relative;">
+            <i class="bi bi-calendar2-week"></i>
+            <span>Meetings</span>
+            @if (scheduledCount > 0)
+            {
+                <span style="
+                    display:inline-flex;align-items:center;justify-content:center;
+                    background:#7f1627;color:#fff;
+                    font-size:10px;font-weight:800;
+                    min-width:18px;height:18px;border-radius:9px;padding:0 5px;
+                    margin-left:auto;line-height:1;">@scheduledCount</span>
+            }
         </a>
         <div class="rm-nav-divider"></div>
         <a class="rm-navitem rm-navitem-danger" href="@Url.Action("Logout", "Home")">

@@ -2,8 +2,11 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - University Infrastructure";
-    ViewData["ActiveNav"] = "requests";
     var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
+    var memberViewOnly = (bool)(ViewBag.MemberViewOnly ?? false);
+    var isManual = (bool)(ViewBag.IsManual ?? false);
+    var readOnlyMode = adminReadOnly || memberViewOnly;
+    ViewData["ActiveNav"] = memberViewOnly ? "archive" : "requests";
     var adminMeetingId = (int)(ViewBag.AdminMeetingId ?? 0);
     var requestId = Model?.Id ?? 0;
     var inst = Model?.UniversityName ?? "—";
@@ -12,7 +15,9 @@
         : Url.Action("DetailsAccreditationBodies", "Home", new { id = requestId });
     var nextLink = adminReadOnly
         ? Url.Action("AdminDetailsRecommendation", "Home", new { id = requestId, meetingId = adminMeetingId })
-        : Url.Action("DetailsRecommendation", "Home", new { id = requestId });
+        : (isManual && !readOnlyMode
+            ? Url.Action("MarkManualDataFilled", "Home", new { id = requestId })
+            : Url.Action("DetailsRecommendation", "Home", new { id = requestId }));
     var pictures = Model?.Pictures?.Rows ?? new List<DTOs.PictureRowDto>();
     var laboratories = Model?.Laboratories ?? new DTOs.LaboratoriesDto();
     var laboratoryRows = laboratories.Rows ?? new List<DTOs.LaboratoryRowDto>();
@@ -69,7 +74,7 @@
             <div class="rm-top-inner">
                 <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
                 <div class="rm-user">
-                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>@(adminReadOnly ? "Admin Review" : "Recognition Member")</b></span></div>
+                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>@(adminReadOnly ? "Admin Review" : (ViewBag.CurrentRecognitionMember ?? "Recognition Member"))</b></span></div>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </div>
             </div>
@@ -98,6 +103,13 @@
                     <div class="meta-pill"><span>Step</span><b>7 / 7</b></div>
                 </div>
             </section>
+
+            @if (readOnlyMode)
+            {
+                <section class="rm-card" style="border:1px solid #fedf89; background:#fffaeb; color:#7a2e0e; font-weight:700;">
+                    <i class="bi bi-eye"></i> Read-only mode: this university is assigned to another member.
+                </section>
+            }
 
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
@@ -279,7 +291,7 @@
 
                             <div class="rd-field">
                                 <label for="facultiesAssessment">Status</label>
-                                <select id="facultiesAssessment" name="facultiesAssessment" data-assessment-select="facultiesAssessmentBadge" data-note-wrap="facultiesAssessmentNoteWrap" data-note-input="facultiesAssessmentNote" @(adminReadOnly ? "disabled" : null)>
+                                <select id="facultiesAssessment" name="facultiesAssessment" data-assessment-select="facultiesAssessmentBadge" data-note-wrap="facultiesAssessmentNoteWrap" data-note-input="facultiesAssessmentNote" @(readOnlyMode ? "disabled" : null)>
                                     <option value="">Select status</option>
                                     <option value="Meets Standards" selected="@(facultiesAssessment == "Meets Standards" ? "selected" : null)">Meets Standards</option>
                                     <option value="Needs Improvement" selected="@(facultiesAssessment == "Needs Improvement" ? "selected" : null)">Needs Improvement</option>
@@ -288,7 +300,7 @@
 
                             <div id="facultiesAssessmentNoteWrap" class="rd-field infra-note-wrap">
                                 <label for="facultiesAssessmentNote">Improvement Note</label>
-                                <textarea id="facultiesAssessmentNote" name="facultiesAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement..." @(adminReadOnly ? "readonly disabled" : null)>@facultiesAssessmentNote</textarea>
+                                <textarea id="facultiesAssessmentNote" name="facultiesAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement..." @(readOnlyMode ? "readonly disabled" : null)>@facultiesAssessmentNote</textarea>
                             </div>
                         </div>
 
@@ -303,7 +315,7 @@
 
                             <div class="rd-field">
                                 <label for="hospitalsAssessment">Status</label>
-                                <select id="hospitalsAssessment" name="hospitalsAssessment" data-assessment-select="hospitalsAssessmentBadge" data-note-wrap="hospitalsAssessmentNoteWrap" data-note-input="hospitalsAssessmentNote" @(adminReadOnly ? "disabled" : null)>
+                                <select id="hospitalsAssessment" name="hospitalsAssessment" data-assessment-select="hospitalsAssessmentBadge" data-note-wrap="hospitalsAssessmentNoteWrap" data-note-input="hospitalsAssessmentNote" @(readOnlyMode ? "disabled" : null)>
                                     <option value="">Select status</option>
                                     <option value="Meets Standards" selected="@(hospitalsAssessment == "Meets Standards" ? "selected" : null)">Meets Standards</option>
                                     <option value="Needs Improvement" selected="@(hospitalsAssessment == "Needs Improvement" ? "selected" : null)">Needs Improvement</option>
@@ -312,7 +324,7 @@
 
                             <div id="hospitalsAssessmentNoteWrap" class="rd-field infra-note-wrap">
                                 <label for="hospitalsAssessmentNote">Improvement Note</label>
-                                <textarea id="hospitalsAssessmentNote" name="hospitalsAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement..." @(adminReadOnly ? "readonly disabled" : null)>@hospitalsAssessmentNote</textarea>
+                                <textarea id="hospitalsAssessmentNote" name="hospitalsAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement..." @(readOnlyMode ? "readonly disabled" : null)>@hospitalsAssessmentNote</textarea>
                             </div>
                         </div>
 
@@ -327,7 +339,7 @@
 
                             <div class="rd-field">
                                 <label for="laboratoriesFacilitiesAssessment">Status</label>
-                                <select id="laboratoriesFacilitiesAssessment" name="laboratoriesFacilitiesAssessment" data-assessment-select="laboratoriesFacilitiesAssessmentBadge" data-note-wrap="laboratoriesFacilitiesAssessmentNoteWrap" data-note-input="laboratoriesFacilitiesAssessmentNote" @(adminReadOnly ? "disabled" : null)>
+                                <select id="laboratoriesFacilitiesAssessment" name="laboratoriesFacilitiesAssessment" data-assessment-select="laboratoriesFacilitiesAssessmentBadge" data-note-wrap="laboratoriesFacilitiesAssessmentNoteWrap" data-note-input="laboratoriesFacilitiesAssessmentNote" @(readOnlyMode ? "disabled" : null)>
                                     <option value="">Select status</option>
                                     <option value="Meets Standards" selected="@(laboratoriesFacilitiesAssessment == "Meets Standards" ? "selected" : null)">Meets Standards</option>
                                     <option value="Needs Improvement" selected="@(laboratoriesFacilitiesAssessment == "Needs Improvement" ? "selected" : null)">Needs Improvement</option>
@@ -336,7 +348,7 @@
 
                             <div id="laboratoriesFacilitiesAssessmentNoteWrap" class="rd-field infra-note-wrap">
                                 <label for="laboratoriesFacilitiesAssessmentNote">Improvement Note</label>
-                                <textarea id="laboratoriesFacilitiesAssessmentNote" name="laboratoriesFacilitiesAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement..." @(adminReadOnly ? "readonly disabled" : null)>@laboratoriesFacilitiesAssessmentNote</textarea>
+                                <textarea id="laboratoriesFacilitiesAssessmentNote" name="laboratoriesFacilitiesAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement..." @(readOnlyMode ? "readonly disabled" : null)>@laboratoriesFacilitiesAssessmentNote</textarea>
                             </div>
                         </div>
 
@@ -351,7 +363,7 @@
 
                             <div class="rd-field">
                                 <label for="libraryAssessment">Status</label>
-                                <select id="libraryAssessment" name="libraryAssessment" data-assessment-select="libraryAssessmentBadge" data-note-wrap="libraryAssessmentNoteWrap" data-note-input="libraryAssessmentNote" @(adminReadOnly ? "disabled" : null)>
+                                <select id="libraryAssessment" name="libraryAssessment" data-assessment-select="libraryAssessmentBadge" data-note-wrap="libraryAssessmentNoteWrap" data-note-input="libraryAssessmentNote" @(readOnlyMode ? "disabled" : null)>
                                     <option value="">Select status</option>
                                     <option value="Meets Standards" selected="@(libraryAssessment == "Meets Standards" ? "selected" : null)">Meets Standards</option>
                                     <option value="Needs Improvement" selected="@(libraryAssessment == "Needs Improvement" ? "selected" : null)">Needs Improvement</option>
@@ -360,12 +372,12 @@
 
                             <div id="libraryAssessmentNoteWrap" class="rd-field infra-note-wrap">
                                 <label for="libraryAssessmentNote">Improvement Note</label>
-                                <textarea id="libraryAssessmentNote" name="libraryAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement..." @(adminReadOnly ? "readonly disabled" : null)>@libraryAssessmentNote</textarea>
+                                <textarea id="libraryAssessmentNote" name="libraryAssessmentNote" class="rd-big infra-note" placeholder="Explain why this section needs improvement..." @(readOnlyMode ? "readonly disabled" : null)>@libraryAssessmentNote</textarea>
                             </div>
                         </div>
                     </div>
 
-                    @if (!adminReadOnly)
+                    @if (!readOnlyMode)
                     {
                         <div style="display:flex; justify-content:flex-end; margin-top:14px;">
                             <button class="rm-btn rm-btn-primary" type="submit"><i class="bi bi-save"></i> Save Assessments</button>
@@ -374,12 +386,35 @@
                 </form>
             </section>
 
+            @if (isManual && !readOnlyMode)
+            {
+                <section class="rm-card" style="border:1px solid #dcfce7; background:#f0fdf4; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:10px; color:#166534; font-weight:600;">
+                        <i class="bi bi-check-circle-fill" style="font-size:1.2rem;"></i>
+                        All university data has been entered. You are ready to write the final recommendation.
+                    </div>
+                    <a class="rm-btn rm-btn-primary" href="@nextLink" style="white-space:nowrap; font-size:1rem; padding:12px 24px;">
+                        <i class="bi bi-award-fill"></i> Go to Recommendation
+                    </a>
+                </section>
+            }
+
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
                     <a class="rm-btn rm-btn-light" href="@previousLink">Previous</a>
                 </div>
                 <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@nextLink">Next</a>
+                    <a class="rm-btn @(isManual && !readOnlyMode ? "rm-btn-primary" : "rm-btn-light")" href="@nextLink">
+                        @if (isManual && !readOnlyMode)
+                        {
+                            <i class="bi bi-award-fill"></i>
+                            <span>Go to Recommendation</span>
+                        }
+                        else
+                        {
+                            <span>Next</span>
+                        }
+                    </a>
                 </div>
             </section>
         </main>
@@ -425,6 +460,7 @@
     </style>
     <script>
         (function () {
+            const isReadOnlyMode = "@readOnlyMode".toLowerCase() === "true";
             /* ── Toast ─────────────────────────────────────────── */
             function showToast(message, type) {
                 const old = document.getElementById('_infra-toast');
@@ -447,6 +483,7 @@
             const form = document.getElementById('infraForm');
             if (form) {
                 form.addEventListener('submit', async function (e) {
+                    if (isReadOnlyMode) return;
                     e.preventDefault();
                     const btn = this.querySelector('button[type="submit"]');
                     const origHtml = btn ? btn.innerHTML : '';
@@ -473,7 +510,6 @@
 
             /* ── Badge + note-wrap live update ─────────────────── */
             const selects = document.querySelectorAll("[data-assessment-select]");
-            const isAdminReadOnly = "@adminReadOnly".toLowerCase() === "true";
 
             function getBadgeStyle(value) {
                 if (value === "Meets Standards") return { text: "Meets Standards", cls: "ok" };
@@ -497,7 +533,7 @@
                 }
                 const requiresNote = selectedValue === "Needs Improvement";
                 if (noteWrap) {
-                    if (isAdminReadOnly) {
+                    if (isReadOnlyMode) {
                         const hasContent = noteInput && noteInput.value && noteInput.value.trim().length > 0;
                         noteWrap.style.display = hasContent ? "grid" : "none";
                     } else {
@@ -505,8 +541,8 @@
                     }
                 }
                 if (noteInput) {
-                    noteInput.required = !isAdminReadOnly && requiresNote;
-                    if (!requiresNote && !isAdminReadOnly) noteInput.value = "";
+                    noteInput.required = !isReadOnlyMode && requiresNote;
+                    if (!requiresNote && !isReadOnlyMode) noteInput.value = "";
                 }
             }
 

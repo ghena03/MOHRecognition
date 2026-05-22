@@ -1,12 +1,27 @@
 ﻿@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
+@using System
 
 @{
     Layout = null;
     ViewData["Title"] = "Requests Archive";
     ViewData["ActiveNav"] = "archive";
     var currentMember = ViewBag.CurrentRecognitionMember as string ?? "Recognition Member";
+    var currentEmail  = ViewBag.CurrentMemberEmail as string ?? "";
     var successMessage = TempData["ArchiveSuccess"] as string;
-    var errorMessage = TempData["ArchiveError"] as string;
+    var errorMessage   = TempData["ArchiveError"] as string;
+    var nameMap = ViewBag.MemberNameMap as Dictionary<string, string>
+                  ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    string MemberName(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email) || email.Equals("Unassigned", StringComparison.OrdinalIgnoreCase))
+            return "Unassigned";
+        var key = email.Trim().ToLowerInvariant();
+        return nameMap.TryGetValue(key, out var n) ? n : email;
+    }
+
+    bool IsUnassigned(string? v) =>
+        string.IsNullOrWhiteSpace(v) || v.Equals("Unassigned", StringComparison.OrdinalIgnoreCase);
 }
 
 <!doctype html>
@@ -92,48 +107,6 @@
                     </div>
                 }
 
-                <div class="arc-filters">
-                    <div class="arc-field grow">
-                        <label>Search</label>
-                        <input type="text" placeholder="Reference, university, email..." />
-                    </div>
-
-                    <div class="arc-field">
-                        <label>Country</label>
-                        <select>
-                            <option>All</option>
-                        </select>
-                    </div>
-
-                    <div class="arc-field">
-                        <label>Status</label>
-                        <select>
-                            <option>All</option>
-                            <option>Pending</option>
-                            <option>Assigned</option>
-                            <option>Requires Admin Review</option>
-                            <option>Under Review</option>
-                            <option>Missing Docs</option>
-                            <option>Approved</option>
-                            <option>Rejected</option>
-                        </select>
-                    </div>
-
-                    <div class="arc-field">
-                        <label>Year</label>
-                        <select>
-                            <option>All</option>
-                        </select>
-                    </div>
-
-                    <button class="rm-btn rm-btn-light" type="button">
-                        <i class="bi bi-search"></i> Search
-                    </button>
-
-                    <button class="rm-btn rm-btn-light" type="button">
-                        <i class="bi bi-x-circle"></i> Clear
-                    </button>
-                </div>
             </section>
 
             <section class="rm-card">
@@ -164,17 +137,22 @@
                             {
                                 @foreach (var item in Model)
                                 {
-                                    var isMine = string.Equals(item.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase);
+                                    var isMine             = string.Equals(item.AssignedMember, currentEmail, StringComparison.OrdinalIgnoreCase);
+                                    var isUnassigned       = IsUnassigned(item.AssignedMember);
+                                    var hasRequest         = !string.IsNullOrWhiteSpace(item.AssignmentRequestBy);
+                                    var requestedByMe      = hasRequest && string.Equals(item.AssignmentRequestBy, currentEmail, StringComparison.OrdinalIgnoreCase);
+                                    var requestedByOther   = hasRequest && !requestedByMe;
+                                    var canRequestToStudy  = !isMine && isUnassigned && !hasRequest;
 
                                     <tr>
                                         <td><b>@item.ReferenceNumber</b></td>
                                         <td>@item.UniversityName</td>
                                         <td>@item.Country</td>
                                         <td>@item.UniversityEmail</td>
-                                        <td>@item.AssignedMember</td>
+                                        <td>@MemberName(item.AssignedMember)</td>
                                         <td><span class="badge badge-pending">@item.Status</span></td>
                                         <td>@item.SubmittedAt.ToString("yyyy-MM-dd")</td>
-                                        <td class="right">
+                                        <td class="right" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
                                             @if (isMine)
                                             {
                                                 <a class="rm-mini" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">Open</a>
@@ -182,6 +160,23 @@
                                             else
                                             {
                                                 <a class="rm-mini rm-mini--view" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">View</a>
+                                            }
+
+                                            @if (canRequestToStudy)
+                                            {
+                                                <form method="post" asp-action="RequestMemberAssignment" asp-controller="Home" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <button type="submit" class="rm-mini" style="background:#f0fdf4;color:#166534;border:1px solid #86efac;">Request to Study</button>
+                                                </form>
+                                            }
+                                            else if (requestedByMe)
+                                            {
+                                                <span class="badge" style="background:#dbeafe;color:#1e40af;">Requested by you</span>
+                                            }
+                                            else if (requestedByOther)
+                                            {
+                                                <span class="badge" style="background:#fef9c3;color:#854d0e;">Pending</span>
                                             }
                                         </td>
                                     </tr>

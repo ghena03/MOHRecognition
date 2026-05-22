@@ -1,6 +1,12 @@
 @using MOHRecognition.DTOs
 @using MOHRecognition.Services
 @model MeetingDto
+@{
+    var employees    = (ViewBag.Employees as List<EmployeeDto> ?? new List<EmployeeDto>())
+                       .OrderBy(e => e.Workplace == "Ministry of Higher Education and Scientific Research" ? 0 : 1)
+                       .ToList();
+    var attendanceRaw = ViewBag.Attendance as Dictionary<int, bool> ?? new Dictionary<int, bool>();
+}
 
 @{
     ViewData["Title"] = "Meeting Workspace";
@@ -235,6 +241,78 @@
             font-size: 14px; font-weight: 700;
         }
 
+        /* ── Attendance card ── */
+        .attend-card {
+            background: #fff;
+            border: 1px solid #e8e0d8;
+            border-top: 3px solid #7f1627;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.06);
+            margin-bottom: 28px;
+            overflow: hidden;
+        }
+        .attend-hd {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 22px; gap: 12px; flex-wrap: wrap;
+            background: #faf8f6; border-bottom: 1px solid #ede7e0;
+        }
+        .attend-hd-left { display: flex; align-items: center; gap: 10px; }
+        .attend-hd-icon { font-size: 15px; color: #7f1627; }
+        .attend-hd-title { font-size: 13.5px; font-weight: 800; color: #1a1a1a; letter-spacing: .1px; }
+        .attend-pill {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #fff; color: #7f1627;
+            border: 1px solid #e0c8cc; border-radius: 6px;
+            padding: 3px 10px; font-size: 12px; font-weight: 800;
+        }
+        .attend-hd-right { display: flex; gap: 8px; }
+        .btn-att {
+            display: inline-flex; align-items: center; gap: 6px;
+            border-radius: 7px; padding: 6px 14px;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            font-family: inherit; transition: all .15s; white-space: nowrap;
+        }
+        .btn-att-ghost { background: #fff; color: #666; border: 1px solid #ddd; }
+        .btn-att-ghost:hover { background: #f5f5f5; border-color: #bbb; color: #333; }
+        .btn-att-primary { background: #7f1627; color: #fff; border: 1px solid #7f1627; }
+        .btn-att-primary:hover { background: #6a1020; border-color: #6a1020; }
+
+        .attend-prog-track { height: 3px; background: #f0ebe4; }
+        .attend-prog-fill  { height: 100%; background: linear-gradient(90deg,#7ba7d4,#4f7fbf); transition: width .4s ease; }
+
+        .attend-grid { display: grid; grid-template-columns: repeat(3,1fr); }
+        .attend-row {
+            display: flex; align-items: flex-start; gap: 13px;
+            padding: 14px 20px 14px 17px;
+            border-left: 3px solid transparent;
+            border-right: 1px solid #f0ebe4;
+            border-bottom: 1px solid #f0ebe4;
+            cursor: pointer; transition: background .14s, border-left-color .14s;
+            user-select: none;
+        }
+        .attend-row:nth-child(3n) { border-right: none; }
+        .attend-row:hover { background: #faf8f6; }
+        .attend-row input[type=checkbox] { display: none; }
+
+        .attend-cb {
+            width: 17px; height: 17px; border-radius: 4px; flex-shrink: 0; margin-top: 1px;
+            border: 1.5px solid #ccc; background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .15s;
+        }
+        .attend-cb i { font-size: 10px; color: #fff; display: none; }
+
+        .attend-text { flex: 1; min-width: 0; }
+        .attend-name { font-size: 13px; font-weight: 700; color: #222; line-height: 1.4; }
+        .attend-org  { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+        /* Present */
+        .attend-row.present { background: #f0f5fc; border-left-color: #5b87c8; }
+        .attend-row.present .attend-cb { background: #4f7fbf; border-color: #4f7fbf; }
+        .attend-row.present .attend-cb i { display: block; }
+        .attend-row.present .attend-name { color: #1a3560; }
+        .attend-row.present .attend-org  { color: #90aed4; }
+
         /* ── Modal ── */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 600; align-items: center; justify-content: center; }
         .modal-overlay.open { display: flex; }
@@ -316,6 +394,52 @@
     </div>
 
     <div class="pg-body">
+
+        @{
+            int presentCount = attendanceRaw.Count(kvp => kvp.Value);
+            int totalMembers = employees.Count;
+            int attendPct    = totalMembers > 0 ? presentCount * 100 / totalMembers : 0;
+        }
+        <!-- Attendance Card -->
+        <div class="attend-card" id="attendCard">
+            <div class="attend-hd">
+                <div class="attend-hd-left">
+                    <i class="bi bi-people-fill attend-hd-icon"></i>
+                    <span class="attend-hd-title">Attendance</span>
+                    <span class="attend-pill">
+                        <i class="bi bi-person-check"></i>
+                        <span id="presentNum">@presentCount</span> / @totalMembers present
+                    </span>
+                </div>
+                <div class="attend-hd-right">
+                    <button class="btn-att btn-att-ghost" onclick="setAllAttendance(false)">
+                        <i class="bi bi-x-lg"></i> Clear All
+                    </button>
+                    <button class="btn-att btn-att-primary" onclick="setAllAttendance(true)">
+                        <i class="bi bi-check2-all"></i> Mark All Present
+                    </button>
+                </div>
+            </div>
+            <div class="attend-prog-track">
+                <div class="attend-prog-fill" id="attendProgFill" style="width:@attendPct%"></div>
+            </div>
+            <div class="attend-grid">
+                @foreach (var emp in employees)
+                {
+                    bool isPresent = attendanceRaw.TryGetValue(emp.Id, out var ap) && ap;
+                    <label class="attend-row @(isPresent ? "present" : "")" id="attend-item-@emp.Id">
+                        <input type="checkbox" id="chk-@emp.Id" data-emp-id="@emp.Id"
+                               @(isPresent ? "checked" : "")
+                               onchange="toggleAttendance(@emp.Id, this.checked)" />
+                        <div class="attend-cb"><i class="bi bi-check-lg"></i></div>
+                        <div class="attend-text">
+                            <div class="attend-name">@emp.Name</div>
+                            <div class="attend-org">@emp.Workplace</div>
+                        </div>
+                    </label>
+                }
+            </div>
+        </div>
 
         <div class="sec-hd">
             <div class="sec-lbl"><i class="bi bi-building" style="font-size:13px;color:#7f1627;margin-right:6px;"></i>Universities Discussed in this Meeting</div>
@@ -415,9 +539,26 @@
             </span>
             @if (!isClosed)
             {
-                <button class="btn-close-meeting" onclick="document.getElementById('closeModal').classList.add('open')">
-                    <i class="bi bi-lock-fill"></i> Close Meeting
-                </button>
+                var allDecided = total > 0 && decidedCount == total;
+                if (allDecided)
+                {
+                    <button class="btn-close-meeting" onclick="document.getElementById('closeModal').classList.add('open')">
+                        <i class="bi bi-lock-fill"></i> Close Meeting
+                    </button>
+                }
+                else
+                {
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                        <button class="btn-close-meeting" disabled
+                                style="opacity:.4; cursor:not-allowed; pointer-events:none;">
+                            <i class="bi bi-lock-fill"></i> Close Meeting
+                        </button>
+                        <span style="font-size:12px; color:#b91c1c; font-weight:600;">
+                            <i class="bi bi-exclamation-circle"></i>
+                            @(total - decidedCount) decision@(total - decidedCount == 1 ? "" : "s") still pending — record all before closing.
+                        </span>
+                    </div>
+                }
             }
             else
             {
@@ -454,6 +595,39 @@
         document.getElementById('closeModal').addEventListener('click', function (e) {
             if (e.target === this) this.classList.remove('open');
         });
+
+        var _meetingId = @Model.Id;
+
+        function toggleAttendance(empId, present) {
+            var item = document.getElementById('attend-item-' + empId);
+            if (present) item.classList.add('present');
+            else         item.classList.remove('present');
+            updatePill();
+            fetch('/Home/ToggleAttendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'meetingId=' + _meetingId + '&employeeId=' + empId + '&present=' + present
+            });
+        }
+
+        function setAllAttendance(present) {
+            var checkboxes = document.querySelectorAll('#attendCard input[type=checkbox]');
+            checkboxes.forEach(function(cb) {
+                if (cb.checked !== present) {
+                    cb.checked = present;
+                    toggleAttendance(parseInt(cb.dataset.empId), present);
+                }
+            });
+        }
+
+        function updatePill() {
+            var checkboxes = document.querySelectorAll('#attendCard input[type=checkbox]');
+            var count = 0;
+            checkboxes.forEach(function(cb) { if (cb.checked) count++; });
+            document.getElementById('presentNum').textContent = count;
+            var pct = checkboxes.length > 0 ? Math.round(count * 100 / checkboxes.length) : 0;
+            document.getElementById('attendProgFill').style.width = pct + '%';
+        }
     </script>
 </body>
 </html>

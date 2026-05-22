@@ -3,8 +3,10 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Accreditation Bodies";
-    ViewData["ActiveNav"] = "requests";
     var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
+    var memberViewOnly = (bool)(ViewBag.MemberViewOnly ?? false);
+    var readOnlyMode = adminReadOnly || memberViewOnly;
+    ViewData["ActiveNav"] = memberViewOnly ? "archive" : "requests";
     var adminMeetingId = (int)(ViewBag.AdminMeetingId ?? 0);
 
     var requestId = ViewBag.RequestId ?? Model?.Id ?? 0;
@@ -16,6 +18,7 @@
         ? Url.Action("AdminDetailsInfrastructure", "Home", new { id = requestId, meetingId = adminMeetingId })
         : Url.Action("DetailsInfrastructure", "Home", new { id = requestId });
 
+    var isManual = (bool)(ViewBag.IsManual ?? false);
     var accreditationRows = Model?.AccreditationBodies ?? new List<DTOs.AccreditationBodyRowDto>();
     var A        = Model?.AcademicInfo   ?? new DTOs.AcademicInfoDto();
     var rankings = Model?.GlobalRankings ?? new DTOs.GlobalRankingsDto();
@@ -131,7 +134,7 @@
                 <div class="rm-user">
                     <div class="rm-userpill">
                         <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>@(adminReadOnly ? "Admin Review" : "Recognition Member")</b></span>
+                        <span>Welcome, <b>@(adminReadOnly ? "Admin Review" : (ViewBag.CurrentRecognitionMember ?? "Recognition Member"))</b></span>
                     </div>
 
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
@@ -173,6 +176,21 @@
                     </div>
                 </div>
             </section>
+
+            @if (readOnlyMode)
+            {
+                <section class="rm-card" style="border:1px solid #fedf89; background:#fffaeb; color:#7a2e0e; font-weight:700;">
+                    <i class="bi bi-eye"></i> Read-only mode: this university is assigned to another member.
+                </section>
+            }
+
+            @if (isManual && !readOnlyMode)
+            {
+                <section class="rm-card" style="border:1px solid #bfdbfe; background:#eff6ff; color:#1e40af; font-weight:600; display:flex; align-items:center; gap:10px;">
+                    <i class="bi bi-pencil-square" style="font-size:1.1rem;"></i>
+                    Manual Request — Accreditation documents are not available for manual entries. You may record global rankings below, then continue.
+                </section>
+            }
 
             <!-- Recognition and Accreditation (unified table) -->
             <section class="rm-card rd-card">
@@ -253,7 +271,7 @@
                                        value="@rankings.ArwuValue"
                                        placeholder="Enter ranking"
                                        data-rank-input="arwu"
-                                       @(adminReadOnly ? "readonly disabled" : null) />
+                                       @(readOnlyMode ? "readonly disabled" : null) />
 
                                 <label class="na-toggle">
                                     <input type="checkbox"
@@ -261,7 +279,7 @@
                                            value="true"
                                            @(rankings.ArwuIsNa ? "checked" : null)
                                            data-rank-na="arwu"
-                                           @(adminReadOnly ? "disabled" : null) />
+                                           @(readOnlyMode ? "disabled" : null) />
                                     N/A
                                 </label>
                             </div>
@@ -276,7 +294,7 @@
                                        value="@rankings.QsValue"
                                        placeholder="Enter ranking"
                                        data-rank-input="qs"
-                                       @(adminReadOnly ? "readonly disabled" : null) />
+                                       @(readOnlyMode ? "readonly disabled" : null) />
 
                                 <label class="na-toggle">
                                     <input type="checkbox"
@@ -284,7 +302,7 @@
                                            value="true"
                                            @(rankings.QsIsNa ? "checked" : null)
                                            data-rank-na="qs"
-                                           @(adminReadOnly ? "disabled" : null) />
+                                           @(readOnlyMode ? "disabled" : null) />
                                     N/A
                                 </label>
                             </div>
@@ -299,7 +317,7 @@
                                        value="@rankings.TheValue"
                                        placeholder="Enter ranking"
                                        data-rank-input="the"
-                                       @(adminReadOnly ? "readonly disabled" : null) />
+                                       @(readOnlyMode ? "readonly disabled" : null) />
 
                                 <label class="na-toggle">
                                     <input type="checkbox"
@@ -307,7 +325,7 @@
                                            value="true"
                                            @(rankings.TheIsNa ? "checked" : null)
                                            data-rank-na="the"
-                                           @(adminReadOnly ? "disabled" : null) />
+                                           @(readOnlyMode ? "disabled" : null) />
                                     N/A
                                 </label>
                             </div>
@@ -322,7 +340,7 @@
                                        value="@rankings.ScopusValue"
                                        placeholder="Enter ranking"
                                        data-rank-input="scopus"
-                                       @(adminReadOnly ? "readonly disabled" : null) />
+                                       @(readOnlyMode ? "readonly disabled" : null) />
 
                                 <label class="na-toggle">
                                     <input type="checkbox"
@@ -330,14 +348,14 @@
                                            value="true"
                                            @(rankings.ScopusIsNa ? "checked" : null)
                                            data-rank-na="scopus"
-                                           @(adminReadOnly ? "disabled" : null) />
+                                           @(readOnlyMode ? "disabled" : null) />
                                     N/A
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    @if (!adminReadOnly)
+                    @if (!readOnlyMode)
                     {
                         <div style="display:flex; justify-content:flex-end; margin-top:14px;">
                             <button class="rm-btn rm-btn-primary" type="submit"><i class="bi bi-save"></i> Save</button>
@@ -375,12 +393,18 @@
 
     <script>
         (function () {
+            const isReadOnlyMode = "@readOnlyMode".toLowerCase() === "true";
             const pairs = ["arwu", "qs", "the", "scopus"];
 
             function syncPair(key) {
                 const input = document.querySelector(`[data-rank-input="${key}"]`);
                 const check = document.querySelector(`[data-rank-na="${key}"]`);
                 if (!input || !check) return;
+                if (isReadOnlyMode) {
+                    input.disabled = true;
+                    check.disabled = true;
+                    return;
+                }
                 input.disabled = check.checked;
                 if (check.checked) input.value = "";
             }
@@ -403,6 +427,7 @@
             var rankForm = document.querySelector('form[action*="SaveGlobalRankings"]');
             if (rankForm) {
                 rankForm.addEventListener('submit', async function (e) {
+                    if (isReadOnlyMode) return;
                     e.preventDefault();
                     try {
                         await fetch(rankForm.action, { method: 'POST', body: new FormData(rankForm) });

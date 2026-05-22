@@ -2,10 +2,12 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Final Assessment";
-    ViewData["ActiveNav"] = "requests";
     var requestId = Model?.Id ?? 0;
     var inst = Model?.UniversityName ?? "—";
     var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
+    var memberViewOnly = (bool)(ViewBag.MemberViewOnly ?? false);
+    var readOnlyMode = adminReadOnly || memberViewOnly;
+    ViewData["ActiveNav"] = memberViewOnly ? "archive" : "requests";
 
     // ── Saved values ─────────────────────────────────────────────────────────
     var savedAccreditationStatus = Model?.AccreditationStatus ?? string.Empty;
@@ -204,7 +206,7 @@
             <div class="rm-top-inner">
                 <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
                 <div class="rm-user">
-                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>Recognition Member</b></span></div>
+                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>@(ViewBag.CurrentRecognitionMember ?? "Recognition Member")</b></span></div>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </div>
             </div>
@@ -227,6 +229,13 @@
                     <div class="meta-pill"><span>Stage</span><b>Final</b></div>
                 </div>
             </section>
+
+            @if (readOnlyMode)
+            {
+                <section class="rm-card" style="border:1px solid #fedf89; background:#fffaeb; color:#7a2e0e; font-weight:700;">
+                    <i class="bi bi-eye"></i> Read-only mode: this university is assigned to another member.
+                </section>
+            }
 
             @if (TempData["RecommendationSaved"] != null)
             {
@@ -307,7 +316,7 @@
                     <div class="fa-select-row">
                         <div class="fa-select-field">
                             <label for="accreditationStatus">Compliance Status</label>
-                            <select id="accreditationStatus" name="accreditationStatus" class="fa-select" @(adminReadOnly ? "disabled" : "required")>
+                            <select id="accreditationStatus" name="accreditationStatus" class="fa-select" @(readOnlyMode ? "disabled" : "required")>
                                 <option value="">Select status…</option>
                                 @if (savedAccreditationStatus == "Compliant")     { <option value="Compliant" selected>Compliant</option> }
                                 else                                               { <option value="Compliant">Compliant</option> }
@@ -327,7 +336,7 @@
                     <label class="fa-note-label" for="accreditationNote">Assessment Note</label>
                     <textarea id="accreditationNote" name="accreditationNote" class="doc-notes"
                               placeholder="Describe your evaluation of the institution's accreditation and recognition status…"
-                              @(adminReadOnly ? "readonly disabled" : "")>@savedAccreditationNote</textarea>
+                              @(readOnlyMode ? "readonly disabled" : "")>@savedAccreditationNote</textarea>
                 </section>
 
                 <section class="rm-card rd-card">
@@ -562,17 +571,17 @@
                             Your Final Decision <span class="fa-required">*</span>
                         </div>
                         <div class="fa-decision-grid">
-                            <button type="button" class="fa-dec-btn approve @(initialDecision == "Approve" ? "selected" : "")" data-value="Approve">
+                            <button type="button" class="fa-dec-btn approve @(initialDecision == "Approve" ? "selected" : "")" data-value="Approve" @(readOnlyMode ? "disabled" : null)>
                                 <i class="bi bi-check2-circle"></i>
                                 <span>Approve</span>
                                 <small>Institution meets all requirements</small>
                             </button>
-                            <button type="button" class="fa-dec-btn conditional @(initialDecision == "Conditional Approval" ? "selected" : "")" data-value="Conditional Approval">
+                            <button type="button" class="fa-dec-btn conditional @(initialDecision == "Conditional Approval" ? "selected" : "")" data-value="Conditional Approval" @(readOnlyMode ? "disabled" : null)>
                                 <i class="bi bi-arrow-repeat"></i>
                                 <span>Conditional Approval</span>
                                 <small>Pending corrective measures</small>
                             </button>
-                            <button type="button" class="fa-dec-btn reject @(initialDecision == "Reject / Committee Review" ? "selected" : "")" data-value="Reject / Committee Review">
+                            <button type="button" class="fa-dec-btn reject @(initialDecision == "Reject / Committee Review" ? "selected" : "")" data-value="Reject / Committee Review" @(readOnlyMode ? "disabled" : null)>
                                 <i class="bi bi-x-octagon-fill"></i>
                                 <span>Reject / Committee Review</span>
                                 <small>Refer to committee for further review</small>
@@ -586,9 +595,9 @@
                     </div>
                     <textarea id="reason" name="reason" class="doc-notes"
                               placeholder="Provide your professional justification for the final recommendation…"
-                              @(adminReadOnly ? "readonly disabled" : "required")>@savedFinalJustification</textarea>
+                              @(readOnlyMode ? "readonly disabled" : "required")>@savedFinalJustification</textarea>
 
-                    @if (!adminReadOnly)
+                    @if (!readOnlyMode)
                     {
                         <div class="fa-save-row">
                             <span class="fa-save-hint"><i class="bi bi-lock-fill"></i> Your decision will be recorded once saved.</span>
@@ -608,7 +617,7 @@
                     </a>
                 </div>
                 <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("ElectronicRequests", "Home")">
+                    <a class="rm-btn rm-btn-light" href="@(memberViewOnly ? Url.Action("Archive", "Home") : Url.Action("ElectronicRequests", "Home"))">
                         <i class="bi bi-x-lg"></i> Exit
                     </a>
                 </div>
@@ -619,6 +628,7 @@
 
     <script>
         (function () {
+            const isReadOnlyMode = "@readOnlyMode".toLowerCase() === "true";
             const sel            = document.getElementById("accreditationStatus");
             const p1Badge        = document.getElementById("p1Badge");
             const p1ScBadge      = document.getElementById("p1ScBadge");
@@ -681,6 +691,7 @@
             const decBtns = document.querySelectorAll(".fa-dec-btn");
             decBtns.forEach(function (btn) {
                 btn.addEventListener("click", function () {
+                    if (isReadOnlyMode) return;
                     decBtns.forEach(function (b) { b.classList.remove("selected"); });
                     this.classList.add("selected");
                     hiddenDecision.value = this.getAttribute("data-value");
@@ -696,6 +707,8 @@
 
         // ── Save Decision toast ───────────────────────────────────────────────
         (function () {
+            const isReadOnlyMode = "@readOnlyMode".toLowerCase() === "true";
+            if (isReadOnlyMode) return;
             function showToast(message, type) {
                 var old = document.getElementById('_rec-toast');
                 if (old) old.remove();

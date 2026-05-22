@@ -1,0 +1,330 @@
+@model List<MOHRecognition.Services.RecognitionRequestRecord>
+@using MOHRecognition.DTOs
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Closed Sessions Archive";
+    ViewData["ActiveNav"] = "closedarchive";
+
+    var currentMember      = ViewBag.CurrentRecognitionMember as string ?? "Recognition Member";
+    var meetingMap         = ViewBag.RequestMeetingMap as Dictionary<int, MeetingDto> ?? new();
+    var memberNameMap      = ViewBag.MemberNameMap as Dictionary<string, string> ?? new();
+    var availableSessions  = ViewBag.AvailableSessions as List<int> ?? new();
+    var availableDecisions = ViewBag.AvailableDecisions as List<string> ?? new();
+
+    var fSession  = ViewBag.FilterSession   as int?;
+    var fUni      = ViewBag.FilterUniversity as string ?? "";
+    var fRef      = ViewBag.FilterReference  as string ?? "";
+    var fCountry  = ViewBag.FilterCountry    as string ?? "";
+    var fDecision = ViewBag.FilterDecision   as string ?? "";
+    var fFrom     = ViewBag.FilterClosedFrom as string ?? "";
+    var fTo       = ViewBag.FilterClosedTo   as string ?? "";
+    var totalClosed = (int)(ViewBag.TotalClosed ?? 0);
+
+    string MemberName(string? email) {
+        if (string.IsNullOrWhiteSpace(email)) return "—";
+        return memberNameMap.TryGetValue(email.Trim().ToLowerInvariant(), out var n) ? n : email;
+    }
+
+    string DecisionLabel(string? dec) {
+        if (string.IsNullOrWhiteSpace(dec)) return "—";
+        if (dec.Contains("Approve", StringComparison.OrdinalIgnoreCase) && !dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase)) return "Approved";
+        if (dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase)) return "Conditional";
+        if (dec.Contains("Reject", StringComparison.OrdinalIgnoreCase)) return "Rejected";
+        return dec;
+    }
+    string DecisionClass(string? dec) {
+        if (string.IsNullOrWhiteSpace(dec)) return "badge-neutral";
+        if (dec.Contains("Approve", StringComparison.OrdinalIgnoreCase) && !dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase)) return "badge-ok";
+        if (dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase)) return "badge-warn";
+        if (dec.Contains("Reject", StringComparison.OrdinalIgnoreCase)) return "badge-returned";
+        return "badge-neutral";
+    }
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/ElectronicRequests.css" asp-append-version="true" />
+    <style>
+        .csa-hero { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap; margin-bottom:0; }
+        .csa-title-block h1 { font-size:28px; font-weight:800; color:#111827; margin-bottom:6px; }
+        .csa-title-block p  { font-size:14px; color:#6b7280; }
+        .csa-chips { display:flex; gap:12px; flex-wrap:wrap; }
+        .csa-chip  { background:#f3f4f6; border:1px solid #e5e7eb; border-radius:14px; padding:10px 18px; text-align:center; min-width:80px; }
+        .csa-chip span { display:block; font-size:11px; color:#6b7280; font-weight:600; margin-bottom:4px; }
+        .csa-chip b    { font-size:22px; font-weight:800; color:#111827; }
+        .csa-chip.accent b { color:#7f1627; }
+
+        .csa-filter-card { background:white; border:1px solid #f0f0f0; border-radius:20px; padding:22px 24px; margin-bottom:20px; }
+        .csa-filter-card h3 { font-size:14px; font-weight:700; color:#374151; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+        .csa-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; }
+        .csa-field { display:flex; flex-direction:column; gap:6px; }
+        .csa-field label { font-size:11px; font-weight:700; color:#6b7280; letter-spacing:.4px; text-transform:uppercase; }
+        .csa-field input,
+        .csa-field select { border:1px solid #e5e7eb; border-radius:12px; padding:10px 14px; font-size:13px; font-family:inherit; background:white; }
+        .csa-field input:focus,
+        .csa-field select:focus { outline:none; border-color:#7f1627; box-shadow:0 0 0 3px rgba(127,22,39,.08); }
+        .csa-filter-actions { display:flex; gap:10px; align-items:flex-end; }
+        .csa-btn-search { background:linear-gradient(135deg,#7f1627,#a51d35); color:white; border:none; border-radius:12px; padding:10px 20px; font-weight:700; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
+        .csa-btn-clear  { background:white; border:1px solid #e5e7eb; border-radius:12px; padding:10px 16px; font-weight:700; font-size:13px; cursor:pointer; color:#374151; text-decoration:none; display:inline-flex; align-items:center; gap:7px; }
+        .csa-btn-clear:hover,.csa-btn-search:hover { transform:translateY(-1px); }
+
+        .csa-table-wrap { overflow-x:auto; }
+        .csa-table { width:100%; border-collapse:separate; border-spacing:0; }
+        .csa-table thead th { background:#faf7f8; padding:14px 16px; text-align:left; font-size:11px; font-weight:800; color:#6b7280; letter-spacing:.5px; border-bottom:1px solid #ececec; white-space:nowrap; }
+        .csa-table tbody td { padding:18px 16px; border-bottom:1px solid #f5f5f5; vertical-align:middle; font-size:13px; }
+        .csa-table tbody tr:last-child td { border-bottom:none; }
+        .csa-table tbody tr:hover td { background:#fafafa; }
+
+        .session-tag { display:inline-flex; align-items:center; gap:5px; background:#f0f4ff; color:#3b52b0; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:700; }
+        .date-cell   { font-size:12px; color:#6b7280; white-space:nowrap; }
+        .ref-cell    { font-weight:700; color:#111827; }
+        .uni-cell    { font-weight:600; color:#1f2937; }
+        .empty-state { text-align:center; padding:60px 20px; color:#9ca3af; }
+        .empty-state i { font-size:40px; display:block; margin-bottom:12px; }
+        .rm-mini-view { display:inline-flex; align-items:center; gap:5px; background:#f3f4f6; color:#374151; border:1px solid #e5e7eb; border-radius:10px; padding:6px 12px; font-size:12px; font-weight:700; text-decoration:none; }
+        .rm-mini-view:hover { background:#e9ecef; }
+    </style>
+</head>
+
+<body class="rm-page">
+
+    <header class="rm-header">
+        <div class="rm-brandbar"></div>
+        <div class="rm-top">
+            <div class="rm-top-inner">
+                <div class="rm-brand">
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+                </div>
+                <div class="rm-user">
+                    <div class="rm-userpill">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Welcome, <b>@currentMember</b></span>
+                    </div>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="rm-shell">
+
+        @await Html.PartialAsync("_MemberSidebar")
+
+        <main class="rm-main">
+
+            <!-- HERO -->
+            <section class="rm-card" style="margin-bottom:16px;">
+                <div class="csa-hero">
+                    <div class="csa-title-block">
+                        <h1><i class="bi bi-archive-fill" style="color:#7f1627;font-size:26px;vertical-align:middle;margin-right:10px;"></i>Closed Sessions Archive</h1>
+                        <p>Requests from closed/completed meeting sessions. Data is read-only and preserved for reference.</p>
+                    </div>
+                    <div class="csa-chips">
+                        <div class="csa-chip accent">
+                            <span>Total Closed</span>
+                            <b>@totalClosed</b>
+                        </div>
+                        <div class="csa-chip">
+                            <span>Showing</span>
+                            <b>@Model.Count</b>
+                        </div>
+                        <div class="csa-chip">
+                            <span>Sessions</span>
+                            <b>@availableSessions.Count</b>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FILTERS -->
+            <div class="csa-filter-card">
+                <h3><i class="bi bi-funnel-fill" style="color:#7f1627;"></i> Filter Closed Records</h3>
+                <form method="get" asp-action="ClosedSessionsArchive" asp-controller="Home">
+                    <div class="csa-grid">
+
+                        <div class="csa-field">
+                            <label>Session No.</label>
+                            <select name="sessionNo">
+                                @if (fSession == null)
+                                {
+                                    <option value="" selected>All Sessions</option>
+                                }
+                                else
+                                {
+                                    <option value="">All Sessions</option>
+                                }
+                                @foreach (var s in availableSessions)
+                                {
+                                    if (fSession == s)
+                                    {
+                                        <option value="@s" selected>Session @s</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@s">Session @s</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="csa-field">
+                            <label>University Name</label>
+                            <input type="text" name="university" value="@fUni" placeholder="Search university..." />
+                        </div>
+
+                        <div class="csa-field">
+                            <label>Reference No.</label>
+                            <input type="text" name="reference" value="@fRef" placeholder="e.g. REQ-001" />
+                        </div>
+
+                        <div class="csa-field">
+                            <label>Country</label>
+                            <input type="text" name="country" value="@fCountry" placeholder="e.g. Jordan" />
+                        </div>
+
+                        <div class="csa-field">
+                            <label>Final Decision</label>
+                            <select name="decision">
+                                @if (string.IsNullOrWhiteSpace(fDecision))
+                                {
+                                    <option value="" selected>All Decisions</option>
+                                }
+                                else
+                                {
+                                    <option value="">All Decisions</option>
+                                }
+                                @foreach (var d in availableDecisions)
+                                {
+                                    if (string.Equals(fDecision, d, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <option value="@d" selected>@DecisionLabel(d)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@d">@DecisionLabel(d)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="csa-field">
+                            <label>Closed From</label>
+                            <input type="date" name="closedFrom" value="@fFrom" />
+                        </div>
+
+                        <div class="csa-field">
+                            <label>Closed To</label>
+                            <input type="date" name="closedTo" value="@fTo" />
+                        </div>
+
+                        <div class="csa-filter-actions">
+                            <button type="submit" class="csa-btn-search">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                            <a href="/Home/ClosedSessionsArchive" class="csa-btn-clear">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </a>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+
+            <!-- TABLE -->
+            <section class="rm-card">
+                <div class="csa-table-wrap">
+                    <table class="csa-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Reference</th>
+                                <th>University</th>
+                                <th>Country</th>
+                                <th>Assigned Member</th>
+                                <th>Final Decision</th>
+                                <th>Session</th>
+                                <th>Closed Date</th>
+                                <th style="text-align:center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Any())
+                            {
+                                int n = 1;
+                                @foreach (var item in Model)
+                                {
+                                    meetingMap.TryGetValue(item.Id, out var mtg);
+                                    <tr>
+                                        <td style="color:#9ca3af;font-weight:700;">@(n++)</td>
+                                        <td class="ref-cell">@(item.ReferenceNumber ?? $"REQ-{item.Id}")</td>
+                                        <td class="uni-cell">@item.UniversityName</td>
+                                        <td>@item.Country</td>
+                                        <td>@MemberName(item.AssignedMember)</td>
+                                        <td>
+                                            <span class="badge @DecisionClass(item.BasicInfoAssessmentDecision)">
+                                                @DecisionLabel(item.BasicInfoAssessmentDecision)
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if (mtg != null)
+                                            {
+                                                <span class="session-tag">
+                                                    <i class="bi bi-layers-fill"></i> Session @mtg.SessionNumber
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span style="color:#9ca3af;">—</span>
+                                            }
+                                        </td>
+                                        <td class="date-cell">
+                                            @(mtg != null ? mtg.MeetingDate.ToString("dd MMM yyyy") : "—")
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <a class="rm-mini-view" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="9">
+                                        <div class="empty-state">
+                                            <i class="bi bi-archive"></i>
+                                            @if (totalClosed == 0)
+                                            {
+                                                <span>No closed sessions yet. Sessions appear here once an admin closes a meeting.</span>
+                                            }
+                                            else
+                                            {
+                                                <span>No records match the current filters.</span>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+</body>
+</html>

@@ -41,7 +41,11 @@
         tbody tr:hover { background: #fcfdff; }
         tbody td { padding: 15px 18px; font-size: 13px; color: #444; vertical-align: middle; }
         .uni-name { font-size: 14px; font-weight: 800; color: #1a1a1a; }
-        .rec-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 11px; font-size: 11.5px; font-weight: 800; background: #f5e8ea; color: #7f1627; }
+        .rec-badge { display: inline-flex; align-items: center; gap: 8px; border-radius: 12px; padding: 9px 18px; font-size: 14px; font-weight: 700; letter-spacing: .2px; }
+        .rec-badge.green  { background: #dcfce7; color: #166534; border: 1.5px solid #86efac; }
+        .rec-badge.orange { background: #fff7ed; color: #9a3412; border: 1.5px solid #fdba74; }
+        .rec-badge.red    { background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
+        .rec-badge.grey   { background: #f1f5f9; color: #64748b; border: 1.5px solid #cbd5e1; }
         .btn-add { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; border-radius: 7px; padding: 8px 12px; font-size: 12px; font-weight: 800; background: #1d4ed8; color: #fff; border: 1px solid #1d4ed8; }
         .btn-add:hover { background: #1e40af; border-color: #1e40af; }
         .empty-state { padding: 70px 32px; text-align: center; }
@@ -93,7 +97,16 @@
                         {
                             foreach (var item in items)
                             {
-                                var recommendation = string.IsNullOrWhiteSpace(item.BasicInfoAssessmentDecision) ? "Recommendation Not Saved" : item.BasicInfoAssessmentDecision;
+                                var recommendation = string.IsNullOrWhiteSpace(item.BasicInfoAssessmentDecision) ? "Not Submitted Yet" : item.BasicInfoAssessmentDecision;
+                                var recLower = recommendation.ToLowerInvariant();
+                                var recColor = recLower.Contains("approve") ? "green"
+                                             : recLower.Contains("conditional") ? "orange"
+                                             : recLower.Contains("reject") ? "red"
+                                             : "grey";
+                                var recIcon  = recColor == "green"  ? "bi-check-circle-fill"
+                                             : recColor == "orange" ? "bi-exclamation-circle-fill"
+                                             : recColor == "red"    ? "bi-x-circle-fill"
+                                             : "bi-clock";
                                 <tr>
                                     <td><span class="uni-name">@(string.IsNullOrWhiteSpace(item.UniversityName) ? "-" : item.UniversityName)</span></td>
                                     <td>@(string.IsNullOrWhiteSpace(item.Country) ? "-" : item.Country)</td>
@@ -108,7 +121,7 @@
                                             <span>Recognition Member</span>
                                         }
                                     </td>
-                                    <td><span class="rec-badge"><i class="bi bi-clipboard2-check"></i> @recommendation</span></td>
+                                    <td><span class="rec-badge @recColor"><i class="bi @recIcon"></i> @recommendation</span></td>
                                     <td>@((item.SubmittedToAdminAt ?? item.SubmittedAt).ToString("dd MMM yyyy"))</td>
                                     <td style="text-align:right;">
                                         <a class="btn-add" href="/Home/AdminViewRecommendation?id=@item.Id">

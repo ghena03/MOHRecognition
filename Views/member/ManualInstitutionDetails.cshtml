@@ -183,36 +183,26 @@
             </a>
 
             <!-- Institution Type Banner + Fill Button -->
-            @if (isBachelor)
-            {
-                <div class="type-banner bachelor">
-                    <i class="bi bi-mortarboard-fill"></i>
-                    <div class="type-banner-text">
-                        <h3>Bachelor Program</h3>
-                        <p>This institution is assigned for Bachelor recognition. Fill the full application below.</p>
-                    </div>
-                    <a class="action-btn bachelor"
-                       href="@Url.Action("UniDashboard", "Home")">
-                        <i class="bi bi-pencil-square"></i>
-                        Fill Bachelor Application
-                    </a>
-                </div>
+            @{
+                var fillUrl = Url.Action("StartManualFill", "Home", new { id = Model.Id });
+                var bannerClass = isBachelor ? "bachelor" : (isPostgraduate ? "postgraduate" : "bachelor");
+                var bannerIcon = isBachelor ? "bi-mortarboard-fill" : "bi-journal-bookmark-fill";
+                var bannerTitle = isBachelor ? "Bachelor Program" : (isPostgraduate ? "Postgraduate Program" : "Recognition Program");
+                var bannerDesc = isBachelor
+                    ? "This institution is assigned for Bachelor recognition. Fill the application data through the standard review pages."
+                    : "This institution is assigned for Postgraduate recognition. Fill the application data through the standard review pages.";
             }
-            else if (isPostgraduate)
-            {
-                <div class="type-banner postgraduate">
-                    <i class="bi bi-journal-bookmark-fill"></i>
-                    <div class="type-banner-text">
-                        <h3>Postgraduate Program</h3>
-                        <p>This institution is assigned for Postgraduate recognition. Fill the postgraduate form below.</p>
-                    </div>
-                    <a class="action-btn postgraduate"
-                       href="@Url.Action("UniPostgraduateInstructions", "Home")">
-                        <i class="bi bi-pencil-square"></i>
-                        Fill Postgraduate Application
-                    </a>
+            <div class="type-banner @bannerClass">
+                <i class="bi @bannerIcon"></i>
+                <div class="type-banner-text">
+                    <h3>@bannerTitle</h3>
+                    <p>@bannerDesc</p>
                 </div>
-            }
+                <a class="action-btn @bannerClass" href="@fillUrl">
+                    <i class="bi bi-pencil-square"></i>
+                    Fill Application
+                </a>
+            </div>
 
             <!-- Details Card -->
             <section class="rm-card">

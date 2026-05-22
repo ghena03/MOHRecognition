@@ -4,8 +4,10 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Academic Info";
-    ViewData["ActiveNav"] = "requests";
     var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
+    var memberViewOnly = (bool)(ViewBag.MemberViewOnly ?? false);
+    var readOnlyMode = adminReadOnly || memberViewOnly;
+    ViewData["ActiveNav"] = memberViewOnly ? "archive" : "requests";
     var adminMeetingId = (int)(ViewBag.AdminMeetingId ?? 0);
     var requestId = ViewBag.RequestId ?? Model?.Id ?? 0;
     var inst = ViewBag.InstitutionName ?? Model?.UniversityName ?? "—";
@@ -15,6 +17,7 @@
     var nextLink = adminReadOnly
         ? Url.Action("AdminDetailsAccreditationBodies", "Home", new { id = requestId, meetingId = adminMeetingId })
         : Url.Action("DetailsAccreditationBodies", "Home", new { id = requestId });
+    var isManual = (bool)(ViewBag.IsManual ?? false);
     var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
 
     string YesNo(bool value) => value ? "Yes" : "No";
@@ -195,7 +198,7 @@
             <div class="rm-top-inner">
                 <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
                 <div class="rm-user">
-                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>@(adminReadOnly ? "Admin Review" : "Recognition Member")</b></span></div>
+                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>@(adminReadOnly ? "Admin Review" : (ViewBag.CurrentRecognitionMember ?? "Recognition Member"))</b></span></div>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </div>
             </div>
@@ -224,6 +227,24 @@
                     <div class="meta-pill"><span>Step</span><b>4 / 7</b></div>
                 </div>
             </section>
+
+            @if (readOnlyMode)
+            {
+                <section class="rm-card" style="border:1px solid #fedf89; background:#fffaeb; color:#7a2e0e; font-weight:700;">
+                    <i class="bi bi-eye"></i> Read-only mode: this university is assigned to another member.
+                </section>
+            }
+
+            @if (isManual && !readOnlyMode)
+            {
+                <section class="rm-card" style="border:1px solid #bfdbfe; background:#eff6ff; color:#1e40af; font-weight:600; display:flex; align-items:center; gap:10px;">
+                    <i class="bi bi-pencil-square" style="font-size:1.1rem;"></i>
+                    Manual Request — Review the computed academic indicators below. Staff and student data was entered in the previous step.
+                    <a class="rm-btn rm-btn-primary" href="@nextLink" style="margin-left:auto; white-space:nowrap;">
+                        <i class="bi bi-arrow-right-circle"></i> Continue to Next Step
+                    </a>
+                </section>
+            }
 
             <section id="sec-hospitals" class="rm-card rd-card">
                 <div class="rd-card-hd">

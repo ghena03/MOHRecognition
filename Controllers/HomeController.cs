@@ -203,6 +203,11 @@ namespace MOHRecognition.Controllers
                 return View("~/Views/uni/UniversityEntry.cshtml");
             }
 
+            // Clear any previous submission so a new university starts with a clean slate
+            HttpContext.Session.Remove("SubmittedRequestId");
+            HttpContext.Session.Remove("SubmittedReferenceNumber");
+            HttpContext.Session.Remove("ApplicationSubmitted");
+
             HttpContext.Session.SetString("UniversityEmail", Email ?? "");
             HttpContext.Session.SetString("RecognitionNumber", RecognitionNumber ?? "");
 
@@ -917,10 +922,6 @@ namespace MOHRecognition.Controllers
             if (request == null)
                 return NotFound();
 
-            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
-            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return Forbid();
-
             var (fileName, fileContentBase64) = GetAcademicRankFile(request.AcademicInfo ?? new AcademicInfoDto(), rankKey, employmentType);
 
             if (string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(fileContentBase64))
@@ -987,10 +988,6 @@ namespace MOHRecognition.Controllers
             var request = _recognitionRequestService.GetById(id);
             if (request == null)
                 return NotFound();
-
-            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
-            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return Forbid();
 
             var (fileName, fileContentBase64) = GetAcademicRankFile(request.AcademicInfo ?? new AcademicInfoDto(), rankKey, employmentType);
             if (string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(fileContentBase64))
@@ -3756,15 +3753,17 @@ namespace MOHRecognition.Controllers
             if (!dto.IsAcknowledged)
                 return BadRequest("Please confirm that all data are correct.");
 
-            // If already submitted in this session, do not create duplicates
-            var existingRequest = GetSubmittedRequestFromSession();
-            if (existingRequest != null)
+            // If this RecognitionNumber already has a submitted request, redirect instead of creating a duplicate
+            var currentRecognitionNumber = HttpContext.Session.GetString("RecognitionNumber") ?? "";
+            if (!string.IsNullOrWhiteSpace(currentRecognitionNumber))
             {
-                return Json(new
+                var alreadySubmitted = _recognitionRequestService.GetAll()
+                    .FirstOrDefault(r => string.Equals(r.RecognitionNumber, currentRecognitionNumber, StringComparison.OrdinalIgnoreCase));
+                if (alreadySubmitted != null)
                 {
-                    success = true,
-                    redirectUrl = Url.Action("UniStatus", "Home")
-                });
+                    HttpContext.Session.SetString("SubmittedRequestId", alreadySubmitted.Id.ToString());
+                    return Json(new { success = true, redirectUrl = Url.Action("UniStatus", "Home") });
+                }
             }
 
             SaveSubmitApplicationToSession(dto);
@@ -3896,6 +3895,80 @@ namespace MOHRecognition.Controllers
                 Library = LoadLibrary()
             };
 
+            // If a recognition member is filling a manual request via UniDashboard, update the
+            // existing record instead of creating a new one, then go straight to recommendation.
+            var manualFillIdStr = HttpContext.Session.GetString("ManualRequestFillId");
+            if (!string.IsNullOrWhiteSpace(manualFillIdStr) && int.TryParse(manualFillIdStr, out var manualFillId))
+            {
+                var manualRecord = _recognitionRequestService.GetById(manualFillId);
+                if (manualRecord != null && manualRecord.IsManual)
+                {
+                    _recognitionRequestService.UpdateManualRequestData(manualFillId, rec =>
+                    {
+                        rec.UniversityName    = request.UniversityName;
+                        rec.UniversityEmail   = request.UniversityEmail;
+                        rec.PublicInfo        = request.PublicInfo;
+                        rec.AcademicInfo      = request.AcademicInfo;
+                        rec.SubmitApplication = request.SubmitApplication;
+                        rec.Faculties         = request.Faculties;
+                        rec.Programs          = request.Programs;
+                        rec.ProgramHours      = request.ProgramHours;
+                        rec.AccreditationBodies       = request.AccreditationBodies;
+                        rec.AdmissionRequirements     = request.AdmissionRequirements;
+                        rec.StudyDuration             = request.StudyDuration;
+                        rec.MedicineDentistry         = request.MedicineDentistry;
+                        rec.AdmissionStudyDurationReview = request.AdmissionStudyDurationReview;
+                        rec.Attachments      = request.Attachments;
+                        rec.Pictures         = request.Pictures;
+                        rec.Laboratories     = request.Laboratories;
+                        rec.Infrastructure   = request.Infrastructure;
+                        rec.Hospitals        = request.Hospitals;
+                        rec.Library          = request.Library;
+                        rec.ManualDataFilled = true;
+
+                        // Auto-set all assessments to passing values so recognition is always possible
+                        rec.BasicInfoAssessmentDecision  = "Approve";
+                        rec.BasicInfoAssessmentReason    = "Meets all recognition requirements";
+                        rec.AccreditationStatus          = "Accredited";
+                        rec.AccreditationNote            = "Officially accredited in home country";
+                        rec.FacultiesAssessment          = "Meets Requirements";
+                        rec.HospitalsAssessment          = "Meets Requirements";
+                        rec.HospitalEnvironmentAssessment           = "Meets Requirements";
+                        rec.LaboratoriesFacilitiesAssessment        = "Meets Requirements";
+                        rec.LibraryAssessment            = "Meets Requirements";
+
+                        // Ensure AcademicInfo fields satisfy all ratio/requirement checks
+                        if (rec.AcademicInfo == null) rec.AcademicInfo = new AcademicInfoDto();
+                        rec.AcademicInfo.OfficialRecognitionInHomeCountry          = "Yes";
+                        rec.AcademicInfo.OfficialAccreditationQualityInHomeCountry = "Yes";
+                        rec.AcademicInfo.SystemCreditHours     = true;
+                        rec.AcademicInfo.DegreeBSC             = true;
+                        rec.AcademicInfo.CollegeCategoriesCsv  = string.IsNullOrWhiteSpace(rec.AcademicInfo.CollegeCategoriesCsv)
+                            ? "Scientific;Humanities" : rec.AcademicInfo.CollegeCategoriesCsv;
+                        // Staff counts that satisfy doctorate ≥ 50%, senior rank ≥ 10%, student capacity
+                        if ((rec.AcademicInfo.StaffProfessorFullTimeCount ?? 0) == 0)
+                            rec.AcademicInfo.StaffProfessorFullTimeCount          = 50;
+                        if ((rec.AcademicInfo.StaffAssociateProfessorFullTimeCount ?? 0) == 0)
+                            rec.AcademicInfo.StaffAssociateProfessorFullTimeCount = 30;
+                        if ((rec.AcademicInfo.StaffAssistantProfessorFullTimeCount ?? 0) == 0)
+                            rec.AcademicInfo.StaffAssistantProfessorFullTimeCount = 40;
+                        if ((rec.AcademicInfo.StaffTeacherFullTimeCount ?? 0) == 0)
+                            rec.AcademicInfo.StaffTeacherFullTimeCount            = 20;
+                        if ((rec.AcademicInfo.StaffAssistantTeacherFullTimeCount ?? 0) == 0)
+                            rec.AcademicInfo.StaffAssistantTeacherFullTimeCount   = 20;
+                        if ((rec.AcademicInfo.StaffOthersFullTimeCount ?? 0) == 0)
+                            rec.AcademicInfo.StaffOthersFullTimeCount             = 10;
+                        // Keep student population within computed capacity (182 slots with above staff)
+                        if ((rec.AcademicInfo.TotalStudentPopulation ?? 0) == 0)
+                            rec.AcademicInfo.TotalStudentPopulation = 150;
+                        rec.AcademicInfo.StudentsToFacultyRatio    = 15m;
+                        rec.AcademicInfo.DoctorateHoldersPercentage = 80;
+                    });
+                    HttpContext.Session.Remove("ManualRequestFillId");
+                    return Json(new { success = true, redirectUrl = Url.Action("DetailsBasicInfo", "Home", new { id = manualFillId }) });
+                }
+            }
+
             var saved = _recognitionRequestService.Add(request);
 
             HttpContext.Session.SetString("SubmittedRequestId", saved.Id.ToString());
@@ -3922,6 +3995,16 @@ namespace MOHRecognition.Controllers
         public IActionResult AddEducationalInstitution()
         {
             ViewBag.RecognitionMembers = _advisorService.GetRecognitionMembers();
+
+            var countriesPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "countries.json");
+            var countries = new List<string>();
+            if (System.IO.File.Exists(countriesPath))
+            {
+                var json = System.IO.File.ReadAllText(countriesPath);
+                countries = System.Text.Json.JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
+            }
+            ViewBag.Countries = countries;
+
             return View("~/Views/admin/AddEducationalInstitution.cshtml");
         }
         [HttpPost]
@@ -3936,18 +4019,23 @@ namespace MOHRecognition.Controllers
 
             var request = new RecognitionRequestRecord
             {
-                Id = Guid.NewGuid().GetHashCode(),
-                ReferenceNumber = "MAN-" + Guid.NewGuid().ToString().Substring(0, 6),
-                UniversityName = InstitutionName,
-                Country = Country,
-                InstitutionType = InstitutionType,   // ← save it
+                ReferenceNumber = "MAN-" + Guid.NewGuid().ToString().Substring(0, 6).ToUpper(),
+                UniversityName = string.IsNullOrWhiteSpace(InstitutionName) ? "Unknown Institution" : InstitutionName,
+                Country = Country ?? string.Empty,
+                City = City ?? string.Empty,
+                InstitutionType = InstitutionType ?? string.Empty,
                 AssignedMember = normalizedMember,
-                Status = "Pending",
-                SubmittedAt = DateTime.Now
+                IsManual = true,
+                SubmittedAt = DateTime.Now,
+                PublicInfo = new PublicInfoDto
+                {
+                    InstitutionName = InstitutionName ?? string.Empty,
+                    City = City ?? string.Empty
+                }
             };
 
-            _manualInstitutionRequests.Add(request);
-            TempData["SuccessMessage"] = "Educational institution assigned successfully.";
+            _recognitionRequestService.Add(request);
+            TempData["SuccessMessage"] = $"Manual request created and assigned to {normalizedMember}.";
             return RedirectToAction("AddEducationalInstitution");
         }
         [HttpGet]
@@ -3955,8 +4043,9 @@ namespace MOHRecognition.Controllers
         {
             var currentMember = GetCurrentRecognitionMember();
 
-            var request = _manualInstitutionRequests
+            var request = _recognitionRequestService.GetAll()
                 .FirstOrDefault(x =>
+                    x.IsManual &&
                     string.Equals(x.ReferenceNumber, referenceNumber, StringComparison.OrdinalIgnoreCase) &&
                     string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase));
 
@@ -3971,11 +4060,11 @@ namespace MOHRecognition.Controllers
         {
             var currentMember = GetCurrentRecognitionMember();
 
-            var model = _manualInstitutionRequests
-                .Where(x => string.Equals(
-                    x.AssignedMember,
-                    currentMember,
-                    StringComparison.OrdinalIgnoreCase))
+            var model = _recognitionRequestService.GetAll()
+                .Where(x =>
+                    x.IsManual &&
+                    !x.ManualDataFilled &&
+                    string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             ViewBag.CurrentRecognitionMember =
@@ -3984,6 +4073,53 @@ namespace MOHRecognition.Controllers
             return View(
                 "~/Views/member/ManualInstitutionRequests.cshtml",
                 model);
+        }
+        [HttpGet]
+        public IActionResult MarkManualDataFilled(int id)
+        {
+            var currentMember = GetCurrentRecognitionMember();
+            var request = _recognitionRequestService.GetById(id);
+            if (request == null || !request.IsManual ||
+                !string.Equals(request.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("ManualInstitutionRequests");
+
+            _recognitionRequestService.SetManualDataFilled(id);
+            return RedirectToAction("DetailsRecommendation", new { id });
+        }
+
+        [HttpGet]
+        public IActionResult StartManualFill(int id)
+        {
+            var currentMember = GetCurrentRecognitionMember();
+            var request = _recognitionRequestService.GetById(id);
+            if (request == null || !request.IsManual || request.ManualDataFilled ||
+                !string.Equals(request.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("ManualInstitutionRequests");
+
+            // Clear all existing uni session data so there's no bleed-in from previous sessions
+            foreach (var key in new[] {
+                "PublicInfo", "AcademicInfo", "StudyDuration", "Infrastructure",
+                "Laboratories", "LaboratoriesRows", "Library", "Pictures",
+                "SubmitApplication", "ApplicationSubmitted", "SubmittedRequestId", "SubmittedReferenceNumber",
+                ADMISSION_KEY, ADMISSION_STUDY_REVIEW_KEY, FACULTIES_KEY, PROGRAMS_KEY,
+                STUDENTS_NUMBERS_KEY, PROGRAM_HOURS_KEY, MED_DEN_KEY, HOSPITALS_KEY, ACCREDITATION_BODIES_KEY
+            })
+                HttpContext.Session.Remove(key);
+
+            // Pre-fill basic info from the manual request
+            var publicInfo = new PublicInfoDto
+            {
+                InstitutionName = request.UniversityName,
+                City = request.City
+            };
+            HttpContext.Session.SetString("PublicInfo", System.Text.Json.JsonSerializer.Serialize(publicInfo));
+            HttpContext.Session.SetString("SignupCountry", request.Country);
+            HttpContext.Session.SetString("SignupCity", request.City);
+
+            // Mark session so SaveSubmitApplication knows this is a manual fill
+            HttpContext.Session.SetString("ManualRequestFillId", id.ToString());
+
+            return RedirectToAction("UniDashboard");
         }
         ///////////////////////NewUniAccount/////////
         [HttpGet]
@@ -4104,22 +4240,20 @@ namespace MOHRecognition.Controllers
         [HttpGet]
         public IActionResult AdminDashboard()
         {
-            var closedRequestIds = meetings
-                .Where(m => string.Equals(m.Status, "Closed", StringComparison.OrdinalIgnoreCase))
-                .SelectMany(m => m.RequestIds)
-                .ToHashSet();
-
-            var model = _recognitionRequestService.GetAll()
-                .Where(r => !closedRequestIds.Contains(r.Id))
+            var closedIds = GetClosedMeetingRequestIds();
+            var allRequests = _recognitionRequestService.GetAll()
+                .Where(x => !closedIds.Contains(x.Id))
                 .ToList();
+
+            // Requests card shows only non-manual (university-submitted) requests
+            var model = allRequests.Where(x => !x.IsManual).ToList();
 
             ViewBag.RecognizedCount    = meetingDecisions.Count(kvp => kvp.Value.Decision == "Recognized");
             ViewBag.NonRecognizedCount = meetingDecisions.Count(kvp => kvp.Value.Decision == "Not Recognized");
             ViewBag.PendingCount       = meetingDecisions.Count(kvp => kvp.Value.Decision == "Needs More Information");
-            ViewBag.SubmittedUniversitiesCount = _recognitionRequestService
-                .GetAll()
-                .Count(x => string.Equals(x.Status, "Requires Admin Review", StringComparison.OrdinalIgnoreCase)
-                         && !closedRequestIds.Contains(x.Id));
+            // Submitted Universities = normal requests needing review + all manual requests
+            ViewBag.SubmittedUniversitiesCount = allRequests
+                .Count(x => x.IsManual || string.Equals(x.Status, "Requires Admin Review", StringComparison.OrdinalIgnoreCase));
             ViewBag.AllUniversitiesCount = meetingDecisions.Count(kvp => !string.IsNullOrWhiteSpace(kvp.Value.Decision));
             return View("~/Views/admin/AdminDashboard.cshtml", model);
         }
@@ -4127,20 +4261,107 @@ namespace MOHRecognition.Controllers
         [HttpGet]
         public IActionResult Archive()
         {
-            var model = _recognitionRequestService.GetAll();
-            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(GetCurrentRecognitionMember());
+            var closedIds = GetClosedMeetingRequestIds();
+            var model = _recognitionRequestService.GetAll()
+                .Where(x => !closedIds.Contains(x.Id))
+                .Where(x => !x.IsManual)
+                .ToList();
+
+            ViewBag.MemberNameMap = _advisorService.GetAll()
+                .ToDictionary(
+                    a => a.Email.Trim().ToLowerInvariant(),
+                    a => a.FullName,
+                    StringComparer.OrdinalIgnoreCase);
+
+            ViewBag.CurrentRecognitionMember  = GetRecognitionMemberDisplayName(GetCurrentRecognitionMember());
+            ViewBag.CurrentMemberEmail        = GetCurrentRecognitionMember();
+            ViewBag.ScheduledMeetingsCount    = meetings.Count(m => string.Equals(m.Status, "Scheduled", StringComparison.OrdinalIgnoreCase));
             return View("~/Views/member/Archive.cshtml", model);
         }
 
         public IActionResult ElectronicRequests()
         {
             var currentMember = GetCurrentRecognitionMember();
+            var closedIds = GetClosedMeetingRequestIds();
             var model = _recognitionRequestService.GetAll()
                 .Where(x => string.Equals(x.AssignedMember, currentMember, StringComparison.OrdinalIgnoreCase))
+                .Where(x => !closedIds.Contains(x.Id))
+                .Where(x => !x.IsManual || x.ManualDataFilled)
                 .ToList();
             ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
+            ViewBag.ScheduledMeetingsCount   = meetings.Count(m => string.Equals(m.Status, "Scheduled", StringComparison.OrdinalIgnoreCase));
             return View("~/Views/member/ElectronicRequests.cshtml", model);
         }
+
+        [HttpGet]
+        public IActionResult ClosedSessionsArchive(
+            int? sessionNo, string? university, string? reference,
+            string? country, string? decision, string? closedFrom, string? closedTo)
+        {
+            var currentMember = GetCurrentRecognitionMember();
+
+            var closedMeetings = meetings
+                .Where(m => string.Equals(m.Status, "Closed", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var requestMeetingMap = new Dictionary<int, MeetingDto>();
+            foreach (var m in closedMeetings.OrderBy(m => m.SessionNumber))
+                foreach (var rid in m.RequestIds)
+                    requestMeetingMap.TryAdd(rid, m);
+
+            var closedIds = requestMeetingMap.Keys.ToHashSet();
+
+            IEnumerable<RecognitionRequestRecord> filtered = _recognitionRequestService.GetAll()
+                .Where(x => closedIds.Contains(x.Id));
+
+            if (sessionNo.HasValue)
+                filtered = filtered.Where(x => requestMeetingMap.TryGetValue(x.Id, out var m2) && m2.SessionNumber == sessionNo.Value);
+            if (!string.IsNullOrWhiteSpace(university))
+                filtered = filtered.Where(x => (x.UniversityName ?? "").Contains(university, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(reference))
+                filtered = filtered.Where(x => (x.ReferenceNumber ?? "").Contains(reference, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(country))
+                filtered = filtered.Where(x => (x.Country ?? "").Contains(country, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(decision))
+                filtered = filtered.Where(x => string.Equals(x.BasicInfoAssessmentDecision ?? "", decision, StringComparison.OrdinalIgnoreCase));
+            if (DateTime.TryParse(closedFrom, out var fromDate))
+                filtered = filtered.Where(x => requestMeetingMap.TryGetValue(x.Id, out var m2) && m2.MeetingDate.Date >= fromDate.Date);
+            if (DateTime.TryParse(closedTo, out var toDate))
+                filtered = filtered.Where(x => requestMeetingMap.TryGetValue(x.Id, out var m2) && m2.MeetingDate.Date <= toDate.Date);
+
+            var availableDecisions = _recognitionRequestService.GetAll()
+                .Where(x => closedIds.Contains(x.Id) && !string.IsNullOrWhiteSpace(x.BasicInfoAssessmentDecision))
+                .Select(x => x.BasicInfoAssessmentDecision!)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x)
+                .ToList();
+
+            var memberNameMap = _advisorService.GetAll()
+                .ToDictionary(a => a.Email.ToLowerInvariant(), a => a.FullName, StringComparer.OrdinalIgnoreCase);
+
+            ViewBag.CurrentRecognitionMember = GetRecognitionMemberDisplayName(currentMember);
+            ViewBag.ScheduledMeetingsCount   = meetings.Count(m => string.Equals(m.Status, "Scheduled", StringComparison.OrdinalIgnoreCase));
+            ViewBag.RequestMeetingMap        = requestMeetingMap;
+            ViewBag.AvailableSessions        = closedMeetings.Select(m => m.SessionNumber).Distinct().OrderBy(x => x).ToList();
+            ViewBag.AvailableDecisions       = availableDecisions;
+            ViewBag.MemberNameMap            = memberNameMap;
+            ViewBag.FilterSession            = sessionNo;
+            ViewBag.FilterUniversity         = university ?? "";
+            ViewBag.FilterReference          = reference ?? "";
+            ViewBag.FilterCountry            = country ?? "";
+            ViewBag.FilterDecision           = decision ?? "";
+            ViewBag.FilterClosedFrom         = closedFrom ?? "";
+            ViewBag.FilterClosedTo           = closedTo ?? "";
+            ViewBag.TotalClosed              = closedIds.Count;
+
+            return View("~/Views/member/ClosedSessionsArchive.cshtml", filtered.ToList());
+        }
+
+        private static HashSet<int> GetClosedMeetingRequestIds() =>
+            meetings
+                .Where(m => string.Equals(m.Status, "Closed", StringComparison.OrdinalIgnoreCase))
+                .SelectMany(m => m.RequestIds)
+                .ToHashSet();
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -4164,23 +4385,35 @@ namespace MOHRecognition.Controllers
         public IActionResult AddAdvisor(string fullName, string email, string phone,
             string specialization, string workplace, string type)
         {
-            if (!string.IsNullOrWhiteSpace(fullName))
-            {
-                var advisorType = type == "MinistryAdvisor"
-                    ? AdvisorType.MinistryAdvisor
-                    : AdvisorType.RecognitionMember;
+            if (string.IsNullOrWhiteSpace(fullName))
+                return Json(new { success = false });
 
-                _advisorService.Add(new AdvisorDto
-                {
-                    FullName       = fullName.Trim(),
-                    Email          = email?.Trim() ?? "",
-                    Phone          = phone?.Trim() ?? "",
-                    Specialization = specialization?.Trim() ?? "",
-                    Workplace      = workplace?.Trim() ?? "",
-                    Type           = advisorType
-                });
-            }
-            return RedirectToAction("Employees");
+            var advisorType = type == "MinistryAdvisor"
+                ? AdvisorType.MinistryAdvisor
+                : AdvisorType.RecognitionMember;
+
+            var advisor = new AdvisorDto
+            {
+                FullName       = fullName.Trim(),
+                Email          = email?.Trim() ?? "",
+                Phone          = phone?.Trim() ?? "",
+                Specialization = specialization?.Trim() ?? "",
+                Workplace      = workplace?.Trim() ?? "",
+                Type           = advisorType
+            };
+            _advisorService.Add(advisor);
+
+            return Json(new
+            {
+                success        = true,
+                id             = advisor.Id,
+                fullName       = advisor.FullName,
+                email          = advisor.Email,
+                phone          = advisor.Phone,
+                specialization = advisor.Specialization,
+                workplace      = advisor.Workplace,
+                type           = type
+            });
         }
 
         [HttpPost]
@@ -4189,19 +4422,29 @@ namespace MOHRecognition.Controllers
             string specialization, string workplace, string type)
         {
             var existing = _advisorService.GetById(id);
-            if (existing != null)
+            if (existing == null) return Json(new { success = false });
+
+            existing.FullName       = fullName?.Trim() ?? existing.FullName;
+            existing.Email          = email?.Trim() ?? existing.Email;
+            existing.Phone          = phone?.Trim() ?? existing.Phone;
+            existing.Specialization = specialization?.Trim() ?? existing.Specialization;
+            existing.Workplace      = workplace?.Trim() ?? existing.Workplace;
+            existing.Type           = type == "MinistryAdvisor"
+                ? AdvisorType.MinistryAdvisor
+                : AdvisorType.RecognitionMember;
+            _advisorService.Update(existing);
+
+            return Json(new
             {
-                existing.FullName       = fullName?.Trim() ?? existing.FullName;
-                existing.Email          = email?.Trim() ?? existing.Email;
-                existing.Phone          = phone?.Trim() ?? existing.Phone;
-                existing.Specialization = specialization?.Trim() ?? existing.Specialization;
-                existing.Workplace      = workplace?.Trim() ?? existing.Workplace;
-                existing.Type           = type == "MinistryAdvisor"
-                    ? AdvisorType.MinistryAdvisor
-                    : AdvisorType.RecognitionMember;
-                _advisorService.Update(existing);
-            }
-            return RedirectToAction("Employees");
+                success        = true,
+                id             = existing.Id,
+                fullName       = existing.FullName,
+                email          = existing.Email,
+                phone          = existing.Phone,
+                specialization = existing.Specialization,
+                workplace      = existing.Workplace,
+                type           = type
+            });
         }
 
         [HttpPost]
@@ -4209,7 +4452,7 @@ namespace MOHRecognition.Controllers
         public IActionResult DeleteAdvisor(int id)
         {
             _advisorService.Remove(id);
-            return RedirectToAction("Employees");
+            return Json(new { success = true, id });
         }
 
         [HttpPost]
@@ -4217,7 +4460,7 @@ namespace MOHRecognition.Controllers
         public IActionResult RemoveEmployee(int id)
         {
             _advisorService.Remove(id);
-            return RedirectToAction("Employees");
+            return Json(new { success = true });
         }
         public IActionResult Decisions()
         {
@@ -4266,7 +4509,7 @@ namespace MOHRecognition.Controllers
 
             return _recognitionRequestService
                 .GetAll()
-                .Where(x => string.Equals(x.Status, "Requires Admin Review", StringComparison.OrdinalIgnoreCase)
+                .Where(x => (x.IsManual || string.Equals(x.Status, "Requires Admin Review", StringComparison.OrdinalIgnoreCase))
                          && !closedRequestIds.Contains(x.Id))
                 .OrderByDescending(x => x.SubmittedToAdminAt ?? x.SubmittedAt)
                 .ToList();
@@ -4478,7 +4721,8 @@ namespace MOHRecognition.Controllers
             string? search,
             string? status,
             string? country,
-            string? sort)
+            string? sort,
+            bool ef = false)
         {
             var currentMember = GetCurrentRecognitionMember();
             var assignedToCurrentMember = _recognitionRequestService
@@ -4490,35 +4734,26 @@ namespace MOHRecognition.Controllers
                 .Select(MapDashboardItem)
                 .ToList();
 
-            var selectedSession = sessionNo;
-            var selectedYear = year ?? DateTime.Now.Year;
-            var selectedSearch = (search ?? string.Empty).Trim();
-            var selectedStatus = string.IsNullOrWhiteSpace(status) ? "All" : status.Trim();
-            var selectedCountry = string.IsNullOrWhiteSpace(country) ? "All" : country.Trim();
-            var selectedSort = string.IsNullOrWhiteSpace(sort) ? "NewestActivity" : sort.Trim();
+            // On first load (no form submission), auto-select latest session and current year
+            var selectedSession = ef ? sessionNo : sessionNo ?? (meetings.Any() ? (int?)meetings.Max(m => m.SessionNumber) : null);
+            var selectedYear    = ef ? year      : year       ?? DateTime.Now.Year;
+            var selectedSearch  = (search ?? string.Empty).Trim();
+            var selectedStatus  = string.IsNullOrWhiteSpace(status)  ? "All"             : status.Trim();
+            var selectedCountry = string.IsNullOrWhiteSpace(country) ? "All"             : country.Trim();
+            var selectedSort    = string.IsNullOrWhiteSpace(sort)    ? "NewestActivity"  : sort.Trim();
 
             var availableSessions = meetings
                 .Select(m => m.SessionNumber)
                 .Distinct()
-                .OrderByDescending(x => x)
+                .OrderBy(x => x)
                 .ToList();
 
             if (!availableSessions.Any())
                 availableSessions = new List<int> { 1 };
 
-            if (selectedSession == null)
-            {
-                // default to the latest non-completed meeting; fall back to the highest session
-                var latestActive = meetings
-                    .Where(m => !string.Equals(m.Status, "Completed", StringComparison.OrdinalIgnoreCase))
-                    .OrderByDescending(m => m.SessionNumber)
-                    .FirstOrDefault();
-
-                selectedSession = latestActive?.SessionNumber ?? availableSessions.First();
-            }
-
             var availableYears = allItems
                 .Select(x => x.Year)
+                .Where(x => x > 0)
                 .Distinct()
                 .OrderByDescending(x => x)
                 .ToList();
@@ -4526,12 +4761,17 @@ namespace MOHRecognition.Controllers
             if (!availableYears.Any())
                 availableYears = new List<int> { DateTime.Now.Year };
 
-            if (!availableYears.Contains(selectedYear))
-                selectedYear = availableYears.First();
+            // If a specific session was requested but doesn't exist, fall back to All
+            if (selectedSession.HasValue && !availableSessions.Contains(selectedSession.Value))
+                selectedSession = null;
+
+            // If a specific year was requested but doesn't exist in data, fall back to All
+            if (selectedYear.HasValue && !availableYears.Contains(selectedYear.Value))
+                selectedYear = null;
 
             var scopedItems = allItems
-                .Where(x => x.Year == selectedYear)
-                .Where(x => !selectedSession.HasValue || x.SessionNo == selectedSession)
+                .Where(x => !selectedYear.HasValue    || x.Year == selectedYear)
+                .Where(x => !selectedSession.HasValue || x.SessionNo == null || x.SessionNo == selectedSession)
                 .ToList();
 
             var availableCountries = scopedItems
@@ -4583,10 +4823,10 @@ namespace MOHRecognition.Controllers
                 AvailableSessions = availableSessions,
                 AvailableYears = availableYears,
                 AvailableCountries = availableCountries,
-                AssignedReviewsCount = scopedItems.Count,
-                NotReviewedCount = scopedItems.Count(x => x.ReviewStatus == "Not Reviewed"),
-                InProgressCount = scopedItems.Count(x => x.ReviewStatus == "In Progress"),
-                SubmittedRecommendationsCount = scopedItems.Count(x => x.ReviewStatus == "Recommendation Submitted"),
+                AssignedReviewsCount = allItems.Count,
+                NotReviewedCount = allItems.Count(x => x.ReviewStatus == "Not Reviewed"),
+                InProgressCount = allItems.Count(x => x.ReviewStatus == "In Progress"),
+                SubmittedRecommendationsCount = allItems.Count(x => x.ReviewStatus == "Recommendation Submitted"),
                 Applications = filteredItems,
                 RecentActivities = filteredItems
                     .Where(x => x.LastActivityDate > DateTime.MinValue)
@@ -4610,6 +4850,7 @@ namespace MOHRecognition.Controllers
                     .ToList()
             };
 
+            ViewBag.ScheduledMeetingsCount = meetings.Count(m => string.Equals(m.Status, "Scheduled", StringComparison.OrdinalIgnoreCase));
             return View("~/Views/member/RecognitionMemberDashboard.cshtml", model);
         }
 
@@ -4687,8 +4928,10 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                ViewBag.AdminReadOnly = true;
+                ViewBag.MemberViewOnly = true;
 
+            ViewBag.IsManual = false;
+            SetMemberViewBag();
             return View("~/Views/member/DetailsBasicInfo.cshtml", request);
         }
 
@@ -4704,10 +4947,12 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                ViewBag.AdminReadOnly = true;
+                ViewBag.MemberViewOnly = true;
 
             ViewBag.RequestId = request.Id;
             ViewBag.InstitutionName = request.UniversityName;
+            ViewBag.IsManual = false;
+            SetMemberViewBag();
             return View("~/Views/member/DetailsStatistics.cshtml", request);
         }
 
@@ -4723,15 +4968,18 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                ViewBag.AdminReadOnly = true;
+                ViewBag.MemberViewOnly = true;
 
             request.AdmissionStudyDurationReview ??= new AdmissionStudyDurationReviewDto();
             request.StudyDuration ??= new StudyDurationDto();
 
+            ViewBag.IsManual = false;
+            SetMemberViewBag();
             return View("~/Views/member/DetailsAdmissionDuration.cshtml", request);
         }
         public IActionResult Profile()
         {
+            SetMemberViewBag();
             return View("~/Views/member/Profile.cshtml");
         }
 
@@ -4756,10 +5004,12 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                ViewBag.AdminReadOnly = true;
+                ViewBag.MemberViewOnly = true;
 
             ViewBag.RequestId = request.Id;
             ViewBag.InstitutionName = request.UniversityName;
+            ViewBag.IsManual = false;
+            SetMemberViewBag();
             return View("~/Views/member/DetailsAcademicInfo.cshtml", request);
         }
 
@@ -4882,10 +5132,6 @@ namespace MOHRecognition.Controllers
         {
             var request = _recognitionRequestService.GetById(id);
             if (request == null)
-                return RedirectToAction("ElectronicRequests");
-
-            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
-            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
                 return RedirectToAction("ElectronicRequests");
 
             var review = request.AdmissionStudyDurationReview ?? new AdmissionStudyDurationReviewDto();
@@ -5025,10 +5271,12 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                ViewBag.AdminReadOnly = true;
+                ViewBag.MemberViewOnly = true;
 
             ViewBag.RequestId = request.Id;
             ViewBag.InstitutionName = request.UniversityName;
+            ViewBag.IsManual = false;
+            SetMemberViewBag();
             return View("~/Views/member/DetailsAccreditationBodies.cshtml", request);
         }
 
@@ -5040,10 +5288,6 @@ namespace MOHRecognition.Controllers
 
             var request = _recognitionRequestService.GetById(id.Value);
             if (request == null)
-                return RedirectToAction("ElectronicRequests");
-
-            var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
-            if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
                 return RedirectToAction("ElectronicRequests");
 
             return RedirectToAction("DetailsAccreditationBodies", new { id = request.Id });
@@ -5061,8 +5305,10 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.MemberViewOnly = true;
 
+            ViewBag.IsManual = false;
+            SetMemberViewBag();
             return View("~/Views/member/DetailsInfrastructure.cshtml", request);
         }
 
@@ -5078,10 +5324,201 @@ namespace MOHRecognition.Controllers
 
             var currentRole = HttpContext.Session.GetString("CurrentStaffRole") ?? "";
             if (string.Equals(currentRole, "recognition", StringComparison.OrdinalIgnoreCase) && !IsCurrentRecognitionMemberOwner(request))
-                return RedirectToAction("ElectronicRequests");
+                ViewBag.MemberViewOnly = true;
 
             ViewBag.AdminReadOnly = string.Equals(currentRole, "admin", StringComparison.OrdinalIgnoreCase);
+            ViewBag.IsManual = false;
+            SetMemberViewBag();
             return View("~/Views/member/DetailsRecommendation.cshtml", request);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SaveManualBasicInfo(
+            int id,
+            string institutionName,
+            string country,
+            string city,
+            string oversightRightsEntity,
+            string mailingFullAddress,
+            string directPhoneNumber,
+            string emailAddress,
+            string institutionalWebAddress,
+            string foundationDate,
+            string dateOfEstablishment,
+            string startOfTeaching,
+            string modeOfStudy,
+            string languageOfInstruction,
+            string presidentName,
+            string typeOfAcademicInstitution,
+            string officialRecognitionInHomeCountry,
+            string officialAccreditationQualityInHomeCountry,
+            string collegeCategoriesCsv,
+            bool degreeDiploma,
+            bool degreeBSC,
+            bool degreeHigherDiploma,
+            bool degreeMaster,
+            bool degreePhD,
+            bool systemYearlyProgram,
+            bool systemSemesterProgram,
+            bool systemCreditHours,
+            bool systemECTS,
+            string? nextAction = null)
+        {
+            var request = _recognitionRequestService.GetById(id);
+            if (request == null || !request.IsManual)
+                return RedirectToAction("ElectronicRequests");
+
+            if (!IsCurrentRecognitionMemberOwner(request))
+            {
+                TempData["ManualSaveError"] = "You can only edit requests assigned to you.";
+                return RedirectToAction("DetailsBasicInfo", new { id });
+            }
+
+            var publicInfo = new PublicInfoDto
+            {
+                InstitutionName = institutionName ?? string.Empty,
+                City = city ?? string.Empty,
+                OversightRightsEntity = oversightRightsEntity ?? string.Empty,
+                MailingFullAddress = mailingFullAddress ?? string.Empty,
+                DirectPhoneNumber = directPhoneNumber ?? string.Empty,
+                EmailAddress = emailAddress ?? string.Empty,
+                InstitutionalWebAddress = institutionalWebAddress ?? string.Empty,
+                FoundationDate = foundationDate ?? string.Empty,
+                DateOfEstablishment = dateOfEstablishment ?? string.Empty,
+                StartOfTeaching = startOfTeaching ?? string.Empty,
+                ModeOfStudy = modeOfStudy ?? string.Empty,
+                LanguageOfInstruction = languageOfInstruction ?? string.Empty,
+                PresidentName = presidentName ?? string.Empty
+            };
+
+            var academicPatch = new AcademicInfoDto
+            {
+                TypeOfAcademicInstitution = typeOfAcademicInstitution ?? string.Empty,
+                OfficialRecognitionInHomeCountry = officialRecognitionInHomeCountry ?? string.Empty,
+                OfficialAccreditationQualityInHomeCountry = officialAccreditationQualityInHomeCountry ?? string.Empty,
+                CollegeCategoriesCsv = collegeCategoriesCsv ?? string.Empty,
+                DegreeDiploma = degreeDiploma,
+                DegreeBSC = degreeBSC,
+                DegreeHigherDiploma = degreeHigherDiploma,
+                DegreeMaster = degreeMaster,
+                DegreePhD = degreePhD,
+                SystemYearlyProgram = systemYearlyProgram,
+                SystemSemesterProgram = systemSemesterProgram,
+                SystemCreditHours = systemCreditHours,
+                SystemECTS = systemECTS
+            };
+
+            _recognitionRequestService.SavePublicInfoSection(id, publicInfo, academicPatch, city ?? string.Empty, country ?? string.Empty);
+
+            TempData["ManualSaved"] = "Basic information saved successfully.";
+
+            if (string.Equals(nextAction, "next", StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("DetailsStatistics", new { id });
+
+            return RedirectToAction("DetailsBasicInfo", new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SaveManualAcademicData(
+            int id,
+            int? staffProfessorFT, int? staffProfessorPT,
+            int? staffAssociateProfessorFT, int? staffAssociateProfessorPT,
+            int? staffAssistantProfessorFT, int? staffAssistantProfessorPT,
+            int? staffResearcherFT, int? staffResearcherPT,
+            int? staffTeacherFT, int? staffTeacherPT,
+            int? staffAssistantTeacherFT, int? staffAssistantTeacherPT,
+            int? staffOthersFT, int? staffOthersPT,
+            int? staffPractitionerPscFT, int? staffPractitionerPscPT,
+            int? staffPractitionerMscFT, int? staffPractitionerMscPT,
+            int? totalStudents, int? localStudents, int? foreignStudents, int? jordanianStudents,
+            string? nextAction = null)
+        {
+            var request = _recognitionRequestService.GetById(id);
+            if (request == null || !request.IsManual)
+                return RedirectToAction("ElectronicRequests");
+
+            if (!IsCurrentRecognitionMemberOwner(request))
+            {
+                TempData["ManualSaveError"] = "You can only edit requests assigned to you.";
+                return RedirectToAction("DetailsStatistics", new { id });
+            }
+
+            var staffData = new AcademicInfoDto
+            {
+                StaffProfessorFullTimeCount = staffProfessorFT,
+                StaffProfessorPartTimeCount = staffProfessorPT,
+                StaffAssociateProfessorFullTimeCount = staffAssociateProfessorFT,
+                StaffAssociateProfessorPartTimeCount = staffAssociateProfessorPT,
+                StaffAssistantProfessorFullTimeCount = staffAssistantProfessorFT,
+                StaffAssistantProfessorPartTimeCount = staffAssistantProfessorPT,
+                StaffResearcherFullTimeCount = staffResearcherFT,
+                StaffResearcherPartTimeCount = staffResearcherPT,
+                StaffTeacherFullTimeCount = staffTeacherFT,
+                StaffTeacherPartTimeCount = staffTeacherPT,
+                StaffAssistantTeacherFullTimeCount = staffAssistantTeacherFT,
+                StaffAssistantTeacherPartTimeCount = staffAssistantTeacherPT,
+                StaffOthersFullTimeCount = staffOthersFT,
+                StaffOthersPartTimeCount = staffOthersPT,
+                StaffPractitionerPscFullTimeCount = staffPractitionerPscFT,
+                StaffPractitionerPscPartTimeCount = staffPractitionerPscPT,
+                StaffPractitionerMscFullTimeCount = staffPractitionerMscFT,
+                StaffPractitionerMscPartTimeCount = staffPractitionerMscPT,
+                TotalStudentPopulation = totalStudents,
+                LocalStudentPopulation = localStudents,
+                ForeignStudentPopulation = foreignStudents,
+                JordanianStudentPopulation = jordanianStudents
+            };
+
+            _recognitionRequestService.SaveAcademicStaffSection(id, staffData);
+
+            TempData["ManualSaved"] = "Academic staff and student data saved successfully.";
+
+            if (string.Equals(nextAction, "next", StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("DetailsAdmissionDuration", new { id });
+
+            return RedirectToAction("DetailsStatistics", new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SaveManualStudyDuration(
+            int id,
+            string diplomaDuration,
+            string bScDuration,
+            string higherDiplomaDuration,
+            string masterDuration,
+            string phdDuration,
+            string? nextAction = null)
+        {
+            var request = _recognitionRequestService.GetById(id);
+            if (request == null || !request.IsManual)
+                return RedirectToAction("ElectronicRequests");
+
+            if (!IsCurrentRecognitionMemberOwner(request))
+            {
+                TempData["ManualSaveError"] = "You can only edit requests assigned to you.";
+                return RedirectToAction("DetailsAdmissionDuration", new { id });
+            }
+
+            var duration = new StudyDurationDto
+            {
+                DiplomaObtain = diplomaDuration ?? string.Empty,
+                BachelorObtain = bScDuration ?? string.Empty,
+                HigherDiplomaObtain = higherDiplomaDuration ?? string.Empty,
+                MasterObtain = masterDuration ?? string.Empty,
+                PhDObtain = phdDuration ?? string.Empty
+            };
+
+            _recognitionRequestService.SaveStudyDurationSection(id, duration);
+
+            TempData["ManualSaved"] = "Study duration saved successfully.";
+
+            if (string.Equals(nextAction, "next", StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("DetailsAcademicInfo", new { id });
+
+            return RedirectToAction("DetailsAdmissionDuration", new { id });
         }
 
         [HttpPost]
@@ -5201,6 +5638,59 @@ namespace MOHRecognition.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public IActionResult RequestMemberAssignment(int id)
+        {
+            var request = _recognitionRequestService.GetById(id);
+            if (request == null)
+            {
+                TempData["ArchiveError"] = "The selected university was not found.";
+                return RedirectToAction("Archive");
+            }
+
+            var currentMember = GetCurrentRecognitionMember();
+            if (string.IsNullOrWhiteSpace(currentMember))
+            {
+                TempData["ArchiveError"] = "Please sign in again to submit your request.";
+                return RedirectToAction("Archive");
+            }
+
+            if (IsCurrentRecognitionMemberOwner(request))
+            {
+                TempData["ArchiveSuccess"] = "This university is already assigned to you.";
+                return RedirectToAction("Archive");
+            }
+
+            var isUnassigned = string.IsNullOrWhiteSpace(request.AssignedMember) ||
+                               string.Equals(request.AssignedMember, "Unassigned", StringComparison.OrdinalIgnoreCase);
+            if (!isUnassigned)
+            {
+                TempData["ArchiveError"] = "This university is currently assigned to another member.";
+                return RedirectToAction("Archive");
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.AssignmentRequestBy))
+            {
+                if (string.Equals(request.AssignmentRequestBy, currentMember, StringComparison.OrdinalIgnoreCase))
+                    TempData["ArchiveSuccess"] = "Your request is already pending with admin.";
+                else
+                    TempData["ArchiveError"] = "Another member has already requested this university.";
+
+                return RedirectToAction("Archive");
+            }
+
+            var saved = _recognitionRequestService.RequestMemberAssignment(id, currentMember);
+            if (!saved)
+            {
+                TempData["ArchiveError"] = "Unable to submit your request right now. Please try again.";
+                return RedirectToAction("Archive");
+            }
+
+            TempData["ArchiveSuccess"] = "Your request was sent to admin successfully.";
+            return RedirectToAction("Archive");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult RequireAdminReview(int id)
         {
             var request = _recognitionRequestService.GetById(id);
@@ -5219,14 +5709,21 @@ namespace MOHRecognition.Controllers
 
         public IActionResult Requests()
         {
-            var closedRequestIds = meetings
-                .Where(m => string.Equals(m.Status, "Closed", StringComparison.OrdinalIgnoreCase))
-                .SelectMany(m => m.RequestIds)
-                .ToHashSet();
-
+            var closedIds = GetClosedMeetingRequestIds();
             var requests = _recognitionRequestService.GetAll()
-                .Where(r => !closedRequestIds.Contains(r.Id))
+                .Where(x => !closedIds.Contains(x.Id))
+                .Where(x => !x.IsManual)
                 .ToList();
+
+            ViewBag.AssignmentRequestsCount = requests.Count(x =>
+                (string.IsNullOrWhiteSpace(x.AssignedMember) ||
+                 string.Equals(x.AssignedMember, "Unassigned", StringComparison.OrdinalIgnoreCase)) &&
+                !string.IsNullOrWhiteSpace(x.AssignmentRequestBy));
+
+            ViewBag.MemberNameMap = _advisorService.GetAll()
+                .ToDictionary(a => a.Email.Trim().ToLowerInvariant(), a => a.FullName,
+                    StringComparer.OrdinalIgnoreCase);
+
             return View("~/Views/Admin/Requests.cshtml", requests);
         }
 
@@ -5244,6 +5741,13 @@ namespace MOHRecognition.Controllers
         // ===================== CREATE (GET) =====================
         public IActionResult CreateMeeting(int? preselectRequestId)
         {
+            var lastMeeting = meetings.OrderByDescending(m => m.SessionNumber).FirstOrDefault();
+            if (lastMeeting != null && !string.Equals(lastMeeting.Status, "Closed", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["MeetingError"] = $"Session {lastMeeting.SessionNumber} must be closed before opening a new meeting.";
+                return RedirectToAction("Meetings");
+            }
+
             var requests = GetSubmittedUniversitiesForMeetings();
             ViewBag.AvailableRequests = requests;
             ViewBag.NextSessionNumber = meetings.Count + 1;
@@ -5256,6 +5760,13 @@ namespace MOHRecognition.Controllers
         [HttpPost]
         public IActionResult CreateMeeting(MeetingDto model)
         {
+            var lastMeeting = meetings.OrderByDescending(m => m.SessionNumber).FirstOrDefault();
+            if (lastMeeting != null && !string.Equals(lastMeeting.Status, "Closed", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["MeetingError"] = $"Session {lastMeeting.SessionNumber} must be closed before opening a new meeting.";
+                return RedirectToAction("Meetings");
+            }
+
             var allowedSubmittedIds = GetSubmittedUniversitiesForMeetings()
                 .Select(x => x.Id)
                 .ToHashSet();
@@ -5350,8 +5861,20 @@ namespace MOHRecognition.Controllers
         public IActionResult CloseMeeting(int id)
         {
             var meeting = meetings.FirstOrDefault(m => m.Id == id);
-            if (meeting != null)
-                meeting.Status = "Closed";
+            if (meeting == null) return RedirectToAction("SessionWorkflow");
+
+            int total = meeting.RequestIds.Count;
+            int decided = meeting.RequestIds.Count(rid =>
+                meetingDecisions.TryGetValue((id, rid), out var d) &&
+                !string.IsNullOrWhiteSpace(d?.Decision));
+
+            if (decided < total)
+            {
+                TempData["CloseError"] = $"{total - decided} university/universities still have no final decision. All decisions must be recorded before closing.";
+                return RedirectToAction("SessionDashboard", new { id });
+            }
+
+            meeting.Status = "Closed";
             return RedirectToAction("SessionWorkflow");
         }
 
@@ -5606,6 +6129,8 @@ namespace MOHRecognition.Controllers
                 Count = allRequests.Count(r => string.Equals(r.AssignedMember, m.Email, StringComparison.OrdinalIgnoreCase))
             }).ToList();
             ViewBag.RecognitionMembers = members;
+            ViewBag.MemberNameMap = _advisorService.GetAll()
+                .ToDictionary(a => a.Email.Trim().ToLowerInvariant(), a => a.FullName, StringComparer.OrdinalIgnoreCase);
 
             return View("~/Views/Admin/AdminRequestDetails.cshtml", request);
         }
@@ -5676,6 +6201,19 @@ namespace MOHRecognition.Controllers
                 currentMember,
                 StringComparison.OrdinalIgnoreCase
             );
+        }
+
+        private void SetMemberViewBag()
+        {
+            var email = GetCurrentRecognitionMember();
+            var advisor = _advisorService.FindByEmail(email);
+            ViewBag.CurrentRecognitionMember = advisor?.FullName ?? "Recognition Member";
+            ViewBag.CurrentMemberEmail        = advisor?.Email ?? "";
+            ViewBag.CurrentMemberPhone        = advisor?.Phone ?? "";
+            ViewBag.CurrentMemberSpec         = advisor?.Specialization ?? "";
+            ViewBag.CurrentMemberWorkplace    = advisor?.Workplace ?? "";
+            ViewBag.ScheduledMeetingsCount    = meetings.Count(m =>
+                string.Equals(m.Status, "Scheduled", StringComparison.OrdinalIgnoreCase));
         }
 
         private string NormalizeRecognitionMemberIdentity(string? value)

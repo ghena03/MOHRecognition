@@ -1,7 +1,7 @@
-﻿@model MOHRecognition.Models.RecognitionMemberDashboardViewModel
+@model MOHRecognition.Models.RecognitionMemberDashboardViewModel
 @{
     Layout = null;
-    ViewData["Title"] = "Academic Recognition Review Workspace";
+    ViewData["Title"] = "Recognition Member Dashboard";
     ViewData["ActiveNav"] = "dashboard";
 }
 
@@ -11,36 +11,172 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"]</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    <style>
+        /* ── Dashboard redesign ── */
+        .dsh-head {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--brand);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 22px 26px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .dsh-head-text { flex: 1; min-width: 0; }
+        .dsh-title {
+            font-size: 19px; font-weight: 800; color: #111827;
+            margin: 0; line-height: 1.25;
+        }
+        .dsh-sub {
+            margin: 5px 0 0; font-size: 13px; color: var(--muted);
+            max-width: 540px; line-height: 1.6;
+        }
+        .dsh-filters {
+            display: flex; align-items: flex-end;
+            gap: 10px; flex-shrink: 0; flex-wrap: wrap;
+        }
+        .dsh-ff { display: flex; flex-direction: column; gap: 4px; min-width: 138px; }
+        .dsh-ff label {
+            font-size: 10.5px; font-weight: 800; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: .5px;
+        }
+        .dsh-ff select {
+            border: 1px solid #d6d3ce; border-radius: 8px;
+            background: #faf8f6; height: 36px; padding: 0 10px;
+            font-size: 13px; color: #111827; font-family: inherit;
+            cursor: pointer;
+        }
+
+        /* ── KPI strip ── */
+        .dsh-kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+        .dsh-kpi {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-left-width: 3px;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
+            padding: 14px 18px;
+            display: flex; align-items: center; justify-content: space-between; gap: 14px;
+            transition: box-shadow .18s, transform .18s, border-color .18s;
+            cursor: default;
+        }
+        .dsh-kpi:hover {
+            box-shadow: 0 4px 18px rgba(0,0,0,.1);
+            transform: translateY(-2px);
+        }
+        .dsh-kpi-a { border-left-color: var(--brand); }
+        .dsh-kpi-b { border-left-color: #d97706; }
+        .dsh-kpi-c { border-left-color: #2563eb; }
+        .dsh-kpi-d { border-left-color: #059669; }
+        .dsh-kpi-a:hover { border-color: var(--brand);  border-left-color: var(--brand); }
+        .dsh-kpi-b:hover { border-color: #d97706; border-left-color: #d97706; }
+        .dsh-kpi-c:hover { border-color: #2563eb; border-left-color: #2563eb; }
+        .dsh-kpi-d:hover { border-color: #059669; border-left-color: #059669; }
+
+        .dsh-kpi-body { flex: 1; min-width: 0; }
+        .dsh-kpi-num {
+            font-size: 30px; font-weight: 900; color: #111827;
+            line-height: 1; letter-spacing: -.5px; margin-bottom: 4px;
+        }
+        .dsh-kpi-label {
+            font-size: 11px; font-weight: 700; color: #6b7280;
+            text-transform: uppercase; letter-spacing: .5px; line-height: 1.35;
+        }
+        .dsh-kpi-iw {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: grid; place-items: center; font-size: 17px; flex-shrink: 0;
+        }
+        .dsh-kpi-a .dsh-kpi-iw { background: var(--brand-soft); color: var(--brand); }
+        .dsh-kpi-b .dsh-kpi-iw { background: #fffbeb; color: #d97706; }
+        .dsh-kpi-c .dsh-kpi-iw { background: #eff6ff; color: #2563eb; }
+        .dsh-kpi-d .dsh-kpi-iw { background: #f0fdf4; color: #059669; }
+
+        /* ── Meetings card ── */
+        .dsh-meetings {
+            background: #fff; border: 1px solid var(--border);
+            border-radius: var(--radius); box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .dsh-mc-head {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px; padding: 17px 22px;
+            border-bottom: 1px solid var(--border);
+        }
+        .dsh-mc-left { display: flex; align-items: center; gap: 12px; }
+        .dsh-mc-iw {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: #eef6ff; color: #2563eb;
+            display: grid; place-items: center; font-size: 16px; flex-shrink: 0;
+        }
+        .dsh-mc-title { font-size: 14px; font-weight: 800; color: var(--text); }
+        .dsh-mc-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .dsh-mc-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #2563eb; color: #fff; border-radius: 8px;
+            padding: 8px 16px; font-size: 12.5px; font-weight: 700;
+            text-decoration: none; transition: background .15s; white-space: nowrap;
+        }
+        .dsh-mc-btn:hover { background: #1d4ed8; }
+
+        .dsh-mlist { display: flex; flex-direction: column; }
+        .dsh-mrow {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 22px; border-bottom: 1px solid var(--border);
+            text-decoration: none; color: inherit; transition: background .12s;
+        }
+        .dsh-mrow:last-child { border-bottom: none; }
+        .dsh-mrow:hover { background: #faf6f2; }
+        .dsh-datebox {
+            display: flex; flex-direction: column; align-items: center;
+            background: var(--brand-soft); color: var(--brand);
+            border-radius: 9px; padding: 7px 12px;
+            min-width: 46px; flex-shrink: 0;
+        }
+        .dsh-datebox-day { font-size: 20px; font-weight: 900; line-height: 1; }
+        .dsh-datebox-mon { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+        .dsh-minfo { flex: 1; min-width: 0; }
+        .dsh-msess { font-size: 13.5px; font-weight: 700; color: var(--text); }
+        .dsh-mnote { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dsh-mchev { font-size: 16px; color: #cbd5e1; transition: color .12s, transform .12s; }
+        .dsh-mrow:hover .dsh-mchev { color: var(--brand); transform: translateX(2px); }
+
+        .dsh-mc-empty {
+            padding: 44px 22px; text-align: center; color: var(--muted);
+        }
+        .dsh-mc-empty i { font-size: 34px; color: #d4c8c4; display: block; margin-bottom: 10px; }
+        .dsh-mc-empty p { font-size: 13px; margin: 0; }
+
+        @@media (max-width: 1100px) { .dsh-kpis { grid-template-columns: repeat(2,1fr); } }
+        @@media (max-width: 640px)  { .dsh-kpis { grid-template-columns: 1fr; } .dsh-head { flex-direction: column; } }
+    </style>
 </head>
 
 <body class="rm-page">
-    <!-- 🔴 RED TOP LINE -->
+
+    <!-- TOP BAR -->
     <div class="top-bar"></div>
 
     <!-- HEADER -->
     <div class="header">
-
         <div class="header-left">
             <img src="/images/mohelogo.png" class="logo" />
-
             <div class="divider"></div>
-
             <div class="title-box">
                 <h1>Recognition Member Dashboard</h1>
-                <p>Review applications, manage recommendations, and track progress</p>
+                <p>Ministry of Higher Education and Scientific Research</p>
             </div>
         </div>
-
         <div class="header-right">
-            <a asp-controller="Home"
-               asp-action="Profile"
-               class="user-pill profile-link">
+            <a asp-controller="Home" asp-action="Profile" class="user-pill profile-link">
                 <i class="bi bi-person-circle"></i>
                 Welcome, <b>@Model.CurrentRecognitionMember</b>
             </a>
@@ -48,230 +184,127 @@
                 <i class="bi bi-box-arrow-right"></i> Logout
             </a>
         </div>
-
     </div>
-
-
-
-  
-
-
-
 
     <div class="rm-shell">
         @await Html.PartialAsync("_MemberSidebar")
 
         <main class="rm-main">
-            <section class="rm-pagehead">
-                <div class="rm-pagehead-left">
-                    <h1>Academic Recognition Review Workspace</h1>
-                    <p>Review assigned recognition applications, study submitted documents, and record your academic recommendation.</p>
+
+            <!-- ── Page head ── -->
+            <div class="dsh-head">
+                <div class="dsh-head-text">
+                    <h1 class="dsh-title">Academic Recognition Review Workspace</h1>
+                    <p class="dsh-sub">Review assigned recognition applications, study submitted documents, and record your academic recommendation.</p>
                 </div>
-                <form class="rm-filters" method="get" asp-action="RecognitionMemberDashboard" asp-controller="Home">
-                    <div class="rm-field">
-                        <label for="sessionNo">Session No.</label>
+                <form class="dsh-filters" method="get" asp-action="RecognitionMemberDashboard" asp-controller="Home">
+                    <input type="hidden" name="ef" value="1" />
+                    <div class="dsh-ff">
+                        <label for="sessionNo">Session</label>
                         <select id="sessionNo" name="sessionNo" onchange="this.form.submit()">
+                            @if (Model.SessionNo == null) { <option value="" selected>All Sessions</option> }
+                            else                          { <option value="">All Sessions</option> }
                             @foreach (var s in Model.AvailableSessions)
                             {
-                                if (Model.SessionNo == s)
-                                {
-                                    <option value="@s" selected>@s</option>
-                                }
-                                else
-                                {
-                                    <option value="@s">@s</option>
-                                }
+                                if (Model.SessionNo == s) { <option value="@s" selected>Session @s</option> }
+                                else                      { <option value="@s">Session @s</option> }
                             }
                         </select>
                     </div>
-                    <div class="rm-field">
+                    <div class="dsh-ff">
                         <label for="year">Year</label>
                         <select id="year" name="year" onchange="this.form.submit()">
+                            @if (Model.Year == null) { <option value="" selected>All Years</option> }
+                            else                     { <option value="">All Years</option> }
                             @foreach (var y in Model.AvailableYears)
                             {
-                                if (Model.Year == y)
-                                {
-                                    <option value="@y" selected>@y</option>
-                                }
-                                else
-                                {
-                                    <option value="@y">@y</option>
-                                }
+                                if (Model.Year == y) { <option value="@y" selected>@y</option> }
+                                else                 { <option value="@y">@y</option> }
                             }
                         </select>
                     </div>
                 </form>
-            </section>
+            </div>
 
-            <section class="rm-kpis">
-                <article class="rm-kpi">
-                    <div class="rm-kpi-icon"><i class="bi bi-folder2-open"></i></div>
-                    <div class="rm-kpi-body">
-                        <div class="rm-kpi-label">Assigned Reviews</div>
-                        <div class="rm-kpi-val">@Model.AssignedReviewsCount</div>
-                        <div class="rm-kpi-sub">Applications assigned in this session and year.</div>
+            <!-- ── KPI strip ── -->
+            <div class="dsh-kpis">
+                <div class="dsh-kpi dsh-kpi-a">
+                    <div class="dsh-kpi-body">
+                        <div class="dsh-kpi-num">@Model.AssignedReviewsCount</div>
+                        <div class="dsh-kpi-label">Assigned Reviews</div>
                     </div>
-                </article>
-                <article class="rm-kpi">
-                    <div class="rm-kpi-icon"><i class="bi bi-hourglass-split"></i></div>
-                    <div class="rm-kpi-body">
-                        <div class="rm-kpi-label">Not Reviewed Yet</div>
-                        <div class="rm-kpi-val">@Model.NotReviewedCount</div>
-                        <div class="rm-kpi-sub">Applications waiting for first review action.</div>
-                    </div>
-                </article>
-                <article class="rm-kpi">
-                    <div class="rm-kpi-icon"><i class="bi bi-pencil-square"></i></div>
-                    <div class="rm-kpi-body">
-                        <div class="rm-kpi-label">In Progress Reviews</div>
-                        <div class="rm-kpi-val">@Model.InProgressCount</div>
-                        <div class="rm-kpi-sub">Reviews with active notes or draft work.</div>
-                    </div>
-                </article>
-                <article class="rm-kpi">
-                    <div class="rm-kpi-icon"><i class="bi bi-check2-square"></i></div>
-                    <div class="rm-kpi-body">
-                        <div class="rm-kpi-label">Submitted Recommendations</div>
-                        <div class="rm-kpi-val">@Model.SubmittedRecommendationsCount</div>
-                        <div class="rm-kpi-sub">Final recommendations submitted by you.</div>
-                    </div>
-                </article>
-            </section>
-
-            @{
-                int wsTotal     = Model.AssignedReviewsCount;
-                int wsCompleted = Model.SubmittedRecommendationsCount;
-                int wsPct       = wsTotal > 0 ? (int)Math.Round((double)wsCompleted / wsTotal * 100) : 0;
-            }
-            <!-- 3-column lower grid -->
-            <div class="db-lower-grid">
-
-                <!-- 1. Session Status card -->
-                <div class="rm-card db-session-card">
-                    <div class="db-sc-hd">
-                        <div class="db-sc-icon"><i class="bi bi-clipboard2-pulse-fill"></i></div>
-                        <div>
-                            <div class="db-sc-title">Session Status</div>
-                            <div class="db-sc-sub">Session @(Model.SessionNo?.ToString() ?? "—") &nbsp;·&nbsp; @(Model.Year?.ToString() ?? "—")</div>
-                        </div>
-                    </div>
-
-                    <div class="db-sc-rows">
-                        <div class="db-sc-row">
-                            <span class="db-sc-dot" style="background:#2563eb;"></span>
-                            <span class="db-sc-lbl">Not Reviewed</span>
-                            <span class="db-sc-val">@Model.NotReviewedCount</span>
-                        </div>
-                        <div class="db-sc-row">
-                            <span class="db-sc-dot" style="background:#c2410c;"></span>
-                            <span class="db-sc-lbl">In Progress</span>
-                            <span class="db-sc-val">@Model.InProgressCount</span>
-                        </div>
-                        <div class="db-sc-row">
-                            <span class="db-sc-dot" style="background:#059669;"></span>
-                            <span class="db-sc-lbl">Submitted</span>
-                            <span class="db-sc-val">@Model.SubmittedRecommendationsCount</span>
-                        </div>
-                        <div class="db-sc-row db-sc-row-total">
-                            <span class="db-sc-dot" style="background:var(--brand);"></span>
-                            <span class="db-sc-lbl">Total Assigned</span>
-                            <span class="db-sc-val">@Model.AssignedReviewsCount</span>
-                        </div>
-                    </div>
-
-                    <div class="db-sc-prog-wrap">
-                        <div class="ws-prog-track">
-                            <div class="ws-prog-fill" style="width:@wsPct%"></div>
-                        </div>
-                        <div class="db-sc-prog-label">
-                            <span>Completion</span>
-                            <span style="font-weight:800; color:@(wsPct==100 ? "#059669" : "var(--brand)");">@wsPct%</span>
-                        </div>
-                    </div>
-
-                    <a class="db-sc-cta" href="@Url.Action("ElectronicRequests", "Home")">
-                        <i class="bi bi-folder2-open"></i> Open My Requests
-                    </a>
+                    <div class="dsh-kpi-iw"><i class="bi bi-folder2-open"></i></div>
                 </div>
+                <div class="dsh-kpi dsh-kpi-b">
+                    <div class="dsh-kpi-body">
+                        <div class="dsh-kpi-num">@Model.NotReviewedCount</div>
+                        <div class="dsh-kpi-label">Not Reviewed Yet</div>
+                    </div>
+                    <div class="dsh-kpi-iw"><i class="bi bi-hourglass-split"></i></div>
+                </div>
+                <div class="dsh-kpi dsh-kpi-c">
+                    <div class="dsh-kpi-body">
+                        <div class="dsh-kpi-num">@Model.InProgressCount</div>
+                        <div class="dsh-kpi-label">In Progress Reviews</div>
+                    </div>
+                    <div class="dsh-kpi-iw"><i class="bi bi-pencil-square"></i></div>
+                </div>
+                <div class="dsh-kpi dsh-kpi-d">
+                    <div class="dsh-kpi-body">
+                        <div class="dsh-kpi-num">@Model.SubmittedRecommendationsCount</div>
+                        <div class="dsh-kpi-label">Submitted Recommendations</div>
+                    </div>
+                    <div class="dsh-kpi-iw"><i class="bi bi-check2-square"></i></div>
+                </div>
+            </div>
 
-                <!-- 2. Meetings card -->
-                <div class="rm-card db-meetings-card">
-                    <div class="db-mc-hd">
-                        <div class="db-sc-icon db-mc-icon"><i class="bi bi-calendar2-week-fill"></i></div>
+            <!-- ── Upcoming Meetings ── -->
+            <div class="dsh-meetings">
+                <div class="dsh-mc-head">
+                    <div class="dsh-mc-left">
+                        <div class="dsh-mc-iw"><i class="bi bi-calendar2-week-fill"></i></div>
                         <div>
-                            <div class="db-sc-title">Upcoming Meetings</div>
-                            <div class="db-sc-sub">Committee sessions for your cases</div>
+                            <div class="dsh-mc-title">Upcoming Meetings</div>
+                            <div class="dsh-mc-sub">Committee sessions scheduled for your cases</div>
                         </div>
                     </div>
-                    @if (Model.Meetings.Any())
-                    {
-                        <div class="db-meeting-list">
-                            @foreach (var meeting in Model.Meetings)
-                            {
-                                <a class="db-meeting-row" href="@Url.Action("MeetingDetails", "Home", new { id = meeting.Id, from = "member" })">
-                                    <div class="db-meeting-date-box">
-                                        <span class="db-meeting-day">@meeting.MeetingDate.ToString("dd")</span>
-                                        <span class="db-meeting-mon">@meeting.MeetingDate.ToString("MMM")</span>
-                                    </div>
-                                    <div class="db-meeting-info">
-                                        <div class="db-meeting-sess">Session @meeting.SessionNo</div>
-                                        @if (!string.IsNullOrWhiteSpace(meeting.Notes))
-                                        {
-                                            <div class="db-meeting-note">@meeting.Notes</div>
-                                        }
-                                    </div>
-                                    <i class="bi bi-chevron-right db-app-chevron"></i>
-                                </a>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="db-mc-empty">
-                            <i class="bi bi-calendar-x"></i>
-                            <p>No meetings scheduled yet.</p>
-                        </div>
-                    }
-                    <a class="db-sc-cta db-mc-cta" href="@Url.Action("RecognitionMemberMeetings", "Home")">
+                    <a class="dsh-mc-btn" href="@Url.Action("RecognitionMemberMeetings", "Home")">
                         <i class="bi bi-calendar2-week"></i> View All Meetings
                     </a>
                 </div>
-
-                <!-- 3. Quick links card -->
-                <div class="rm-card db-links-card">
-                    <div class="db-sc-hd" style="margin-bottom:16px;">
-                        <div class="db-sc-icon db-links-icon"><i class="bi bi-grid-fill"></i></div>
-                        <div>
-                            <div class="db-sc-title">Quick Access</div>
-                            <div class="db-sc-sub">Navigate your workspace</div>
-                        </div>
+                @if (Model.Meetings.Any())
+                {
+                    <div class="dsh-mlist">
+                        @foreach (var meeting in Model.Meetings)
+                        {
+                            <a class="dsh-mrow" href="@Url.Action("MeetingDetails", "Home", new { id = meeting.Id, from = "member" })">
+                                <div class="dsh-datebox">
+                                    <span class="dsh-datebox-day">@meeting.MeetingDate.ToString("dd")</span>
+                                    <span class="dsh-datebox-mon">@meeting.MeetingDate.ToString("MMM")</span>
+                                </div>
+                                <div class="dsh-minfo">
+                                    <div class="dsh-msess">Session @meeting.SessionNo</div>
+                                    @if (!string.IsNullOrWhiteSpace(meeting.Notes))
+                                    {
+                                        <div class="dsh-mnote">@meeting.Notes</div>
+                                    }
+                                </div>
+                                <i class="bi bi-chevron-right dsh-mchev"></i>
+                            </a>
+                        }
                     </div>
-                    <div class="db-links-list">
-                        <a class="db-link-row db-link-primary" href="@Url.Action("ElectronicRequests", "Home")">
-                            <i class="bi bi-folder2-open"></i>
-                            <span>My Assigned Requests</span>
-                            <i class="bi bi-arrow-right-short db-link-arrow"></i>
-                        </a>
-                        <a class="db-link-row" href="@Url.Action("Archive", "Home")">
-                            <i class="bi bi-archive"></i>
-                            <span>Requests Archive</span>
-                            <i class="bi bi-arrow-right-short db-link-arrow"></i>
-                        </a>
-                        <a class="db-link-row" href="@Url.Action("RecognitionMemberMeetings", "Home")">
-                            <i class="bi bi-calendar2-week"></i>
-                            <span>My Meetings</span>
-                            <i class="bi bi-arrow-right-short db-link-arrow"></i>
-                        </a>
-                        <a class="db-link-row" href="@Url.Action("ManualInstitutionRequests", "Home")">
-                            <i class="bi bi-building-add"></i>
-                            <span>Manual Institution Requests</span>
-                            <i class="bi bi-arrow-right-short db-link-arrow"></i>
-                        </a>
+                }
+                else
+                {
+                    <div class="dsh-mc-empty">
+                        <i class="bi bi-calendar-x"></i>
+                        <p>No upcoming meetings scheduled at this time.</p>
                     </div>
-                </div>
-
+                }
             </div>
+
         </main>
     </div>
+
 </body>
 </html>

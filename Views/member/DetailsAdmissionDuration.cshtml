@@ -2,8 +2,10 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Admission Requirements and Study Duration";
-    ViewData["ActiveNav"] = "requests";
     var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
+    var memberViewOnly = (bool)(ViewBag.MemberViewOnly ?? false);
+    var readOnlyMode = adminReadOnly || memberViewOnly;
+    ViewData["ActiveNav"] = memberViewOnly ? "archive" : "requests";
     var adminMeetingId = (int)(ViewBag.AdminMeetingId ?? 0);
     var requestId = Model?.Id ?? 0;
     var inst = Model?.UniversityName ?? "—";
@@ -14,6 +16,7 @@
         ? Url.Action("AdminDetailsAcademicInfo", "Home", new { id = requestId, meetingId = adminMeetingId })
         : Url.Action("DetailsAcademicInfo", "Home", new { id = requestId });
 
+    var isManual = (bool)(ViewBag.IsManual ?? false);
     var review = Model?.AdmissionStudyDurationReview ?? new DTOs.AdmissionStudyDurationReviewDto();
     var submittedDuration = Model?.StudyDuration ?? new DTOs.StudyDurationDto();
 
@@ -49,7 +52,7 @@
             <div class="rm-top-inner">
                 <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
                 <div class="rm-user">
-                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>@(adminReadOnly ? "Admin Review" : "Recognition Member")</b></span></div>
+                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>@(adminReadOnly ? "Admin Review" : (ViewBag.CurrentRecognitionMember ?? "Recognition Member"))</b></span></div>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </div>
             </div>
@@ -79,148 +82,124 @@
                 </div>
             </section>
 
-            <section class="rm-card rd-card">
-                <div class="rd-card-hd">
-                    <h2>Admission Requirements and Study Duration</h2>
-                    <p>Submitted admission documents and study durations (view / download only).</p>
-                </div>
+            @if (readOnlyMode)
+            {
+                <section class="rm-card" style="border:1px solid #fedf89; background:#fffaeb; color:#7a2e0e; font-weight:700;">
+                    <i class="bi bi-eye"></i> Read-only mode: this university is assigned to another member.
+                </section>
+            }
 
-                <div class="adm-grid">
-                    <article class="adm-card">
-                        <h3>Diploma</h3>
-                        <div class="rd-field">
-                            <label>Sample requirement PDF</label>
-                            @if (!string.IsNullOrWhiteSpace(review.DiplomaSamplePdfFileName))
-                            {
-                                <div class="adm-file-row">
-                                    <span class="adm-file-name"><i class="bi bi-file-earmark-pdf"></i> @review.DiplomaSamplePdfFileName</span>
-                                    <div class="adm-file-actions">
-                                        <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = "Diploma", inline = true })" target="_blank" rel="noopener">View</a>
-                                        <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = "Diploma" })">Download</a>
-                                    </div>
+            @if (isManual && !readOnlyMode)
+            {
+                <section class="rm-card" style="border:1px solid #bfdbfe; background:#eff6ff; color:#1e40af; font-weight:600; display:flex; align-items:center; gap:10px;">
+                    <i class="bi bi-pencil-square" style="font-size:1.1rem;"></i>
+                    Manual Request — Enter study durations for each degree level.
+                </section>
+            }
+            @if (TempData["ManualSaved"] != null)
+            {
+                <section class="rm-card" style="border:1px solid #bbf7d0; background:#f0fdf4; color:#166534; font-weight:600;">
+                    <i class="bi bi-check-circle-fill"></i> @TempData["ManualSaved"]
+                </section>
+            }
+
+            @if (isManual && !readOnlyMode)
+            {
+                <form asp-controller="Home" asp-action="SaveManualStudyDuration" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@requestId" />
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd">
+                        <h2>Study Duration Entry</h2>
+                        <p>Enter the study duration (e.g. "4 years") for each degree level offered.</p>
+                    </div>
+                    <div class="adm-grid">
+                        @foreach (var (level, label, fieldName, existingVal) in new[]
+                        {
+                            ("Diploma",        "Diploma",        "diplomaDuration",        diplomaDuration),
+                            ("BSc",            "BSc / Bachelor", "bScDuration",            bScDuration),
+                            ("HigherDiploma",  "Higher Diploma", "higherDiplomaDuration",  higherDiplomaDuration),
+                            ("Master",         "Master",         "masterDuration",         masterDuration),
+                            ("PhD",            "PhD",            "phdDuration",            phdDuration)
+                        })
+                        {
+                            <article class="adm-card">
+                                <h3>@label</h3>
+                                <div class="rd-field">
+                                    <label>Study Duration (years)</label>
+                                    <input type="text" name="@fieldName" value="@existingVal" placeholder="e.g. 4 years" />
                                 </div>
-                            }
-                            else
-                            {
-                                <div class="adm-file-empty">No sample PDF uploaded.</div>
-                            }
-                        </div>
-                        <div class="rd-field">
-                            <label>Study duration</label>
-                            <input type="text" value="@diplomaDuration" placeholder="—" readonly />
-                        </div>
-                    </article>
+                            </article>
+                        }
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; padding-top:16px; border-top:1px solid #e5e7eb;">
+                        <button type="submit" name="nextAction" value="save" class="rm-btn rm-btn-light">
+                            <i class="bi bi-floppy"></i> Save
+                        </button>
+                        <button type="submit" name="nextAction" value="next" class="rm-btn rm-btn-primary">
+                            <i class="bi bi-arrow-right-circle"></i> Save &amp; Continue
+                        </button>
+                    </div>
+                </section>
+                </form>
+            }
+            else
+            {
+                <section class="rm-card rd-card">
+                    <div class="rd-card-hd">
+                        <h2>Admission Requirements and Study Duration</h2>
+                        <p>Submitted admission documents and study durations (view / download only).</p>
+                    </div>
 
-                    <article class="adm-card">
-                        <h3>BSc</h3>
-                        <div class="rd-field">
-                            <label>Sample requirement PDF</label>
-                            @if (!string.IsNullOrWhiteSpace(review.BScSamplePdfFileName))
-                            {
-                                <div class="adm-file-row">
-                                    <span class="adm-file-name"><i class="bi bi-file-earmark-pdf"></i> @review.BScSamplePdfFileName</span>
-                                    <div class="adm-file-actions">
-                                        <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = "BSc", inline = true })" target="_blank" rel="noopener">View</a>
-                                        <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = "BSc" })">Download</a>
-                                    </div>
+                    <div class="adm-grid">
+                        @foreach (var (level, label, sampleFile, duration) in new[]
+                        {
+                            ("Diploma",       "Diploma",        review.DiplomaSamplePdfFileName,       diplomaDuration),
+                            ("BSc",           "BSc",            review.BScSamplePdfFileName,           bScDuration),
+                            ("HigherDiploma", "Higher Diploma", review.HigherDiplomaSamplePdfFileName, higherDiplomaDuration),
+                            ("Master",        "Master",         review.MasterSamplePdfFileName,        masterDuration),
+                            ("PhD",           "PhD",            review.PhdSamplePdfFileName,           phdDuration)
+                        })
+                        {
+                            <article class="adm-card">
+                                <h3>@label</h3>
+                                <div class="rd-field">
+                                    <label>Sample requirement PDF</label>
+                                    @if (!string.IsNullOrWhiteSpace(sampleFile))
+                                    {
+                                        <div class="adm-file-row">
+                                            <span class="adm-file-name"><i class="bi bi-file-earmark-pdf"></i> @sampleFile</span>
+                                            <div class="adm-file-actions">
+                                                <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = level, inline = true })" target="_blank" rel="noopener">View</a>
+                                                <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = level })">Download</a>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="adm-file-empty">No sample PDF uploaded.</div>
+                                    }
                                 </div>
-                            }
-                            else
-                            {
-                                <div class="adm-file-empty">No sample PDF uploaded.</div>
-                            }
-                        </div>
-                        <div class="rd-field">
-                            <label>Study duration</label>
-                            <input type="text" value="@bScDuration" placeholder="—" readonly />
-                        </div>
-                    </article>
-
-                    <article class="adm-card">
-                        <h3>Higher Diploma</h3>
-                        <div class="rd-field">
-                            <label>Sample requirement PDF</label>
-                            @if (!string.IsNullOrWhiteSpace(review.HigherDiplomaSamplePdfFileName))
-                            {
-                                <div class="adm-file-row">
-                                    <span class="adm-file-name"><i class="bi bi-file-earmark-pdf"></i> @review.HigherDiplomaSamplePdfFileName</span>
-                                    <div class="adm-file-actions">
-                                        <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = "HigherDiploma", inline = true })" target="_blank" rel="noopener">View</a>
-                                        <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = "HigherDiploma" })">Download</a>
-                                    </div>
+                                <div class="rd-field">
+                                    <label>Study duration</label>
+                                    <input type="text" value="@duration" placeholder="—" readonly />
                                 </div>
-                            }
-                            else
-                            {
-                                <div class="adm-file-empty">No sample PDF uploaded.</div>
-                            }
-                        </div>
-                        <div class="rd-field">
-                            <label>Study duration</label>
-                            <input type="text" value="@higherDiplomaDuration" placeholder="—" readonly />
-                        </div>
-                    </article>
-
-                    <article class="adm-card">
-                        <h3>Master</h3>
-                        <div class="rd-field">
-                            <label>Sample requirement PDF</label>
-                            @if (!string.IsNullOrWhiteSpace(review.MasterSamplePdfFileName))
-                            {
-                                <div class="adm-file-row">
-                                    <span class="adm-file-name"><i class="bi bi-file-earmark-pdf"></i> @review.MasterSamplePdfFileName</span>
-                                    <div class="adm-file-actions">
-                                        <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = "Master", inline = true })" target="_blank" rel="noopener">View</a>
-                                        <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = "Master" })">Download</a>
-                                    </div>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="adm-file-empty">No sample PDF uploaded.</div>
-                            }
-                        </div>
-                        <div class="rd-field">
-                            <label>Study duration</label>
-                            <input type="text" value="@masterDuration" placeholder="—" readonly />
-                        </div>
-                    </article>
-
-                    <article class="adm-card">
-                        <h3>PhD</h3>
-                        <div class="rd-field">
-                            <label>Sample requirement PDF</label>
-                            @if (!string.IsNullOrWhiteSpace(review.PhdSamplePdfFileName))
-                            {
-                                <div class="adm-file-row">
-                                    <span class="adm-file-name"><i class="bi bi-file-earmark-pdf"></i> @review.PhdSamplePdfFileName</span>
-                                    <div class="adm-file-actions">
-                                        <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = "PhD", inline = true })" target="_blank" rel="noopener">View</a>
-                                        <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = "PhD" })">Download</a>
-                                    </div>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="adm-file-empty">No sample PDF uploaded.</div>
-                            }
-                        </div>
-                        <div class="rd-field">
-                            <label>Study duration</label>
-                            <input type="text" value="@phdDuration" placeholder="—" readonly />
-                        </div>
-                    </article>
-                </div>
-
-            </section>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
 
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
                     <a class="rm-btn rm-btn-light" href="@previousLink">Previous</a>
                 </div>
-                <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light" href="@nextLink">Next</a>
-                </div>
+                @if (!isManual || readOnlyMode)
+                {
+                    <div class="rd-actions-right">
+                        <a class="rm-btn rm-btn-light" href="@nextLink">Next</a>
+                    </div>
+                }
             </section>
         </main>
     </div>

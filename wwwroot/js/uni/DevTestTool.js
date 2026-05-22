@@ -1,49 +1,83 @@
 /* ================================================================
    DEV TEST TOOL  —  REMOVE BEFORE FINAL DELIVERY
-   ================================================================
-   Drop this file and remove the <script> tag in UniDashboard.cshtml
-   to fully remove this tool from the build.
    ================================================================ */
 
 (function () {
     'use strict';
 
-    // ── Data ──────────────────────────────────────────────────────────────────
+    // ── Random helpers ────────────────────────────────────────────────────────
+    const rand   = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const pick   = arr => arr[Math.floor(Math.random() * arr.length)];
+    const randId = () => Math.random().toString(36).substring(2, 6).toUpperCase();
 
-    const COLLEGES = [
-        { name: 'College of Engineering', type: 'Scientific',  students: '1800' },
-        { name: 'Medicine',               type: 'Medical',     students: '950'  },
-        { name: 'Dentistry',              type: 'Medical',     students: '400'  },
-        { name: 'College of Humanities',  type: 'Humanities',  students: '620'  },
-        { name: 'College of Law',         type: 'Humanities',  students: '480'  },
+    // ── Random pools ──────────────────────────────────────────────────────────
+    const UNIS = [
+        'Jordan International University', 'Arabian Gulf University',
+        'Al-Ahliyya Amman University',     'Middle East University',
+        'Applied Science University',       'Petra University',
+        'Philadelphia University',          'Zarqa University',
+        'Jerash University',                'Irbid National University',
+        'Al-Balqa Applied University',      'Hashemite University',
+        'Al-Isra University',               'Al-Zaytoonah University',
+        'Jadara University',                'Amman Arab University',
     ];
 
-    const PROGRAMS = [
-        { program: 'Computer Science',        degree: 'Bachelor',       years: '4', system: 'Credit Hours',     acc: '2020-03-15', grad: '2024-06-30' },
-        { program: 'Software Engineering',    degree: 'Bachelor',       years: '4', system: 'Credit Hours',     acc: '2021-02-10', grad: '2025-06-30' },
-        { program: 'Internal Medicine',       degree: 'Bachelor',       years: '6', system: 'Semester Program', acc: '2019-07-01', grad: '2023-05-20' },
-        { program: 'Dentistry',               degree: 'Bachelor',       years: '5', system: 'Semester Program', acc: '2018-09-01', grad: '2023-06-15' },
-        { program: 'Business Administration', degree: 'Bachelor',       years: '4', system: 'Credit Hours',     acc: '2016-03-15', grad: '2020-06-20' },
-        { program: 'Data Science',            degree: 'Master',         years: '2', system: 'Credit Hours',     acc: '2022-09-01', grad: '2024-08-20' },
-        { program: 'MBA',                     degree: 'Master',         years: '2', system: 'Credit Hours',     acc: '2018-08-20', grad: '2022-07-31' },
-        { program: 'Cybersecurity',           degree: 'Higher Diploma', years: '1', system: 'Yearly Program',   acc: '2022-06-01', grad: '2023-06-30' },
+    const PRESIDENTS = [
+        'Prof. Ahmad Al-Hassan',    'Prof. Mohammad Al-Rashid',
+        'Prof. Khalid Al-Zubi',     'Prof. Sami Al-Tarawneh',
+        'Prof. Nidal Al-Omari',     'Prof. Bassam Al-Khatib',
+        'Prof. Imad Al-Dabbas',     'Prof. Walid Al-Masri',
+        'Prof. Rana Al-Omoush',     'Prof. Feras Al-Shawabkeh',
+        'Prof. Lina Al-Barakat',    'Prof. Omar Al-Nabulsi',
     ];
 
-    const HOSPITALS = [
-        { spec: 'Medicine',  name: 'King Hussein Medical Center',     beds: '300', dental: null  },
-        { spec: 'Medicine',  name: 'Jordan University Hospital',      beds: '250', dental: null  },
-        { spec: 'Dentistry', name: 'Royal Medical Services - Dental', beds: null,  dental: '80'  },
+    const CITIES = ['Amman', 'Irbid', 'Zarqa', 'Aqaba', 'Salt', 'Karak', 'Ajloun', 'Mafraq'];
+
+    const COLLEGE_POOLS = [
+        { name: 'College of Engineering',          type: 'Scientific',  students: () => rand(800,  2500) },
+        { name: 'College of Information Technology',type: 'Scientific', students: () => rand(600,  1800) },
+        { name: 'College of Medicine',             type: 'Medical',     students: () => rand(400,  1200) },
+        { name: 'College of Dentistry',            type: 'Medical',     students: () => rand(200,  700)  },
+        { name: 'College of Pharmacy',             type: 'Medical',     students: () => rand(300,  900)  },
+        { name: 'College of Humanities',           type: 'Humanities',  students: () => rand(500,  1500) },
+        { name: 'College of Law',                  type: 'Humanities',  students: () => rand(300,  800)  },
+        { name: 'College of Business',             type: 'Humanities',  students: () => rand(700,  2000) },
+        { name: 'College of Science',              type: 'Scientific',  students: () => rand(500,  1400) },
+        { name: 'College of Nursing',              type: 'Medical',     students: () => rand(200,  600)  },
     ];
 
-    const LABS = [
-        { computers: '45', labs: '12' },
-        { computers: '30', labs: '8'  },
+    const PROGRAM_POOLS = [
+        { program: 'Computer Science',         degree: 'Bachelor', years: '4', system: 'Credit Hours'     },
+        { program: 'Software Engineering',     degree: 'Bachelor', years: '4', system: 'Credit Hours'     },
+        { program: 'Civil Engineering',        degree: 'Bachelor', years: '5', system: 'Credit Hours'     },
+        { program: 'Internal Medicine',        degree: 'Bachelor', years: '6', system: 'Semester Program' },
+        { program: 'Dentistry',                degree: 'Bachelor', years: '5', system: 'Semester Program' },
+        { program: 'Business Administration',  degree: 'Bachelor', years: '4', system: 'Credit Hours'     },
+        { program: 'Data Science',             degree: 'Master',   years: '2', system: 'Credit Hours'     },
+        { program: 'MBA',                      degree: 'Master',   years: '2', system: 'Credit Hours'     },
+        { program: 'Cybersecurity',            degree: 'Higher Diploma', years: '1', system: 'Yearly Program' },
+        { program: 'Nursing',                  degree: 'Bachelor', years: '4', system: 'Semester Program' },
+        { program: 'Law',                      degree: 'Bachelor', years: '4', system: 'Credit Hours'     },
+        { program: 'Electrical Engineering',   degree: 'Bachelor', years: '4', system: 'Credit Hours'     },
+        { program: 'Pharmacy',                 degree: 'Bachelor', years: '5', system: 'Semester Program' },
+        { program: 'Artificial Intelligence',  degree: 'Master',   years: '2', system: 'Credit Hours'     },
     ];
 
-    const ACCREDITATION_BODIES = [
+    const HOSPITAL_POOLS = [
+        { spec: 'Medicine',  name: 'King Hussein Medical Center',      beds: () => rand(200, 500), dental: null              },
+        { spec: 'Medicine',  name: 'Jordan University Hospital',       beds: () => rand(150, 400), dental: null              },
+        { spec: 'Medicine',  name: 'Princess Basma Teaching Hospital', beds: () => rand(120, 350), dental: null              },
+        { spec: 'Dentistry', name: 'Royal Medical Services - Dental',  beds: null,                 dental: () => rand(50,120)},
+        { spec: 'Dentistry', name: 'Jordan Dental Center',             beds: null,                 dental: () => rand(40,100)},
+    ];
+
+    const ACCB_POOLS = [
         { name: 'ABET – Accreditation Board for Engineering and Technology', type: 'International' },
         { name: 'WASC Senior College and University Commission',             type: 'International' },
-        { name: 'National Accreditation Commission',                        type: 'Local'         },
+        { name: 'National Accreditation Commission',                         type: 'Local'         },
+        { name: 'Association to Advance Collegiate Schools of Business',     type: 'International' },
+        { name: 'Accreditation Council for Pharmacy Education',              type: 'International' },
+        { name: 'Higher Education Accreditation Commission – Jordan',        type: 'Local'         },
     ];
 
     const PICTURE_CARDS = ['library', 'hospital', 'faculties', 'laboratories', 'facilities'];
@@ -56,8 +90,79 @@
         '0000000058 00000 n \n0000000115 00000 n \n' +
         'trailer<</Size 4/Root 1 0 R>>\nstartxref\n190\n%%EOF\n';
 
-    // ── Utilities ─────────────────────────────────────────────────────────────
+    // ── Pick random data for this run ─────────────────────────────────────────
+    // (frozen once per page load so a single run is internally consistent)
+    const RUN = (() => {
+        const uniName  = pick(UNIS);
+        const city     = pick(CITIES);
+        const slug     = uniName.replace(/\s+/g, '').toLowerCase().substring(0, 10);
+        const id       = randId();
+        const year     = rand(1975, 2005);
+        const colleges = shuffle(COLLEGE_POOLS).slice(0, rand(3, 5));
+        const programs = shuffle(PROGRAM_POOLS).slice(0, rand(4, 7));
+        const hospitals= shuffle(HOSPITAL_POOLS).slice(0, rand(1, 3));
+        const accbs    = shuffle(ACCB_POOLS).slice(0, rand(1, 3));
 
+        return {
+            uniName, city, id, year, colleges, programs, hospitals, accbs,
+            president:       pick(PRESIDENTS),
+            address:         `${rand(1,999)} University St, ${city} ${rand(10000,99999)}, Jordan`,
+            phone:           `+962-${rand(2,9)}-${rand(1000000,9999999)}`,
+            email:           `admin@${slug}${id.toLowerCase()}.edu.jo`,
+            website:         `https://www.${slug}${id.toLowerCase()}.edu.jo`,
+            localStudents:   rand(1500, 8000),
+            foreignStudents: rand(100,  1200),
+            jordanStudents:  rand(1000, 6000),
+            areaKm2:         (rand(30, 200) / 100).toFixed(2),
+            campuses:        rand(1, 5),
+            classrooms:      rand(50, 250),
+            libraries:       rand(1, 6),
+            stadiums:        rand(1, 4),
+            libArea:         rand(500, 3000),
+            libCapacity:     rand(200, 1500),
+            libBooks:        rand(5000, 60000),
+            libPaperJournals:rand(100, 800),
+            libEbooks:       rand(1000, 15000),
+            libEjournals:    rand(300, 3000),
+            staff: randomStaff(),
+        };
+    })();
+
+    function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function randomStaff() {
+        // Values chosen so doctorate holders ≥ 50%, senior rank ≥ 10% of total,
+        // and student capacity (≈182) always exceeds the safe TotalStudentPopulation (150).
+        return {
+            StaffProfessorFullTimeCount:              String(rand(40, 60)),
+            StaffProfessorPartTimeCount:              String(rand(5,  12)),
+            StaffAssociateProfessorFullTimeCount:     String(rand(30, 50)),
+            StaffAssociateProfessorPartTimeCount:     String(rand(6,  14)),
+            StaffAssistantProfessorFullTimeCount:     String(rand(40, 60)),
+            StaffAssistantProfessorPartTimeCount:     String(rand(8,  18)),
+            StaffTeacherFullTimeCount:                String(rand(20, 40)),
+            StaffTeacherPartTimeCount:                String(rand(6,  16)),
+            StaffAssistantTeacherFullTimeCount:       String(rand(15, 25)),
+            StaffAssistantTeacherPartTimeCount:       String(rand(5,  12)),
+            StaffResearcherFullTimeCount:             String(rand(5,  15)),
+            StaffResearcherPartTimeCount:             String(rand(2,  8)),
+            StaffOthersFullTimeCount:                 String(rand(8,  16)),
+            StaffOthersPartTimeCount:                 String(rand(2,  7)),
+            StaffPractitionerMscFullTimeCount:        String(rand(5,  12)),
+            StaffPractitionerMscPartTimeCount:        String(rand(2,  7)),
+            StaffPractitionerPscFullTimeCount:        String(rand(4,  10)),
+            StaffPractitionerPscPartTimeCount:        String(rand(2,  6)),
+        };
+    }
+
+    // ── Utilities ─────────────────────────────────────────────────────────────
     const delay = ms => new Promise(r => setTimeout(r, ms));
 
     function pdf(name) {
@@ -112,7 +217,7 @@
 
     function waitMutation(container, ms = 6000) {
         return new Promise(resolve => {
-            const t = setTimeout(() => { ob.disconnect(); resolve(); }, ms);
+            const t  = setTimeout(() => { ob.disconnect(); resolve(); }, ms);
             const ob = new MutationObserver(() => { clearTimeout(t); ob.disconnect(); setTimeout(resolve, 120); });
             ob.observe(container, { childList: true, subtree: true });
         });
@@ -133,20 +238,20 @@
         const sec = document.getElementById('sec-general');
         if (!sec) { log('⚠ sec-general not found'); return; }
 
-        setByName(sec, 'InstitutionName',           'Jordan International University');
-        setByName(sec, 'FoundationDate',             '1990-09-01');
-        setByName(sec, 'DateOfEstablishment',        '1990-09-01');
-        setByName(sec, 'StartOfTeaching',            '1991-09-01');
-        setByName(sec, 'PresidentName',              'Prof. Ahmad Al-Hassan');
-        setByName(sec, 'MailingFullAddress',         '123 University Avenue, Amman 11942, Jordan');
-        setByName(sec, 'DirectPhoneNumber',          '+962-6-5300000');
-        setByName(sec, 'EmailAddress',               'admin@jiu.edu.jo');
-        setByName(sec, 'InstitutionalWebAddress',    'https://www.jiu.edu.jo');
+        setByName(sec, 'InstitutionName',        RUN.uniName);
+        setByName(sec, 'FoundationDate',         `${RUN.year}-09-01`);
+        setByName(sec, 'DateOfEstablishment',    `${RUN.year}-09-01`);
+        setByName(sec, 'StartOfTeaching',        `${RUN.year + 1}-09-01`);
+        setByName(sec, 'PresidentName',          RUN.president);
+        setByName(sec, 'MailingFullAddress',     RUN.address);
+        setByName(sec, 'DirectPhoneNumber',      RUN.phone);
+        setByName(sec, 'EmailAddress',           RUN.email);
+        setByName(sec, 'InstitutionalWebAddress',RUN.website);
 
         const modeEl = sec.querySelector('[name="ModeOfStudy"]');
-        if (modeEl) setVal(modeEl, 'On-campus');
+        if (modeEl) setVal(modeEl, pick(['On-campus', 'Online', 'Hybrid']));
         const langEl = sec.querySelector('[name="LanguageOfInstruction"]');
-        if (langEl) setVal(langEl, bestOption(langEl, 'English'));
+        if (langEl) setVal(langEl, bestOption(langEl, pick(['English', 'Arabic'])));
         const oversightEl = sec.querySelector('[name="OversightRightsEntity"]');
         if (oversightEl) setVal(oversightEl, 'Ministry');
 
@@ -160,14 +265,13 @@
         if (!sec) { log('⚠ sec-academic not found'); return; }
 
         const typeEl = sec.querySelector('[name="TypeOfAcademicInstitution"]');
-        if (typeEl) setVal(typeEl, 'Private');
+        if (typeEl) setVal(typeEl, pick(['Private', 'Public', 'Semi-Government']));
 
         ['DegreeBSC', 'DegreeHigherDiploma', 'DegreeMaster'].forEach(n => {
             const cb = sec.querySelector(`[name="${n}"]`);
             if (cb && !cb.checked) cb.click();
         });
 
-        // Educational systems
         ['SystemCreditHours', 'SystemSemesterProgram'].forEach(n => {
             const cb = sec.querySelector(`[name="${n}"]`);
             if (cb && !cb.checked) cb.click();
@@ -183,22 +287,16 @@
         const accEl = sec.querySelector('[name="OfficialAccreditationQualityInHomeCountry"]');
         if (accEl) setVal(accEl, 'Yes');
 
-        setByName(sec, 'LocalStudentPopulation',     '3200');
-        setByName(sec, 'ForeignStudentPopulation',   '550');
-        setByName(sec, 'JordanianStudentPopulation', '2800');
+        // Use student counts that fit within the staff capacity so all ratios pass
+        const safeTotal = 150;
+        setByName(sec, 'LocalStudentPopulation',     String(Math.min(RUN.localStudents,   safeTotal - 10)));
+        setByName(sec, 'ForeignStudentPopulation',   String(10));
+        setByName(sec, 'JordanianStudentPopulation', String(Math.min(RUN.jordanStudents,  safeTotal - 10)));
+        setByName(sec, 'TotalStudentPopulation',     String(safeTotal));
+        setByName(sec, 'StudentsToFacultyRatio',     '15');
+        setByName(sec, 'DoctorateHoldersPercentage', '80');
 
-        const staff = {
-            StaffProfessorFullTimeCount:           '18', StaffProfessorPartTimeCount:           '4',
-            StaffAssociateProfessorFullTimeCount:   '22', StaffAssociateProfessorPartTimeCount:  '6',
-            StaffAssistantProfessorFullTimeCount:   '35', StaffAssistantProfessorPartTimeCount:  '8',
-            StaffTeacherFullTimeCount:              '28', StaffTeacherPartTimeCount:             '10',
-            StaffAssistantTeacherFullTimeCount:     '12', StaffAssistantTeacherPartTimeCount:    '5',
-            StaffResearcherFullTimeCount:           '8',  StaffResearcherPartTimeCount:          '3',
-            StaffOthersFullTimeCount:               '5',  StaffOthersPartTimeCount:              '2',
-            StaffPractitionerMscFullTimeCount:      '6',  StaffPractitionerMscPartTimeCount:     '4',
-            StaffPractitionerPscFullTimeCount:      '4',  StaffPractitionerPscPartTimeCount:     '2',
-        };
-        for (const [n, v] of Object.entries(staff)) setByName(sec, n, v);
+        for (const [n, v] of Object.entries(RUN.staff)) setByName(sec, n, v);
 
         await delay(200);
         document.getElementById('btnSaveAcademic')?.click();
@@ -233,11 +331,11 @@
         if (!sec) { log('⚠ sec-admission-duration not found'); return; }
 
         const durations = {
-            'AdmissionStudy.DiplomaDuration':       '2 years',
-            'AdmissionStudy.BScDuration':           '4 years',
-            'AdmissionStudy.HigherDiplomaDuration': '1 year',
-            'AdmissionStudy.MasterDuration':        '2 years',
-            'AdmissionStudy.PhDDuration':           '3 years',
+            'AdmissionStudy.DiplomaDuration':       `${rand(1,3)} year${rand(1,3)>1?'s':''}`,
+            'AdmissionStudy.BScDuration':           `${rand(3,5)} years`,
+            'AdmissionStudy.HigherDiplomaDuration': `${rand(1,2)} year${rand(1,2)>1?'s':''}`,
+            'AdmissionStudy.MasterDuration':        `${rand(1,3)} years`,
+            'AdmissionStudy.PhDDuration':           `${rand(3,5)} years`,
         };
         for (const [n, v] of Object.entries(durations)) {
             const el = sec.querySelector(`[name="${n}"]`);
@@ -246,7 +344,7 @@
 
         ['Diploma', 'BSc', 'HigherDiploma', 'Master', 'PhD'].forEach(type => {
             const input = sec.querySelector(`[name="AdmissionStudy.${type}SamplePdf"]`);
-            if (input) attachFile(input, pdf(`sample_${type}.pdf`));
+            if (input) attachFile(input, pdf(`sample_${type}_${RUN.id}.pdf`));
         });
 
         await delay(200);
@@ -258,10 +356,10 @@
         const c = document.getElementById('faculties-container');
         if (!c) { log('⚠ faculties-container not found'); return; }
 
-        for (const row of COLLEGES) {
+        for (const row of RUN.colleges) {
             setVal('fac_name',          row.name);
             setVal('fac_type',          bestOption('fac_type', row.type));
-            setVal('fac_studentsCount', row.students);
+            setVal('fac_studentsCount', String(row.students()));
 
             const btn = document.getElementById('fac_btnAdd');
             if (!btn || btn.disabled) { await delay(500); continue; }
@@ -276,14 +374,17 @@
         const c = document.getElementById('programs-container');
         if (!c) { log('⚠ programs-container not found'); return; }
 
-        for (const row of PROGRAMS) {
+        // Random accreditation/graduation years per program
+        for (const row of RUN.programs) {
+            const accYear  = rand(2010, 2022);
+            const gradYear = rand(2022, 2025);
             setVal('prg_faculty',  firstOption('prg_faculty'));
             setVal('prg_program',  row.program);
-            setVal('prg_degree',   bestOption('prg_degree',  row.degree));
+            setVal('prg_degree',   bestOption('prg_degree', row.degree));
             setVal('prg_years',    row.years);
-            setVal('prg_system',   bestOption('prg_system',  row.system));
-            setVal('prg_acc',      row.acc);
-            setVal('prg_gradlast', row.grad);
+            setVal('prg_system',   bestOption('prg_system', row.system));
+            setVal('prg_acc',      `${accYear}-${String(rand(1,12)).padStart(2,'0')}-${String(rand(1,28)).padStart(2,'0')}`);
+            setVal('prg_gradlast', `${gradYear}-06-${String(rand(1,30)).padStart(2,'0')}`);
 
             const btn = document.getElementById('prg_addBtn') || c.querySelector('[data-prg-add]');
             if (!btn) { log('⚠ prg add btn not found'); continue; }
@@ -299,22 +400,32 @@
                || document.querySelector('[data-partial-url*="MedicineDentistry"]');
         if (!c) { log('⚠ medDenContainer not found'); return; }
 
+        const medStud = rand(400, 1200); const denStud = rand(150, 600);
         const fields = {
-            med_totalStudents: '950', den_totalStudents: '400',
-            med_fullTimeProfessor: '8',                      med_partTimeClinicalProfessor: '3',
-            med_fullTimeAssociateProfessor: '10',             med_partTimeClinicalAssociateProfessor: '4',
-            med_fullTimeAssistantProfessor: '14',             med_partTimeClinicalAssistantProfessor: '5',
-            med_fullTimeLecturerPhd: '6',                    med_partTimeClinicalLecturerPhd: '2',
-            med_fullTimeLecturerMsc: '4',
-            med_fullTimeAssistantLecturerPhd: '3',
-            med_fullTimeAssistantLecturerMsc: '2',
-            den_fullTimeProfessor: '5',                      den_partTimeClinicalProfessor: '2',
-            den_fullTimeAssociateProfessor: '6',              den_partTimeClinicalAssociateProfessor: '2',
-            den_fullTimeAssistantProfessor: '8',              den_partTimeClinicalAssistantProfessor: '3',
-            den_fullTimeLecturerPhd: '3',                    den_partTimeClinicalLecturerPhd: '1',
-            den_fullTimeLecturerMsc: '2',
-            den_fullTimeAssistantLecturerPhd: '2',
-            den_fullTimeAssistantLecturerMsc: '1',
+            med_totalStudents:                      String(medStud),
+            den_totalStudents:                      String(denStud),
+            med_fullTimeProfessor:                  String(rand(5,  15)),
+            med_partTimeClinicalProfessor:           String(rand(2,  8)),
+            med_fullTimeAssociateProfessor:          String(rand(8,  18)),
+            med_partTimeClinicalAssociateProfessor:  String(rand(3,  10)),
+            med_fullTimeAssistantProfessor:          String(rand(10, 22)),
+            med_partTimeClinicalAssistantProfessor:  String(rand(4,  12)),
+            med_fullTimeLecturerPhd:                 String(rand(4,  12)),
+            med_partTimeClinicalLecturerPhd:         String(rand(1,  6)),
+            med_fullTimeLecturerMsc:                 String(rand(3,  9)),
+            med_fullTimeAssistantLecturerPhd:        String(rand(2,  8)),
+            med_fullTimeAssistantLecturerMsc:        String(rand(1,  5)),
+            den_fullTimeProfessor:                   String(rand(3,  10)),
+            den_partTimeClinicalProfessor:            String(rand(1,  5)),
+            den_fullTimeAssociateProfessor:           String(rand(4,  12)),
+            den_partTimeClinicalAssociateProfessor:   String(rand(2,  7)),
+            den_fullTimeAssistantProfessor:           String(rand(5,  14)),
+            den_partTimeClinicalAssistantProfessor:   String(rand(2,  8)),
+            den_fullTimeLecturerPhd:                  String(rand(2,  7)),
+            den_partTimeClinicalLecturerPhd:          String(rand(1,  4)),
+            den_fullTimeLecturerMsc:                  String(rand(1,  5)),
+            den_fullTimeAssistantLecturerPhd:         String(rand(1,  4)),
+            den_fullTimeAssistantLecturerMsc:         String(rand(1,  3)),
         };
         for (const [id, v] of Object.entries(fields)) setVal(id, v);
 
@@ -327,11 +438,11 @@
         const c = document.getElementById('infrastructureContainer');
         if (!c) { log('⚠ infrastructureContainer not found'); return; }
 
-        setVal('infra_areaKm2',         '0.85');
-        setVal('infra_campusesCount',   '3');
-        setVal('infra_classroomsCount', '120');
-        setVal('infra_librariesCount',  '4');
-        setVal('infra_stadiumsCount',   '2');
+        setVal('infra_areaKm2',         RUN.areaKm2);
+        setVal('infra_campusesCount',   String(RUN.campuses));
+        setVal('infra_classroomsCount', String(RUN.classrooms));
+        setVal('infra_librariesCount',  String(RUN.libraries));
+        setVal('infra_stadiumsCount',   String(RUN.stadiums));
 
         await delay(200);
         document.getElementById('btnSaveInfrastructure')?.click();
@@ -342,10 +453,14 @@
         const c = document.getElementById('laboratoriesContainer');
         if (!c) { log('⚠ laboratoriesContainer not found'); return; }
 
-        for (const row of LABS) {
+        const rows = [
+            { computers: rand(20, 80), labs: rand(5, 20) },
+            { computers: rand(20, 80), labs: rand(5, 20) },
+        ];
+        for (const row of rows) {
             setVal('lab_facultyId',    firstOption('lab_facultyId'));
-            setVal('lab_computers',    row.computers);
-            setVal('lab_laboratories', row.labs);
+            setVal('lab_computers',    String(row.computers));
+            setVal('lab_laboratories', String(row.labs));
 
             const btn = document.getElementById('lab_addBtn');
             if (!btn) { log('⚠ lab_addBtn not found'); continue; }
@@ -360,12 +475,12 @@
         const c = document.getElementById('libraryContainer');
         if (!c) { log('⚠ libraryContainer not found'); return; }
 
-        setVal('lib_area',               '1200');
-        setVal('lib_capacity',           '500');
-        setVal('lib_numberOfBooks',      '20000');
-        setVal('lib_paperJournals',      '350');
-        setVal('lib_electronicBooks',    '5000');
-        setVal('lib_electronicJournals', '1200');
+        setVal('lib_area',               String(RUN.libArea));
+        setVal('lib_capacity',           String(RUN.libCapacity));
+        setVal('lib_numberOfBooks',      String(RUN.libBooks));
+        setVal('lib_paperJournals',      String(RUN.libPaperJournals));
+        setVal('lib_electronicBooks',    String(RUN.libEbooks));
+        setVal('lib_electronicJournals', String(RUN.libEjournals));
 
         await delay(200);
         if (window.LibrarySave) { await window.LibrarySave(); }
@@ -377,10 +492,10 @@
         const c = document.getElementById('accreditationBodiesContainer');
         if (!c) { log('⚠ accreditationBodiesContainer not found'); return; }
 
-        for (const row of ACCREDITATION_BODIES) {
+        for (const row of RUN.accbs) {
             setVal('accb_bodyName', row.name);
             setVal('accb_type',     bestOption('accb_type', row.type));
-            attachFile(document.getElementById('accb_pdf'), pdf('accreditation_certificate.pdf'));
+            attachFile(document.getElementById('accb_pdf'), pdf(`accreditation_${RUN.id}.pdf`));
 
             const btn = document.getElementById('accb_addBtn');
             if (!btn) { log('⚠ accb_addBtn not found'); break; }
@@ -395,8 +510,7 @@
         const c = document.getElementById('hospitalsContainer');
         if (!c) { log('⚠ hospitalsContainer not found'); return; }
 
-        for (const fac of HOSPITALS) {
-            // Set specialization and trigger capacity field visibility
+        for (const fac of RUN.hospitals) {
             const specEl = document.getElementById('hosp_fac_specialization');
             if (specEl) {
                 setVal(specEl, fac.spec);
@@ -407,11 +521,10 @@
 
             setVal('hosp_fac_name', fac.name);
 
-            // Set capacity based on specialization
-            if (fac.beds)   setVal('hosp_fac_beds',   fac.beds);
-            if (fac.dental) setVal('hosp_fac_dental', fac.dental);
+            if (fac.beds)   setVal('hosp_fac_beds',   String(fac.beds()));
+            if (fac.dental) setVal('hosp_fac_dental',  String(fac.dental()));
 
-            attachFile(document.getElementById('hosp_fac_agreement_files'), pdf('hospital_agreement.pdf'));
+            attachFile(document.getElementById('hosp_fac_agreement_files'), pdf(`hospital_agreement_${RUN.id}.pdf`));
 
             const mut = waitMutation(c);
             if (window.HospFacilityAdd) window.HospFacilityAdd();
@@ -428,7 +541,8 @@
     }
 
     async function genURA() {
-        const c = document.getElementById('uniRecAccContainer');
+        const c = document.getElementById('uniRecAccContainer')
+               || document.querySelector('[data-partial-url*="MedicineDentistry"]');
         if (!c) { log('⚠ uniRecAccContainer not found'); return; }
 
         if (!c.querySelector('input, button, select')) {
@@ -443,17 +557,17 @@
 
         const recInput = document.getElementById('ura_docs_local_recognition');
         if (recInput) {
-            attachFile(recInput, pdf('local_recognition.pdf'));
+            attachFile(recInput, pdf(`local_recognition_${RUN.id}.pdf`));
             await delay(200);
             if (window.URAUploadSection) { await window.URAUploadSection('recognition'); await delay(800); }
         }
 
         const typeInput = document.getElementById('ura_docs_accreditation_type');
-        if (typeInput) setVal(typeInput, bestOption(typeInput, 'Local'));
+        if (typeInput) setVal(typeInput, bestOption(typeInput, pick(['Local', 'International'])));
 
         const accInput = document.getElementById('ura_docs_accreditation');
         if (accInput) {
-            attachFile(accInput, pdf('local_accreditation.pdf'));
+            attachFile(accInput, pdf(`local_accreditation_${RUN.id}.pdf`));
             await delay(200);
             if (window.URAUploadSection) { await window.URAUploadSection('accreditation'); await delay(800); }
         }
@@ -471,15 +585,15 @@
         for (const cardId of PICTURE_CARDS) {
             const input = document.getElementById(`input_${cardId}`);
             if (!input) { log(`⚠ input_${cardId} not found`); continue; }
-            attachFile(input, pdf(`${cardId}_photo.pdf`));
+            attachFile(input, pdf(`${cardId}_${RUN.id}.pdf`));
             await delay(200);
             if (window.PictureUploadCategory) { await window.PictureUploadCategory(cardId, `input_${cardId}`); await delay(700); }
         }
     }
 
     async function genSubmitFields() {
-        setVal('subapp_name',      'Dr. Kamelia Qumsieh');
-        setVal('subapp_workplace', 'Jordan International University');
+        setVal('subapp_name',      pick(PRESIDENTS).replace('Prof.', 'Dr.'));
+        setVal('subapp_workplace', RUN.uniName);
         const ack = document.getElementById('subapp_ack');
         if (ack && !ack.checked) ack.click();
     }
@@ -487,21 +601,21 @@
     // ── Steps ─────────────────────────────────────────────────────────────────
 
     const STEPS = [
-        { label: 'Public Info',                fn: genPublicInfo         },
-        { label: 'Academic Info',              fn: genAcademicInfo       },
-        { label: 'Rank Staff Excel Files',     fn: genRankExcels         },
-        { label: 'Admission & Duration (PDFs)',fn: genAdmissionDuration  },
-        { label: 'Colleges',                   fn: genColleges           },
-        { label: 'Programs',                   fn: genPrograms           },
-        { label: 'Medicine & Dentistry',       fn: genMedicineDentistry  },
-        { label: 'Infrastructure',             fn: genInfrastructure     },
-        { label: 'Laboratories',               fn: genLabs               },
-        { label: 'Library',                    fn: genLibrary            },
-        { label: 'Accreditation Bodies (PDFs)',fn: genAccreditationBodies},
-        { label: 'Hospitals (PDFs)',           fn: genHospitals          },
-        { label: 'University Rec. & Acc. Docs',fn: genURA                },
-        { label: 'Pictures',                   fn: genPictures           },
-        { label: 'Submit Fields',              fn: genSubmitFields       },
+        { label: 'Public Info',                 fn: genPublicInfo          },
+        { label: 'Academic Info',               fn: genAcademicInfo        },
+        { label: 'Rank Staff Excel Files',      fn: genRankExcels          },
+        { label: 'Admission & Duration (PDFs)', fn: genAdmissionDuration   },
+        { label: 'Colleges',                    fn: genColleges            },
+        { label: 'Programs',                    fn: genPrograms            },
+        { label: 'Medicine & Dentistry',        fn: genMedicineDentistry   },
+        { label: 'Infrastructure',              fn: genInfrastructure      },
+        { label: 'Laboratories',                fn: genLabs                },
+        { label: 'Library',                     fn: genLibrary             },
+        { label: 'Accreditation Bodies (PDFs)', fn: genAccreditationBodies },
+        { label: 'Hospitals (PDFs)',            fn: genHospitals           },
+        { label: 'University Rec. & Acc. Docs', fn: genURA                 },
+        { label: 'Pictures',                    fn: genPictures            },
+        { label: 'Submit Fields',               fn: genSubmitFields        },
     ];
 
     // ── Clear ─────────────────────────────────────────────────────────────────
@@ -575,7 +689,7 @@
             if (i < STEPS.length - 1) await delay(300);
         }
         setProgress(STEPS.length, STEPS.length);
-        log('✅ Done — all sections filled!');
+        log(`✅ Done — ${RUN.uniName} (${RUN.id})`);
     }
 
     // ── Panel ─────────────────────────────────────────────────────────────────
@@ -587,15 +701,19 @@
                 position: fixed; bottom: 20px; right: 20px; z-index: 99999;
                 background: #0f172a; color: #e2e8f0;
                 border: 1px solid #1e293b; border-radius: 14px;
-                padding: 14px 16px; width: 260px;
+                padding: 14px 16px; width: 270px;
                 box-shadow: 0 10px 40px rgba(0,0,0,.65);
                 font-family: ui-monospace, 'Cascadia Code', monospace; font-size: 12px;
             }
             #_dt-panel ._dt-title {
                 font-size: 11px; font-weight: 800; color: #f59e0b;
                 letter-spacing: 1px; text-transform: uppercase;
-                margin-bottom: 10px; display: flex; align-items: center;
+                margin-bottom: 4px; display: flex; align-items: center;
                 justify-content: space-between;
+            }
+            #_dt-uni-label {
+                font-size: 10px; color: #64748b; margin-bottom: 10px;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             }
             #_dt-fill {
                 width: 100%; padding: 11px 0; border-radius: 9px; border: none;
@@ -637,7 +755,9 @@
         panel.innerHTML = `
             <div class="_dt-title">
                 <span>⚙ DEV TOOL</span>
+                <span style="color:#475569;font-size:9px;">#${RUN.id}</span>
             </div>
+            <div id="_dt-uni-label">📍 ${RUN.uniName}</div>
             <button id="_dt-fill">▶ Fill Everything</button>
             <button id="_dt-clr">✕ Clear Test Rows</button>
             <div id="_dt-bar-track"><div id="_dt-bar-fill"></div></div>
@@ -661,7 +781,7 @@
         fillBtn.addEventListener('click', () => run(fillAll));
         clrBtn .addEventListener('click', () => run(clearTestRows));
 
-        log('Ready');
+        log(`Ready — ${RUN.uniName}`);
     }
 
     document.addEventListener('DOMContentLoaded', buildPanel);

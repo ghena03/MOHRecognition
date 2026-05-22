@@ -8,6 +8,7 @@ namespace MOHRecognition.Services
         RecognitionRequestRecord? GetById(int id);
         RecognitionRequestRecord Add(RecognitionRequestRecord request);
 
+        bool RequestMemberAssignment(int id, string memberEmail);
         bool RequireAdminReview(int id, string submittedBy);
         bool AssignMember(int id, string memberName);
         bool SaveInfrastructureNotes(
@@ -26,6 +27,11 @@ namespace MOHRecognition.Services
         bool SaveGlobalRankings(int id, GlobalRankingsDto rankings);
         bool SaveBasicInfoAssessment(int id, string decision, string reason, string accreditationStatus, string accreditationNote);
         bool UpdateStatus(int id, string status);
+        bool SavePublicInfoSection(int id, PublicInfoDto publicInfo, AcademicInfoDto academicInfoPatch, string city, string country);
+        bool SaveAcademicStaffSection(int id, AcademicInfoDto staffData);
+        bool SaveStudyDurationSection(int id, StudyDurationDto studyDuration);
+        bool SetManualDataFilled(int id);
+        bool UpdateManualRequestData(int id, Action<RecognitionRequestRecord> updater);
     }
 
     public class RecognitionRequestRecord
@@ -56,6 +62,10 @@ namespace MOHRecognition.Services
         public string SubmittedToAdminBy { get; set; } = string.Empty;
 
         public DateTime? SubmittedToAdminAt { get; set; }
+
+        public string AssignmentRequestBy { get; set; } = string.Empty;
+
+        public DateTime? AssignmentRequestAt { get; set; }
 
         public int Year { get; set; }
 
@@ -127,5 +137,8 @@ namespace MOHRecognition.Services
         public string City { get; set; } = string.Empty;
 
         public string RecognitionType { get; set; } = string.Empty;
+
+        public bool IsManual { get; set; } = false;
+        public bool ManualDataFilled { get; set; } = false;
     }
 }

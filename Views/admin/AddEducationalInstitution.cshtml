@@ -51,6 +51,10 @@
                 <p>Create a manual recognition request and assign it to a recognition member.</p>
             </div>
         </div>
+
+        <div class="header-right">
+            <a class="back-btn" href="@Url.Action("AdminDashboard", "Home")">← Back to Dashboard</a>
+        </div>
     </div>
 
     <div class="page">
@@ -94,9 +98,16 @@
                             Country
                         </label>
 
-                        <input type="text"
-                               name="Country"
-                               required />
+                        <select name="Country" required>
+                            <option value="">Select Country</option>
+                            @if (ViewBag.Countries != null)
+                            {
+                                foreach (var c in (List<string>)ViewBag.Countries)
+                                {
+                                    <option value="@c">@c</option>
+                                }
+                            }
+                        </select>
 
                     </div>
 
