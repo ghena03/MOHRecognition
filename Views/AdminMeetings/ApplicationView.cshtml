@@ -258,104 +258,9 @@
     <link rel="stylesheet" href="~/css/member/DetailsAcademicInfo.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/DetailsInfrastructure.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/DetailsRecommendation.css" asp-append-version="true" />
-    <style>
-        /* Admin-only additions — no overrides to member styles */
-        .admin-topbar {
-            background: #5a0e1b; color: rgba(255,255,255,.7);
-            font-size: 10.5px; font-weight: 500; letter-spacing: .4px;
-            padding: 5px 28px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
-        }
-        .admin-vo-badge {
-            background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.35);
-            border-radius: 999px; padding: 3px 12px;
-            font-size: 10px; font-weight: 800; letter-spacing: .5px;
-            display: inline-flex; align-items: center; gap: 5px;
-        }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-        .rm-navitem { cursor: pointer; }
-        .rm-navitem.active { background: rgba(127,22,39,.1); color: #7f1627; font-weight: 700; }
-        .ro-val {
-            display: block; padding: 8px 10px;
-            background: #f9f6f2; border: 1px solid #e8ddd4;
-            border-radius: 6px; font-size: 13.5px; font-weight: 500; color: #1a1a1a;
-            min-height: 36px; word-break: break-word;
-        }
-        .ro-textarea {
-            display: block; padding: 10px 12px;
-            background: #f9f6f2; border: 1px solid #e8ddd4;
-            border-radius: 6px; font-size: 13px; color: #1a1a1a; line-height: 1.55;
-            min-height: 72px; word-break: break-word;
-        }
-        .rec-big-badge {
-            display: inline-flex; align-items: center; gap: 10px;
-            border-radius: 10px; padding: 16px 22px; font-size: 17px; font-weight: 800;
-        }
-        .rec-big-badge.approve    { background: #e8f5ea; color: #166534; border: 2px solid #86efac; }
-        .rec-big-badge.conditional{ background: #fefce8; color: #854d0e; border: 2px solid #fde047; }
-        .rec-big-badge.reject     { background: #fef2f2; color: #991b1b; border: 2px solid #fca5a5; }
-
-        /* Committee Decision form (t8) */
-        /* Committee Decision form (t8) */
-        .cd-form-group { margin-bottom: 20px; }
-        .cd-form-group label { display: block; font-weight: 700; color: #444; margin-bottom: 6px; font-size: 0.92em; }
-        .cd-form-group select,
-        .cd-form-group textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #d0b0bb; border-radius: 7px; font-size: 0.95em; color: #333; background: #fff; box-sizing: border-box; font-family: inherit; }
-        .cd-form-group select:focus,
-        .cd-form-group textarea:focus { outline: none; border-color: #7f1627; box-shadow: 0 0 0 2px rgba(127,22,39,.12); }
-        .cd-btn-row { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
-        .cd-btn-save { padding: 10px 32px; border-radius: 7px; font-size: 0.95em; font-weight: 700; border: none; cursor: pointer; background: #7f1627; color: #fff; }
-        .cd-btn-save:hover { background: #6a1020; }
-        .cd-saved-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 8px; background: #e8f5ea; color: #166534; font-size: 12px; font-weight: 700; border: 1.5px solid #86efac; }
-        /* Final Decision nav item distinct styling */
-        .fd-divider {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 10px 0 6px;
-        }
-        .fd-divider-line { flex: 1; height: 1px; background: #e2c9cb; }
-        .fd-divider-label {
-            font-size: 10px;
-            font-weight: 900;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            color: #9b2335;
-            white-space: nowrap;
-        }
-        .rm-navitem.final-decision-nav {
-            background: linear-gradient(135deg, #7f1627 0%, #a02030 100%);
-            color: #fff !important;
-            font-weight: 800;
-            border: none;
-            border-radius: 10px;
-            padding: 11px 12px;
-            box-shadow: 0 4px 14px rgba(127,22,39,0.35);
-            transition: box-shadow 0.2s, transform 0.15s;
-            position: relative;
-            overflow: hidden;
-        }
-        .rm-navitem.final-decision-nav::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
-            pointer-events: none;
-        }
-        .rm-navitem.final-decision-nav i { color: #fff; }
-        .rm-navitem.final-decision-nav:hover {
-            box-shadow: 0 6px 20px rgba(127,22,39,0.5);
-            transform: translateY(-1px);
-        }
-        .rm-navitem.final-decision-nav.active {
-            background: linear-gradient(135deg, #5e0f1b 0%, #7f1627 100%) !important;
-            box-shadow: 0 2px 8px rgba(127,22,39,0.5);
-        }
-        /* Rankings read-only display */
-        .rank-ro-val { padding: 10px 0 2px; }
-        .rank-na-badge { display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; color: #64748b; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 7px 16px; font-size: 0.88em; font-weight: 700; }
-        .rank-na-badge::before { content: "— "; color: #94a3b8; }
-    </style>
+    <link rel="stylesheet"
+          href="~/css/admin/ApplicationView.css"
+          asp-append-version="true" />
 </head>
 <body class="rm-page">
 
@@ -387,7 +292,7 @@
     <div class="rm-shell">
 
         <!-- ══ SIDEBAR ══ -->
-        <aside class="rm-sidebar">
+        <aside class="rm-sidebar" id="rmSidebar">
             <div class="rm-side-label">Application Review</div>
             <nav class="rm-nav">
                 <button class="rm-navitem active" onclick="showTab('t1',this)">
@@ -424,7 +329,9 @@
                 }
             </nav>
         </aside>
-
+        <button id="sidebarToggle" class="sidebar-toggle">
+            <i class="bi bi-chevron-left"></i>
+        </button>
         <main class="rm-main">
 
             <!-- ══════════════════════════════════════════════════
@@ -1583,9 +1490,49 @@
             body.style.display = isOpen ? 'none' : 'grid';
             if (chevron) chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
         }
+                const sidebar = document.getElementById("rmSidebar");
+        const toggleBtn = document.getElementById("sidebarToggle");
+        const shell = document.querySelector(".rm-shell");
+
+        toggleBtn.addEventListener("click", () => {
+
+            sidebar.classList.toggle("collapsed");
+            shell.classList.toggle("sidebar-collapsed");
+
+            const icon = toggleBtn.querySelector("i");
+
+            if(sidebar.classList.contains("collapsed")){
+                icon.classList.remove("bi-chevron-left");
+                icon.classList.add("bi-chevron-right");
+            }else{
+                icon.classList.remove("bi-chevron-right");
+                icon.classList.add("bi-chevron-left");
+            }
+
+        });
+    </script>
+    <script>
+
+        const sidebar = document.getElementById("rmSidebar");
+        const toggle = document.getElementById("sidebarToggle");
+
+        toggle.addEventListener("click", function () {
+
+            sidebar.classList.toggle("collapsed");
+
+            const icon = toggle.querySelector("i");
+
+            if(sidebar.classList.contains("collapsed")){
+                icon.classList.remove("bi-chevron-left");
+                icon.classList.add("bi-chevron-right");
+            }else{
+                icon.classList.remove("bi-chevron-right");
+                icon.classList.add("bi-chevron-left");
+            }
+
+        });
 
     </script>
-
 
 </body>
 </html>
