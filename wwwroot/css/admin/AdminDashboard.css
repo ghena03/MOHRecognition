@@ -1023,3 +1023,11 @@ html, body {
     .btn-view:hover {
         background: #dfe6ff;
     }
+
+/* Application type — colored left border indicator */
+tr.app-row-bachelor td:first-child    { border-left: 5px solid #3b82f6 !important; padding-left: 11px !important; }
+tr.app-row-postgraduate td:first-child { border-left: 5px solid #8b5cf6 !important; padding-left: 11px !important; }
+tr.app-row-online td:first-child       { border-left: 5px solid #10b981 !important; padding-left: 11px !important; }
+.app-row-bachelor    { border-left: 5px solid #3b82f6 !important; }
+.app-row-postgraduate { border-left: 5px solid #8b5cf6 !important; }
+.app-row-online       { border-left: 5px solid #10b981 !important; }

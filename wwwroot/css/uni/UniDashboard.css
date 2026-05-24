@@ -1184,11 +1184,7 @@ html {
     }
 
 .prg-table tbody td:last-child:not(.prg-empty) {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-    align-items: center !important;
-    justify-content: center !important;
+    text-align: center;
 }
 
 .prg-wrap,
@@ -2097,6 +2093,71 @@ html {
     justify-content: center;
 }
 
+/* ── Medical sections: Not-Required overlay ─────────────────────── */
+.section-na-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 40px 24px;
+    text-align: center;
+    background: #f9fafb;
+    border: 1.5px dashed #d1d5db;
+    border-radius: 10px;
+    color: #6b7280;
+}
+
+.section-na-overlay .na-icon-wrap {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.section-na-overlay strong {
+    font-size: 1rem;
+    color: #374151;
+}
+
+.section-na-overlay p {
+    font-size: .875rem;
+    max-width: 460px;
+    margin: 0;
+}
+
+.section-na-overlay a {
+    color: #9e1b32;
+    text-decoration: underline;
+}
+
+.section-na-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+    margin-left: 8px;
+    vertical-align: middle;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+
+.side-item--na {
+    opacity: .55;
+}
+
+.side-na-tag {
+    font-size: .68rem;
+    font-weight: 600;
+    color: #9ca3af;
+    margin-left: 4px;
+}
+
+/* ────────────────────────────────────────────────────────────────── */
+
 .iconbtn {
     width: 34px;
     height: 34px;
@@ -2787,6 +2848,126 @@ html {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
 }
+
+/* ── Optional Notes & Files section ── */
+/* ── Additional Notes & Files (simplified) ──────────────────────────── */
+.subapp-extra {
+    margin-top: 18px;
+    margin-bottom: 4px;
+}
+
+.subapp-extra-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #5a3f3f;
+    margin-bottom: 6px;
+}
+
+.subapp-extra-opt {
+    font-size: 12px;
+    font-weight: 400;
+    color: #aaa;
+    margin-left: 4px;
+}
+
+.subapp-extra-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 13px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 8px 10px;
+    color: #333;
+    background: #fff;
+    resize: vertical;
+}
+
+.subapp-attach-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.subapp-attach-btn {
+    display: inline-block;
+    background: #7f1627;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s;
+}
+
+.subapp-attach-btn:hover { background: #5a1020; }
+
+.subapp-attach-hint {
+    font-size: 12px;
+    color: #666;
+}
+
+
+.subapp-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.subapp-file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fafafa;
+    border: 1px solid #e8dfd8;
+    border-radius: 6px;
+    padding: 5px 10px;
+}
+
+.subapp-file-tag {
+    font-size: 10px;
+    font-weight: 700;
+    color: #7f1627;
+    background: #fce8eb;
+    border-radius: 3px;
+    padding: 1px 5px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.subapp-file-link {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: #333;
+    text-decoration: none;
+}
+
+.subapp-file-link:hover { text-decoration: underline; color: #7f1627; }
+
+.subapp-file-remove {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #bbb;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+}
+
+.subapp-file-remove:hover { color: #c0392b; }
+
+/* ────────────────────────────────────────────────────────────────────── */
+
+/* ───────────────────────────────────────────── */
 
 .submitapp-check {
     display: inline-flex;
@@ -5273,20 +5454,23 @@ html {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    flex-wrap: wrap;
 }
 
 #picturesContainer .pic-file-name {
     font-size: 14px;
     font-weight: 700;
     color: #1f2937;
-    word-break: break-word;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
 }
 
 #picturesContainer .pic-file-actions {
     display: flex;
     gap: 6px;
-    flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 /* ================= ACCREDITATION (MODERN) ================= */

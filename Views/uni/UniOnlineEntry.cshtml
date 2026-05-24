@@ -1,0 +1,450 @@
+@{
+    Layout = null;
+}
+@model MOHRecognition.DTOs.OnlineEducationDto
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Online Education Application</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/uni/UniDashboard.css" asp-append-version="true" />
+    <style>
+        /* ── Yes/No toggle ── */
+        .online-gate {
+            background: #fff;
+            border: 1px solid #e2ddd8;
+            border-top: 3px solid #7f1627;
+            border-radius: 12px;
+            padding: 32px 28px;
+            margin-bottom: 28px;
+            text-align: center;
+        }
+        .online-gate-title {
+            font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 8px;
+        }
+        .online-gate-sub {
+            font-size: 13.5px; color: #6b7280; margin-bottom: 24px;
+        }
+        .online-gate-btns {
+            display: inline-flex; gap: 14px; justify-content: center;
+        }
+        .gate-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 32px; border-radius: 9px; font-size: 14px; font-weight: 700;
+            cursor: pointer; border: 2px solid transparent; transition: all .15s;
+        }
+        .gate-btn-yes {
+            background: #7f1627; color: #fff; border-color: #7f1627;
+        }
+        .gate-btn-yes:hover { background: #6a1020; border-color: #6a1020; }
+        .gate-btn-yes.selected {
+            box-shadow: 0 0 0 3px rgba(127,22,39,.25);
+        }
+        .gate-btn-no {
+            background: #fff; color: #374151; border-color: #d1d5db;
+        }
+        .gate-btn-no:hover { background: #f9fafb; }
+        .gate-btn-no.selected {
+            background: #f1f5f9; border-color: #94a3b8; color: #374151;
+            box-shadow: 0 0 0 3px rgba(100,116,139,.2);
+        }
+        /* hidden until Yes is chosen */
+        .online-form-sections { display: none; }
+        .online-form-sections.visible { display: block; }
+
+        .decline-note {
+            display: none;
+            background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 10px;
+            padding: 20px 24px; text-align: center; color: #64748b;
+            font-size: 13.5px; margin-top: 16px;
+        }
+        .decline-note.visible { display: block; }
+        .decline-note strong { color: #374151; }
+    </style>
+</head>
+
+<body class="submitapp-page ltr">
+
+    <!-- HEADER -->
+    <header class="top-header en">
+        <div class="hdr-grid">
+            <div></div>
+            <nav class="hdr-nav">
+                <a class="hdr-link" href="@Url.Action("UniStatus", "Home")">← Back</a>
+                <a class="hdr-link" href="https://www.mohe.gov.jo/" target="_blank">Ministry Website</a>
+            </nav>
+            <div class="hdr-logo">
+                <img class="rm-logo" src="~/images/mohelogo.png" />
+            </div>
+        </div>
+        <div class="brand-bar"></div>
+    </header>
+
+    <div class="layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <a href="@Url.Action("UniStatus", "Home")" class="side-user">
+                <div class="user-avatar">UN</div>
+                <div class="user-info">
+                    <span class="user-name">University Account</span>
+                    <span class="user-link">Show account</span>
+                </div>
+            </a>
+            <a class="side-item" href="#sec-gate">Application Intent</a>
+            <a class="side-item" href="#sec-general">Public Info</a>
+            <a class="side-item" href="#sec-programs">Online Programs</a>
+            <a class="side-item" href="#sec-students">Number of Students</a>
+            <a class="side-item" href="#sec-faculty">Academic Staff</a>
+            <a class="side-item" href="#sec-user">Applicant Info</a>
+            <div class="side-footer">
+                <a class="logout" href="@Url.Action("Logout", "Home")">Logout</a>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="content">
+
+            <!-- WELCOME -->
+            <section class="welcome">
+                <div class="welcome-card">
+                    <div class="welcome-icon">🖥️</div>
+                    <h1 class="welcome-title">Online Education Recognition Application</h1>
+                    <p class="welcome-text">
+                        Apply for recognition of online education programs offered by your institution.
+                        Shared institution information is pre-filled from your previous application.
+                    </p>
+                </div>
+            </section>
+
+            @{
+                var P = ViewBag.Public as DTOs.PublicInfoDto ?? new DTOs.PublicInfoDto();
+                var languageOfInstruction = (P.LanguageOfInstruction ?? "").Trim();
+                var languageInstructionOptions = new[]
+                {
+                    "English only", "Arabic only", "English + Arabic", "English + Spanish",
+                    "English + French", "English + Hindi", "English + Turkish", "English + German",
+                    "English + Portuguese", "English + Chinese (Mandarin)", "English + Russian",
+                    "English + Japanese", "English + Korean", "English + Italian", "English + Urdu",
+                    "English + Bengali", "English + Persian", "English + Indonesian", "English + Malay",
+                    "English + Dutch", "English + Swahili", "English + Tamil", "English + Punjabi",
+                    "English + Vietnamese", "English + Thai", "English + Filipino (Tagalog)",
+                    "English + Greek", "English + Polish", "English + Ukrainian"
+                };
+                var isKnownLanguageOption = languageInstructionOptions.Any(opt =>
+                    languageOfInstruction.Equals(opt, StringComparison.OrdinalIgnoreCase));
+                var isOtherLanguage = !string.IsNullOrWhiteSpace(languageOfInstruction)
+                    && !isKnownLanguageOption
+                    && !languageOfInstruction.Equals("Others", StringComparison.OrdinalIgnoreCase);
+                var showOtherLanguageInput = isOtherLanguage || languageOfInstruction.Equals("Others", StringComparison.OrdinalIgnoreCase);
+            }
+
+            <!-- ── Gate: Does this institution want to apply for Online Education? ── -->
+            <div class="online-gate" id="sec-gate">
+                <div class="online-gate-title">Does your institution want to apply for Online Education recognition?</div>
+                <div class="online-gate-sub">
+                    Select <strong>Yes</strong> to fill in the application. Select <strong>No</strong> to return to your dashboard.
+                </div>
+                <div class="online-gate-btns">
+                    <button type="button" class="gate-btn gate-btn-yes" id="gateYes" onclick="setGate(true)">
+                        <i class="fa-solid fa-circle-check"></i> Yes, Apply for Online Education
+                    </button>
+                    <button type="button" class="gate-btn gate-btn-no" id="gateNo" onclick="setGate(false)">
+                        <i class="fa-solid fa-circle-xmark"></i> No, Not at This Time
+                    </button>
+                </div>
+                <div class="decline-note" id="declineNote">
+                    <strong>No problem.</strong> You can always return to start an Online Education application when you are ready.
+                    <br><a href="@Url.Action("UniStatus", "Home")" style="color:#7f1627;font-weight:700;text-decoration:none;">← Return to Dashboard</a>
+                </div>
+            </div>
+
+            <!-- ===================== ENTIRE FORM STARTS HERE ===================== -->
+            <div class="online-form-sections" id="onlineFormSections">
+                <form method="post"
+                      asp-controller="Home"
+                      asp-action="SaveOnlineApplication"
+                      enctype="multipart/form-data"
+                      id="mainOnlineForm">
+
+                    <!-- ================= PUBLIC INFO ================= -->
+                    <section class="card" id="sec-general">
+                        <div class="card-hd">
+                            <h2>Public Info</h2>
+                            <p>Fields marked with (*) are required. Pre-filled from your previous application.</p>
+                        </div>
+                        <div class="card-bd">
+                            <div class="grid-2">
+                                <div class="field">
+                                    <label>Name of Institution <span class="req">*</span></label>
+                                    <input name="InstitutionName" value="@P.InstitutionName" />
+                                </div>
+                                <div class="field">
+                                    <label>Official Entity Possessing Oversight Rights</label>
+                                    <select name="OversightRightsEntity">
+                                        <option value="">-- Choose --</option>
+                                        <option selected="@(P.OversightRightsEntity == "Ministry")">Ministry</option>
+                                        <option selected="@(P.OversightRightsEntity == "Accreditation Body")">Accreditation Body</option>
+                                        <option selected="@(P.OversightRightsEntity == "Other")">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="field">
+                                    <label>Founding Date <span class="req">*</span></label>
+                                    <input name="FoundationDate" type="date" value="@P.FoundationDate" />
+                                </div>
+                                <div class="field">
+                                    <label>Date of Establishment <span class="req">*</span></label>
+                                    <input name="DateOfEstablishment" type="date" value="@P.DateOfEstablishment" />
+                                </div>
+                                <div class="field">
+                                    <label>Mode of Study <span class="req">*</span></label>
+                                    <select name="ModeOfStudy">
+                                        <option value="">-- Choose --</option>
+                                        <option selected="@(P.ModeOfStudy == "On-campus")">On-campus</option>
+                                        <option selected="@(P.ModeOfStudy == "Blended")">Blended</option>
+                                        <option value="Online" selected="@(P.ModeOfStudy == "Online")">Online</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label>Language of Instruction <span class="req">*</span></label>
+                                    <select name="LanguageOfInstruction" id="LanguageOfInstruction">
+                                        <option value="">-- Choose --</option>
+                                        @foreach (var langOpt in languageInstructionOptions)
+                                        {
+                                            <option value="@langOpt" selected="@(languageOfInstruction.Equals(langOpt, StringComparison.OrdinalIgnoreCase))">@langOpt</option>
+                                        }
+                                        <option value="Others" selected="@showOtherLanguageInput">Others</option>
+                                    </select>
+                                    <div id="LanguageOfInstructionOtherWrap" style="margin-top:10px; display:@(showOtherLanguageInput ? "block" : "none");">
+                                        <input type="text" name="LanguageOfInstructionOther" id="LanguageOfInstructionOther"
+                                               placeholder="Please specify"
+                                               value="@(isOtherLanguage ? languageOfInstruction : "")" />
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label>Start of Teaching <span class="req">*</span></label>
+                                    <input name="StartOfTeaching" type="date" value="@P.StartOfTeaching" />
+                                </div>
+                            </div>
+                            <div class="subhead">Information of President of Institution</div>
+                            <div class="grid-3">
+                                <div class="field">
+                                    <label>Name</label>
+                                    <input name="PresidentName" value="@P.PresidentName" />
+                                </div>
+                            </div>
+                            <div class="subhead">Contact Information</div>
+                            <div class="grid-2">
+                                <div class="field">
+                                    <label>Mailing Full Address <span class="req">*</span></label>
+                                    <input name="MailingFullAddress" value="@P.MailingFullAddress" />
+                                </div>
+                                <div class="field">
+                                    <label>Direct Phone Number <span class="req">*</span></label>
+                                    <input name="DirectPhoneNumber" value="@P.DirectPhoneNumber" inputmode="tel" />
+                                </div>
+                                <div class="field">
+                                    <label>Email Address <span class="req">*</span></label>
+                                    <input name="EmailAddress" value="@P.EmailAddress" type="email" />
+                                </div>
+                                <div class="field">
+                                    <label>Institutional Web Address <span class="req">*</span></label>
+                                    <input name="InstitutionalWebAddress" value="@P.InstitutionalWebAddress" type="url" placeholder="https://..." />
+                                </div>
+                                <div class="field">
+                                    <label><i class="fa-solid fa-location-dot" style="margin-right:4px;"></i> Location (Country / City) <span class="req">*</span></label>
+                                    <input name="Location" type="text" placeholder="Country / City"
+                                           value="@(!string.IsNullOrWhiteSpace(Model?.Location) ? Model.Location : P.City)" />
+                                </div>
+                            </div>
+                            <div class="actions" style="justify-content:center; margin-top:14px;">
+                                <button type="button" class="btn-primary" onclick="scrollToNext('sec-programs')">
+                                    Save Public Info →
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ================= ONLINE PROGRAMS ================= -->
+                    <section class="card" id="sec-programs">
+                        <div class="card-hd">
+                            <h2>Online Programs</h2>
+                            <p>Upload the list of online programs offered by the institution.</p>
+                        </div>
+                        <div class="card-bd">
+                            <div class="upload-card" style="max-width:480px;">
+                                <h3>Online Program Files <span class="req">*</span></h3>
+                                <input asp-for="ProgramFile" type="file" />
+                            </div>
+                            <div class="actions" style="justify-content:center; margin-top:20px;">
+                                <button type="button" class="btn-primary" onclick="scrollToNext('sec-students')">
+                                    Save Programs →
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ================= STUDENTS ================= -->
+                    <section class="card" id="sec-students">
+                        <div class="card-hd modern-hd">
+                            <div class="students-title-wrap">
+                                <div>
+                                    <h2>Number of Students</h2>
+                                    <p>Enter the total number of enrolled online students.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-bd students-modern-body">
+                            <div class="student-modern-row" style="border-bottom:none;">
+                                <div class="student-left">
+                                    <div class="student-mini-icon">
+                                        <i class="fa-solid fa-laptop"></i>
+                                    </div>
+                                    <div>
+                                        <label>Online Students <span class="required">*</span></label>
+                                        <small>Total enrolled online students</small>
+                                    </div>
+                                </div>
+                                <input asp-for="OnlineStudents" type="number" />
+                            </div>
+                            <div class="actions" style="justify-content:center; margin-top:20px;">
+                                <button type="button" class="btn-primary" onclick="scrollToNext('sec-faculty')">
+                                    Save Students →
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ================= FACULTY ================= -->
+                    <section class="card" id="sec-faculty">
+                        <div class="card-hd">
+                            <h2>Academic Staff</h2>
+                            <p>Academic staff assigned to online programs.</p>
+                        </div>
+                        <div class="card-bd">
+                            <div class="faculty-modern-card">
+                                <div class="faculty-modern-grid">
+                                    <div class="faculty-input-box">
+                                        <label><i class="fa-solid fa-chalkboard-user"></i> Professor</label>
+                                        <input asp-for="Professor" type="number" />
+                                    </div>
+                                    <div class="faculty-input-box">
+                                        <label><i class="fa-solid fa-user-graduate"></i> Associate Professor</label>
+                                        <input asp-for="AssociateProfessor" type="number" />
+                                    </div>
+                                    <div class="faculty-input-box">
+                                        <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor</label>
+                                        <input asp-for="AssistantProfessor" type="number" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="actions" style="justify-content:center; margin-top:20px;">
+                                <button type="button" class="btn-primary" onclick="scrollToNext('sec-user')">
+                                    Save Academic Staff →
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ================= USER INFO ================= -->
+                    <section class="card" id="sec-user">
+                        <div class="card-hd modern-applicant-hd">
+                            <div class="applicant-title-wrap">
+                                <div>
+                                    <h2>Applicant Information</h2>
+                                    <p>Please enter the official applicant details.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-bd applicant-modern-body">
+                            <div class="applicant-grid">
+                                <div class="applicant-field">
+                                    <label><i class="fa-solid fa-user"></i> Full Name</label>
+                                    <input asp-for="Name" type="text" placeholder="Enter applicant name" />
+                                </div>
+                                <div class="applicant-field">
+                                    <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+                                    <input asp-for="Email" type="email" placeholder="example@email.com" />
+                                </div>
+                            </div>
+                            <div class="submit-area">
+                                <button type="submit" class="submit-modern-btn">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                    Submit Application
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                </form>
+            </div>
+            <!-- ===================== ENTIRE FORM ENDS HERE ===================== -->
+
+            <footer class="foot">© Ministry of Higher Education</footer>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- DEV TEST TOOL — REMOVE BEFORE FINAL DELIVERY -->
+    <script src="~/js/uni/OnlineDevTestTool.js" asp-append-version="true"></script>
+
+    <script>
+        function setGate(yes) {
+            var formSections = document.getElementById('onlineFormSections');
+            var declineNote  = document.getElementById('declineNote');
+            var btnYes = document.getElementById('gateYes');
+            var btnNo  = document.getElementById('gateNo');
+
+            if (yes) {
+                formSections.classList.add('visible');
+                declineNote.classList.remove('visible');
+                btnYes.classList.add('selected');
+                btnNo.classList.remove('selected');
+                setTimeout(function () {
+                    document.getElementById('sec-general').scrollIntoView({ behavior: 'smooth' });
+                }, 80);
+            } else {
+                formSections.classList.remove('visible');
+                declineNote.classList.add('visible');
+                btnNo.classList.add('selected');
+                btnYes.classList.remove('selected');
+            }
+        }
+
+        document.getElementById('LanguageOfInstruction').addEventListener('change', function () {
+            var wrap = document.getElementById('LanguageOfInstructionOtherWrap');
+            wrap.style.display = this.value === 'Others' ? 'block' : 'none';
+        });
+
+        function scrollToNext(sectionId) {
+            var el = document.getElementById(sectionId);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        document.getElementById('mainOnlineForm')
+            ?.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var form = this;
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Application Submitted!',
+                    html: "<p style='font-size:14px;color:#555;margin:0'>Your online education application has been submitted successfully.<br>You will be redirected to your dashboard.</p>",
+                    confirmButtonText: 'Go to Dashboard',
+                    confirmButtonColor: '#7f1627',
+                    allowOutsideClick: false
+                }).then(function () {
+                    form.submit();
+                });
+            });
+    </script>
+
+</body>
+</html>

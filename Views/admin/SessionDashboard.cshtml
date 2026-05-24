@@ -6,6 +6,12 @@
                        .OrderBy(e => e.Workplace == "Ministry of Higher Education and Scientific Research" ? 0 : 1)
                        .ToList();
     var attendanceRaw = ViewBag.Attendance as Dictionary<int, bool> ?? new Dictionary<int, bool>();
+    string RowClass(string? t) => (t ?? "Bachelor") switch
+    {
+        "Postgraduate" => "app-row-postgraduate",
+        "Online"       => "app-row-online",
+        _              => "app-row-bachelor"
+    };
 }
 
 @{
@@ -325,6 +331,14 @@
         .btn-mc:hover { border-color: #7f1627; color: #7f1627; }
         .btn-mconf { flex: 1; padding: 12px; border: none; border-radius: 9px; background: #b91c1c; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
         .btn-mconf:hover { background: #991b1b; }
+
+        /* Application type — colored left border indicator */
+        tr.app-row-bachelor td:first-child    { border-left: 5px solid #3b82f6 !important; padding-left: 11px !important; }
+        tr.app-row-postgraduate td:first-child { border-left: 5px solid #8b5cf6 !important; padding-left: 11px !important; }
+        tr.app-row-online td:first-child       { border-left: 5px solid #10b981 !important; padding-left: 11px !important; }
+        .app-row-bachelor    { border-left: 5px solid #3b82f6 !important; }
+        .app-row-postgraduate { border-left: 5px solid #8b5cf6 !important; }
+        .app-row-online       { border-left: 5px solid #10b981 !important; }
     </style>
 </head>
 <body>
@@ -479,12 +493,23 @@
                             }
                         }
 
-                        <div class="uni-card @(hasDecision ? "decided" : "")">
+                        <div class="uni-card @(hasDecision ? "decided" : "") @RowClass(r.ApplicationType)">
                             <div class="uni-inner">
                                 <div class="uni-idx">@rowNum</div>
 
                                 <div class="uni-info">
-                                    <div class="uni-name">@(string.IsNullOrWhiteSpace(r.UniversityName) ? "Unnamed University" : r.UniversityName)</div>
+                                    <div class="uni-name" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                                        @(string.IsNullOrWhiteSpace(r.UniversityName) ? "Unnamed University" : r.UniversityName)
+                                        @{
+                                            var sdAtStyle = (r.ApplicationType ?? "Bachelor") switch
+                                            {
+                                                "Postgraduate" => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
+                                                "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
+                                                _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
+                                            };
+                                        }
+                                        <span style="display:inline-block;border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:700;@sdAtStyle">@(r.ApplicationType ?? "Bachelor")</span>
+                                    </div>
                                     <div class="uni-sub">
                                         @if (!string.IsNullOrWhiteSpace(r.Country))
                                         {

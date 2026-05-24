@@ -140,6 +140,11 @@
 
             </section>
 
+            @{
+                var P       = ViewBag.Public as DTOs.PublicInfoDto ?? new DTOs.PublicInfoDto();
+                var country = (ViewBag.Country as string) ?? "";
+            }
+
             <form id="onlineSystemForm"
                   method="post"
                   enctype="multipart/form-data">
@@ -161,7 +166,7 @@
 
                 <div class="field">
                     <label>Name of Institution <span class="req">*</span></label>
-                    <input name="InstitutionName" />
+                    <input name="InstitutionName" value="@P.InstitutionName" />
                 </div>
 
                 <div class="field">
@@ -170,9 +175,9 @@
                     <select name="OversightRightsEntity">
 
                         <option value="">-- Choose --</option>
-                        <option>Ministry</option>
-                        <option>Accreditation Body</option>
-                        <option>Other</option>
+                        <option selected="@(P.OversightRightsEntity == "Ministry")">Ministry</option>
+                        <option selected="@(P.OversightRightsEntity == "Accreditation Body")">Accreditation Body</option>
+                        <option selected="@(P.OversightRightsEntity == "Other")">Other</option>
 
                     </select>
                 </div>
@@ -183,12 +188,12 @@
 
                 <div class="field">
                     <label>Founding Date <span class="req">*</span></label>
-                    <input name="FoundationDate" type="date" />
+                    <input name="FoundationDate" type="date" value="@P.FoundationDate" />
                 </div>
 
                 <div class="field">
                     <label>Date of Establishment <span class="req">*</span></label>
-                    <input name="DateOfEstablishment" type="date" />
+                    <input name="DateOfEstablishment" type="date" value="@P.DateOfEstablishment" />
                 </div>
 
                 <div class="field">
@@ -210,12 +215,13 @@
                     <label>Language of Instruction <span class="req">*</span></label>
                     <input type="text"
                            name="LanguageOfInstruction"
+                           value="@P.LanguageOfInstruction"
                            placeholder="Example: English" />
                 </div>
 
                 <div class="field">
                     <label>Start of Teaching <span class="req">*</span></label>
-                    <input name="StartOfTeaching" type="date" />
+                    <input name="StartOfTeaching" type="date" value="@P.StartOfTeaching" />
                 </div>
 
             </div>
@@ -228,7 +234,7 @@
 
                 <div class="field">
                     <label>President Name</label>
-                    <input name="PresidentName" />
+                    <input name="PresidentName" value="@P.PresidentName" />
                 </div>
 
             </div>
@@ -241,24 +247,35 @@
 
                 <div class="field">
                     <label>Mailing Full Address <span class="req">*</span></label>
-                    <input name="MailingFullAddress" />
+                    <input name="MailingFullAddress" value="@P.MailingFullAddress" />
                 </div>
 
                 <div class="field">
                     <label>Direct Phone Number <span class="req">*</span></label>
-                    <input name="DirectPhoneNumber" inputmode="tel" />
+                    <input name="DirectPhoneNumber" inputmode="tel" value="@P.DirectPhoneNumber" />
                 </div>
 
                 <div class="field">
                     <label>Email Address <span class="req">*</span></label>
-                    <input name="EmailAddress" type="email" />
+                    <input name="EmailAddress" type="email" value="@P.EmailAddress" />
                 </div>
 
                 <div class="field">
                     <label>Institutional Web Address <span class="req">*</span></label>
                     <input name="InstitutionalWebAddress"
                            type="url"
-                           placeholder="https://..." />
+                           placeholder="https://..."
+                           value="@P.InstitutionalWebAddress" />
+                </div>
+
+                <div class="field">
+                    <label>Country</label>
+                    <input name="Country" value="@country" />
+                </div>
+
+                <div class="field">
+                    <label>City</label>
+                    <input name="City" value="@P.City" />
                 </div>
 
             </div>
@@ -271,9 +288,7 @@
                             <button type="button"
                                     class="btn-primary"
                                     onclick="saveOnlineSystem('sec-duration')">
-
                                 Save Public Info →
-
                             </button>
 
             </div>
@@ -346,10 +361,8 @@
 
                 <button type="button"
                         class="btn-primary"
-                        onclick="scrollToNext('sec-communication')">
-
+                        onclick="saveOnlineSystem('sec-communication')">
                     Save Study Duration →
-
                 </button>
 
             </div>
@@ -443,10 +456,8 @@
 
                 <button type="button"
                         class="btn-primary"
-                        onclick="scrollToNext('sec-exams')">
-
+                        onclick="saveOnlineSystem('sec-online-staff')">
                     Save Communication →
-
                 </button>
 
             </div>
@@ -682,10 +693,8 @@
 
                             <button type="button"
                                     class="btn-primary"
-                                    onclick="saveOnlineSystem()">
-
+                                    onclick="saveOnlineSystem('sec-exams')">
                                 Save Online Academic Staff →
-
                             </button>
 
                         </div>
@@ -823,10 +832,8 @@ Istanbul - Turkey"></textarea>
 
                 <button type="button"
                         class="btn-primary"
-                        onclick="scrollToNext('sec-platform')">
-
+                        onclick="saveOnlineSystem('sec-platform')">
                     Save Examination System →
-
                 </button>
 
             </div>
@@ -974,7 +981,6 @@ Istanbul - Turkey"></textarea>
     </div>
     <script src="~/js/uni/OnlineSys.js"
             asp-append-version="true"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

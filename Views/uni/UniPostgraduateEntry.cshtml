@@ -179,9 +179,19 @@
                                 <label>Institutional Web Address <span class="req">*</span></label>
                                 <input name="InstitutionalWebAddress" value="@P.InstitutionalWebAddress" type="url" placeholder="https://..." />
                             </div>
+                            <div class="field">
+                                <label><i class="fa-solid fa-earth-americas" style="margin-right:4px;"></i> Country <span class="req">*</span></label>
+                                <input name="Country" type="text" placeholder="Country"
+                                       value="@(!string.IsNullOrWhiteSpace(Model?.Country) ? Model.Country : (ViewBag.Country as string ?? ""))" />
+                            </div>
+                            <div class="field">
+                                <label><i class="fa-solid fa-location-dot" style="margin-right:4px;"></i> City <span class="req">*</span></label>
+                                <input name="City" type="text" placeholder="City"
+                                       value="@(!string.IsNullOrWhiteSpace(Model?.City) ? Model.City : (ViewBag.City as string ?? ""))" />
+                            </div>
                         </div>
                         <div class="actions" style="justify-content:center; margin-top:14px;">
-                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-programs')">
+                            <button type="button" id="btnSavePublic" class="btn-primary">
                                 Save Public Info →
                             </button>
                         </div>
@@ -223,7 +233,7 @@
                             </div>
                         </div>
                         <div class="actions" style="justify-content:center; margin-top:20px;">
-                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-students')">
+                            <button type="button" id="btnSavePrograms" class="btn-primary">
                                 Save Programs →
                             </button>
                         </div>
@@ -278,7 +288,7 @@
                             <input asp-for="DiplomaStudents" type="number" />
                         </div>
                         <div class="actions" style="justify-content:center; margin-top:20px;">
-                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-faculty')">
+                            <button type="button" id="btnSaveStudents" class="btn-primary">
                                 Save Students →
                             </button>
                         </div>
@@ -364,7 +374,7 @@
                             </div>
                         </div>
                         <div class="actions" style="justify-content:center; margin-top:20px;">
-                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-user')">
+                            <button type="button" id="btnSaveFaculty" class="btn-primary">
                                 Save Academic Staff →
                             </button>
                         </div>
@@ -377,7 +387,7 @@
                         <div class="applicant-title-wrap">
                             <div>
                                 <h2>Applicant Information</h2>
-                                <p>Please enter the official applicant details.</p>
+                                <p>Review and confirm the applicant details for this request.</p>
                             </div>
                         </div>
                     </div>
@@ -385,22 +395,37 @@
                         <div class="applicant-grid">
                             <div class="applicant-field">
                                 <label><i class="fa-solid fa-user"></i> Full Name</label>
-                                <input asp-for="Name" type="text" placeholder="Enter applicant name" />
+                                <input asp-for="Name" type="text" placeholder="Enter applicant name"
+                                       value="@(ViewBag.ApplicantName ?? "")" />
                             </div>
                             <div class="applicant-field">
-                                <label><i class="fa-solid fa-envelope"></i> Email Address</label>
-                                <input asp-for="Email" type="email" placeholder="example@email.com" />
-                            </div>
-                            <div class="applicant-field full-width">
-                                <label><i class="fa-solid fa-location-dot"></i> Location</label>
-                                <input asp-for="Location" type="text" placeholder="Country / City" />
+                                <label><i class="fa-solid fa-building"></i> Work Place</label>
+                                <input asp-for="WorkPlace" type="text" placeholder="Enter work place"
+                                       value="@(ViewBag.WorkPlace ?? "")" />
                             </div>
                         </div>
-                        <div class="submit-area">
-                            <!-- ✅ ONLY this button submits the form -->
-                            <button type="submit" class="submit-modern-btn">
-                                <i class="fa-solid fa-paper-plane"></i>
-                                Submit Application
+
+                        <!-- Online Education question -->
+                        <div style="margin-top:12px;">
+                            <label style="font-weight:600; display:block; margin-bottom:6px;">
+                                Would you like to continue to Online Education Recognition?
+                            </label>
+
+                            <label style="margin-right:12px;">
+                                <input type="radio" name="ApplyOnline" value="yes" id="applyOnlineYes" /> Yes
+                            </label>
+
+                            <label>
+                                <input type="radio" name="ApplyOnline" value="no" id="applyOnlineNo" checked /> No
+                            </label>
+                        </div>
+
+                        <div style="display:flex; justify-content:flex-start; margin-top:18px; gap:12px;">
+                            <button type="submit" id="btnSubmitPostgrad" class="btn-primary">
+                                Finish Submission
+                            </button>
+                            <button type="submit" id="btnContinueOnline" class="btn-primary" style="display:none;">
+                                Save &amp; Continue to Online Education
                             </button>
                         </div>
                     </div>
@@ -416,6 +441,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/uni/PostgraduatePrograms.js" asp-append-version="true"></script>
+
+    <!-- DEV TEST TOOL — REMOVE BEFORE FINAL DELIVERY -->
+    <script src="~/js/uni/PostgraduateDevTestTool.js" asp-append-version="true"></script>
 
     <script>
         function scrollToNext(sectionId) {

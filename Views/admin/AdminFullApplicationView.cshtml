@@ -82,6 +82,20 @@
         _ => string.IsNullOrWhiteSpace(normalizedType) ? "—" : normalizedType
     };
 
+    // Section 12 — University Recognition and Accreditation (from UniRecAcc, not Hospitals.Documents)
+    var uraRawDocs = (Model.UniRecAcc?.Documents ?? new List<UniRecAccDocumentDto>())
+        .Where(x => !string.IsNullOrWhiteSpace(x.FileUrl))
+        .OrderBy(x => x.DocumentType)
+        .ThenByDescending(x => x.UploadedAt ?? DateTime.MinValue)
+        .ToList();
+
+    var localRecognitionDocs = uraRawDocs.Where(x => string.Equals(x.DocumentType, "LocalRecognition", StringComparison.OrdinalIgnoreCase)).ToList();
+    var localAccreditationDocs = uraRawDocs.Where(x => string.Equals(x.DocumentType, "LocalAccreditation", StringComparison.OrdinalIgnoreCase)).ToList();
+    var regionalAccreditationDocs = uraRawDocs.Where(x => string.Equals(x.DocumentType, "RegionalAccreditation", StringComparison.OrdinalIgnoreCase)).ToList();
+    var internationalAccreditationDocs = uraRawDocs.Where(x => string.Equals(x.DocumentType, "InternationalAccreditation", StringComparison.OrdinalIgnoreCase)).ToList();
+    var otherAccreditationDocs = uraRawDocs.Where(x => string.Equals(x.DocumentType, "OtherAccreditation", StringComparison.OrdinalIgnoreCase)).ToList();
+
+    // Hospital agreement docs still come from Hospitals.Documents
     var typedHospDocs = (Model.Hospitals?.Documents ?? new List<HospitalFileDto>())
         .Where(x => !string.IsNullOrWhiteSpace(x.FileUrl))
         .Select(x => new { Doc = x, Type = NormalizeHospitalDocType(x.DocumentType) })
@@ -91,11 +105,6 @@
         .ThenBy(x => x.Doc.OriginalFileName)
         .ToList();
 
-    var localRecognitionDocs = typedHospDocs.Where(x => x.Type == "LocalRecognition").Select(x => x.Doc).ToList();
-    var localAccreditationDocs = typedHospDocs.Where(x => x.Type == "LocalAccreditation").Select(x => x.Doc).ToList();
-    var regionalAccreditationDocs = typedHospDocs.Where(x => x.Type == "RegionalAccreditation").Select(x => x.Doc).ToList();
-    var internationalAccreditationDocs = typedHospDocs.Where(x => x.Type == "InternationalAccreditation").Select(x => x.Doc).ToList();
-    var otherAccreditationDocs = typedHospDocs.Where(x => x.Type == "OtherAccreditation").Select(x => x.Doc).ToList();
     var hospitalAgreementDocs = typedHospDocs.Where(x => x.Type == "HospitalAgreement").Select(x => x.Doc).ToList();
     var facilityAgreementDocs = hospitalAgreementDocs
         .Where(x => !string.IsNullOrWhiteSpace(x.FacilityId))
@@ -371,6 +380,18 @@
             .fg { grid-template-columns: 1fr 1fr; }
             .fg-4, .stat-grid, .score-grid { grid-template-columns: 1fr 1fr; }
         }
+        .field-empty { color: #9ca3af; font-size: 13px; font-style: italic; margin: 4px 0 0; }
+        .ro-note-block {
+            background: #fdfaf8;
+            border: 1px solid #e8dfd8;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #3d2e2e;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>
@@ -446,6 +467,7 @@
             <a class="sid-link" href="#sec-library"><span class="sid-num">10</span> Library</a>
             <a class="sid-link" href="#sec-photos"><span class="sid-num">11</span> Photos / Media</a>
             <a class="sid-link" href="#sec-documents"><span class="sid-num">12</span> Recognition &amp; Accreditation</a>
+            <a class="sid-link" href="#sec-additional-notes"><span class="sid-num">13</span> Additional Notes</a>
 
             @if (showRec)
             {
@@ -1356,7 +1378,7 @@
                                 {
                                     <tr>
                                         <td>@V(doc.OriginalFileName)</td>
-                                        <td>@HospitalDocLabel(typedHospDocs.FirstOrDefault(x => x.Doc == doc)?.Type ?? "")</td>
+                                        <td>@HospitalDocLabel(doc.DocumentType ?? "")</td>
                                         <td><div style="display:flex;gap:6px;flex-wrap:wrap;"><a class="btn-view" href="@doc.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a><a class="btn-view" href="@doc.FileUrl" download="@doc.OriginalFileName"><i class="bi bi-download"></i> Download</a></div></td>
                                     </tr>
                                 }
@@ -1367,6 +1389,69 @@
             </div>
         </div>
         }
+
+
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <!-- SECTION 13 — ADDITIONAL NOTES AND SUPPORTING FILES        -->
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <div class="section-card" id="sec-additional-notes">
+            <div class="sec-hd">
+                <div class="sec-num">13</div>
+                <div>
+                    <h2>Additional Notes and Supporting Files</h2>
+                    <p>Optional note and files submitted by the university with the application</p>
+                </div>
+            </div>
+            <div class="sec-bd">
+                <div class="sub-hd">Additional Note</div>
+                @if (string.IsNullOrWhiteSpace(Model.AdditionalNote))
+                {
+                    <p class="field-empty">No additional note provided.</p>
+                }
+                else
+                {
+                    <div class="ro-note-block">@Model.AdditionalNote</div>
+                }
+
+                <div class="sub-hd" style="margin-top:18px;">Supporting Files</div>
+                @{
+                    var addFiles = Model.AdditionalFiles ?? new List<AdditionalFileDto>();
+                }
+                @if (!addFiles.Any())
+                {
+                    <p class="field-empty">No additional supporting files uploaded.</p>
+                }
+                else
+                {
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Type</th>
+                                    <th style="width:160px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var af in addFiles)
+                                {
+                                    <tr>
+                                        <td>@V(af.FileName)</td>
+                                        <td><span style="font-size:11px;font-weight:700;color:#7f1627;background:#fce8eb;border-radius:4px;padding:2px 6px;">@V(af.FileType)</span></td>
+                                        <td>
+                                            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                                <a class="btn-view" href="@af.FileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
+                                                <a class="btn-view" href="@af.FileUrl" download="@af.FileName"><i class="bi bi-download"></i> Download</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
 
 
         <!-- ══════════════════════════════════════════════════════════ -->

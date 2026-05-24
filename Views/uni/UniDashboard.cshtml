@@ -1,6 +1,11 @@
 @using DTOs
 @{
     Layout = null;
+    var _academicForMedical = ViewBag.Academic as DTOs.AcademicInfoDto ?? new DTOs.AcademicInfoDto();
+    var hasMedical = (_academicForMedical.CollegeCategoriesCsv ?? "")
+        .Split(';', StringSplitOptions.RemoveEmptyEntries)
+        .Select(x => x.Trim())
+        .Any(x => x.Equals("Medical", StringComparison.OrdinalIgnoreCase));
 }
 
 <!doctype html>
@@ -60,8 +65,8 @@
             <a class="side-item" href="#sec-admission-duration">Admission Requirements and Study Duration</a>
             <a class="side-item" href="#sec-faculties">Colleges</a>
             <a class="side-item" href="#sec-programs">Programs</a>
-            <a class="side-item" href="#sec-med">Medicine Colleges</a>
-            <a class="side-item" href="#sec-hosp">Hospitals</a>
+            <a class="side-item" id="side-med" href="#sec-med">Medicine Colleges <span class="side-na-tag" style="display:none">(Not Required)</span></a>
+            <a class="side-item" id="side-hosp" href="#sec-hosp">Hospitals <span class="side-na-tag" style="display:none">(Not Required)</span></a>
             <a class="side-item" href="#sec-infra">University Infrastructure</a>
             <a class="side-item" href="#sec-labs">Laboratories</a>
             <a class="side-item" href="#sec-library">Library</a>
@@ -873,7 +878,7 @@
                 <section id="sec-admission-duration" class="card">
                     <div class="card-hd">
                         <h2>Admission Requirements and Study Duration</h2>
-                        <p>Upload optional sample requirement PDFs and enter study duration by qualification level.</p>
+                        <p>Both the study duration and the sample requirement PDF are <strong>required</strong> for each selected degree.</p>
                     </div>
 
                     <div class="card-bd">
@@ -881,66 +886,70 @@
                             var D = (DTOs.StudyDurationDto)(ViewBag.Duration ?? new DTOs.StudyDurationDto());
                         }
 
+                        <p id="adm-no-degrees-msg" style="color:#888; font-size:.9rem; margin-bottom:1rem; display:none;">
+                            No degrees selected yet. Please select the degrees your institution offers in the Academic Information section above.
+                        </p>
+
                         <div class="adm-study-grid">
-                            <article class="adm-study-card">
+                            <article class="adm-study-card" id="adm-card-diploma" style="display:@(A.DegreeDiploma ? "block" : "none")">
                                 <h3>Diploma</h3>
                                 <div class="field">
-                                    <label>Upload sample requirement PDF (optional)</label>
+                                    <label>Upload sample requirement PDF <span style="color:#e53e3e;">*</span></label>
                                     <input type="file" name="AdmissionStudy.DiplomaSamplePdf" accept=".pdf,application/pdf" />
                                 </div>
                                 <div class="field">
-                                    <label>Study duration</label>
+                                    <label>Study duration <span style="color:#e53e3e;">*</span></label>
                                     <input type="text" name="AdmissionStudy.DiplomaDuration" value="@(string.IsNullOrWhiteSpace(D.DiplomaObtain) ? D.DiplomaEnrollment : D.DiplomaObtain)" placeholder="e.g., 2 years" />
                                 </div>
                             </article>
 
-                            <article class="adm-study-card">
+                            <article class="adm-study-card" id="adm-card-bsc" style="display:@(A.DegreeBSC ? "block" : "none")">
                                 <h3>BSc</h3>
                                 <div class="field">
-                                    <label>Upload sample requirement PDF (optional)</label>
+                                    <label>Upload sample requirement PDF <span style="color:#e53e3e;">*</span></label>
                                     <input type="file" name="AdmissionStudy.BScSamplePdf" accept=".pdf,application/pdf" />
                                 </div>
                                 <div class="field">
-                                    <label>Study duration</label>
+                                    <label>Study duration <span style="color:#e53e3e;">*</span></label>
                                     <input type="text" name="AdmissionStudy.BScDuration" value="@(string.IsNullOrWhiteSpace(D.BachelorObtain) ? D.BachelorEnrollment : D.BachelorObtain)" placeholder="e.g., 4 years" />
                                 </div>
                             </article>
 
-                            <article class="adm-study-card">
+                            <article class="adm-study-card" id="adm-card-higherdiploma" style="display:@(A.DegreeHigherDiploma ? "block" : "none")">
                                 <h3>Higher Diploma</h3>
                                 <div class="field">
-                                    <label>Upload sample requirement PDF (optional)</label>
+                                    <label>Upload sample requirement PDF <span style="color:#e53e3e;">*</span></label>
                                     <input type="file" name="AdmissionStudy.HigherDiplomaSamplePdf" accept=".pdf,application/pdf" />
                                 </div>
                                 <div class="field">
-                                    <label>Study duration</label>
+                                    <label>Study duration <span style="color:#e53e3e;">*</span></label>
                                     <input type="text" name="AdmissionStudy.HigherDiplomaDuration" value="@(string.IsNullOrWhiteSpace(D.HigherDiplomaObtain) ? D.HigherDiplomaEnrollment : D.HigherDiplomaObtain)" placeholder="e.g., 1 year" />
                                 </div>
                             </article>
 
-                            <article class="adm-study-card">
+                            <article class="adm-study-card" id="adm-card-master" style="display:@(A.DegreeMaster ? "block" : "none")">
                                 <h3>Master</h3>
                                 <div class="field">
-                                    <label>Upload sample requirement PDF (optional)</label>
+                                    <label>Upload sample requirement PDF <span style="color:#e53e3e;">*</span></label>
                                     <input type="file" name="AdmissionStudy.MasterSamplePdf" accept=".pdf,application/pdf" />
                                 </div>
                                 <div class="field">
-                                    <label>Study duration</label>
+                                    <label>Study duration <span style="color:#e53e3e;">*</span></label>
                                     <input type="text" name="AdmissionStudy.MasterDuration" value="@(string.IsNullOrWhiteSpace(D.MasterObtain) ? D.MasterEnrollment : D.MasterObtain)" placeholder="e.g., 2 years" />
                                 </div>
                             </article>
 
-                            <article class="adm-study-card">
+                            <article class="adm-study-card" id="adm-card-phd" style="display:@(A.DegreePhD ? "block" : "none")">
                                 <h3>PhD</h3>
                                 <div class="field">
-                                    <label>Upload sample requirement PDF (optional)</label>
+                                    <label>Upload sample requirement PDF <span style="color:#e53e3e;">*</span></label>
                                     <input type="file" name="AdmissionStudy.PhDSamplePdf" accept=".pdf,application/pdf" />
                                 </div>
                                 <div class="field">
-                                    <label>Study duration</label>
+                                    <label>Study duration <span style="color:#e53e3e;">*</span></label>
                                     <input type="text" name="AdmissionStudy.PhDDuration" value="@(string.IsNullOrWhiteSpace(D.PhDObtain) ? D.PhDEnrollment : D.PhDObtain)" placeholder="e.g., 3 years" />
-                                </div>
-                            </article>
+                                    </div>
+                                </article>
                         </div>
 
                         <div class="actions" style="justify-content:center; margin-top:14px;">
@@ -1011,30 +1020,56 @@
 
                     <!-- ---------------------- Medicine and Dentistry------------------ -->
                     <section id="sec-med" class="card">
-                        <div class="card-hd"><h2>Medicine Colleges</h2></div>
+                        <div class="card-hd">
+                            <h2>Medicine Colleges <span id="med-na-badge" class="section-na-badge" style="display:@(hasMedical ? "none" : "inline-flex")">Not Required</span></h2>
+                            <p id="med-na-desc" style="display:@(hasMedical ? "none" : "block"); color:#6b7280;">Select "Medical Colleges" in Academic Info to enable this section.</p>
+                        </div>
 
                         <div class="card-bd">
-                            <div id="medDenContainer"
-                                 data-partial-url="@Url.Action("MedicineDentistryPartial", "Home")"
-                                 data-save-url="@Url.Action("MedicineDentistrySave", "Home")"
-                                 data-after-save="#sec-hosp">
+                            <div id="med-na-overlay" class="section-na-overlay" style="display:@(hasMedical ? "none" : "flex")">
+                                <div class="na-icon-wrap">🏥</div>
+                                <strong>Not Required</strong>
+                                <p>This section is only required if your institution has <strong>Medical Colleges</strong>. Go to <a href="#sec-academic" onclick="event.preventDefault();document.getElementById('sec-academic').scrollIntoView({behavior:'smooth'})">Academic Info</a> and select "Medical Colleges" to enable it.</p>
                             </div>
 
-                            <div class="medden-actions">
-                                <button type="button" class="btn-primary medden-save-btn" onclick="MedDenSave()">Save</button>
+                            <div id="med-real-content" style="display:@(hasMedical ? "block" : "none")">
+                                <div id="medDenContainer"
+                                     data-partial-url="@Url.Action("MedicineDentistryPartial", "Home")"
+                                     data-save-url="@Url.Action("MedicineDentistrySave", "Home")"
+                                     data-after-save="#sec-hosp">
+                                </div>
+
+                                <div class="medden-actions">
+                                    <button type="button" class="btn-primary medden-save-btn" onclick="MedDenSave()">Save</button>
+                                </div>
                             </div>
                         </div>
                     </section>
 
                     <!-- ---------------------- Hospitals ------------------ -->
                     <section id="sec-hosp" class="card">
-                        <div id="hospitalsContainer"
-                             data-load-url="@Url.Action("HospitalsPartial", "Home")"
-                             data-facility-add-url="@Url.Action("AddHospital", "Home")"
-                             data-facility-update-url="@Url.Action("UpdateHospital", "Home")"
-                             data-facility-delete-url="@Url.Action("DeleteHospital", "Home")"
-                             data-docs-save-url="@Url.Action("SaveHospitalDocuments", "Home")"
-                             data-docs-delete-url="@Url.Action("DeleteHospitalDocument", "Home")">
+                        <div class="card-hd">
+                            <h2>Hospitals <span id="hosp-na-badge" class="section-na-badge" style="display:@(hasMedical ? "none" : "inline-flex")">Not Required</span></h2>
+                            <p id="hosp-na-desc" style="display:@(hasMedical ? "none" : "block"); color:#6b7280;">Select "Medical Colleges" in Academic Info to enable this section.</p>
+                        </div>
+
+                        <div class="card-bd">
+                            <div id="hosp-na-overlay" class="section-na-overlay" style="display:@(hasMedical ? "none" : "flex")">
+                                <div class="na-icon-wrap">🏥</div>
+                                <strong>Not Required</strong>
+                                <p>This section is only required if your institution has <strong>Medical Colleges</strong>. Go to <a href="#sec-academic" onclick="event.preventDefault();document.getElementById('sec-academic').scrollIntoView({behavior:'smooth'})">Academic Info</a> and select "Medical Colleges" to enable it.</p>
+                            </div>
+
+                            <div id="hosp-real-content" style="display:@(hasMedical ? "block" : "none")">
+                                <div id="hospitalsContainer"
+                                     data-load-url="@Url.Action("HospitalsPartial", "Home")"
+                                     data-facility-add-url="@Url.Action("AddHospital", "Home")"
+                                     data-facility-update-url="@Url.Action("UpdateHospital", "Home")"
+                                     data-facility-delete-url="@Url.Action("DeleteHospital", "Home")"
+                                     data-docs-save-url="@Url.Action("SaveHospitalDocuments", "Home")"
+                                     data-docs-delete-url="@Url.Action("DeleteHospitalDocument", "Home")">
+                                </div>
+                            </div>
                         </div>
                     </section>
 
@@ -1106,8 +1141,8 @@
                     <div class="card-bd">
                         <div id="uniRecAccContainer"
                              data-load-url="@Url.Action("UniversityRecognitionAccreditationPartial", "Home")"
-                             data-docs-save-url="@Url.Action("SaveHospitalDocuments", "Home")"
-                             data-docs-delete-url="@Url.Action("DeleteHospitalDocument", "Home")">
+                             data-docs-save-url="@Url.Action("SaveUniversityRecognitionDocuments", "Home")"
+                             data-docs-delete-url="@Url.Action("DeleteUniversityRecognitionDocument", "Home")">
                         </div>
                     </div>
                 </section>
@@ -1124,7 +1159,9 @@
                         <!-- Submit Application -->
                         <div id="submitApplicationContainer"
                              data-load-url="@Url.Action("SubmitApplicationPartial", "Home")"
-                             data-save-url="@Url.Action("SaveSubmitApplication", "Home")">
+                             data-save-url="@Url.Action("SaveSubmitApplication", "Home")"
+                             data-upload-additional-url="@Url.Action("UploadAdditionalFile", "Home")"
+                             data-delete-additional-url="@Url.Action("DeleteAdditionalFile", "Home")">
 
                             @await Html.PartialAsync(
                             "Partial_Views/_SubmitApplication",
@@ -1229,6 +1266,47 @@
                 const sec = document.getElementById("sec-admission-duration");
                 if (!sec) return;
 
+                // ── Validation: duration + PDF required for every visible degree card ──
+                const cardFields = [
+                    { cardId: 'adm-card-diploma',      durationName: 'AdmissionStudy.DiplomaDuration',       pdfName: 'AdmissionStudy.DiplomaSamplePdf',       label: 'Diploma' },
+                    { cardId: 'adm-card-bsc',           durationName: 'AdmissionStudy.BScDuration',           pdfName: 'AdmissionStudy.BScSamplePdf',           label: 'BSc' },
+                    { cardId: 'adm-card-higherdiploma', durationName: 'AdmissionStudy.HigherDiplomaDuration', pdfName: 'AdmissionStudy.HigherDiplomaSamplePdf', label: 'Higher Diploma' },
+                    { cardId: 'adm-card-master',        durationName: 'AdmissionStudy.MasterDuration',        pdfName: 'AdmissionStudy.MasterSamplePdf',        label: 'Master' },
+                    { cardId: 'adm-card-phd',           durationName: 'AdmissionStudy.PhDDuration',           pdfName: 'AdmissionStudy.PhDSamplePdf',           label: 'PhD' },
+                ];
+                const missingDuration = [], missingPdf = [];
+                cardFields.forEach(f => {
+                    const card = document.getElementById(f.cardId);
+                    if (!card || card.style.display === 'none') return;
+
+                    const durationInput = sec.querySelector(`input[name="${f.durationName}"]`);
+                    if (durationInput) {
+                        if (!durationInput.value.trim()) {
+                            durationInput.style.borderColor = '#dc2626';
+                            durationInput.style.boxShadow   = '0 0 0 2px rgba(220,38,38,.25)';
+                            missingDuration.push(f.label);
+                        } else {
+                            durationInput.style.borderColor = '';
+                            durationInput.style.boxShadow   = '';
+                        }
+                    }
+
+                    const pdfInput = sec.querySelector(`input[name="${f.pdfName}"]`);
+                    if (pdfInput && !pdfInput.files?.length) {
+                        pdfInput.style.outline = '2px solid #dc2626';
+                        missingPdf.push(f.label);
+                    } else if (pdfInput) {
+                        pdfInput.style.outline = '';
+                    }
+                });
+                if (missingDuration.length > 0 || missingPdf.length > 0) {
+                    const parts = [];
+                    if (missingDuration.length) parts.push(`Study duration missing for: ${missingDuration.join(', ')}`);
+                    if (missingPdf.length) parts.push(`Sample PDF missing for: ${missingPdf.join(', ')}`);
+                    window.showAppToast?.(parts.join(' | '), 'error');
+                    return;
+                }
+
                 const diploma = sec.querySelector('input[name="AdmissionStudy.DiplomaDuration"]')?.value?.trim() || "";
                 const bsc = sec.querySelector('input[name="AdmissionStudy.BScDuration"]')?.value?.trim() || "";
                 const higherDiploma = sec.querySelector('input[name="AdmissionStudy.HigherDiplomaDuration"]')?.value?.trim() || "";
@@ -1270,18 +1348,27 @@
                         body: body.toString()
                     });
 
+                    if (!durationRes.ok) {
+                        const errText = await durationRes.text().catch(() => "");
+                        window.showAppToast?.("Save failed (duration): " + (errText || durationRes.status), "error");
+                        return;
+                    }
+
                     const admissionRes = await fetch("@Url.Action("SaveAdmissionStudyFromUni", "Home")", {
                         method: "POST",
                         body: formData
                     });
 
-                    if (!durationRes.ok || !admissionRes.ok) {
-                        throw new Error("Save failed");
+                    if (!admissionRes.ok) {
+                        const errText = await admissionRes.text().catch(() => "");
+                        window.showAppToast?.("Save failed (admission): " + (errText || admissionRes.status), "error");
+                        return;
                     }
+
                     window.showAppToast?.("Saved successfully.", "success");
                     window.scrollToNextSection("sec-admission-duration");
                 } catch (err) {
-                    window.showAppToast?.("Save failed. Please try again.", "error");
+                    window.showAppToast?.("Save failed: " + err.message, "error");
                 } finally {
                     btn.disabled = false;
                 }
@@ -1289,9 +1376,33 @@
 
             document.addEventListener("DOMContentLoaded", function () {
                 const btn = document.getElementById("btnSaveAdmissionRequirement");
-                if (!btn) return;
+                if (btn) btn.addEventListener("click", saveAdmissionStudyDurations);
 
-                btn.addEventListener("click", saveAdmissionStudyDurations);
+                // Sync degree checkboxes → admission cards live
+                const degreeMap = {
+                    'DegreeDiploma':      'adm-card-diploma',
+                    'DegreeBSC':          'adm-card-bsc',
+                    'DegreeHigherDiploma':'adm-card-higherdiploma',
+                    'DegreeMaster':       'adm-card-master',
+                    'DegreePhD':          'adm-card-phd',
+                };
+                function syncAdmissionCards() {
+                    let anyVisible = false;
+                    Object.entries(degreeMap).forEach(([cbName, cardId]) => {
+                        const cb   = document.querySelector(`input[name="${cbName}"]`);
+                        const card = document.getElementById(cardId);
+                        if (!cb || !card) return;
+                        card.style.display = cb.checked ? 'block' : 'none';
+                        if (cb.checked) anyVisible = true;
+                    });
+                    const msg = document.getElementById('adm-no-degrees-msg');
+                    if (msg) msg.style.display = anyVisible ? 'none' : 'block';
+                }
+                Object.keys(degreeMap).forEach(cbName => {
+                    const cb = document.querySelector(`input[name="${cbName}"]`);
+                    if (cb) cb.addEventListener('change', syncAdmissionCards);
+                });
+                syncAdmissionCards();
             });
         })();
     </script>
@@ -1331,6 +1442,53 @@
 
         });
     </script>
+    <script>
+        // ── Medical Sections: show/hide based on "Medical" college category ──────
+        (function () {
+            function hasMedicalSelected() {
+                const csv = document.getElementById('CollegeCategoriesCsv')?.value || '';
+                return csv.split(';').some(s => s.trim() === 'Medical');
+            }
+
+            function syncMedicalSections() {
+                const medical = hasMedicalSelected();
+
+                // Section overlays / content wrappers
+                const ids = [
+                    { overlay: 'med-na-overlay',  content: 'med-real-content',  badge: 'med-na-badge',  desc: 'med-na-desc',  side: 'side-med'  },
+                    { overlay: 'hosp-na-overlay', content: 'hosp-real-content', badge: 'hosp-na-badge', desc: 'hosp-na-desc', side: 'side-hosp' },
+                ];
+                ids.forEach(({ overlay, content, badge, desc, side }) => {
+                    const ov  = document.getElementById(overlay);
+                    const ct  = document.getElementById(content);
+                    const bg  = document.getElementById(badge);
+                    const ds  = document.getElementById(desc);
+                    const si  = document.getElementById(side);
+
+                    if (ov)  ov.style.display  = medical ? 'none'         : 'flex';
+                    if (ct)  ct.style.display  = medical ? 'block'        : 'none';
+                    if (bg)  bg.style.display  = medical ? 'none'         : 'inline-flex';
+                    if (ds)  ds.style.display  = medical ? 'none'         : 'block';
+                    if (si) {
+                        const tag = si.querySelector('.side-na-tag');
+                        if (tag) tag.style.display = medical ? 'none' : 'inline';
+                        si.classList.toggle('side-item--na', !medical);
+                    }
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                syncMedicalSections();
+                // Re-sync whenever a college-category checkbox changes
+                document.querySelectorAll('input[data-group="college-categories"]').forEach(cb => {
+                    cb.addEventListener('change', syncMedicalSections);
+                });
+            });
+
+            // Expose for SubmitApplication.js validation
+            window.hasMedicalSelected = hasMedicalSelected;
+        })();
+    </script>
     <script src="~/js/uni/UniDashboard.js" asp-append-version="true"></script> 
     <script src="~/js/uni/PublicInfo.js" asp-append-version="true"></script> 
     <script src="~/js/uni/AcademicInfo.js" asp-append-version="true"></script>
@@ -1349,6 +1507,90 @@
 
     <!-- DEV TEST TOOL — REMOVE BEFORE FINAL DELIVERY -->
     <script src="~/js/uni/DevTestTool.js" asp-append-version="true"></script>
+
+    <!-- Completeness Check Modal -->
+    <div id="completenessModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:16px; width:min(560px,92vw); box-shadow:0 20px 60px rgba(0,0,0,.25); overflow:hidden; animation:cmSlideIn .22s ease;">
+            <div style="background:#7b1428; padding:22px 28px 18px; display:flex; align-items:flex-start; gap:14px;">
+                <div style="font-size:22px; margin-top:1px;">⚠️</div>
+                <div>
+                    <div style="color:#fff; font-size:17px; font-weight:700; margin-bottom:3px;">Incomplete Application</div>
+                    <div style="color:#f3c4cc; font-size:13px; line-height:1.5;">The following sections must be completed before submitting. Please fill them and try again.</div>
+                </div>
+            </div>
+            <div style="padding:20px 28px 8px;">
+                <ul id="completenessModalList" style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;"></ul>
+            </div>
+            <div style="padding:18px 28px 24px; display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #f0ece8; margin-top:10px;">
+                <button type="button" id="completenessModalGoBtn"
+                    style="background:#7b1428; color:#fff; border:none; border-radius:8px; padding:10px 22px; font-size:14px; font-weight:600; cursor:pointer;">
+                    Go to First Incomplete Section
+                </button>
+                <button type="button" id="completenessModalCloseBtn"
+                    style="background:#fff; color:#374151; border:1.5px solid #d1d5db; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:500; cursor:pointer;">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+    <style>
+        @@keyframes cmSlideIn { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:translateY(0); } }
+    </style>
+    <script>
+    (function () {
+        var _firstAnchor = null;
+
+        function openModal(sections) {
+            var list = document.getElementById('completenessModalList');
+            list.innerHTML = '';
+            _firstAnchor = sections.length ? sections[0].anchor : null;
+
+            sections.forEach(function (s, i) {
+                var li = document.createElement('li');
+                li.style.cssText = 'display:flex;align-items:center;gap:10px;background:#fdf6f7;border:1px solid #f0d5da;border-radius:8px;padding:10px 14px;';
+                li.innerHTML =
+                    '<span style="background:#7b1428;color:#fff;font-size:11px;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">' + (i + 1) + '</span>' +
+                    '<a href="#' + s.anchor + '" onclick="document.getElementById(\'completenessModal\').style.display=\'none\'" style="color:#7b1428;font-weight:600;font-size:14px;text-decoration:none;">' + s.name + '</a>';
+                list.appendChild(li);
+            });
+
+            var modal = document.getElementById('completenessModal');
+            modal.style.display = 'flex';
+        }
+
+        document.getElementById('completenessModalCloseBtn').addEventListener('click', function () {
+            document.getElementById('completenessModal').style.display = 'none';
+        });
+
+        document.getElementById('completenessModalGoBtn').addEventListener('click', function () {
+            document.getElementById('completenessModal').style.display = 'none';
+            if (_firstAnchor) {
+                var el = document.getElementById(_firstAnchor);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        document.getElementById('completenessModal').addEventListener('click', function (e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+
+        window.checkAndSubmit = async function (continueCallback) {
+            var btn = document.getElementById('btnSubmitApplication') || document.getElementById('btnSaveAndApplyPostgraduate');
+            try {
+                var res = await fetch('@Url.Action("CheckApplicationCompleteness", "Home")', { cache: 'no-store' });
+                var data = await res.json();
+                if (data.incomplete && data.incomplete.length > 0) {
+                    openModal(data.incomplete);
+                    return false;
+                }
+                return true;
+            } catch (e) {
+                console.error('Completeness check failed', e);
+                return true; // allow submit if check itself fails
+            }
+        };
+    })();
+    </script>
 
 </body>
 </html>

@@ -1,4 +1,8 @@
-﻿@model DTOs.SubmitApplicationDto
+@model DTOs.SubmitApplicationDto
+@using System.Collections.Generic
+@{
+    var additionalFiles = (ViewBag.AdditionalFiles as List<DTOs.AdditionalFileDto>) ?? new List<DTOs.AdditionalFileDto>();
+}
 
 <div class="submitapp-wrap" style="margin-top:0;">
     <div class="duration-titlebar">
@@ -29,7 +33,43 @@
         </div>
     </div>
 
-    <label class="submitapp-check" style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+    <!-- ── Additional Notes and Supporting Files ─────────────────────── -->
+    <div class="subapp-extra">
+        <div class="subapp-extra-label">Additional Notes <span class="subapp-extra-opt">(Optional)</span></div>
+        <textarea id="subapp_additional_note"
+                  name="AdditionalNote"
+                  rows="2"
+                  maxlength="2000"
+                  placeholder="Any additional notes for the recognition committee..."
+                  class="subapp-extra-textarea">@(Model?.AdditionalNote ?? "")</textarea>
+
+        <div class="subapp-attach-row">
+            <input type="file" id="subapp_additional_files_input" multiple
+                   accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                   style="display:none;" />
+            <label for="subapp_additional_files_input" class="subapp-attach-btn">
+                + Attach Files
+            </label>
+            <span id="subapp_additional_files_hint" class="subapp-attach-hint"></span>
+        </div>
+
+        @if (additionalFiles.Any())
+        {
+            <div class="subapp-file-list">
+                @foreach (var f in additionalFiles)
+                {
+                    <div class="subapp-file-item">
+                        <span class="subapp-file-tag">@f.FileType</span>
+                        <a class="subapp-file-link" href="@f.FileUrl" target="_blank" rel="noopener">@f.FileName</a>
+                        <button type="button" class="subapp-file-remove" title="Remove"
+                                onclick="window.SubAppDeleteAdditionalFile('@f.StoredFileName')">×</button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <label class="submitapp-check" style="display:flex; align-items:center; gap:8px; margin-top:16px;">
         <input id="subapp_ack" name="IsAcknowledged" type="checkbox" @(Model != null && Model.IsAcknowledged ? "checked" : "") />
         <span>I acknowledge that all data are correct.</span>
     </label>
@@ -50,10 +90,7 @@
     </div>
 
     <div style="display:flex; justify-content:flex-start; margin-top:18px; gap:12px;">
-        <!-- Default submit (shown when user chooses No OR when question hidden) -->
         <button type="button" id="btnSubmitApplication" class="btn-primary">Submit</button>
-
-        <!-- Shown only when user chooses Yes -->
         <button type="button" id="btnSaveAndApplyPostgraduate" class="btn-primary" style="display:none;">
             Save &amp; Apply for Postgraduate
         </button>

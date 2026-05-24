@@ -303,6 +303,49 @@
                 }
             </div>
         </section>
+
+        <!-- Additional Notes & Supporting Files -->
+        @{
+            var reviewAddFiles = Model.AdditionalFiles ?? new List<DTOs.AdditionalFileDto>();
+        }
+        <section class="panel">
+            <div class="panel-hd">Additional Notes and Supporting Files</div>
+            <div class="panel-bd">
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:12px;font-weight:700;color:#7f1627;margin-bottom:6px;">Note from University</div>
+                    @if (string.IsNullOrWhiteSpace(Model.AdditionalNote))
+                    {
+                        <div class="notes" style="color:#9ca3af;font-style:italic;">No additional note provided.</div>
+                    }
+                    else
+                    {
+                        <div class="notes" style="white-space:pre-wrap;word-break:break-word;">@Model.AdditionalNote</div>
+                    }
+                </div>
+                <div>
+                    <div style="font-size:12px;font-weight:700;color:#7f1627;margin-bottom:6px;">Supporting Files</div>
+                    @if (!reviewAddFiles.Any())
+                    {
+                        <div class="notes" style="color:#9ca3af;font-style:italic;">No additional supporting files uploaded.</div>
+                    }
+                    else
+                    {
+                        <div style="display:flex;flex-direction:column;gap:6px;">
+                            @foreach (var af in reviewAddFiles)
+                            {
+                                <div style="display:flex;align-items:center;gap:8px;background:#fdfaf8;border:1px solid #e8dfd8;border-radius:8px;padding:7px 10px;">
+                                    <span style="font-size:10px;font-weight:700;color:#7f1627;background:#fce8eb;border-radius:4px;padding:2px 6px;flex-shrink:0;">@af.FileType</span>
+                                    <a href="@af.FileUrl" target="_blank" rel="noopener"
+                                       style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:#333;text-decoration:none;">@af.FileName</a>
+                                    <a href="@af.FileUrl" download="@af.FileName"
+                                       class="btn-mini">Download</a>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
     </main>
 </body>
 </html>

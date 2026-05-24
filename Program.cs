@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using MOHRecognition.Data;
 using MOHRecognition.DTOs;
 using MOHRecognition.Services;
 
@@ -32,8 +34,15 @@ builder.Services.AddSession(options =>
 });
 
 
-builder.Services.AddSingleton<IRecognitionRequestService, InMemoryRecognitionRequestService>();
-builder.Services.AddSingleton<IAdvisorService, InMemoryAdvisorService>();
+// ─────────────────────────────────────────────────────────────────────────────
+// DATABASE — SQLite via EF Core
+// ─────────────────────────────────────────────────────────────────────────────
+builder.Services.AddDbContext<AppDbContext>(opts =>
+    opts.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IRecognitionRequestService, DatabaseRecognitionRequestService>();
+builder.Services.AddScoped<IAdvisorService,            DatabaseAdvisorService>();
+builder.Services.AddScoped<IMeetingService,            DatabaseMeetingService>();
 
 // ─────────────────────────────────────────────────────────────────────────────
 //    "en" = English (LTR)  — default
@@ -57,6 +66,15 @@ var localizationOptions = new RequestLocalizationOptions
 localizationOptions.RequestCultureProviders.Insert(0, new QueryStringRequestCultureProvider());
 
 var app = builder.Build();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MIGRATE + SEED on startup
+// ─────────────────────────────────────────────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DbInitializer.InitializeAsync(db);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  HTTP PIPELINE

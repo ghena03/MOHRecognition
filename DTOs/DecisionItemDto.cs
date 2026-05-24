@@ -12,5 +12,6 @@ namespace MOHRecognition.DTOs
         public string Decision { get; set; } = "";
         public string Notes { get; set; } = "";
         public DateTime? DecisionDate { get; set; }
+        public string ApplicationType { get; set; } = "Bachelor";
     }
 }

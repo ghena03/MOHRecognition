@@ -1,4 +1,5 @@
 @model MOHRecognition.Services.RecognitionRequestRecord
+@using DTOs
 @{
     Layout = null;
     ViewData["Title"] = "Assessment Report — View Only";
@@ -677,6 +678,53 @@
                         <i class="bi @Icon(envOverall)"></i> @envOverall
                     </span>
                 </div>
+            </section>
+
+            <!-- ═══════════════ ADDITIONAL NOTES & FILES ═══════════════ -->
+            @{
+                var docAddFiles = Model?.AdditionalFiles ?? new List<DTOs.AdditionalFileDto>();
+            }
+            <section class="rm-card" style="padding:20px 24px;">
+                <div style="font-size:13px;font-weight:800;color:#7f1627;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
+                    <i class="bi bi-paperclip" style="margin-right:6px;"></i>Additional Notes &amp; Supporting Files
+                </div>
+
+                <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">
+                    Note from University
+                </div>
+                @if (string.IsNullOrWhiteSpace(Model?.AdditionalNote))
+                {
+                    <div class="ro-block ro-empty">No additional note provided.</div>
+                }
+                else
+                {
+                    <div class="ro-block" style="white-space:pre-wrap;word-break:break-word;">@Model.AdditionalNote</div>
+                }
+
+                <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-top:14px;margin-bottom:6px;">
+                    Supporting Files
+                </div>
+                @if (!docAddFiles.Any())
+                {
+                    <div class="ro-block ro-empty">No additional supporting files uploaded.</div>
+                }
+                else
+                {
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                        @foreach (var af in docAddFiles)
+                        {
+                            <div style="display:flex;align-items:center;gap:8px;background:#fdfaf8;border:1px solid #e8dfd8;border-radius:8px;padding:7px 10px;">
+                                <span style="font-size:10px;font-weight:700;color:#7f1627;background:#fce8eb;border-radius:4px;padding:2px 6px;flex-shrink:0;">@af.FileType</span>
+                                <a href="@af.FileUrl" target="_blank" rel="noopener"
+                                   style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:#333;text-decoration:none;">@af.FileName</a>
+                                <a href="@af.FileUrl" download="@af.FileName"
+                                   class="rm-btn rm-btn-light" style="font-size:12px;padding:4px 10px;flex-shrink:0;">
+                                    <i class="bi bi-download"></i> Download
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
             </section>
 
             <!-- ═══════════════ FINAL DECISION ═══════════════ -->

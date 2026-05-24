@@ -766,6 +766,9 @@
                 showToast("Academic Info saved successfully.", false);
                 window.scrollToNextSection("sec-academic");
                 updateCollegeCategoriesUI();
+                if (typeof window.LoadLaboratoriesSection === "function") {
+                    window.LoadLaboratoriesSection();
+                }
             } catch (e) {
                 const msg = e.message || "Save failed.";
                 showToast(msg, true);

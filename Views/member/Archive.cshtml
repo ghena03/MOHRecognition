@@ -20,8 +20,18 @@
         return nameMap.TryGetValue(key, out var n) ? n : email;
     }
 
-    bool IsUnassigned(string? v) =>
-        string.IsNullOrWhiteSpace(v) || v.Equals("Unassigned", StringComparison.OrdinalIgnoreCase);
+    string AppTypeStyle(string? t) => (t ?? "Bachelor") switch
+    {
+        "Postgraduate" => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
+        "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
+        _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
+    };
+    string RowClass(string? t) => (t ?? "Bachelor") switch
+    {
+        "Postgraduate" => "app-row-postgraduate",
+        "Online"       => "app-row-online",
+        _              => "app-row-bachelor"
+    };
 }
 
 <!doctype html>
@@ -122,6 +132,7 @@
                         <thead>
                             <tr>
                                 <th>Reference</th>
+                                <th>Type</th>
                                 <th>University</th>
                                 <th>Country</th>
                                 <th>Email</th>
@@ -137,15 +148,11 @@
                             {
                                 @foreach (var item in Model)
                                 {
-                                    var isMine             = string.Equals(item.AssignedMember, currentEmail, StringComparison.OrdinalIgnoreCase);
-                                    var isUnassigned       = IsUnassigned(item.AssignedMember);
-                                    var hasRequest         = !string.IsNullOrWhiteSpace(item.AssignmentRequestBy);
-                                    var requestedByMe      = hasRequest && string.Equals(item.AssignmentRequestBy, currentEmail, StringComparison.OrdinalIgnoreCase);
-                                    var requestedByOther   = hasRequest && !requestedByMe;
-                                    var canRequestToStudy  = !isMine && isUnassigned && !hasRequest;
+                                    var isMine = string.Equals(item.AssignedMember, currentEmail, StringComparison.OrdinalIgnoreCase);
 
-                                    <tr>
+                                    <tr class="@RowClass(item.ApplicationType)">
                                         <td><b>@item.ReferenceNumber</b></td>
+                                        <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
                                         <td>@item.UniversityName</td>
                                         <td>@item.Country</td>
                                         <td>@item.UniversityEmail</td>
@@ -161,23 +168,6 @@
                                             {
                                                 <a class="rm-mini rm-mini--view" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">View</a>
                                             }
-
-                                            @if (canRequestToStudy)
-                                            {
-                                                <form method="post" asp-action="RequestMemberAssignment" asp-controller="Home" style="display:inline;">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@item.Id" />
-                                                    <button type="submit" class="rm-mini" style="background:#f0fdf4;color:#166534;border:1px solid #86efac;">Request to Study</button>
-                                                </form>
-                                            }
-                                            else if (requestedByMe)
-                                            {
-                                                <span class="badge" style="background:#dbeafe;color:#1e40af;">Requested by you</span>
-                                            }
-                                            else if (requestedByOther)
-                                            {
-                                                <span class="badge" style="background:#fef9c3;color:#854d0e;">Pending</span>
-                                            }
                                         </td>
                                     </tr>
                                 }
@@ -185,7 +175,7 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="8" style="text-align:center; padding:24px;">
+                                    <td colspan="9" style="text-align:center; padding:24px;">
                                         No submitted requests yet.
                                     </td>
                                 </tr>

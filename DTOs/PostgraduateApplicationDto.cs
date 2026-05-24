@@ -32,8 +32,11 @@ namespace MOHRecognition.DTOs
         public int? DiplomaAssistant { get; set; }
         // ================= APPLICANT INFO =================
         public string? Name { get; set; }
-        public string? Email { get; set; }
-        public string? Location { get; set; }
+        public string? WorkPlace { get; set; }
+        public string? Country { get; set; }
+        public string? City { get; set; }
+        // "yes" → redirect to Online Education after save; anything else → normal flow
+        public string? ApplyOnline { get; set; }
         // ================= PUBLIC INFO =================
         public string? InstitutionName { get; set; }
         public string? OversightRightsEntity { get; set; }

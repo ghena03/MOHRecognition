@@ -15,12 +15,19 @@
         return nameMap.TryGetValue(key, out var n) ? n : email;
     }
 
-    var assignmentRequests = Model
-        .Where(x => (string.IsNullOrWhiteSpace(x.AssignedMember) ||
-                     string.Equals(x.AssignedMember, "Unassigned", StringComparison.OrdinalIgnoreCase))
-                    && !string.IsNullOrWhiteSpace(x.AssignmentRequestBy))
-        .OrderByDescending(x => x.AssignmentRequestAt ?? DateTime.MinValue)
-        .ToList();
+    string AppTypeStyle(string? t) => (t ?? "Bachelor") switch
+    {
+        "Postgraduate" => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
+        "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
+        _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
+    };
+    string RowClass(string? t) => (t ?? "Bachelor") switch
+    {
+        "Postgraduate" => "app-row-postgraduate",
+        "Online"       => "app-row-online",
+        _              => "app-row-bachelor"
+    };
+
 }
 
 <!DOCTYPE html>
@@ -54,50 +61,6 @@
 
     <!-- MAIN -->
     <div class="main-container">
-
-        @if (assignmentRequests.Any())
-        {
-            <!-- ASSIGNMENT REQUESTS FROM RECOGNITION MEMBERS -->
-            <div class="page-head" style="display:flex;align-items:center;gap:12px;">
-                <h2>Assignment Requests</h2>
-                <span style="background:#7f1627;color:#fff;border-radius:20px;padding:2px 10px;font-size:13px;font-weight:700;">@assignmentRequests.Count</span>
-            </div>
-            <div class="table-box" style="margin-bottom:32px;border-left:4px solid #7f1627;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Reference</th>
-                            <th>University</th>
-                            <th>Country</th>
-                            <th>Requested By</th>
-                            <th>Requested At</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in assignmentRequests)
-                        {
-                            <tr>
-                                <td>@item.ReferenceNumber</td>
-                                <td>@item.UniversityName</td>
-                                <td>@item.Country</td>
-                                <td>@MemberName(item.AssignmentRequestBy)</td>
-                                <td>@(item.AssignmentRequestAt?.ToString("yyyy-MM-dd") ?? "—")</td>
-                                <td style="display:flex;gap:6px;align-items:center">
-                                    <a asp-controller="Home"
-                                       asp-action="AdminRequestDetails"
-                                       asp-route-id="@item.Id"
-                                       class="action-btn"
-                                       style="background:#7f1627;color:#fff;border-color:#7f1627">
-                                        Open & Assign
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
 
         <!-- TITLE ROW -->
         <div class="page-head">
@@ -136,6 +99,7 @@
                 <thead>
                     <tr>
                         <th>Reference</th>
+                        <th>Type</th>
                         <th>Applicant</th>
                         <th>University</th>
                         <th>Country</th>
@@ -148,9 +112,11 @@
                 <tbody id="req-tbody">
                     @foreach (var item in Model)
                     {
-                        <tr data-search="@((item.ReferenceNumber + " " + item.UniversityName + " " + item.Country + " " + item.ApplicantName).ToLower())"
-                            data-status="@item.Status.ToLower()">
+                        <tr data-search="@((item.ReferenceNumber + " " + item.UniversityName + " " + item.Country + " " + item.ApplicantName + " " + item.ApplicationType).ToLower())"
+                            data-status="@item.Status.ToLower()"
+                            class="@RowClass(item.ApplicationType)">
                             <td>@item.ReferenceNumber</td>
+                            <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
                             <td>@item.ApplicantName</td>
                             <td>@item.UniversityName</td>
                             <td>@item.Country</td>

@@ -4,6 +4,19 @@
     Layout = null;
     var items = ViewBag.Items as List<RecognitionRequestRecord> ?? new List<RecognitionRequestRecord>();
     var memberNameMap = ViewBag.MemberNameMap as Dictionary<string, string> ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    string AppTypeStyle(string? t) => (t ?? "Bachelor") switch
+    {
+        "Postgraduate" => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
+        "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
+        _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
+    };
+    string RowClass(string? t) => (t ?? "Bachelor") switch
+    {
+        "Postgraduate" => "app-row-postgraduate",
+        "Online"       => "app-row-online",
+        _              => "app-row-bachelor"
+    };
 }
 
 <!doctype html>
@@ -52,6 +65,14 @@
         .empty-state i { font-size: 50px; color: #bfdbfe; display: block; margin-bottom: 14px; }
         .empty-state h3 { font-size: 18px; color: #555; margin-bottom: 8px; }
         .empty-state p { color: #888; font-size: 13.5px; max-width: 430px; margin: 0 auto; line-height: 1.7; }
+
+        /* Application type — colored left border indicator */
+        tr.app-row-bachelor td:first-child    { border-left: 5px solid #3b82f6 !important; padding-left: 11px !important; }
+        tr.app-row-postgraduate td:first-child { border-left: 5px solid #8b5cf6 !important; padding-left: 11px !important; }
+        tr.app-row-online td:first-child       { border-left: 5px solid #10b981 !important; padding-left: 11px !important; }
+        .app-row-bachelor    { border-left: 5px solid #3b82f6 !important; }
+        .app-row-postgraduate { border-left: 5px solid #8b5cf6 !important; }
+        .app-row-online       { border-left: 5px solid #10b981 !important; }
     </style>
 </head>
 <body>
@@ -84,6 +105,7 @@
                     <thead>
                         <tr>
                             <th>University Name</th>
+                            <th>Type</th>
                             <th>Country</th>
                             <th>Request ID</th>
                             <th>Doctor Name</th>
@@ -107,8 +129,9 @@
                                              : recColor == "orange" ? "bi-exclamation-circle-fill"
                                              : recColor == "red"    ? "bi-x-circle-fill"
                                              : "bi-clock";
-                                <tr>
+                                <tr class="@RowClass(item.ApplicationType)">
                                     <td><span class="uni-name">@(string.IsNullOrWhiteSpace(item.UniversityName) ? "-" : item.UniversityName)</span></td>
+                                    <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
                                     <td>@(string.IsNullOrWhiteSpace(item.Country) ? "-" : item.Country)</td>
                                     <td><strong>#@item.Id</strong></td>
                                     <td>
@@ -134,7 +157,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="empty-state">
                                         <i class="bi bi-inbox"></i>
                                         <h3>No submitted universities yet</h3>

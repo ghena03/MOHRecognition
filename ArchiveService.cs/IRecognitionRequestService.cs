@@ -1,17 +1,16 @@
-﻿using DTOs;
+using DTOs;
 
 namespace MOHRecognition.Services
 {
     public interface IRecognitionRequestService
     {
-        IReadOnlyList<RecognitionRequestRecord> GetAll();
-        RecognitionRequestRecord? GetById(int id);
-        RecognitionRequestRecord Add(RecognitionRequestRecord request);
+        Task<IReadOnlyList<RecognitionRequestRecord>> GetAll();
+        Task<RecognitionRequestRecord?> GetById(int id);
+        Task<RecognitionRequestRecord> Add(RecognitionRequestRecord request);
 
-        bool RequestMemberAssignment(int id, string memberEmail);
-        bool RequireAdminReview(int id, string submittedBy);
-        bool AssignMember(int id, string memberName);
-        bool SaveInfrastructureNotes(
+        Task<bool> RequireAdminReview(int id, string submittedBy);
+        Task<bool> AssignMember(int id, string memberName);
+        Task<bool> SaveInfrastructureNotes(
             int id,
             string facultiesAssessment,
             string hospitalsAssessment,
@@ -23,15 +22,15 @@ namespace MOHRecognition.Services
             string hospitalEnvironmentAssessmentNote,
             string laboratoriesFacilitiesAssessmentNote,
             string libraryAssessmentNote);
-        bool SaveAdmissionStudyDurationReview(int id, AdmissionStudyDurationReviewDto review);
-        bool SaveGlobalRankings(int id, GlobalRankingsDto rankings);
-        bool SaveBasicInfoAssessment(int id, string decision, string reason, string accreditationStatus, string accreditationNote);
-        bool UpdateStatus(int id, string status);
-        bool SavePublicInfoSection(int id, PublicInfoDto publicInfo, AcademicInfoDto academicInfoPatch, string city, string country);
-        bool SaveAcademicStaffSection(int id, AcademicInfoDto staffData);
-        bool SaveStudyDurationSection(int id, StudyDurationDto studyDuration);
-        bool SetManualDataFilled(int id);
-        bool UpdateManualRequestData(int id, Action<RecognitionRequestRecord> updater);
+        Task<bool> SaveAdmissionStudyDurationReview(int id, AdmissionStudyDurationReviewDto review);
+        Task<bool> SaveGlobalRankings(int id, GlobalRankingsDto rankings);
+        Task<bool> SaveBasicInfoAssessment(int id, string decision, string reason, string accreditationStatus, string accreditationNote);
+        Task<bool> UpdateStatus(int id, string status);
+        Task<bool> SavePublicInfoSection(int id, PublicInfoDto publicInfo, AcademicInfoDto academicInfoPatch, string city, string country);
+        Task<bool> SaveAcademicStaffSection(int id, AcademicInfoDto staffData);
+        Task<bool> SaveStudyDurationSection(int id, StudyDurationDto studyDuration);
+        Task<bool> SetManualDataFilled(int id);
+        Task<bool> UpdateManualRequestData(int id, Action<RecognitionRequestRecord> updater);
     }
 
     public class RecognitionRequestRecord
@@ -62,10 +61,6 @@ namespace MOHRecognition.Services
         public string SubmittedToAdminBy { get; set; } = string.Empty;
 
         public DateTime? SubmittedToAdminAt { get; set; }
-
-        public string AssignmentRequestBy { get; set; } = string.Empty;
-
-        public DateTime? AssignmentRequestAt { get; set; }
 
         public int Year { get; set; }
 
@@ -106,6 +101,9 @@ namespace MOHRecognition.Services
         public InfrastructureDto Infrastructure { get; set; } = new();
         public HospitalsDto Hospitals { get; set; } = new();
         public LibraryDto Library { get; set; } = new();
+        public UniRecAccDto UniRecAcc { get; set; } = new();
+        public string AdditionalNote { get; set; } = "";
+        public List<AdditionalFileDto> AdditionalFiles { get; set; } = new();
 
         public string FacultiesAssessment { get; set; } = string.Empty;
 
@@ -140,5 +138,8 @@ namespace MOHRecognition.Services
 
         public bool IsManual { get; set; } = false;
         public bool ManualDataFilled { get; set; } = false;
+
+        // "Bachelor" | "Postgraduate" | "Online"
+        public string ApplicationType { get; set; } = "Bachelor";
     }
 }

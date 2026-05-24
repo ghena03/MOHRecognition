@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
     const containerId = "submitApplicationContainer";
 
     function getContainer() {
@@ -37,6 +37,7 @@
             ApplicantName: document.getElementById("subapp_name")?.value?.trim() || "",
             WorkPlace: document.getElementById("subapp_workplace")?.value?.trim() || "",
             IsAcknowledged: document.getElementById("subapp_ack")?.checked || false,
+            AdditionalNote: document.getElementById("subapp_additional_note")?.value?.trim() || "",
             ContinueToPostgraduate: continueChoice ? (continueChoice.value === "yes") : false
         };
     }
@@ -45,6 +46,100 @@
         return data.ApplicantName !== "" &&
             data.WorkPlace !== "";
     }
+
+    // ── Additional files ──────────────────────────────────────────────────────
+
+    function saveFormState() {
+        return {
+            name:      document.getElementById("subapp_name")?.value ?? "",
+            workplace: document.getElementById("subapp_workplace")?.value ?? "",
+            note:      document.getElementById("subapp_additional_note")?.value ?? "",
+            ack:       document.getElementById("subapp_ack")?.checked ?? false,
+        };
+    }
+
+    function restoreFormState(state) {
+        const name = document.getElementById("subapp_name");
+        const workplace = document.getElementById("subapp_workplace");
+        const note = document.getElementById("subapp_additional_note");
+        const ack = document.getElementById("subapp_ack");
+        if (name)      name.value      = state.name;
+        if (workplace) workplace.value = state.workplace;
+        if (note)      note.value      = state.note;
+        if (ack) {
+            ack.checked = state.ack;
+            ack.dispatchEvent(new Event('change')); // re-trigger updateVisibility
+        }
+    }
+
+    async function uploadAdditionalFiles(files) {
+        const uploadUrl = getUrl("data-upload-additional-url");
+        if (!uploadUrl) return;
+
+        const saved = saveFormState();
+
+        for (const file of files) {
+            const fd = new FormData();
+            fd.append("file", file);
+            try {
+                const res = await fetch(uploadUrl, { method: "POST", body: fd });
+                const data = await res.json();
+                if (!data.success) {
+                    showBanner(data.message || "Upload failed.", true);
+                    return;
+                }
+            } catch {
+                showBanner("An error occurred while uploading.", true);
+                return;
+            }
+        }
+
+        await loadPartial(false, "", false);
+        restoreFormState(saved);
+    }
+
+    window.SubAppDeleteAdditionalFile = async function (storedFileName) {
+        const deleteUrl = getUrl("data-delete-additional-url");
+        if (!deleteUrl) return;
+
+        const saved = saveFormState();
+
+        try {
+            const res = await fetch(deleteUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(storedFileName)
+            });
+            const data = await res.json();
+            if (data.success) {
+                await loadPartial(false, "", false);
+                restoreFormState(saved);
+            } else {
+                showBanner(data.message || "Delete failed.", true);
+            }
+        } catch {
+            showBanner("An error occurred while removing the file.", true);
+        }
+    };
+
+    function bindAdditionalFiles() {
+        const input = document.getElementById("subapp_additional_files_input");
+        const hint  = document.getElementById("subapp_additional_files_hint");
+
+        if (!input) return;
+
+        input.addEventListener("change", async () => {
+            const files = Array.from(input.files || []);
+            if (files.length === 0) return;
+
+            if (hint) hint.textContent = "Uploading…";
+            await uploadAdditionalFiles(files);
+            input.value = "";
+            if (hint) hint.textContent = "";
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     async function sendSaveRequest(data) {
         const url = getUrl("data-save-url");
@@ -62,7 +157,8 @@
                 body: new URLSearchParams({
                     ApplicantName: data.ApplicantName,
                     WorkPlace: data.WorkPlace,
-                    IsAcknowledged: data.IsAcknowledged
+                    IsAcknowledged: data.IsAcknowledged,
+                    AdditionalNote: data.AdditionalNote
                 }).toString()
             });
 
@@ -129,6 +225,12 @@
         const btnPost = document.getElementById("btnSaveAndApplyPostgraduate");
 
         async function handleClick(overrideContinueToPostgraduate = null) {
+            // Run full completeness check first — shows modal with missing sections if any
+            if (typeof window.checkAndSubmit === 'function') {
+                const ready = await window.checkAndSubmit();
+                if (!ready) return;
+            }
+
             const data = collectData();
 
             if (!validate(data)) {
@@ -182,9 +284,10 @@
             const html = await res.text();
             render(html);
 
-            // bind UI toggles and buttons after partial is injected
+            // bind UI toggles, buttons, and file upload after partial is injected
             bindSubmitUI();
             bindSubmitButton();
+            bindAdditionalFiles();
 
             if (showMessage && message) {
                 showBanner(message, isError);

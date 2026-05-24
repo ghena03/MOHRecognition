@@ -204,25 +204,26 @@
                             </div>
                         </div>
 
-                        <div class="actions-row">
+                        <div class="start-options">
 
-                            <!-- Bachelor -->
-                            <a class="btn-primary"
+                            <a class="start-card start-card--primary"
                                href="@Url.Action("UniDashboard", "Home")#sec-instructions">
-                                Start Bachelor Application
+                                <div class="start-card__icon">🎓</div>
+                                <div class="start-card__body">
+                                    <strong>Start Bachelor Application</strong>
+                                    <span>Begin with a bachelor's degree program. You can add postgraduate and online programs afterwards.</span>
+                                </div>
+                                <div class="start-card__arrow">→</div>
                             </a>
 
-                            @if (institutionType == "Bachelor")
-                            {
-                                <a class="btn-primary"
-                                   href="@Url.Action("UniDashboardDoctors", "Home")">
-                                    Start Bachelor Application
-                                </a>
-                            }
-                            <!-- Postgraduate -->
-                            <a class="btn-secondary"
+                            <a class="start-card start-card--secondary"
                                href="@Url.Action("UniPostgraduateInstructions", "Home")">
-                                Start New Postgraduate Application
+                                <div class="start-card__icon">📚</div>
+                                <div class="start-card__body">
+                                    <strong>Start Postgraduate Application</strong>
+                                    <span>Only for institutions that <em>do not</em> offer a bachelor's program. If your institution has a bachelor's program, it must be recognized first before applying for postgraduate recognition.</span>
+                                </div>
+                                <div class="start-card__arrow">→</div>
                             </a>
 
                         </div>
@@ -230,6 +231,34 @@
                         <div class="info-note">
                             After submitting the request, you can track its status and review the final decision through your account.
                         </div>
+
+                        <style>
+                            .start-options {
+                                display: flex;
+                                flex-direction: column;
+                                gap: .75rem;
+                                margin-top: 1.2rem;
+                            }
+                            .start-card {
+                                display: flex;
+                                align-items: center;
+                                gap: 1rem;
+                                border-radius: 12px;
+                                padding: 1rem 1.2rem;
+                                text-decoration: none;
+                                color: #fff;
+                                border: 1.5px solid rgba(255,255,255,.1);
+                                background: rgba(255,255,255,.04);
+                                transition: border-color .2s, background .2s;
+                            }
+                            .start-card--primary:hover  { border-color: #e53e3e; background: rgba(229,62,62,.08); }
+                            .start-card--secondary:hover { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.08); }
+                            .start-card__icon { font-size: 1.6rem; flex-shrink: 0; }
+                            .start-card__body { flex: 1; }
+                            .start-card__body strong { display: block; font-size: .95rem; font-weight: 600; margin-bottom: .25rem; }
+                            .start-card__body span   { font-size: .8rem; color: #9ca3af; line-height: 1.4; }
+                            .start-card__arrow { font-size: 1.1rem; color: #9ca3af; flex-shrink: 0; }
+                        </style>
                     }
                 </section>
 

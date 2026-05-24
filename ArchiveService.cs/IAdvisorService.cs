@@ -4,13 +4,13 @@ namespace MOHRecognition.Services
 {
     public interface IAdvisorService
     {
-        IReadOnlyList<AdvisorDto> GetAll();
-        AdvisorDto?               GetById(int id);
-        IReadOnlyList<AdvisorDto> GetRecognitionMembers();
-        IReadOnlyList<AdvisorDto> GetMinistryAdvisors();
-        AdvisorDto?               FindByEmail(string email);
-        void Add(AdvisorDto advisor);
-        void Update(AdvisorDto advisor);
-        void Remove(int id);
+        Task<IReadOnlyList<AdvisorDto>> GetAll();
+        Task<AdvisorDto?>               GetById(int id);
+        Task<IReadOnlyList<AdvisorDto>> GetRecognitionMembers();
+        Task<IReadOnlyList<AdvisorDto>> GetMinistryAdvisors();
+        Task<AdvisorDto?>               FindByEmail(string email);
+        Task Add(AdvisorDto advisor);
+        Task Update(AdvisorDto advisor);
+        Task Remove(int id);
     }
 }

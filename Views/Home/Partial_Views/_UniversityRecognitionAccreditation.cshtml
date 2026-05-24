@@ -1,9 +1,9 @@
-@model DTOs.HospitalsDto
+@model DTOs.UniRecAccDto
 @using System
 @using System.Linq
 
 @{
-    var documents = Model?.Documents ?? new List<DTOs.HospitalFileDto>();
+    var documents = Model?.Documents ?? new List<DTOs.UniRecAccDocumentDto>();
 
     string NormalizeDocType(string? rawType)
     {

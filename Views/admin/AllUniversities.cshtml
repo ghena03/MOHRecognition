@@ -3,6 +3,19 @@
     ViewData["Title"] = "All Universities";
     Layout = null;
     var items = ViewBag.Items as List<DecisionItemDto> ?? new List<DecisionItemDto>();
+
+    string AppTypeStyle(string? t) => (t ?? "Bachelor") switch
+    {
+        "Postgraduate" => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
+        "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
+        _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
+    };
+    string RowClass(string? t) => (t ?? "Bachelor") switch
+    {
+        "Postgraduate" => "app-row-postgraduate",
+        "Online"       => "app-row-online",
+        _              => "app-row-bachelor"
+    };
 }
 <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
 <!doctype html>
@@ -113,6 +126,7 @@
                     <thead>
                         <tr>
                             <th>University Name</th>
+                            <th>Type</th>
                             <th>Country</th>
                             <th>Request ID</th>
                             <th>Meeting/Session</th>
@@ -130,8 +144,9 @@
                                     : item.Decision == "Not Recognized" ? "status-red"
                                     : "status-amber";
                                 var statusLabel = item.Decision == "Needs More Information" ? "Pending / Needs More Information" : item.Decision;
-                                <tr>
+                                <tr class="@RowClass(item.ApplicationType)">
                                     <td><span class="uni-name">@(string.IsNullOrWhiteSpace(item.UniversityName) ? "-" : item.UniversityName)</span></td>
+                                    <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
                                     <td>@(string.IsNullOrWhiteSpace(item.Country) ? "-" : item.Country)</td>
                                     <td><strong>#@item.RequestId</strong></td>
                                     <td>
@@ -151,7 +166,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="7">
+                                <td colspan="8">
                                     <div class="empty-state">
                                         <i class="bi bi-clipboard2-data"></i>
                                         <h3>No finalized universities yet</h3>

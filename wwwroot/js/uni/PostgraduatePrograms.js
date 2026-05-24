@@ -1,16 +1,24 @@
 ﻿// ================= TOAST =================
 
-function showToast(icon, title) {
+function showToast(type, message) {
 
-    Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: icon,
-        title: title,
-        showConfirmButton: false,
-        timer: 2200,
-        timerProgressBar: true
-    });
+    let host = document.getElementById("uniToastHost");
+    if (!host) {
+        host = document.createElement("div");
+        host.id = "uniToastHost";
+        host.className = "uni-toast-host";
+        document.body.appendChild(host);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = "uni-toast" + (type === "error" ? " is-error" : " is-success");
+    toast.textContent = message;
+    host.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add("fade-out");
+        setTimeout(() => toast.remove(), 220);
+    }, 2200);
 
 }
 
@@ -113,6 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             showToast("success", "Public info saved");
+            scrollToNext("sec-programs");
 
         });
 
@@ -172,6 +181,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             showToast("success", "Programs saved");
+            scrollToNext("sec-students");
 
         });
 
@@ -231,6 +241,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             showToast("success", "Students saved");
+            scrollToNext("sec-faculty");
 
         });
 
@@ -332,9 +343,34 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             showToast("success", "Faculty saved");
+            scrollToNext("sec-user");
 
         });
 
+
+
+
+    // ================= ONLINE QUESTION BUTTON TOGGLE =================
+
+    const radioOnlineYes = document.querySelector('input[name="ApplyOnline"][value="yes"]');
+    const radioOnlineNo  = document.querySelector('input[name="ApplyOnline"][value="no"]');
+    const btnSubmit      = document.getElementById("btnSubmitPostgrad");
+    const btnOnline      = document.getElementById("btnContinueOnline");
+
+    function updateOnlineButtons() {
+        const selected = document.querySelector('input[name="ApplyOnline"]:checked')?.value || "no";
+        if (selected === "yes") {
+            if (btnSubmit) btnSubmit.style.display = "none";
+            if (btnOnline) btnOnline.style.display = "inline-flex";
+        } else {
+            if (btnSubmit) btnSubmit.style.display = "inline-flex";
+            if (btnOnline) btnOnline.style.display = "none";
+        }
+    }
+
+    if (radioOnlineYes) radioOnlineYes.onchange = updateOnlineButtons;
+    if (radioOnlineNo)  radioOnlineNo.onchange  = updateOnlineButtons;
+    updateOnlineButtons();
 
 
 
@@ -343,30 +379,13 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelector("form")
         ?.addEventListener("submit", function (e) {
 
-            const name =
-                document.querySelector('[name="Name"]').value.trim();
+            const name      = document.querySelector('[name="Name"]')?.value.trim();
+            const workPlace = document.querySelector('[name="WorkPlace"]')?.value.trim();
 
-            const email =
-                document.querySelector('[name="Email"]').value.trim();
-
-            const location =
-                document.querySelector('[name="Location"]').value.trim();
-
-
-
-            if (!name || !email || !location) {
-
+            if (!name || !workPlace) {
                 e.preventDefault();
-
-                showToast("error", "Complete applicant information");
-
-                return;
-
+                showToast("error", "Please fill in Full Name and Work Place.");
             }
-
-
-
-            showToast("success", "Application submitted");
 
         });
 
