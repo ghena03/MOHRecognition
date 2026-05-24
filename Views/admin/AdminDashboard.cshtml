@@ -100,14 +100,43 @@
             </div>
         </div>
         <div class="user-box">
-            <div class="avatar">A</div>
-            <div>
-                <strong>Admin User</strong><br>
-                <span>System Administrator</span>
-            </div>
-            <a href="@Url.Action("Logout", "Home")" style="margin-left:16px;display:inline-flex;align-items:center;gap:6px;padding:7px 16px;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;color:#374151;font-size:13px;font-weight:600;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='#fff'">
-                <i class="bi bi-box-arrow-right"></i> Logout
+
+            <a asp-controller="Home"
+               asp-action="AdminProfile"
+               class="profile-link">
+
+                <div class="avatar">
+
+                    @(Context.Session.GetString("AdminUsername")
+                                        ?.Substring(0, 1)
+                                        .ToUpper() ?? "A")
+
+                </div>
+
+                <div>
+
+                    <strong>
+
+                        @(Context.Session.GetString("AdminUsername")
+                                                ?? "Admin User")
+
+                    </strong><br>
+
+                    <span>System Administrator</span>
+
+                </div>
+
             </a>
+
+            <a href="@Url.Action("Logout", "Home")"
+               style="margin-left:16px;display:inline-flex;align-items:center;gap:6px;padding:7px 16px;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;color:#374151;font-size:13px;font-weight:600;text-decoration:none;transition:background .15s;"
+               onmouseover="this.style.background='#f3f4f6'"
+               onmouseout="this.style.background='#fff'">
+
+                <i class="bi bi-box-arrow-right"></i> Logout
+
+            </a>
+
         </div>
     </div>
 

@@ -1,0 +1,58 @@
+﻿/* ===== SAFE COLLAPSE ===== */
+
+.rm-sidebar {
+    transition: width .3s ease;
+    overflow: hidden;
+}
+
+    /* collapsed */
+    .rm-sidebar.collapsed {
+        width: 90px !important;
+        min-width: 90px !important;
+    }
+
+        /* hide text only */
+        .rm-sidebar.collapsed .rm-side-label,
+        .rm-sidebar.collapsed .fd-divider,
+        .rm-sidebar.collapsed .rm-navitem span {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        /* keep buttons working */
+        .rm-sidebar.collapsed .rm-navitem {
+            justify-content: center;
+        }
+
+            .rm-sidebar.collapsed .rm-navitem i {
+                margin: 0 !important;
+                font-size: 20px;
+            }
+
+/* toggle */
+.sidebar-toggle {
+    position: fixed;
+    left: 285px;
+    top: 320px;
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 50%;
+    background: #981b31;
+    color: #fff;
+    z-index: 9999;
+    cursor: pointer;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 20px rgba(0,0,0,.18);
+    transition: all .3s ease;
+}
+
+/* collapsed button position */
+.rm-sidebar.collapsed + .sidebar-toggle {
+    left: 55px;
+}
