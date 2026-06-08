@@ -50,6 +50,11 @@ public class MedicineDentistryDto
     public int? Med_TotalStudents { get; set; }
     public int? Den_TotalStudents { get; set; }
 
+    // ── College Selection ─────────────────────────────────────────────────
+    public bool HasMedicine { get; set; } = true;
+    public bool HasDentistry { get; set; } = true;
+    public bool HasOtherClinical { get; set; } = false;
+
     // ── Computed: Part-Time Totals ────────────────────────────────────────
     public int Med_TotalPartTime =>
         (Med_PartTimeClinicalProfessor ?? 0) +
@@ -101,7 +106,7 @@ public class MedicineDentistryDto
     public int Med_PartTimePscHolders => Med_PartTimeClinicalPractitionerPsc ?? 0;
     public int Den_PartTimePscHolders => Den_PartTimeClinicalPractitionerPsc ?? 0;
 
-    // ── Computed: Legacy summaries ────────────────────────────────────────
+    // ── Computed: Summary card values ─────────────────────────────────────
     public int Med_PhdHolders =>
         (Med_FullTimeProfessor ?? 0) +
         (Med_FullTimeAssociateProfessor ?? 0) +
@@ -114,6 +119,24 @@ public class MedicineDentistryDto
         (Den_FullTimeAssistantProfessor ?? 0) +
         (Den_FullTimeLecturerPhd ?? 0);
 
+    // MSc lecturers only (excludes practitioners so they can have their own card)
+    public int Med_MscLecturers =>
+        (Med_FullTimeLecturerMsc ?? 0) +
+        (Med_FullTimeAssistantLecturerMsc ?? 0);
+
+    public int Den_MscLecturers =>
+        (Den_FullTimeLecturerMsc ?? 0) +
+        (Den_FullTimeAssistantLecturerMsc ?? 0);
+
+    // All full-time practitioners (clinical/practical training staff)
+    public int Med_PractitionerTotal =>
+        (Med_FullTimePractitionerMsc ?? 0); // BSc not applicable for Medicine
+
+    public int Den_PractitionerTotal =>
+        (Den_FullTimePractitionerPsc ?? 0) +
+        (Den_FullTimePractitionerMsc ?? 0);
+
+    // Legacy — kept for backward compat (MSc + practitioners combined)
     public int Med_MscHolders =>
         (Med_FullTimeLecturerMsc ?? 0) +
         (Med_FullTimeAssistantLecturerMsc ?? 0) +

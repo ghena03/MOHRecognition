@@ -2,6 +2,9 @@
 @{
     ViewData["Title"] = "All Universities";
     Layout = null;
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
     var items = ViewBag.Items as List<DecisionItemDto> ?? new List<DecisionItemDto>();
 
     string AppTypeStyle(string? t) => (t ?? "Bachelor") switch
@@ -10,26 +13,47 @@
         "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
         _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
     };
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
     string RowClass(string? t) => (t ?? "Bachelor") switch
     {
         "Postgraduate" => "app-row-postgraduate",
         "Online"       => "app-row-online",
         _              => "app-row-bachelor"
     };
+
+    string ToEnglishStatus(string? d) {
+        if (string.IsNullOrWhiteSpace(d)) return "Pending";
+        if (d == "Recognized" || d == "تقديم طلب اعتراف" ||
+            d == "الاعتراف - بكالوريوس فقط" || d == "الاعتراف - بكالوريوس وماجستير" ||
+            d == "الاعتراف للدراسات العليا" || d == "التأكيد على القرار السابق")
+            return "Recognized";
+        if (d == "Not Recognized" || d == "عدم الاعتراف" || d == "سحب الاعتراف كامل" || d == "سحب الاعتراف بالدراسات العليا")
+            return "Not Recognized";
+        return "Pending";
+    }
+
+    string StatusLabel(string s) => isRtl
+        ? s switch { "Recognized" => "معترف به", "Not Recognized" => "غير معترف به", _ => "قيد الانتظار" }
+        : s;
 }
 <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
 <link rel="stylesheet" href="~/css/admin/AllUniversities.css" />
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>All Universities</title>
+    <title>@(isRtl ? "جميع الجامعات" : "All Universities")</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
 </head>
-<body>
+<body class="@(isRtl ? "rtl-body" : "")">
     <!-- HEADER -->
     <div class="top-bar"></div>
     <div class="header">
@@ -37,22 +61,25 @@
             <img src="/images/mohelogo.png" class="logo" />
             <div class="divider"></div>
             <div class="title-box">
-                <h1>All Universities</h1>
-                <p>Final recognition outcomes after committee decisions</p>
+                <h1>@(isRtl ? "جميع الجامعات" : "All Universities")</h1>
+                <p>@(isRtl ? "نتائج الاعتراف النهائية بعد قرارات اللجنة" : "Final recognition outcomes after committee decisions")</p>
             </div>
         </div>
-        <a class="back-btn"
+        <div style="display:flex;align-items:center;gap:10px;">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+            <a class="back-btn"
            href="@Url.Action("AdminDashboard", "Home")">
-            ← Back to Dashboard
+            @(isRtl ? "→ العودة إلى لوحة التحكم" : "← Back to Dashboard")
         </a>
+        </div>
     </div>
 
 
     <main class="pg-body">
 
         <section class="top-card">
-            <h2>All Universities</h2>
-            <p>View all universities with their final recognition status.</p>
+            <h2>@(isRtl ? "جميع الجامعات" : "All Universities")</h2>
+            <p>@(isRtl ? "عرض جميع الجامعات مع حالة الاعتراف النهائية." : "View all universities with their final recognition status.")</p>
         </section>
 
         <partial name="_UniversityFilters"
@@ -60,46 +87,55 @@
 
         <section class="tbl-card">
             <div class="tbl-top">
-                <h3>Finalized Universities</h3>
-                <span class="count-pill"><i class="bi bi-buildings-fill"></i> @items.Count finalized</span>
+                <h3>@(isRtl ? "الجامعات المُنهاة" : "Finalized Universities")</h3>
+                <span class="count-pill">
+                    <i class="bi bi-buildings-fill"></i>
+                    @items.Count @(isRtl ? "جامعة مُنهاة" : "finalized")
+                </span>
             </div>
             <div class="table-wrap">
                 <table>
                     <thead>
                         <tr>
-                            <th>University Name</th>
-                            <th>Type</th>
-                            <th>Country</th>
-                            <th>Request ID</th>
-                            <th>Meeting/Session</th>
-                            <th>Final Status</th>
-                            <th>Decision Date</th>
-                            <th style="text-align:right;padding-right:24px;">Action</th>
+                            <th>@(isRtl ? "اسم الجامعة" : "University Name")</th>
+                            <th>@(isRtl ? "النوع" : "Type")</th>
+                            <th>@(isRtl ? "الدولة" : "Country")</th>
+                            <th>@(isRtl ? "رقم الطلب" : "Request ID")</th>
+                            <th>@(isRtl ? "الاجتماع / الجلسة" : "Meeting/Session")</th>
+                            <th>@(isRtl ? "الحالة النهائية" : "Final Status")</th>
+                            <th>@(isRtl ? "تاريخ القرار" : "Decision Date")</th>
+                            <th style="text-align:@(isRtl ? "left" : "right");padding-@(isRtl ? "left" : "right"):24px;">@(isRtl ? "إجراء" : "Action")</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="au-tbody">
                         @if (items.Any())
                         {
                             foreach (var item in items)
                             {
-                                var statusClass = item.Decision == "Recognized" ? "status-green"
-                                    : item.Decision == "Not Recognized" ? "status-red"
+                                var statusEn = ToEnglishStatus(item.Decision);
+                                var statusClass = statusEn == "Recognized" ? "status-green"
+                                    : statusEn == "Not Recognized" ? "status-red"
                                     : "status-amber";
-                                var statusLabel = item.Decision == "Needs More Information" ? "Pending / Needs More Information" : item.Decision;
-                                <tr class="@RowClass(item.ApplicationType)">
+                                <tr class="au-row @RowClass(item.ApplicationType)"
+                                    data-status="@(item.Decision ?? "")"
+                                    data-uni="@(item.UniversityName ?? "")"
+                                    data-country="@(item.Country ?? "")"
+                                    data-type="@(item.ApplicationType ?? "Bachelor")"
+                                    data-session="@item.SessionNumber"
+                                    data-year="@item.MeetingDate.Year">
                                     <td><span class="uni-name">@(string.IsNullOrWhiteSpace(item.UniversityName) ? "-" : item.UniversityName)</span></td>
-                                    <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
+                                    <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@AppTypeLabel(item.ApplicationType)</span></td>
                                     <td>@(string.IsNullOrWhiteSpace(item.Country) ? "-" : item.Country)</td>
                                     <td><strong>#@item.RequestId</strong></td>
                                     <td>
-                                        <strong>Meeting #@item.SessionNumber</strong>
+                                        <strong>@(isRtl ? "اجتماع #" : "Meeting #")@item.SessionNumber</strong>
                                         <div style="color:#888;font-size:11.5px;margin-top:3px;">@item.MeetingDate.ToString("dd MMM yyyy")</div>
                                     </td>
-                                    <td><span class="status-badge @statusClass">@statusLabel</span></td>
+                                    <td><span class="status-badge @statusClass">@StatusLabel(statusEn)</span></td>
                                     <td>@(item.DecisionDate.HasValue ? item.DecisionDate.Value.ToString("dd MMM yyyy") : "-")</td>
-                                    <td style="text-align:right;">
-                                        <a class="btn-view" href="/Home/MeetingDecision?meetingId=@item.MeetingId&requestId=@item.RequestId">
-                                            <i class="bi bi-eye"></i> View Final Recommendation
+                                    <td style="text-align:@(isRtl ? "left" : "right");">
+                                        <a class="btn-view" href="/Home/AdminFinalDecision?id=@item.RequestId&meetingId=@item.MeetingId&viewOnly=true">
+                                            <i class="bi bi-eye"></i> @(isRtl ? "عرض التوصية النهائية" : "View Final Recommendation")
                                         </a>
                                     </td>
                                 </tr>
@@ -110,8 +146,8 @@
                             <tr>
                                 <td colspan="8">
                                     <div class="empty-state">
-                                        <h3>No finalized universities yet</h3>
-                                        <p>Universities will appear here automatically after the final committee decision is saved inside إدارة الجلسات.</p>
+                                        <h3>@(isRtl ? "لا توجد جامعات مُنهاة بعد" : "No finalized universities yet")</h3>
+                                        <p>@(isRtl ? "ستظهر الجامعات هنا تلقائيًا بعد حفظ قرار اللجنة النهائي داخل إدارة الجلسات." : "Universities will appear here automatically after the final committee decision is saved inside إدارة الجلسات.")</p>
                                     </div>
                                 </td>
                             </tr>

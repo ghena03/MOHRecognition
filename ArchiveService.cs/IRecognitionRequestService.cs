@@ -1,4 +1,5 @@
 using DTOs;
+using MOHRecognition.DTOs;
 
 namespace MOHRecognition.Services
 {
@@ -25,6 +26,7 @@ namespace MOHRecognition.Services
         Task<bool> SaveAdmissionStudyDurationReview(int id, AdmissionStudyDurationReviewDto review);
         Task<bool> SaveGlobalRankings(int id, GlobalRankingsDto rankings);
         Task<bool> SaveBasicInfoAssessment(int id, string decision, string reason, string accreditationStatus, string accreditationNote);
+        Task<bool> SaveCommitteeFinalDecision(int id, string decision, string recommendation);
         Task<bool> UpdateStatus(int id, string status);
         Task<bool> SavePublicInfoSection(int id, PublicInfoDto publicInfo, AcademicInfoDto academicInfoPatch, string city, string country);
         Task<bool> SaveAcademicStaffSection(int id, AcademicInfoDto staffData);
@@ -129,6 +131,10 @@ namespace MOHRecognition.Services
 
         public string BasicInfoAssessmentReason { get; set; } = string.Empty;
 
+        public string CommitteeFinalDecision { get; set; } = string.Empty;
+
+        public string CommitteeFinalRecommendation { get; set; } = string.Empty;
+
         public string AccreditationStatus { get; set; } = string.Empty;
 
         public string AccreditationNote { get; set; } = string.Empty;
@@ -141,5 +147,11 @@ namespace MOHRecognition.Services
 
         // "Bachelor" | "Postgraduate" | "Online"
         public string ApplicationType { get; set; } = "Bachelor";
+
+        // Full Online Education application data (saved permanently for Online/Postgraduate+Online)
+        public OnlineEducationDto OnlineEducationData { get; set; } = new();
+
+        // Full Postgraduate application data (saved permanently for Postgraduate submissions)
+        public PostgraduateApplicationDto PostgraduateData { get; set; } = new();
     }
 }

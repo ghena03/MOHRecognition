@@ -514,6 +514,7 @@
         collegeCats.forEach(ch => {
             ch.addEventListener("change", () => {
                 serializeChecks("input[data-group='college-categories']", "CollegeCategoriesCsv");
+                if (typeof window.syncMedicalSections === 'function') window.syncMedicalSections();
             });
         });
 

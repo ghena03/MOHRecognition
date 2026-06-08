@@ -1,0 +1,507 @@
+@model MOHRecognition.Models.MemberReviewHistoryViewModel
+
+@{
+    Layout = null;
+    ViewData["Title"] = "My Review History";
+
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
+
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
+
+    string MemberDecisionLabel(string d) => isRtl ? d switch {
+        "Approve"                    => "موافقة",
+        "Conditional Approval"       => "موافقة مشروطة",
+        "Reject / Committee Review"  => "رفض / مراجعة اللجنة",
+        _                            => d
+    } : d;
+
+    string CommitteeDecisionLabel(string d) => isRtl ? d switch {
+        "Recognized"             => "معترف به",
+        "Not Recognized"         => "غير معترف به",
+        "Needs More Information" => "يحتاج مزيداً من المعلومات",
+        _                        => d
+    } : d;
+
+    string DecisionColor(string d) => d switch {
+        "Approve"                    => "rh-badge-approve",
+        "Conditional Approval"       => "rh-badge-conditional",
+        "Reject / Committee Review"  => "rh-badge-reject",
+        _                            => "rh-badge-none"
+    };
+    string DecisionIcon(string d) => d switch {
+        "Approve"                    => "bi-check2-circle",
+        "Conditional Approval"       => "bi-arrow-repeat",
+        "Reject / Committee Review"  => "bi-x-octagon",
+        _                            => "bi-dash-circle"
+    };
+    string CommitteeColor(string d) => d switch {
+        "Recognized"              => "rh-badge-recognized",
+        "Not Recognized"          => "rh-badge-notrecognized",
+        "Needs More Information"  => "rh-badge-moreinfo",
+        _                         => "rh-badge-pending"
+    };
+    string CommitteeIcon(string d) => d switch {
+        "Recognized"              => "bi-shield-check",
+        "Not Recognized"          => "bi-shield-x",
+        "Needs More Information"  => "bi-question-circle",
+        _                         => "bi-hourglass-split"
+    };
+    string TypeBadge(string t) => t switch {
+        "Postgraduate" => "rh-type-pg",
+        "Online"       => "rh-type-online",
+        _              => "rh-type-bach"
+    };
+    string DetailUrl(string t, int id) => t switch {
+        "Postgraduate" => $"/Home/DetailsPostgraduateRequest/{id}",
+        "Online"       => $"/Home/DetailsOnlineRequest/{id}",
+        _              => $"/Home/DetailsAcademicInfo/{id}"
+    };
+}
+
+<!doctype html>
+<html lang="@culture" dir="@dir">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(isRtl ? "سجل مراجعاتي" : "My Review History")</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
+    <style>
+        /* ── Page shell ── */
+        .rh-main { padding: 28px 28px 60px; }
+
+        /* ── Hero ── */
+        .rh-hero {
+            background: linear-gradient(135deg, #7f1627 0%, #5a0e1b 100%);
+            border-radius: 16px;
+            padding: 28px 32px;
+            color: #fff;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+        .rh-hero-left h1 { font-size: 22px; font-weight: 800; margin: 0 0 4px; }
+        .rh-hero-left p  { font-size: 13px; opacity: .75; margin: 0; }
+
+        /* ── KPI strip ── */
+        .rh-kpis { display: flex; gap: 12px; flex-wrap: wrap; }
+        .rh-kpi {
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 12px;
+            padding: 12px 20px;
+            text-align: center;
+            min-width: 90px;
+        }
+        .rh-kpi-num  { font-size: 24px; font-weight: 900; line-height: 1; }
+        .rh-kpi-lbl  { font-size: 10.5px; font-weight: 700; opacity: .7; margin-top: 4px; text-transform: uppercase; letter-spacing: .05em; }
+        .rh-kpi.approve     { background: rgba(34,197,94,.18);  border-color: rgba(34,197,94,.3); }
+        .rh-kpi.conditional { background: rgba(245,158,11,.18); border-color: rgba(245,158,11,.3); }
+        .rh-kpi.reject      { background: rgba(239,68,68,.18);  border-color: rgba(239,68,68,.3); }
+        .rh-kpi.recognized  { background: rgba(99,102,241,.18); border-color: rgba(99,102,241,.3); }
+
+        /* ── Filter bar ── */
+        .rh-filters {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 16px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.04);
+        }
+        .rh-ff { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
+        .rh-ff label { font-size: 10.5px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; }
+        .rh-ff select,
+        .rh-ff input  {
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2937;
+            background: #f9fafb;
+            outline: none;
+            font-family: inherit;
+            transition: border-color .15s;
+        }
+        .rh-ff select:focus,
+        .rh-ff input:focus  { border-color: #7f1627; background: #fff; }
+        .rh-filter-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #7f1627; color: #fff; border: none;
+            border-radius: 9px; padding: 8px 18px;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            font-family: inherit; text-decoration: none;
+            height: fit-content; align-self: flex-end; white-space: nowrap;
+        }
+        .rh-filter-btn:hover { background: #5a0e1b; color: #fff; }
+        .rh-reset-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #f3f4f6; color: #374151;
+            border: 1.5px solid #e5e7eb; border-radius: 9px; padding: 8px 14px;
+            font-size: 12.5px; font-weight: 700; cursor: pointer;
+            font-family: inherit; text-decoration: none;
+            height: fit-content; align-self: flex-end; white-space: nowrap;
+        }
+        .rh-reset-btn:hover { background: #e5e7eb; color: #1f2937; }
+
+        /* ── Results meta ── */
+        .rh-results-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .rh-results-count { font-size: 13px; font-weight: 700; color: #6b7280; }
+        .rh-results-count b { color: #1f2937; }
+
+        /* ── Cards list ── */
+        .rh-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .rh-card {
+            background: #fff;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,.04);
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .rh-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 16px rgba(0,0,0,.07); }
+
+        .rh-card-top { display: flex; align-items: center; gap: 16px; padding: 16px 20px; flex-wrap: wrap; }
+
+        .rh-card.type-bachelor    { border-left: 4px solid #3b82f6; }
+        .rh-card.type-postgraduate{ border-left: 4px solid #8b5cf6; }
+        .rh-card.type-online      { border-left: 4px solid #10b981; }
+
+        html[dir="rtl"] .rh-card.type-bachelor    { border-left: none; border-right: 4px solid #3b82f6; }
+        html[dir="rtl"] .rh-card.type-postgraduate{ border-left: none; border-right: 4px solid #8b5cf6; }
+        html[dir="rtl"] .rh-card.type-online      { border-left: none; border-right: 4px solid #10b981; }
+
+        .rh-card-uni { flex: 1; min-width: 0; }
+        .rh-card-name { font-size: 15px; font-weight: 800; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rh-card-meta { display: flex; align-items: center; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+        .rh-card-ref  { font-size: 11.5px; font-weight: 700; color: #7f1627; font-family: monospace; }
+        .rh-card-country { font-size: 12px; color: #6b7280; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .rh-card-year { font-size: 11px; color: #9ca3af; font-weight: 600; }
+
+        /* ── Type badge ── */
+        .rh-type-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 800; white-space: nowrap; flex-shrink: 0; }
+        .rh-type-bach  { background: #dbeafe; color: #1e40af; }
+        .rh-type-pg    { background: #ede9fe; color: #5b21b6; }
+        .rh-type-online{ background: #dcfce7; color: #166534; }
+
+        /* ── Decisions row ── */
+        .rh-card-decisions { display: flex; align-items: stretch; border-top: 1px solid #f3f4f6; background: #fafafa; flex-wrap: wrap; }
+        .rh-dec-block { flex: 1; min-width: 200px; padding: 14px 20px; display: flex; flex-direction: column; gap: 6px; }
+        .rh-dec-block + .rh-dec-block { border-left: 1px solid #f3f4f6; }
+        html[dir="rtl"] .rh-dec-block + .rh-dec-block { border-left: none; border-right: 1px solid #f3f4f6; }
+        .rh-dec-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #9ca3af; display: flex; align-items: center; gap: 5px; }
+        .rh-dec-label i { font-size: 11px; }
+        .rh-dec-value { display: flex; align-items: center; gap: 8px; }
+
+        /* ── Decision badges ── */
+        .rh-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+        .rh-badge-approve      { background: #dcfce7; color: #166534; }
+        .rh-badge-conditional  { background: #fef3c7; color: #92400e; }
+        .rh-badge-reject       { background: #fee2e2; color: #991b1b; }
+        .rh-badge-none         { background: #f3f4f6; color: #6b7280; }
+        .rh-badge-recognized   { background: #e0e7ff; color: #3730a3; }
+        .rh-badge-notrecognized{ background: #fee2e2; color: #991b1b; }
+        .rh-badge-moreinfo     { background: #fef9c3; color: #713f12; }
+        .rh-badge-pending      { background: #f3f4f6; color: #6b7280; }
+
+        /* ── Session chip ── */
+        .rh-session-chip { display: inline-flex; align-items: center; gap: 5px; background: #f0f4ff; color: #3730a3; border: 1px solid #c7d2fe; border-radius: 8px; padding: 4px 10px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+
+        /* ── Justification note ── */
+        .rh-justification { font-size: 12px; color: #6b7280; font-style: italic; line-height: 1.5; max-width: 420px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+        /* ── Action link ── */
+        .rh-view-btn { display: inline-flex; align-items: center; gap: 5px; background: #fff; border: 1.5px solid #d1d5db; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700; color: #374151; text-decoration: none; transition: all .14s; white-space: nowrap; flex-shrink: 0; }
+        .rh-view-btn:hover { border-color: #7f1627; color: #7f1627; background: #fdf4f5; }
+
+        /* ── Empty state ── */
+        .rh-empty { text-align: center; padding: 60px 20px; color: #9ca3af; }
+        .rh-empty i  { font-size: 48px; display: block; margin-bottom: 12px; opacity: .4; }
+        .rh-empty h3 { font-size: 17px; font-weight: 700; color: #374151; margin: 0 0 6px; }
+        .rh-empty p  { font-size: 13px; margin: 0; }
+    </style>
+</head>
+
+<body class="rm-page @(isRtl ? "rtl-body" : "")">
+
+    <header class="rm-header">
+        <div class="rm-brandbar"></div>
+        <div class="rm-top">
+            <div class="rm-top-inner">
+                <div class="rm-brand">
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+                </div>
+                <div class="rm-user">
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@((ViewBag.CurrentRecognitionMember as string)?.Substring(0,1)?.ToUpper() ?? "M")</div>
+                        <div class="rm-user-card-text">
+                            <strong>@(ViewBag.CurrentRecognitionMember ?? (isRtl ? "عضو لجنة الاعتراف" : "Recognition Member"))</strong>
+                            <span>@(isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
+                        <i class="bi bi-box-arrow-right"></i> @(isRtl ? "تسجيل الخروج" : "Logout")
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="rm-shell">
+
+        @await Html.PartialAsync("_MemberSidebar")
+
+        <main class="rm-main rh-main">
+
+            <!-- ── Hero ── -->
+            <div class="rh-hero">
+                <div class="rh-hero-left">
+                    <h1><i class="bi bi-clock-history"></i> @(isRtl ? "سجل مراجعاتي" : "My Review History")</h1>
+                    <p>@(isRtl ? "جميع الطلبات التي راجعتها — توصيتي والنتيجة النهائية للجنة." : "All applications you have reviewed — your recommendation and the committee's final outcome.")</p>
+                </div>
+                <div class="rh-kpis">
+                    <div class="rh-kpi">
+                        <div class="rh-kpi-num">@Model.TotalReviewed</div>
+                        <div class="rh-kpi-lbl">@(isRtl ? "إجمالي المراجعات" : "Total Reviewed")</div>
+                    </div>
+                    <div class="rh-kpi approve">
+                        <div class="rh-kpi-num">@Model.ApprovedCount</div>
+                        <div class="rh-kpi-lbl">@(isRtl ? "موافقة" : "Approved")</div>
+                    </div>
+                    <div class="rh-kpi conditional">
+                        <div class="rh-kpi-num">@Model.ConditionalCount</div>
+                        <div class="rh-kpi-lbl">@(isRtl ? "مشروطة" : "Conditional")</div>
+                    </div>
+                    <div class="rh-kpi reject">
+                        <div class="rh-kpi-num">@Model.RejectedCount</div>
+                        <div class="rh-kpi-lbl">@(isRtl ? "مرفوضة" : "Rejected")</div>
+                    </div>
+                    <div class="rh-kpi recognized">
+                        <div class="rh-kpi-num">@Model.RecognizedCount</div>
+                        <div class="rh-kpi-lbl">@(isRtl ? "معترف به" : "Recognized")</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Filters ── -->
+            <form class="rh-filters" method="get" asp-action="MemberReviewHistory" asp-controller="Home">
+                <div class="rh-ff">
+                    <label><i class="bi bi-search"></i> @(isRtl ? "البحث" : "Search")</label>
+                    <input type="text" name="search" value="@Model.Search"
+                           placeholder="@(isRtl ? "الجامعة، الرقم المرجعي، الدولة..." : "University, ref. no., country…")" />
+                </div>
+                <div class="rh-ff">
+                    <label><i class="bi bi-journal-check"></i> @(isRtl ? "قراري" : "My Decision")</label>
+                    <select name="decision">
+                        <option value="All" selected="@(Model.FilterDecision == "All")">@(isRtl ? "جميع القرارات" : "All Decisions")</option>
+                        <option value="Approve"                   selected="@(Model.FilterDecision == "Approve")">@(isRtl ? "موافقة" : "Approve")</option>
+                        <option value="Conditional Approval"      selected="@(Model.FilterDecision == "Conditional Approval")">@(isRtl ? "موافقة مشروطة" : "Conditional Approval")</option>
+                        <option value="Reject / Committee Review" selected="@(Model.FilterDecision == "Reject / Committee Review")">@(isRtl ? "رفض / مراجعة اللجنة" : "Reject / Committee Review")</option>
+                    </select>
+                </div>
+                <div class="rh-ff">
+                    <label><i class="bi bi-shield-check"></i> @(isRtl ? "نتيجة اللجنة" : "Committee Outcome")</label>
+                    <select name="committee">
+                        <option value="All"                   selected="@(Model.FilterCommittee == "All")">@(isRtl ? "جميع النتائج" : "All Outcomes")</option>
+                        <option value="Recognized"             selected="@(Model.FilterCommittee == "Recognized")">@(isRtl ? "معترف به" : "Recognized")</option>
+                        <option value="Not Recognized"         selected="@(Model.FilterCommittee == "Not Recognized")">@(isRtl ? "غير معترف به" : "Not Recognized")</option>
+                        <option value="Needs More Information" selected="@(Model.FilterCommittee == "Needs More Information")">@(isRtl ? "يحتاج مزيداً من المعلومات" : "Needs More Information")</option>
+                    </select>
+                </div>
+                <div class="rh-ff">
+                    <label><i class="bi bi-mortarboard"></i> @(isRtl ? "نوع الطلب" : "App. Type")</label>
+                    <select name="type">
+                        <option value="All" selected="@(Model.FilterType == "All")">@(isRtl ? "جميع الأنواع" : "All Types")</option>
+                        @foreach (var t in Model.AvailableTypes)
+                        {
+                            <option value="@t" selected="@(Model.FilterType == t)">@AppTypeLabel(t)</option>
+                        }
+                    </select>
+                </div>
+                <div class="rh-ff">
+                    <label><i class="bi bi-calendar3"></i> @(isRtl ? "السنة" : "Year")</label>
+                    <select name="year">
+                        <option value="All" selected="@(Model.FilterYear == "All")">@(isRtl ? "جميع السنوات" : "All Years")</option>
+                        @foreach (var yr in Model.AvailableYears)
+                        {
+                            <option value="@yr" selected="@(Model.FilterYear == yr.ToString())">@yr</option>
+                        }
+                    </select>
+                </div>
+                @if (Model.AvailableCountries.Count > 1)
+                {
+                    <div class="rh-ff">
+                        <label><i class="bi bi-globe2"></i> @(isRtl ? "الدولة" : "Country")</label>
+                        <select name="country">
+                            <option value="All" selected="@(Model.FilterCountry == "All")">@(isRtl ? "جميع الدول" : "All Countries")</option>
+                            @foreach (var c in Model.AvailableCountries)
+                            {
+                                <option value="@c" selected="@(Model.FilterCountry == c)">@c</option>
+                            }
+                        </select>
+                    </div>
+                }
+                <button type="submit" class="rh-filter-btn"><i class="bi bi-funnel-fill"></i> @(isRtl ? "تطبيق" : "Apply")</button>
+                <a href="@Url.Action("MemberReviewHistory", "Home")" class="rh-reset-btn"><i class="bi bi-x-circle"></i> @(isRtl ? "إعادة تعيين" : "Reset")</a>
+            </form>
+
+            <!-- ── Results ── -->
+            <div class="rh-results-meta">
+                <span class="rh-results-count">
+                    @if (isRtl)
+                    {
+                        <text>عرض <b>@Model.Items.Count</b> من أصل <b>@Model.TotalReviewed</b> طلب مراجَع</text>
+                    }
+                    else
+                    {
+                        <text>Showing <b>@Model.Items.Count</b> of <b>@Model.TotalReviewed</b> reviewed applications</text>
+                    }
+                </span>
+            </div>
+
+            @if (!Model.Items.Any())
+            {
+                <div class="rh-empty">
+                    <i class="bi bi-inbox"></i>
+                    <h3>@(isRtl ? "لا توجد مراجعات" : "No reviews found")</h3>
+                    <p>@(isRtl ? "لا يوجد طلبات تطابق مرشّحاتك الحالية، أو لم تُقدَّم أي توصيات بعد." : "No applications match your current filters, or you haven't submitted any recommendations yet.")</p>
+                </div>
+            }
+            else
+            {
+                <div class="rh-list">
+                    @foreach (var item in Model.Items)
+                    {
+                        var typeClass = item.ApplicationType switch {
+                            "Postgraduate" => "type-postgraduate",
+                            "Online"       => "type-online",
+                            _              => "type-bachelor"
+                        };
+                        <div class="rh-card @typeClass">
+                            <div class="rh-card-top">
+                                <!-- University info -->
+                                <div class="rh-card-uni">
+                                    <div class="rh-card-name">@item.UniversityName</div>
+                                    <div class="rh-card-meta">
+                                        <span class="rh-card-ref"><i class="bi bi-hash"></i>@item.ReferenceNumber</span>
+                                        <span class="rh-card-country"><i class="bi bi-geo-alt"></i>@item.Country</span>
+                                        @if (item.Year > 0) { <span class="rh-card-year">@item.Year</span> }
+                                    </div>
+                                </div>
+
+                                <!-- Type badge -->
+                                <span class="rh-type-badge @TypeBadge(item.ApplicationType)">
+                                    @if (item.ApplicationType == "Postgraduate") { <i class="bi bi-mortarboard"></i> }
+                                    else if (item.ApplicationType == "Online")   { <i class="bi bi-wifi"></i> }
+                                    else                                          { <i class="bi bi-bank"></i> }
+                                    @AppTypeLabel(item.ApplicationType)
+                                </span>
+
+                                <!-- Session chip -->
+                                @if (item.SessionNumber.HasValue)
+                                {
+                                    <span class="rh-session-chip">
+                                        <i class="bi bi-calendar2-event"></i>
+                                        @(isRtl ? "جلسة #" : "Session #")@item.SessionNumber
+                                        @if (item.MeetingDate.HasValue) { <span style="opacity:.65">· @item.MeetingDate.Value.ToString("dd MMM yyyy")</span> }
+                                    </span>
+                                }
+
+                                <!-- View link -->
+                                <a class="rh-view-btn" href="@DetailUrl(item.ApplicationType, item.RequestId)" target="_blank">
+                                    <i class="bi bi-eye"></i> @(isRtl ? "عرض" : "View")
+                                </a>
+                            </div>
+
+                            <!-- Decisions row -->
+                            <div class="rh-card-decisions">
+                                <!-- My recommendation -->
+                                <div class="rh-dec-block">
+                                    <div class="rh-dec-label"><i class="bi bi-person-check"></i> @(isRtl ? "توصيتي" : "My Recommendation")</div>
+                                    <div class="rh-dec-value">
+                                        @if (!string.IsNullOrWhiteSpace(item.MemberDecision))
+                                        {
+                                            <span class="rh-badge @DecisionColor(item.MemberDecision)">
+                                                <i class="bi @DecisionIcon(item.MemberDecision)"></i>
+                                                @MemberDecisionLabel(item.MemberDecision)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="rh-badge rh-badge-none"><i class="bi bi-dash"></i> @(isRtl ? "لم تُقدَّم" : "Not submitted")</span>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(item.MemberJustification))
+                                    {
+                                        <div class="rh-justification">"@item.MemberJustification"</div>
+                                    }
+                                    @if (item.SubmittedToAdminAt.HasValue)
+                                    {
+                                        <div style="font-size:11px;color:#9ca3af;margin-top:2px;">
+                                            <i class="bi bi-send"></i> @(isRtl ? "مُقدَّمة " : "Submitted ")@item.SubmittedToAdminAt.Value.ToString("dd MMM yyyy")
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Committee outcome -->
+                                <div class="rh-dec-block">
+                                    <div class="rh-dec-label"><i class="bi bi-people"></i> @(isRtl ? "نتيجة اللجنة" : "Committee Outcome")</div>
+                                    <div class="rh-dec-value">
+                                        @if (!string.IsNullOrWhiteSpace(item.CommitteeDecision))
+                                        {
+                                            <span class="rh-badge @CommitteeColor(item.CommitteeDecision)">
+                                                <i class="bi @CommitteeIcon(item.CommitteeDecision)"></i>
+                                                @CommitteeDecisionLabel(item.CommitteeDecision)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="rh-badge rh-badge-pending">
+                                                <i class="bi bi-hourglass-split"></i> @(isRtl ? "في انتظار اللجنة" : "Awaiting committee")
+                                            </span>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(item.CommitteeNotes))
+                                    {
+                                        <div class="rh-justification">"@item.CommitteeNotes"</div>
+                                    }
+                                    @if (item.CommitteeDecisionDate.HasValue)
+                                    {
+                                        <div style="font-size:11px;color:#9ca3af;margin-top:2px;">
+                                            <i class="bi bi-calendar-check"></i> @(isRtl ? "تقرر في " : "Decided ")@item.CommitteeDecisionDate.Value.ToString("dd MMM yyyy")
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+        </main>
+    </div>
+
+</body>
+</html>

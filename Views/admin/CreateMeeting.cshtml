@@ -2,20 +2,31 @@
 @{
     ViewData["Title"] = "Schedule New Meeting";
     Layout = null;
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
 
     var allRequests = ViewBag.AvailableRequests as IEnumerable<RecognitionRequestRecord>
                       ?? Enumerable.Empty<RecognitionRequestRecord>();
     int nextNum = ViewBag.NextSessionNumber ?? 1;
     int preselectedRequestId = ViewBag.PreselectedRequestId ?? 0;
+
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Schedule New Meeting</title>
+    <title>@(isRtl ? "جدولة اجتماع جديد" : "Schedule New Meeting")</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f0eb; color: #1a1a1a; min-height: 100vh; }
@@ -30,12 +41,6 @@
         .hd-text p  { font-size: 11.5px; opacity: .72; margin-top: 2px; }
         .btn-back { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.35); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; text-decoration: none; transition: background .15s; }
         .btn-back:hover { background: rgba(255,255,255,.25); }
-
-        .breadcrumb-bar { background: #fff; border-bottom: 1px solid #ece5dd; padding: 0 48px; height: 44px; display: flex; align-items: center; }
-        .bc-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #999; text-decoration: none; }
-        .bc-item:hover { color: #7f1627; }
-        .bc-sep { font-size: 12px; color: #ccc; margin: 0 10px; }
-        .bc-cur { color: #7f1627; font-weight: 700; }
 
         /* ── Layout ── */
         .pg-body { max-width: 1200px; margin: 0 auto; padding: 36px 24px 80px; display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
@@ -125,21 +130,22 @@
         .uni-meta-item i { font-size: 11px; }
 
         .status-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-        .sp-pending  { background: #fff3cd; color: #a06800; }
-        .sp-assigned { background: #e8f0fe; color: #1a56db; }
         .sp-review   { background: #fde8ec; color: #7f1627; }
-        .sp-other    { background: #f0f0f0; color: #777; }
+        .app-type-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 10.5px; font-weight: 700; flex-shrink: 0; }
+        .atp-bachelor     { background: #dbeafe; color: #1e40af; }
+        .atp-postgraduate { background: #ede9fe; color: #5b21b6; }
+        .atp-online       { background: #dcfce7; color: #166534; }
 
         .empty-picker { text-align: center; padding: 48px 32px; color: #bbb; }
         .empty-picker i { font-size: 40px; display: block; margin-bottom: 12px; }
         .empty-picker p { font-size: 13px; }
     </style>
 </head>
-<body>
+<body class="@(isRtl ? "rtl-body" : "")">
 
     <div class="ministry-bar">
         <i class="bi bi-bank2"></i>
-        Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan
+        @(isRtl ? "وزارة التعليم العالي والبحث العلمي — المملكة الأردنية الهاشمية" : "Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan")
     </div>
 
     <div class="pg-header">
@@ -147,13 +153,16 @@
             <img src="/images/mohelogo.png" alt="Logo" />
             <div class="hd-sep"></div>
             <div class="hd-text">
-                <h1>Schedule New Meeting</h1>
-                <p>Meeting Preparation</p>
+                <h1>@(isRtl ? "جدولة اجتماع جديد" : "Schedule New Meeting")</h1>
+                <p>@(isRtl ? "تحضير الاجتماع" : "Meeting Preparation")</p>
             </div>
         </div>
-        <a href="/Home/Meetings" class="btn-back">
-            <i class="bi bi-arrow-left"></i> Back to Meetings
+                <div style="display:flex;align-items:center;gap:10px;">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+            <a href="/Home/Meetings" class="btn-back">
+            <i class="bi bi-arrow-@(isRtl ? "right" : "left")"></i> @(isRtl ? "العودة إلى الاجتماعات" : "Back to Meetings")
         </a>
+        </div>
     </div>
 
 
@@ -164,60 +173,52 @@
             <!-- ── Left: Meeting Details ── -->
             <div class="details-card">
                 <div class="card-head">
-                    <h2><i class="bi bi-calendar3" style="margin-right:6px;"></i>Meeting Details</h2>
-                    <p>Set the schedule information for this meeting</p>
+                    <h2><i class="bi bi-calendar3" style="margin-@(isRtl ? "left" : "right"):6px;"></i>@(isRtl ? "تفاصيل الاجتماع" : "Meeting Details")</h2>
+                    <p>@(isRtl ? "تحديد معلومات الجدول الزمني لهذا الاجتماع" : "Set the schedule information for this meeting")</p>
                 </div>
                 <div class="card-body">
 
                     <div class="form-group">
-                        <label>Session Number</label>
+                        <label>@(isRtl ? "رقم الجلسة" : "Session Number")</label>
                         <input class="form-input" name="SessionNumber" value="@nextNum" readonly />
                     </div>
 
                     <div class="form-group">
-                        <label>Meeting Title</label>
-                        <input class="form-input" name="MeetingTitle" placeholder="e.g. Committee Review — Q2 2026" />
+                        <label>@(isRtl ? "عنوان الاجتماع" : "Meeting Title")</label>
+                        <input class="form-input" name="MeetingTitle" placeholder="@(isRtl ? "مثال: مراجعة اللجنة — الربع الثاني 2026" : "e.g. Committee Review — Q2 2026")" />
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Date <span style="color:#b91c1c;">*</span></label>
+                            <label>@(isRtl ? "التاريخ" : "Date") <span style="color:#b91c1c;">*</span></label>
                             <input class="form-input" type="date" name="MeetingDate" required />
                         </div>
                         <div class="form-group">
-                            <label>Time</label>
+                            <label>@(isRtl ? "الوقت" : "Time")</label>
                             <input class="form-input" type="time" name="MeetingTime" />
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Location / Platform</label>
-                        <input class="form-input" name="LocationOrPlatform" placeholder="e.g. MOHE Hall / Zoom / Teams" />
+                        <label>@(isRtl ? "الموقع / المنصة" : "Location / Platform")</label>
+                        <input class="form-input" name="LocationOrPlatform" placeholder="@(isRtl ? "مثال: قاعة الوزارة / Zoom / Teams" : "e.g. MOHE Hall / Zoom / Teams")" />
                     </div>
 
                     <div class="form-group">
-                        <label>Status</label>
-                        <select class="form-input" name="Status">
-                            <option value="Scheduled">Scheduled</option>
-                            <option value="Open">Open</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Notes</label>
-                        <textarea class="form-input" name="Notes" rows="3" placeholder="Any additional notes..."></textarea>
+                        <label>@(isRtl ? "ملاحظات" : "Notes")</label>
+                        <textarea class="form-input" name="Notes" rows="3" placeholder="@(isRtl ? "أي ملاحظات إضافية..." : "Any additional notes...")"></textarea>
                     </div>
 
                     <div style="border-top:1px solid #f0ebe4;padding-top:16px;">
-                        <div style="font-size:11.5px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Universities Selected</div>
+                        <div style="font-size:11.5px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">@(isRtl ? "الجامعات المختارة" : "Universities Selected")</div>
                         <div class="selected-count-pill">
                             <i class="bi bi-building"></i>
-                            <span id="selCount">0</span> selected
+                            <span id="selCount">0</span> @(isRtl ? "مختارة" : "selected")
                         </div>
                     </div>
 
                     <button type="submit" class="btn-save">
-                        <i class="bi bi-check-lg"></i> Save Meeting
+                        <i class="bi bi-check-lg"></i> @(isRtl ? "حفظ الاجتماع" : "Save Meeting")
                     </button>
 
                 </div>
@@ -226,12 +227,20 @@
             <!-- ── Right: University Picker ── -->
             <div class="picker-card">
                 <div class="picker-head">
-                    <h2><i class="bi bi-building" style="margin-right:8px;color:#7f1627;"></i>Select Universities</h2>
+                    <h2><i class="bi bi-building" style="margin-@(isRtl ? "left" : "right"):8px;color:#7f1627;"></i>@(isRtl ? "اختر الجامعات" : "Select Universities")</h2>
                     <div class="picker-head-right">
-                        <span class="count-badge" id="headCount">0 selected</span>
+                        <span class="count-badge" id="headCount">0 @(isRtl ? "مختارة" : "selected")</span>
                     </div>
                 </div>
 
+                <div class="picker-filters">
+                    <div class="search-wrap">
+                        <i class="bi bi-search"></i>
+                        <input id="searchBox" class="search-input" placeholder="@(isRtl ? "بحث عن جامعة..." : "Search universities...")" />
+                    </div>
+                    <button type="button" class="btn-quick" onclick="selectAll()">@(isRtl ? "اختر الكل" : "Select All")</button>
+                    <button type="button" class="btn-quick" onclick="clearAll()">@(isRtl ? "إلغاء الكل" : "Clear All")</button>
+                </div>
 
                 <div class="uni-list" id="uniList">
                     @{
@@ -241,7 +250,7 @@
                     {
                         <div class="empty-picker">
                             <i class="bi bi-inbox"></i>
-                            <p>No university requests submitted yet.</p>
+                            <p>@(isRtl ? "لا توجد طلبات جامعات مقدّمة بعد." : "No university requests submitted yet.")</p>
                         </div>
                     }
                     else
@@ -249,6 +258,17 @@
                         foreach (var req in reqList)
                         {
                             bool isSelected = preselectedRequestId > 0 && preselectedRequestId == req.Id;
+                            var appType = req.ApplicationType ?? "Bachelor";
+                            var atpClass = appType switch {
+                                "Postgraduate" => "atp-postgraduate",
+                                "Online"       => "atp-online",
+                                _              => "atp-bachelor"
+                            };
+                            var atpIcon = appType switch {
+                                "Postgraduate" => "bi-mortarboard-fill",
+                                "Online"       => "bi-laptop",
+                                _              => "bi-building"
+                            };
 
                             <div class="uni-item @(isSelected ? "selected" : "")"
                                  data-name="@req.UniversityName?.ToLower()"
@@ -258,7 +278,7 @@
                                 <div class="uni-cb"><i class="bi bi-check"></i></div>
                                 <input type="checkbox" name="RequestIds" value="@req.Id" style="display:none;" @(isSelected ? "checked" : "") />
                                 <div class="uni-info">
-                                    <div class="uni-name">@(string.IsNullOrWhiteSpace(req.UniversityName) ? "Unnamed University" : req.UniversityName)</div>
+                                    <div class="uni-name">@(string.IsNullOrWhiteSpace(req.UniversityName) ? (isRtl ? "جامعة غير مسمّاة" : "Unnamed University") : req.UniversityName)</div>
                                     <div class="uni-meta">
                                         @if (!string.IsNullOrWhiteSpace(req.Country))
                                         {
@@ -271,7 +291,8 @@
                                         }
                                     </div>
                                 </div>
-                                <span class="status-pill sp-review">Submitted</span>
+                                <span class="app-type-pill @atpClass"><i class="bi @atpIcon"></i> @AppTypeLabel(appType)</span>
+                                <span class="status-pill sp-review">@(isRtl ? "مقدّم" : "Submitted")</span>
                             </div>
                         }
                     }
@@ -282,10 +303,12 @@
     </form>
 
     <script>
+        var _isRtl = @(isRtl ? "true" : "false");
+
         function updateCount() {
             var n = document.querySelectorAll('.uni-item.selected').length;
             document.getElementById('selCount').textContent = n;
-            document.getElementById('headCount').textContent = n + ' selected';
+            document.getElementById('headCount').textContent = n + ' ' + (_isRtl ? 'مختارة' : 'selected');
         }
 
         function toggleItem(el, id) {

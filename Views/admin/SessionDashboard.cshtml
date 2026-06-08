@@ -2,16 +2,24 @@
 @using MOHRecognition.Services
 @model MeetingDto
 @{
-    var employees    = (ViewBag.Employees as List<EmployeeDto> ?? new List<EmployeeDto>())
-                       .OrderBy(e => e.Workplace == "Ministry of Higher Education and Scientific Research" ? 0 : 1)
-                       .ToList();
+    var employees    = (ViewBag.Employees as List<EmployeeDto> ?? new List<EmployeeDto>()).ToList();
     var attendanceRaw = ViewBag.Attendance as Dictionary<int, bool> ?? new Dictionary<int, bool>();
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
+
     string RowClass(string? t) => (t ?? "Bachelor") switch
     {
         "Postgraduate" => "app-row-postgraduate",
         "Online"       => "app-row-online",
         _              => "app-row-bachelor"
     };
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
+    string MeetingStatusLabel(string? s) => isRtl
+        ? s switch { "Open" => "مفتوح", "Closed" => "مُغلق", "Scheduled" => "مجدول", _ => s ?? "" }
+        : s ?? "";
 }
 
 @{
@@ -42,12 +50,16 @@
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Meeting #@Model.SessionNumber — إدارة الجلسات</title>
+    <title>@(isRtl ? "اجتماع #" : "Meeting #")@Model.SessionNumber — @(isRtl ? "إدارة الجلسات" : "Meeting Management")</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -193,6 +205,11 @@
         .dec-not-recognized { background: #fde8e8; color: #b91c1c; }
         .dec-needs-more     { background: #fff3cd; color: #856404; }
         .dec-pending        { background: #f4f1ec; color: #bbb; font-style: italic; font-weight: 500; }
+        .dec-ar-green       { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .dec-ar-red         { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .dec-ar-amber       { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .dec-ar-blue        { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+        .dec-ar-purple      { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
 
         .uni-actions { padding-left: 22px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; min-width: 200px; flex-shrink: 0; }
 
@@ -205,12 +222,6 @@
         }
         .btn-view-app  { background: #f0f5ff; color: #1a56db; border-color: #c5d8f8; }
         .btn-view-app:hover { background: #deeafc; }
-        .btn-doctors   { background: #f0fbf4; color: #1a7a34; border-color: #b8e8c8; }
-        .btn-doctors:hover { background: #ddf5e7; }
-        .btn-decide    { background: #7f1627; color: #fff; border-color: #7f1627; font-weight: 700; }
-        .btn-decide:hover { background: #6a1020; }
-        .btn-edit-dec  { background: #fff; color: #7f1627; border-color: #d0a0b0; font-weight: 700; }
-        .btn-edit-dec:hover { background: #fdf0f2; }
 
         /* ── Empty state ── */
         .empty-wrap {
@@ -341,11 +352,11 @@
         .app-row-online       { border-left: 5px solid #10b981 !important; }
     </style>
 </head>
-<body>
+<body class="@(isRtl ? "rtl-body" : "")">
 
     <div class="ministry-bar">
         <i class="bi bi-bank2"></i>
-        Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan
+        @(isRtl ? "وزارة التعليم العالي والبحث العلمي — المملكة الأردنية الهاشمية" : "Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan")
     </div>
 
     <div class="pg-header">
@@ -353,13 +364,16 @@
             <img src="/images/mohelogo.png" alt="Logo" />
             <div class="hd-sep"></div>
             <div class="hd-text">
-                <h1>إدارة الجلسات</h1>
-                <p>Committee Working Area</p>
+                <h1>@(isRtl ? "إدارة الجلسات" : "Meeting Management")</h1>
+                <p>@(isRtl ? "منطقة عمل اللجنة" : "Committee Working Area")</p>
             </div>
         </div>
-        <a href="/Home/SessionWorkflow" class="btn-back">
-            <i class="bi bi-arrow-left"></i> إدارة الجلسات
+                <div style="display:flex;align-items:center;gap:10px;">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+            <a href="/Home/SessionWorkflow" class="btn-back">
+            <i class="bi bi-arrow-@(isRtl ? "right" : "left")"></i> @(isRtl ? "إدارة الجلسات" : "Session Management")
         </a>
+        </div>
     </div>
 
 
@@ -367,10 +381,10 @@
     <div class="info-banner">
         <div class="ib-top">
             <div>
-                <div class="ib-session-num">Meeting #@Model.SessionNumber</div>
+                <div class="ib-session-num">@(isRtl ? "اجتماع #" : "Meeting #")@Model.SessionNumber</div>
                 <div class="ib-title">
                     @(string.IsNullOrWhiteSpace(Model.MeetingTitle)
-                        ? "Committee Meeting — " + Model.MeetingDate.ToString("dd MMMM yyyy")
+                        ? (isRtl ? "اجتماع اللجنة — " : "Committee Meeting — ") + Model.MeetingDate.ToString("dd MMMM yyyy")
                         : Model.MeetingTitle)
                 </div>
                 <div class="ib-meta">
@@ -385,24 +399,24 @@
                     }
                 </div>
             </div>
-            <span class="sbadge @sb"><span class="sdot"></span>@Model.Status</span>
+            <span class="sbadge @sb"><span class="sdot"></span>@MeetingStatusLabel(Model.Status)</span>
         </div>
         <div class="stats-strip">
             <div class="stat-cell">
                 <div class="stat-val">@total</div>
-                <div class="stat-lbl">Universities</div>
+                <div class="stat-lbl">@(isRtl ? "الجامعات" : "Universities")</div>
             </div>
             <div class="stat-cell">
                 <div class="stat-val">@decidedCount</div>
-                <div class="stat-lbl">Decided</div>
+                <div class="stat-lbl">@(isRtl ? "تم البت بها" : "Decided")</div>
             </div>
             <div class="stat-cell">
                 <div class="stat-val">@pending</div>
-                <div class="stat-lbl">Pending</div>
+                <div class="stat-lbl">@(isRtl ? "معلّقة" : "Pending")</div>
             </div>
             <div class="stat-cell">
                 <div class="stat-val">@pct%</div>
-                <div class="stat-lbl">Complete</div>
+                <div class="stat-lbl">@(isRtl ? "مكتمل" : "Complete")</div>
             </div>
         </div>
     </div>
@@ -419,18 +433,18 @@
             <div class="attend-hd">
                 <div class="attend-hd-left">
                     <i class="bi bi-people-fill attend-hd-icon"></i>
-                    <span class="attend-hd-title">Attendance</span>
+                    <span class="attend-hd-title">@(isRtl ? "الحضور" : "Attendance")</span>
                     <span class="attend-pill">
                         <i class="bi bi-person-check"></i>
-                        <span id="presentNum">@presentCount</span> / @totalMembers present
+                        <span id="presentNum">@presentCount</span> / @totalMembers @(isRtl ? "حاضر" : "present")
                     </span>
                 </div>
                 <div class="attend-hd-right">
                     <button class="btn-att btn-att-ghost" onclick="setAllAttendance(false)">
-                        <i class="bi bi-x-lg"></i> Clear All
+                        <i class="bi bi-x-lg"></i> @(isRtl ? "مسح الكل" : "Clear All")
                     </button>
                     <button class="btn-att btn-att-primary" onclick="setAllAttendance(true)">
-                        <i class="bi bi-check2-all"></i> Mark All Present
+                        <i class="bi bi-check2-all"></i> @(isRtl ? "تعيين الجميع حاضرين" : "Mark All Present")
                     </button>
                 </div>
             </div>
@@ -456,15 +470,15 @@
         </div>
 
         <div class="sec-hd">
-            <div class="sec-lbl"><i class="bi bi-building" style="font-size:13px;color:#7f1627;margin-right:6px;"></i>Universities Discussed in this Meeting</div>
+            <div class="sec-lbl"><i class="bi bi-building" style="font-size:13px;color:#7f1627;margin-@(isRtl ? "left" : "right"):6px;"></i>@(isRtl ? "الجامعات المناقَشة في هذا الاجتماع" : "Universities Discussed in this Meeting")</div>
         </div>
 
         @if (total > 0)
         {
             <div class="prog-wrap">
                 <div class="prog-row">
-                    <span>Decision Progress</span>
-                    <span class="prog-pct">@decidedCount / @total decisions recorded</span>
+                    <span>@(isRtl ? "تقدّم اتخاذ القرارات" : "Decision Progress")</span>
+                    <span class="prog-pct">@decidedCount / @total @(isRtl ? "قرارات مسجّلة" : "decisions recorded")</span>
                 </div>
                 <div class="prog-track">
                     <div class="prog-fill @(pct == 100 ? "full" : "")"></div>
@@ -481,14 +495,43 @@
                         bool hasDecision = dec != null && !string.IsNullOrWhiteSpace(dec.Decision);
 
                         string decBadge = "dec-pending";
-                        string decLabel = "Pending";
+                        string decLabel = isRtl ? "قرار معلّق" : "Pending";
                         if (hasDecision)
                         {
                             switch (dec!.Decision)
                             {
-                                case "Recognized":             decBadge = "dec-recognized";     decLabel = "Recognized";       break;
-                                case "Not Recognized":         decBadge = "dec-not-recognized"; decLabel = "Not Recognized";   break;
-                                case "Needs More Information": decBadge = "dec-needs-more";     decLabel = "Needs More Info";  break;
+                                case "Recognized":
+                                case "Approve":
+                                    decBadge = "dec-recognized";
+                                    decLabel = isRtl ? "موافقة" : "Approve";
+                                    break;
+                                case "Not Recognized":
+                                case "Reject":
+                                    decBadge = "dec-not-recognized";
+                                    decLabel = isRtl ? "رفض" : "Reject";
+                                    break;
+                                case "Needs More Information":
+                                case "Pending":
+                                    decBadge = "dec-needs-more";
+                                    decLabel = isRtl ? "يحتاج معلومات" : "Pending";
+                                    break;
+                                case "الاعتراف - بكالوريوس فقط":
+                                case "الاعتراف - بكالوريوس وماجستير":
+                                case "الاعتراف للدراسات العليا":
+                                case "تقديم طلب اعتراف":
+                                    decBadge = "dec-ar-green"; decLabel = dec.Decision; break;
+                                case "عدم الاعتراف":
+                                case "سحب الاعتراف كامل":
+                                case "سحب الاعتراف بالدراسات العليا":
+                                    decBadge = "dec-ar-red"; decLabel = dec.Decision; break;
+                                case "تأجيل الاعتراف (مستندات)":
+                                case "تأجيل الاعتراف (تخريج فوج)":
+                                    decBadge = "dec-ar-amber"; decLabel = dec.Decision; break;
+                                case "تحويل إلى عضو اللجنة":
+                                case "التأكيد على القرار السابق":
+                                    decBadge = "dec-ar-blue"; decLabel = dec.Decision; break;
+                                case "التغييرات التي طرأت على المؤسسة":
+                                    decBadge = "dec-ar-purple"; decLabel = dec.Decision; break;
                                 default: decLabel = dec.Decision; break;
                             }
                         }
@@ -499,7 +542,7 @@
 
                                 <div class="uni-info">
                                     <div class="uni-name" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                                        @(string.IsNullOrWhiteSpace(r.UniversityName) ? "Unnamed University" : r.UniversityName)
+                                        @(string.IsNullOrWhiteSpace(r.UniversityName) ? (isRtl ? "جامعة غير مسمّاة" : "Unnamed University") : r.UniversityName)
                                         @{
                                             var sdAtStyle = (r.ApplicationType ?? "Bachelor") switch
                                             {
@@ -508,29 +551,29 @@
                                                 _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
                                             };
                                         }
-                                        <span style="display:inline-block;border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:700;@sdAtStyle">@(r.ApplicationType ?? "Bachelor")</span>
+                                        <span style="display:inline-block;border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:700;@sdAtStyle">@AppTypeLabel(r.ApplicationType)</span>
                                     </div>
                                     <div class="uni-sub">
                                         @if (!string.IsNullOrWhiteSpace(r.Country))
                                         {
                                             <span class="uni-sub-item"><i class="bi bi-geo-alt"></i> @r.Country</span>
                                         }
-                                        <span class="uni-sub-item"><i class="bi bi-hash"></i> Request ID: @r.Id</span>
+                                        <span class="uni-sub-item"><i class="bi bi-hash"></i> @(isRtl ? "معرّف الطلب:" : "Request ID:") @r.Id</span>
                                         @if (!string.IsNullOrWhiteSpace(r.ReferenceNumber))
                                         {
-                                            <span class="uni-sub-item"><i class="bi bi-file-text"></i> Ref: @r.ReferenceNumber</span>
+                                            <span class="uni-sub-item"><i class="bi bi-file-text"></i> @(isRtl ? "المرجع:" : "Ref:") @r.ReferenceNumber</span>
                                         }
                                     </div>
                                 </div>
 
                                 <div class="uni-dec">
-                                    <div class="uni-dec-lbl">Final Decision</div>
+                                    <div class="uni-dec-lbl">@(isRtl ? "القرار النهائي" : "Final Decision")</div>
                                     <span class="dec-badge @decBadge">@decLabel</span>
                                 </div>
 
                                 <div class="uni-actions">
                                     <a class="btn-action btn-view-app" href="/Home/AdminMeetingApplicationView?requestId=@r.Id&meetingId=@meetingId">
-                                        <i class="bi bi-eye"></i> View Application
+                                        <i class="bi bi-eye"></i> @(isRtl ? "عرض الطلب" : "View Application")
                                     </a>
                                 </div>
                             </div>
@@ -545,8 +588,8 @@
         {
             <div class="empty-wrap">
                 <i class="bi bi-journal-x"></i>
-                <h3>No Universities Linked</h3>
-                <p>No university requests have been linked to this meeting. Go to <strong>Meetings</strong> to edit this meeting and select the universities to be discussed.</p>
+                <h3>@(isRtl ? "لا توجد جامعات مرتبطة" : "No Universities Linked")</h3>
+                <p>@(isRtl ? "لم يتم ربط أي طلبات جامعات بهذا الاجتماع. اذهب إلى الاجتماعات لتعديل هذا الاجتماع واختيار الجامعات المراد مناقشتها." : "No university requests have been linked to this meeting. Go to Meetings to edit this meeting and select the universities to be discussed.")</p>
             </div>
         }
 
@@ -555,11 +598,11 @@
             <span class="close-note">
                 @if (isClosed)
                 {
-                    <span>This meeting has been officially closed and finalized.</span>
+                    <span>@(isRtl ? "تم إغلاق هذا الاجتماع وإنهاؤه رسميًا." : "This meeting has been officially closed and finalized.")</span>
                 }
                 else
                 {
-                    <span>After all decisions are recorded, you can officially close this meeting.</span>
+                    <span>@(isRtl ? "بعد تسجيل جميع القرارات، يمكنك إغلاق هذا الاجتماع رسميًا." : "After all decisions are recorded, you can officially close this meeting.")</span>
                 }
             </span>
             @if (!isClosed)
@@ -568,7 +611,7 @@
                 if (allDecided)
                 {
                     <button class="btn-close-meeting" onclick="document.getElementById('closeModal').classList.add('open')">
-                        <i class="bi bi-lock-fill"></i> Close Meeting
+                        <i class="bi bi-lock-fill"></i> @(isRtl ? "إغلاق الاجتماع" : "Close Meeting")
                     </button>
                 }
                 else
@@ -576,11 +619,18 @@
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
                         <button class="btn-close-meeting" disabled
                                 style="opacity:.4; cursor:not-allowed; pointer-events:none;">
-                            <i class="bi bi-lock-fill"></i> Close Meeting
+                            <i class="bi bi-lock-fill"></i> @(isRtl ? "إغلاق الاجتماع" : "Close Meeting")
                         </button>
                         <span style="font-size:12px; color:#b91c1c; font-weight:600;">
                             <i class="bi bi-exclamation-circle"></i>
-                            @(total - decidedCount) decision@(total - decidedCount == 1 ? "" : "s") still pending — record all before closing.
+                            @if (isRtl)
+                            {
+                                <text>@(total - decidedCount) قرار لا يزال معلّقًا — سجّل جميع القرارات قبل الإغلاق.</text>
+                            }
+                            else
+                            {
+                                <text>@(total - decidedCount) decision@(total - decidedCount == 1 ? "" : "s") still pending — record all before closing.</text>
+                            }
                         </span>
                     </div>
                 }
@@ -588,7 +638,7 @@
             else
             {
                 <span class="session-closed-note">
-                    <i class="bi bi-lock-fill"></i> Meeting Closed
+                    <i class="bi bi-lock-fill"></i> @(isRtl ? "الاجتماع مُغلق" : "Meeting Closed")
                 </span>
             }
         </div>
@@ -599,14 +649,20 @@
     <div class="modal-overlay" id="closeModal">
         <div class="modal-box">
             <div class="modal-icon"><i class="bi bi-lock-fill"></i></div>
-            <div class="modal-title">Close Meeting #@Model.SessionNumber?</div>
+            <div class="modal-title">@(isRtl ? $"إغلاق الاجتماع #{Model.SessionNumber}؟" : $"Close Meeting #{Model.SessionNumber}?")</div>
             <div class="modal-body">
-                This will officially finalize and close the meeting.<br>
-                All decisions will be locked. This action cannot be undone.
+                @if (isRtl)
+                {
+                    <text>سيؤدي هذا إلى إنهاء الاجتماع وإغلاقه رسميًا.<br>ستُقفل جميع القرارات ولا يمكن التراجع عن هذا الإجراء.</text>
+                }
+                else
+                {
+                    <text>This will officially finalize and close the meeting.<br>All decisions will be locked. This action cannot be undone.</text>
+                }
             </div>
             <div class="modal-actions">
-                <button class="btn-mc" onclick="document.getElementById('closeModal').classList.remove('open')">Cancel</button>
-                <button class="btn-mconf" onclick="document.getElementById('closeForm').submit()">Close Meeting</button>
+                <button class="btn-mc" onclick="document.getElementById('closeModal').classList.remove('open')">@(isRtl ? "إلغاء" : "Cancel")</button>
+                <button class="btn-mconf" onclick="document.getElementById('closeForm').submit()">@(isRtl ? "إغلاق الاجتماع" : "Close Meeting")</button>
             </div>
         </div>
     </div>

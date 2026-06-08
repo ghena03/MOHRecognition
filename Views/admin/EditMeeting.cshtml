@@ -9,15 +9,34 @@
     var allRequests = ViewBag.AvailableRequests as IEnumerable<RecognitionRequestRecord>
                       ?? Enumerable.Empty<RecognitionRequestRecord>();
     var selectedIds = new HashSet<int>(Model.RequestIds ?? new List<int>());
+
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
+
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
+
+    string StatusLabel(string s) => isRtl ? s switch {
+        "Scheduled" => "مجدول",
+        "Open"      => "مفتوح",
+        "Closed"    => "مغلق",
+        _           => s
+    } : s;
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Edit Meeting #@Model.SessionNumber</title>
+    <title>@(isRtl ? "تعديل الاجتماع #" : "Edit Meeting #")@Model.SessionNumber</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f0eb; color: #1a1a1a; min-height: 100vh; }
@@ -72,6 +91,9 @@
         .search-input { width: 100%; padding: 10px 12px 10px 36px; border: 1.5px solid #e8e0d8; border-radius: 9px; font-size: 13.5px; font-family: inherit; background: #faf8f5; outline: none; transition: border-color .15s; }
         .search-input:focus { border-color: #7f1627; background: #fff; }
 
+        html[dir="rtl"] .search-wrap i { left: auto; right: 12px; }
+        html[dir="rtl"] .search-input  { padding: 10px 36px 10px 12px; }
+
         .btn-quick { padding: 9px 16px; border-radius: 8px; border: 1.5px solid #e8e0d8; background: #fff; font-size: 12px; font-weight: 700; color: #666; cursor: pointer; font-family: inherit; transition: background .12s, border-color .12s; white-space: nowrap; }
         .btn-quick:hover { background: #fde8ec; border-color: #d0a0b0; color: #7f1627; }
 
@@ -98,17 +120,21 @@
         .sp-assigned { background: #e8f0fe; color: #1a56db; }
         .sp-review   { background: #fde8ec; color: #7f1627; }
         .sp-other    { background: #f0f0f0; color: #777; }
+        .app-type-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 10.5px; font-weight: 700; flex-shrink: 0; }
+        .atp-bachelor     { background: #dbeafe; color: #1e40af; }
+        .atp-postgraduate { background: #ede9fe; color: #5b21b6; }
+        .atp-online       { background: #dcfce7; color: #166534; }
 
         .empty-picker { text-align: center; padding: 48px 32px; color: #bbb; }
         .empty-picker i { font-size: 40px; display: block; margin-bottom: 12px; }
         .empty-picker p { font-size: 13px; }
     </style>
 </head>
-<body>
+<body class="@(isRtl ? "rtl-body" : "")">
 
     <div class="ministry-bar">
         <i class="bi bi-bank2"></i>
-        Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan
+        @(isRtl ? "وزارة التعليم العالي والبحث العلمي — المملكة الأردنية الهاشمية" : "Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan")
     </div>
 
     <div class="pg-header">
@@ -116,21 +142,24 @@
             <img src="/images/mohelogo.png" alt="Logo" />
             <div class="hd-sep"></div>
             <div class="hd-text">
-                <h1>Edit Meeting #@Model.SessionNumber</h1>
-                <p>Update meeting details and select universities</p>
+                <h1>@(isRtl ? "تعديل الاجتماع #" : "Edit Meeting #")@Model.SessionNumber</h1>
+                <p>@(isRtl ? "تحديث تفاصيل الاجتماع واختيار الجامعات" : "Update meeting details and select universities")</p>
             </div>
         </div>
-        <a href="/Home/Meetings" class="btn-back">
-            <i class="bi bi-arrow-left"></i> Back to Meetings
+                <div style="display:flex;align-items:center;gap:10px;">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+            <a href="/Home/Meetings" class="btn-back">
+            <i class="bi bi-arrow-@(isRtl ? "right" : "left")"></i> @(isRtl ? "العودة إلى الاجتماعات" : "Back to Meetings")
         </a>
+        </div>
     </div>
 
     <div class="breadcrumb-bar">
-        <a class="bc-item" href="/Home/AdminDashboard"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
-        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <a class="bc-item" href="/Home/Meetings"><i class="bi bi-calendar3"></i> Meetings</a>
-        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <span class="bc-item bc-cur"><i class="bi bi-pencil"></i> Edit Meeting #@Model.SessionNumber</span>
+        <a class="bc-item" href="/Home/AdminDashboard"><i class="bi bi-grid-1x2-fill"></i> @(isRtl ? "لوحة التحكم" : "Dashboard")</a>
+        <span class="bc-sep"><i class="bi bi-chevron-@(isRtl ? "left" : "right")"></i></span>
+        <a class="bc-item" href="/Home/Meetings"><i class="bi bi-calendar3"></i> @(isRtl ? "الاجتماعات" : "Meetings")</a>
+        <span class="bc-sep"><i class="bi bi-chevron-@(isRtl ? "left" : "right")"></i></span>
+        <span class="bc-item bc-cur"><i class="bi bi-pencil"></i> @(isRtl ? "تعديل الاجتماع #" : "Edit Meeting #")@Model.SessionNumber</span>
     </div>
 
     <form method="post" action="/Home/EditMeeting/@Model.Id" id="mainForm">
@@ -141,40 +170,42 @@
             <!-- ── Left: Meeting Details ── -->
             <div class="details-card">
                 <div class="card-head">
-                    <h2><i class="bi bi-pencil" style="margin-right:6px;"></i>Meeting Details</h2>
-                    <p>Update the schedule information</p>
+                    <h2><i class="bi bi-pencil" style="margin-@(isRtl ? "left" : "right"):6px;"></i>@(isRtl ? "تفاصيل الاجتماع" : "Meeting Details")</h2>
+                    <p>@(isRtl ? "تحديث معلومات الجدول الزمني" : "Update the schedule information")</p>
                 </div>
                 <div class="card-body">
 
                     <div class="form-group">
-                        <label>Session Number</label>
+                        <label>@(isRtl ? "رقم الجلسة" : "Session Number")</label>
                         <input class="form-input" name="SessionNumber" value="@Model.SessionNumber" readonly />
                     </div>
 
                     <div class="form-group">
-                        <label>Meeting Title</label>
-                        <input class="form-input" name="MeetingTitle" value="@Model.MeetingTitle" placeholder="e.g. Committee Review — Q2 2026" />
+                        <label>@(isRtl ? "عنوان الاجتماع" : "Meeting Title")</label>
+                        <input class="form-input" name="MeetingTitle" value="@Model.MeetingTitle"
+                               placeholder="@(isRtl ? "مثال: مراجعة اللجنة — الربع الثاني 2026" : "e.g. Committee Review — Q2 2026")" />
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Date <span style="color:#b91c1c;">*</span></label>
+                            <label>@(isRtl ? "التاريخ" : "Date") <span style="color:#b91c1c;">*</span></label>
                             <input class="form-input" type="date" name="MeetingDate"
                                    value="@Model.MeetingDate.ToString("yyyy-MM-dd")" required />
                         </div>
                         <div class="form-group">
-                            <label>Time</label>
+                            <label>@(isRtl ? "الوقت" : "Time")</label>
                             <input class="form-input" type="time" name="MeetingTime" value="@Model.MeetingTime" />
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Location / Platform</label>
-                        <input class="form-input" name="LocationOrPlatform" value="@Model.LocationOrPlatform" placeholder="e.g. MOHE Hall / Zoom / Teams" />
+                        <label>@(isRtl ? "الموقع / المنصة" : "Location / Platform")</label>
+                        <input class="form-input" name="LocationOrPlatform" value="@Model.LocationOrPlatform"
+                               placeholder="@(isRtl ? "مثال: قاعة الوزارة / Zoom / Teams" : "e.g. MOHE Hall / Zoom / Teams")" />
                     </div>
 
                     <div class="form-group">
-                        <label>Status</label>
+                        <label>@(isRtl ? "الحالة" : "Status")</label>
                         <select class="form-input" name="Status">
                             @{
                                 string[] statuses = { "Scheduled", "Open", "Closed" };
@@ -182,11 +213,11 @@
                                 {
                                     if (s == Model.Status)
                                     {
-                                        <option value="@s" selected>@s</option>
+                                        <option value="@s" selected>@StatusLabel(s)</option>
                                     }
                                     else
                                     {
-                                        <option value="@s">@s</option>
+                                        <option value="@s">@StatusLabel(s)</option>
                                     }
                                 }
                             }
@@ -194,20 +225,21 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Notes</label>
-                        <textarea class="form-input" name="Notes" rows="3" placeholder="Any additional notes...">@Model.Notes</textarea>
+                        <label>@(isRtl ? "ملاحظات" : "Notes")</label>
+                        <textarea class="form-input" name="Notes" rows="3"
+                                  placeholder="@(isRtl ? "أي ملاحظات إضافية..." : "Any additional notes...")">@Model.Notes</textarea>
                     </div>
 
                     <div style="border-top:1px solid #f0ebe4;padding-top:16px;">
-                        <div style="font-size:11.5px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Universities Selected</div>
+                        <div style="font-size:11.5px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">@(isRtl ? "الجامعات المختارة" : "Universities Selected")</div>
                         <div class="selected-count-pill">
                             <i class="bi bi-building"></i>
-                            <span id="selCount">@selectedIds.Count</span> selected
+                            <span id="selCount">@selectedIds.Count</span> @(isRtl ? "مختارة" : "selected")
                         </div>
                     </div>
 
                     <button type="submit" class="btn-save">
-                        <i class="bi bi-check-lg"></i> Save Changes
+                        <i class="bi bi-check-lg"></i> @(isRtl ? "حفظ التغييرات" : "Save Changes")
                     </button>
 
                 </div>
@@ -216,19 +248,20 @@
             <!-- ── Right: University Picker ── -->
             <div class="picker-card">
                 <div class="picker-head">
-                    <h2><i class="bi bi-building" style="margin-right:8px;color:#7f1627;"></i>Select Universities</h2>
+                    <h2><i class="bi bi-building" style="margin-@(isRtl ? "left" : "right"):8px;color:#7f1627;"></i>@(isRtl ? "اختيار الجامعات" : "Select Universities")</h2>
                     <div class="picker-head-right">
-                        <span class="count-badge" id="headCount">@selectedIds.Count selected</span>
+                        <span class="count-badge" id="headCount">@selectedIds.Count @(isRtl ? "مختارة" : "selected")</span>
                     </div>
                 </div>
 
                 <div class="picker-filters">
                     <div class="search-wrap">
                         <i class="bi bi-search"></i>
-                        <input class="search-input" type="text" id="searchBox" placeholder="Search by university name, country or reference..." />
+                        <input class="search-input" type="text" id="searchBox"
+                               placeholder="@(isRtl ? "البحث باسم الجامعة، الدولة، أو الرقم المرجعي..." : "Search by university name, country or reference...")" />
                     </div>
-                    <button type="button" class="btn-quick" onclick="selectAll()"><i class="bi bi-check-all"></i> All</button>
-                    <button type="button" class="btn-quick" onclick="clearAll()"><i class="bi bi-x-lg"></i> Clear</button>
+                    <button type="button" class="btn-quick" onclick="selectAll()"><i class="bi bi-check-all"></i> @(isRtl ? "الكل" : "All")</button>
+                    <button type="button" class="btn-quick" onclick="clearAll()"><i class="bi bi-x-lg"></i> @(isRtl ? "مسح" : "Clear")</button>
                 </div>
 
                 <div class="uni-list" id="uniList">
@@ -239,7 +272,7 @@
                     {
                         <div class="empty-picker">
                             <i class="bi bi-inbox"></i>
-                            <p>No university requests submitted yet.</p>
+                            <p>@(isRtl ? "لم يُقدَّم أي طلب جامعة بعد." : "No university requests submitted yet.")</p>
                         </div>
                     }
                     else
@@ -247,6 +280,17 @@
                         foreach (var req in reqList)
                         {
                             bool isSelected = selectedIds.Contains(req.Id);
+                            var appType = req.ApplicationType ?? "Bachelor";
+                            var atpClass = appType switch {
+                                "Postgraduate" => "atp-postgraduate",
+                                "Online"       => "atp-online",
+                                _              => "atp-bachelor"
+                            };
+                            var atpIcon = appType switch {
+                                "Postgraduate" => "bi-mortarboard-fill",
+                                "Online"       => "bi-laptop",
+                                _              => "bi-building"
+                            };
                             <div class="uni-item @(isSelected ? "selected" : "")"
                                  data-name="@req.UniversityName?.ToLower()"
                                  data-country="@req.Country?.ToLower()"
@@ -256,20 +300,21 @@
                                 <input type="checkbox" name="RequestIds" value="@req.Id"
                                        style="display:none;" @(isSelected ? "checked" : "") />
                                 <div class="uni-info">
-                                    <div class="uni-name">@(string.IsNullOrWhiteSpace(req.UniversityName) ? "Unnamed University" : req.UniversityName)</div>
+                                    <div class="uni-name">@(string.IsNullOrWhiteSpace(req.UniversityName) ? (isRtl ? "جامعة بدون اسم" : "Unnamed University") : req.UniversityName)</div>
                                     <div class="uni-meta">
                                         @if (!string.IsNullOrWhiteSpace(req.Country))
                                         {
                                             <span class="uni-meta-item"><i class="bi bi-geo-alt"></i> @req.Country</span>
                                         }
-                                        <span class="uni-meta-item"><i class="bi bi-hash"></i> ID: @req.Id</span>
+                                        <span class="uni-meta-item"><i class="bi bi-hash"></i> @(isRtl ? "الرقم:" : "ID:") @req.Id</span>
                                         @if (!string.IsNullOrWhiteSpace(req.ReferenceNumber))
                                         {
                                             <span class="uni-meta-item"><i class="bi bi-file-text"></i> @req.ReferenceNumber</span>
                                         }
                                     </div>
                                 </div>
-                                <span class="status-pill sp-review">Submitted</span>
+                                <span class="app-type-pill @atpClass"><i class="bi @atpIcon"></i> @AppTypeLabel(appType)</span>
+                                <span class="status-pill sp-review">@(isRtl ? "مُقدَّم" : "Submitted")</span>
                             </div>
                         }
                     }
@@ -280,10 +325,12 @@
     </form>
 
     <script>
+        var _isRtl = @(isRtl ? "true" : "false");
+
         function updateCount() {
             var n = document.querySelectorAll('.uni-item.selected').length;
             document.getElementById('selCount').textContent = n;
-            document.getElementById('headCount').textContent = n + ' selected';
+            document.getElementById('headCount').textContent = _isRtl ? (n + ' مختارة') : (n + ' selected');
         }
 
         function toggleItem(el, id) {

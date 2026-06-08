@@ -1,4 +1,4 @@
-﻿@model MOHRecognition.Services.RecognitionRequestRecord
+@model MOHRecognition.Services.RecognitionRequestRecord
 
 @{
     Layout = null;
@@ -41,14 +41,66 @@
     if (a.SystemCreditHours) systems.Add("Credit Hours");
     if (a.SystemECTS) systems.Add("ECTS");
 
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
+
+    string ModeOfStudyLabel(string? m) => isRtl ? (m ?? "") switch {
+        "Full-time"        => "دوام كامل",
+        "Part-time"        => "دوام جزئي",
+        "Distance Learning"=> "التعلم عن بُعد",
+        "Online"           => "عبر الإنترنت",
+        "Blended"          => "مدمج",
+        _                  => m ?? ""
+    } : (m ?? "");
+
+    string InstitutionTypeLabel(string? t) => isRtl ? (t ?? "") switch {
+        "University"         => "جامعة",
+        "College"            => "كلية",
+        "Institute"          => "معهد",
+        "Academy"            => "أكاديمية",
+        "School of Medicine" => "كلية الطب",
+        _                    => t ?? ""
+    } : (t ?? "");
+
+    string CollegeCategoryLabel(string? c) => isRtl ? (c ?? "") switch {
+        "Scientific"  => "علمي",
+        "Humanities"  => "إنساني",
+        "Medical"     => "طبي",
+        "Applied"     => "تطبيقي",
+        _             => c ?? ""
+    } : (c ?? "");
+
+    string DegreeLevelLabel(string? d) => isRtl ? (d ?? "") switch {
+        "Diploma"        => "دبلوم",
+        "Bachelor"       => "بكالوريوس",
+        "Higher Diploma" => "دبلوم عالي",
+        "Master"         => "ماجستير",
+        "PhD"            => "دكتوراه",
+        _                => d ?? ""
+    } : (d ?? "");
+
+    string EducationalSystemLabel(string? s) => isRtl ? (s ?? "") switch {
+        "Yearly Program"   => "برنامج سنوي",
+        "Semester Program" => "برنامج فصلي",
+        "Credit Hours"     => "ساعات معتمدة",
+        "ECTS"             => "ECTS",
+        _                  => s ?? ""
+    } : (s ?? "");
+
+    string YesNoLabel(string? v) => isRtl ? (v ?? "") switch {
+        "Yes" => "نعم",
+        "No"  => "لا",
+        _     => v ?? ""
+    } : (v ?? "");
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "تفاصيل الطلب — المعلومات الأساسية" : "Request Details - Basic Information")</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,9 +109,13 @@
 
     <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/DetailsBasicInfo.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
 </head>
 
-<body class="rm-page">
+<body class="rm-page @(isRtl ? "rtl-body" : "")">
     <header class="rm-header">
         <div class="rm-brandbar"></div>
         <div class="rm-top">
@@ -68,12 +124,16 @@
                     <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
                 </div>
                 <div class="rm-user">
-                    <div class="rm-userpill">
-                        <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>@(adminReadOnly ? "Admin Review" : (ViewBag.CurrentRecognitionMember ?? "Recognition Member"))</b></span>
-                    </div>
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@(adminReadOnly ? "A" : ((ViewBag.CurrentRecognitionMember as string)?.Substring(0,1)?.ToUpper() ?? "M"))</div>
+                        <div class="rm-user-card-text">
+                            <strong>@(adminReadOnly ? (isRtl ? "مراجعة المدير" : "Admin Review") : (ViewBag.CurrentRecognitionMember ?? (isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")))</strong>
+                            <span>@(adminReadOnly ? (isRtl ? "عرض المدير" : "Admin View") : (isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member"))</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                        <i class="bi bi-box-arrow-right"></i> @(isRtl ? "تسجيل الخروج" : "Logout")
                     </a>
                 </div>
             </div>
@@ -93,22 +153,22 @@
         <main class="rm-main">
             <section class="rm-card rd-head">
                 <div>
-                    <h1>Request Details</h1>
-                    <p class="rd-inst">Institution: <b>@Model.UniversityName</b></p>
-                    <p>Step 1 of 7 — Institution Basic Information.</p>
+                    <h1>@(isRtl ? "تفاصيل الطلب" : "Request Details")</h1>
+                    <p class="rd-inst">@(isRtl ? "المؤسسة: " : "Institution: ")<b>@Model.UniversityName</b></p>
+                    <p>@(isRtl ? "الخطوة 1 من 7 — المعلومات الأساسية للمؤسسة." : "Step 1 of 7 — Institution Basic Information.")</p>
                 </div>
 
                 <div class="rd-meta">
-                    <div class="meta-pill"><span>Request ID</span><b>#@Model.Id</b></div>
-                    <div class="meta-pill"><span>Reference</span><b>@Model.ReferenceNumber</b></div>
-                    <div class="meta-pill"><span>Step</span><b>1 / 7</b></div>
+                    <div class="meta-pill"><span>@(isRtl ? "رقم الطلب" : "Request ID")</span><b>#@Model.Id</b></div>
+                    <div class="meta-pill"><span>@(isRtl ? "المرجع" : "Reference")</span><b>@Model.ReferenceNumber</b></div>
+                    <div class="meta-pill"><span>@(isRtl ? "الخطوة" : "Step")</span><b>1 / 7</b></div>
                 </div>
             </section>
 
             @if (readOnlyMode)
             {
                 <section class="rm-card" style="border:1px solid #fedf89; background:#fffaeb; color:#7a2e0e; font-weight:700;">
-                    <i class="bi bi-eye"></i> Read-only mode: this university is assigned to another member.
+                    <i class="bi bi-eye"></i> @(isRtl ? "وضع العرض فقط: هذه الجامعة معيّنة لعضو آخر." : "Read-only mode: this university is assigned to another member.")
                 </section>
             }
 
@@ -116,7 +176,14 @@
             {
                 <section class="rm-card" style="border:1px solid #bfdbfe; background:#eff6ff; color:#1e40af; font-weight:600; display:flex; align-items:center; gap:10px;">
                     <i class="bi bi-pencil-square" style="font-size:1.1rem;"></i>
-                    Manual Request — Fill in the institution data below, then click <b style="margin-left:4px;">Save &amp; Continue</b>.
+                    @if (isRtl)
+                    {
+                        <span>طلب يدوي — أدخل بيانات المؤسسة أدناه، ثم انقر على <b style="margin-right:4px;">حفظ والمتابعة</b>.</span>
+                    }
+                    else
+                    {
+                        <span>Manual Request — Fill in the institution data below, then click <b style="margin-left:4px;">Save &amp; Continue</b>.</span>
+                    }
                 </section>
             }
 
@@ -135,86 +202,86 @@
 
                     <section class="rm-card rd-card">
                         <div class="rd-card-hd">
-                            <h2>Institution Information Entry</h2>
-                            <p>Fill in all institution details, then click Save &amp; Continue.</p>
+                            <h2>@(isRtl ? "إدخال بيانات المؤسسة" : "Institution Information Entry")</h2>
+                            <p>@(isRtl ? "أدخل جميع تفاصيل المؤسسة، ثم انقر على حفظ والمتابعة." : "Fill in all institution details, then click Save & Continue.")</p>
                         </div>
 
                         <div class="info-section">
-                            <div class="section-title">Location &amp; Contact Information</div>
+                            <div class="section-title">@(isRtl ? "معلومات الموقع والتواصل" : "Location & Contact Information")</div>
                             <div class="rd-grid4">
-                                <div class="rd-field"><label>Institution Name</label><input type="text" name="institutionName" value="@p.InstitutionName" /></div>
-                                <div class="rd-field"><label>Oversight Rights Entity</label><input type="text" name="oversightRightsEntity" value="@p.OversightRightsEntity" /></div>
-                                <div class="rd-field"><label>Country</label><input type="text" name="country" value="@Model.Country" /></div>
-                                <div class="rd-field"><label>City</label><input type="text" name="city" value="@(string.IsNullOrWhiteSpace(p.City) ? Model.City : p.City)" /></div>
-                                <div class="rd-field"><label>Mailing Full Address</label><input type="text" name="mailingFullAddress" value="@p.MailingFullAddress" /></div>
-                                <div class="rd-field"><label>Direct Phone Number</label><input type="text" name="directPhoneNumber" value="@p.DirectPhoneNumber" /></div>
-                                <div class="rd-field"><label>Email Address</label><input type="text" name="emailAddress" value="@p.EmailAddress" /></div>
-                                <div class="rd-field"><label>Institutional Web Address</label><input type="text" name="institutionalWebAddress" value="@p.InstitutionalWebAddress" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "اسم المؤسسة" : "Institution Name")</label><input type="text" name="institutionName" value="@p.InstitutionName" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "الجهة المشرفة" : "Oversight Rights Entity")</label><input type="text" name="oversightRightsEntity" value="@p.OversightRightsEntity" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "الدولة" : "Country")</label><input type="text" name="country" value="@Model.Country" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "المدينة" : "City")</label><input type="text" name="city" value="@(string.IsNullOrWhiteSpace(p.City) ? Model.City : p.City)" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "العنوان البريدي الكامل" : "Mailing Full Address")</label><input type="text" name="mailingFullAddress" value="@p.MailingFullAddress" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "رقم الهاتف المباشر" : "Direct Phone Number")</label><input type="text" name="directPhoneNumber" value="@p.DirectPhoneNumber" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "البريد الإلكتروني" : "Email Address")</label><input type="text" name="emailAddress" value="@p.EmailAddress" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "الموقع الإلكتروني للمؤسسة" : "Institutional Web Address")</label><input type="text" name="institutionalWebAddress" value="@p.InstitutionalWebAddress" /></div>
                             </div>
                         </div>
 
                         <div class="info-section" style="margin-top:18px;">
-                            <div class="section-title">Key Dates</div>
+                            <div class="section-title">@(isRtl ? "التواريخ الرئيسية" : "Key Dates")</div>
                             <div class="rd-grid3">
-                                <div class="rd-field"><label>Founding Date</label><input type="text" name="foundationDate" value="@p.FoundationDate" /></div>
-                                <div class="rd-field"><label>Date of Establishment</label><input type="text" name="dateOfEstablishment" value="@p.DateOfEstablishment" /></div>
-                                <div class="rd-field"><label>Start of Teaching</label><input type="text" name="startOfTeaching" value="@p.StartOfTeaching" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "تاريخ التأسيس" : "Founding Date")</label><input type="text" name="foundationDate" value="@p.FoundationDate" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "تاريخ الإنشاء" : "Date of Establishment")</label><input type="text" name="dateOfEstablishment" value="@p.DateOfEstablishment" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "بدء التدريس" : "Start of Teaching")</label><input type="text" name="startOfTeaching" value="@p.StartOfTeaching" /></div>
                             </div>
                         </div>
 
                         <div class="info-section" style="margin-top:18px;">
-                            <div class="section-title">Institution Profile</div>
+                            <div class="section-title">@(isRtl ? "ملف المؤسسة" : "Institution Profile")</div>
                             <div class="rd-grid3">
                                 <div class="rd-field">
-                                    <label>Mode of Study</label>
+                                    <label>@(isRtl ? "نمط الدراسة" : "Mode of Study")</label>
                                     <select name="modeOfStudy">
-                                        <option value="">Select…</option>
+                                        <option value="">@(isRtl ? "اختر..." : "Select…")</option>
                                         @{ var modeOptions = new[] { "Full-time", "Part-time", "Distance Learning", "Online", "Blended" }; }
                                         @foreach (var opt in modeOptions)
                                         {
-                                            if (p.ModeOfStudy == opt) { <option value="@opt" selected>@opt</option> }
-                                            else { <option value="@opt">@opt</option> }
+                                            if (p.ModeOfStudy == opt) { <option value="@opt" selected>@ModeOfStudyLabel(opt)</option> }
+                                            else { <option value="@opt">@ModeOfStudyLabel(opt)</option> }
                                         }
                                     </select>
                                 </div>
                                 <div class="rd-field">
-                                    <label>Institution Type</label>
+                                    <label>@(isRtl ? "نوع المؤسسة" : "Institution Type")</label>
                                     <select name="typeOfAcademicInstitution">
-                                        <option value="">Select…</option>
+                                        <option value="">@(isRtl ? "اختر..." : "Select…")</option>
                                         @{ var typeOptions = new[] { "University", "College", "Institute", "Academy", "School of Medicine" }; }
                                         @foreach (var opt in typeOptions)
                                         {
-                                            if (a.TypeOfAcademicInstitution == opt) { <option value="@opt" selected>@opt</option> }
-                                            else { <option value="@opt">@opt</option> }
+                                            if (a.TypeOfAcademicInstitution == opt) { <option value="@opt" selected>@InstitutionTypeLabel(opt)</option> }
+                                            else { <option value="@opt">@InstitutionTypeLabel(opt)</option> }
                                         }
                                     </select>
                                 </div>
-                                <div class="rd-field"><label>Language of Instruction</label><input type="text" name="languageOfInstruction" value="@p.LanguageOfInstruction" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "لغة التدريس" : "Language of Instruction")</label><input type="text" name="languageOfInstruction" value="@p.LanguageOfInstruction" /></div>
                             </div>
                             <div class="rd-grid3" style="margin-top:12px;">
                                 <div class="rd-field">
-                                    <label>Official Recognition in Home Country</label>
+                                    <label>@(isRtl ? "الاعتراف الرسمي في الدولة الأصلية" : "Official Recognition in Home Country")</label>
                                     <select name="officialRecognitionInHomeCountry">
-                                        <option value="">Select…</option>
-                                        @if (a.OfficialRecognitionInHomeCountry == "Yes") { <option value="Yes" selected>Yes</option> <option value="No">No</option> }
-                                        else if (a.OfficialRecognitionInHomeCountry == "No") { <option value="Yes">Yes</option> <option value="No" selected>No</option> }
-                                        else { <option value="Yes">Yes</option> <option value="No">No</option> }
+                                        <option value="">@(isRtl ? "اختر..." : "Select…")</option>
+                                        @if (a.OfficialRecognitionInHomeCountry == "Yes") { <option value="Yes" selected>@(isRtl ? "نعم" : "Yes")</option> <option value="No">@(isRtl ? "لا" : "No")</option> }
+                                        else if (a.OfficialRecognitionInHomeCountry == "No") { <option value="Yes">@(isRtl ? "نعم" : "Yes")</option> <option value="No" selected>@(isRtl ? "لا" : "No")</option> }
+                                        else { <option value="Yes">@(isRtl ? "نعم" : "Yes")</option> <option value="No">@(isRtl ? "لا" : "No")</option> }
                                     </select>
                                 </div>
                                 <div class="rd-field">
-                                    <label>Official Accreditation / Quality in Home Country</label>
+                                    <label>@(isRtl ? "الاعتماد الرسمي / الجودة في الدولة الأصلية" : "Official Accreditation / Quality in Home Country")</label>
                                     <select name="officialAccreditationQualityInHomeCountry">
-                                        <option value="">Select…</option>
-                                        @if (a.OfficialAccreditationQualityInHomeCountry == "Yes") { <option value="Yes" selected>Yes</option> <option value="No">No</option> }
-                                        else if (a.OfficialAccreditationQualityInHomeCountry == "No") { <option value="Yes">Yes</option> <option value="No" selected>No</option> }
-                                        else { <option value="Yes">Yes</option> <option value="No">No</option> }
+                                        <option value="">@(isRtl ? "اختر..." : "Select…")</option>
+                                        @if (a.OfficialAccreditationQualityInHomeCountry == "Yes") { <option value="Yes" selected>@(isRtl ? "نعم" : "Yes")</option> <option value="No">@(isRtl ? "لا" : "No")</option> }
+                                        else if (a.OfficialAccreditationQualityInHomeCountry == "No") { <option value="Yes">@(isRtl ? "نعم" : "Yes")</option> <option value="No" selected>@(isRtl ? "لا" : "No")</option> }
+                                        else { <option value="Yes">@(isRtl ? "نعم" : "Yes")</option> <option value="No">@(isRtl ? "لا" : "No")</option> }
                                     </select>
                                 </div>
                             </div>
                         </div>
 
                         <div class="info-section" style="margin-top:18px;">
-                            <div class="section-title">College Categories</div>
+                            <div class="section-title">@(isRtl ? "فئات الكليات" : "College Categories")</div>
                             @{ var allCats = new[] { "Scientific", "Humanities", "Medical", "Applied" }; }
                             <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;">
                                 @foreach (var cat in allCats)
@@ -223,23 +290,23 @@
                                     <label style="display:flex; align-items:center; gap:6px; font-weight:500; cursor:pointer;">
                                         @if (catChecked) { <input type="checkbox" name="collegeCategoriesCsv" value="@cat" checked style="width:16px;height:16px;" /> }
                                         else { <input type="checkbox" name="collegeCategoriesCsv" value="@cat" style="width:16px;height:16px;" /> }
-                                        @cat
+                                        @CollegeCategoryLabel(cat)
                                     </label>
                                 }
                             </div>
                         </div>
 
                         <div class="info-section" style="margin-top:18px;">
-                            <div class="section-title">Information of President of Institution</div>
+                            <div class="section-title">@(isRtl ? "معلومات رئيس المؤسسة" : "Information of President of Institution")</div>
                             <div class="rd-grid3">
-                                <div class="rd-field"><label>Name</label><input type="text" name="presidentName" value="@p.PresidentName" /></div>
+                                <div class="rd-field"><label>@(isRtl ? "الاسم" : "Name")</label><input type="text" name="presidentName" value="@p.PresidentName" /></div>
                             </div>
                         </div>
 
                         <div class="info-section" style="margin-top:18px;">
-                            <div class="section-title">Education &amp; Degrees</div>
+                            <div class="section-title">@(isRtl ? "التعليم والدرجات العلمية" : "Education & Degrees")</div>
                             <div class="info-block">
-                                <label class="block-title">Degrees Offered</label>
+                                <label class="block-title">@(isRtl ? "الدرجات العلمية المقدَّمة" : "Degrees Offered")</label>
                                 <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;">
                                     @foreach (var (lbl, fld, chk) in new[] {
                                         ("Diploma","degreeDiploma",a.DegreeDiploma),
@@ -251,13 +318,13 @@
                                         <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;">
                                             @if (chk) { <input type="checkbox" name="@fld" value="true" checked style="width:16px;height:16px;" /> }
                                             else { <input type="checkbox" name="@fld" value="true" style="width:16px;height:16px;" /> }
-                                            @lbl
+                                            @DegreeLevelLabel(lbl)
                                         </label>
                                     }
                                 </div>
                             </div>
                             <div class="info-block" style="margin-top:12px;">
-                                <label class="block-title">Educational System in Effect</label>
+                                <label class="block-title">@(isRtl ? "النظام التعليمي المعتمد" : "Educational System in Effect")</label>
                                 <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;">
                                     @foreach (var (lbl, fld, chk) in new[] {
                                         ("Yearly Program","systemYearlyProgram",a.SystemYearlyProgram),
@@ -268,7 +335,7 @@
                                         <label style="display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;">
                                             @if (chk) { <input type="checkbox" name="@fld" value="true" checked style="width:16px;height:16px;" /> }
                                             else { <input type="checkbox" name="@fld" value="true" style="width:16px;height:16px;" /> }
-                                            @lbl
+                                            @EducationalSystemLabel(lbl)
                                         </label>
                                     }
                                 </div>
@@ -276,8 +343,8 @@
                         </div>
 
                         <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;">
-                            <button type="submit" name="nextAction" value="save" class="rm-btn rm-btn-light"><i class="bi bi-floppy"></i> Save</button>
-                            <button type="submit" name="nextAction" value="next" class="rm-btn rm-btn-primary"><i class="bi bi-arrow-right-circle"></i> Save &amp; Continue</button>
+                            <button type="submit" name="nextAction" value="save" class="rm-btn rm-btn-light"><i class="bi bi-floppy"></i> @(isRtl ? "حفظ" : "Save")</button>
+                            <button type="submit" name="nextAction" value="next" class="rm-btn rm-btn-primary"><i class="bi bi-arrow-@(isRtl ? "left" : "right")-circle"></i> @(isRtl ? "حفظ والمتابعة" : "Save & Continue")</button>
                         </div>
                     </section>
                 </form>
@@ -286,71 +353,75 @@
             {
                 <section class="rm-card rd-card">
                     <div class="rd-card-hd">
-                        <h2>Institution Information Review</h2>
-                        <p>Submitted data for professional evaluation.</p>
+                        <h2>@(isRtl ? "مراجعة بيانات المؤسسة" : "Institution Information Review")</h2>
+                        <p>@(isRtl ? "البيانات المُقدَّمة للتقييم المهني." : "Submitted data for professional evaluation.")</p>
                     </div>
 
                     <div class="info-section">
-                        <div class="section-title">Location &amp; Contact Information</div>
+                        <div class="section-title">@(isRtl ? "معلومات الموقع والتواصل" : "Location & Contact Information")</div>
                         <div class="rd-grid4">
-                            <div class="rd-field"><label>Institution Name</label><input type="text" value="@p.InstitutionName" readonly /></div>
-                            <div class="rd-field"><label>Official Entity Possessing Oversight Rights</label><input type="text" value="@p.OversightRightsEntity" readonly /></div>
-                            <div class="rd-field"><label>Country</label><input type="text" value="@Model.Country" readonly /></div>
-                            <div class="rd-field"><label>City</label><input type="text" value="@p.City" readonly /></div>
-                            <div class="rd-field"><label>Mailing Full Address</label><input type="text" value="@p.MailingFullAddress" readonly /></div>
-                            <div class="rd-field"><label>Direct Phone Number</label><input type="text" value="@p.DirectPhoneNumber" readonly /></div>
-                            <div class="rd-field"><label>Email Address</label><input type="text" value="@p.EmailAddress" readonly /></div>
-                            <div class="rd-field"><label>Institutional Web Address</label><input type="text" value="@p.InstitutionalWebAddress" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "اسم المؤسسة" : "Institution Name")</label><input type="text" value="@p.InstitutionName" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "الجهة الرسمية ذات حقوق الإشراف" : "Official Entity Possessing Oversight Rights")</label><input type="text" value="@p.OversightRightsEntity" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "الدولة" : "Country")</label><input type="text" value="@Model.Country" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "المدينة" : "City")</label><input type="text" value="@p.City" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "العنوان البريدي الكامل" : "Mailing Full Address")</label><input type="text" value="@p.MailingFullAddress" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "رقم الهاتف المباشر" : "Direct Phone Number")</label><input type="text" value="@p.DirectPhoneNumber" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "البريد الإلكتروني" : "Email Address")</label><input type="text" value="@p.EmailAddress" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "الموقع الإلكتروني للمؤسسة" : "Institutional Web Address")</label><input type="text" value="@p.InstitutionalWebAddress" readonly /></div>
                         </div>
                     </div>
 
                     <div class="info-section" style="margin-top:18px;">
-                        <div class="section-title">Key Dates</div>
+                        <div class="section-title">@(isRtl ? "التواريخ الرئيسية" : "Key Dates")</div>
                         <div class="rd-grid3">
-                            <div class="rd-field"><label>Founding Date</label><input type="text" value="@p.FoundationDate" readonly /></div>
-                            <div class="rd-field"><label>Date of Establishment</label><input type="text" value="@p.DateOfEstablishment" readonly /></div>
-                            <div class="rd-field"><label>Start of Teaching</label><input type="text" value="@p.StartOfTeaching" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "تاريخ التأسيس" : "Founding Date")</label><input type="text" value="@p.FoundationDate" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "تاريخ الإنشاء" : "Date of Establishment")</label><input type="text" value="@p.DateOfEstablishment" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "بدء التدريس" : "Start of Teaching")</label><input type="text" value="@p.StartOfTeaching" readonly /></div>
                         </div>
                     </div>
 
                     <div class="info-section" style="margin-top:18px;">
-                        <div class="section-title">Institution Profile</div>
+                        <div class="section-title">@(isRtl ? "ملف المؤسسة" : "Institution Profile")</div>
                         <div class="rd-grid3">
-                            <div class="rd-field"><label>Mode of Study</label><input type="text" value="@p.ModeOfStudy" readonly /></div>
-                            <div class="rd-field"><label>Institution Type</label><input type="text" value="@a.TypeOfAcademicInstitution" readonly /></div>
-                            <div class="rd-field"><label>Language of Instruction</label><input type="text" value="@p.LanguageOfInstruction" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "نمط الدراسة" : "Mode of Study")</label><input type="text" value="@ModeOfStudyLabel(p.ModeOfStudy)" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "نوع المؤسسة" : "Institution Type")</label><input type="text" value="@InstitutionTypeLabel(a.TypeOfAcademicInstitution)" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "لغة التدريس" : "Language of Instruction")</label><input type="text" value="@p.LanguageOfInstruction" readonly /></div>
+                        </div>
+                        <div class="rd-grid3" style="margin-top:12px;">
+                            <div class="rd-field"><label>@(isRtl ? "الاعتراف الرسمي في الدولة الأصلية" : "Official Recognition in Home Country")</label><input type="text" value="@YesNoLabel(a.OfficialRecognitionInHomeCountry)" readonly /></div>
+                            <div class="rd-field"><label>@(isRtl ? "الاعتماد الرسمي / الجودة في الدولة الأصلية" : "Official Accreditation / Quality in Home Country")</label><input type="text" value="@YesNoLabel(a.OfficialAccreditationQualityInHomeCountry)" readonly /></div>
                         </div>
                     </div>
 
                     <div class="info-section" style="margin-top:18px;">
-                        <div class="section-title">College Categories</div>
+                        <div class="section-title">@(isRtl ? "فئات الكليات" : "College Categories")</div>
                         <div class="info-block">
                             <div class="chip-list">
-                                @if (selectedCollegeCategories.Any()) { foreach (var c in selectedCollegeCategories) { <span class="chip">@c</span> } }
-                                else { <span class="chip muted">No college categories submitted</span> }
+                                @if (selectedCollegeCategories.Any()) { foreach (var c in selectedCollegeCategories) { <span class="chip">@CollegeCategoryLabel(c)</span> } }
+                                else { <span class="chip muted">@(isRtl ? "لم يتم إدخال فئات كليات." : "No college categories submitted")</span> }
                             </div>
                         </div>
                     </div>
 
                     <div class="info-section" style="margin-top:18px;">
-                        <div class="section-title">Information of President of Institution</div>
-                        <div class="rd-grid3"><div class="rd-field"><label>Name</label><input type="text" value="@p.PresidentName" readonly /></div></div>
+                        <div class="section-title">@(isRtl ? "معلومات رئيس المؤسسة" : "Information of President of Institution")</div>
+                        <div class="rd-grid3"><div class="rd-field"><label>@(isRtl ? "الاسم" : "Name")</label><input type="text" value="@p.PresidentName" readonly /></div></div>
                     </div>
 
                     <div class="info-section" style="margin-top:18px;">
-                        <div class="section-title">Education &amp; Degrees</div>
+                        <div class="section-title">@(isRtl ? "التعليم والدرجات العلمية" : "Education & Degrees")</div>
                         <div class="info-block">
-                            <label class="block-title">Degrees Offered</label>
+                            <label class="block-title">@(isRtl ? "الدرجات العلمية المقدَّمة" : "Degrees Offered")</label>
                             <div class="chip-list">
-                                @if (degrees.Any()) { foreach (var d in degrees) { <span class="chip">@d</span> } }
-                                else { <span class="chip muted">No degrees submitted</span> }
+                                @if (degrees.Any()) { foreach (var d in degrees) { <span class="chip">@DegreeLevelLabel(d)</span> } }
+                                else { <span class="chip muted">@(isRtl ? "لم يتم إدخال درجات علمية." : "No degrees submitted")</span> }
                             </div>
                         </div>
                         <div class="info-block" style="margin-top:12px;">
-                            <label class="block-title">Educational System in Effect</label>
+                            <label class="block-title">@(isRtl ? "النظام التعليمي المعتمد" : "Educational System in Effect")</label>
                             <div class="chip-list">
-                                @if (systems.Any()) { foreach (var s in systems) { <span class="chip">@s</span> } }
-                                else { <span class="chip muted">No system submitted</span> }
+                                @if (systems.Any()) { foreach (var s in systems) { <span class="chip">@EducationalSystemLabel(s)</span> } }
+                                else { <span class="chip muted">@(isRtl ? "لم يتم إدخال نظام تعليمي." : "No system submitted")</span> }
                             </div>
                         </div>
                     </div>
@@ -360,13 +431,13 @@
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
                     <a class="rm-btn rm-btn-light" href="@backLink">
-                        <i class="bi bi-box-arrow-left"></i> @(adminReadOnly ? "Back to Meeting" : "Back to List")
+                        <i class="bi bi-box-arrow-@(isRtl ? "right" : "left")"></i> @(adminReadOnly ? (isRtl ? "العودة إلى الاجتماع" : "Back to Meeting") : (isRtl ? "العودة إلى القائمة" : "Back to List"))
                     </a>
                 </div>
                 @if (!isManual || readOnlyMode)
                 {
                     <div class="rd-actions-right">
-                        <a class="rm-btn rm-btn-light" href="@nextLink">Next</a>
+                        <a class="rm-btn rm-btn-light" href="@nextLink">@(isRtl ? "التالي" : "Next")</a>
                     </div>
                 }
             </section>

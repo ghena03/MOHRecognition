@@ -117,12 +117,15 @@
 
     string V(string? s) => string.IsNullOrWhiteSpace(s) ? "—" : s;
     string N(int? n)    => n.HasValue && n.Value > 0 ? n.Value.ToString("N0") : "—";
+    string N0(int? n)   => (n ?? 0).ToString("N0");
     string D(decimal? d) => d.HasValue && d.Value > 0 ? d.Value.ToString("0.##") : "—";
     bool F(string? s)   => !string.IsNullOrWhiteSpace(s);
     bool FN(int? n)     => n.HasValue && n.Value > 0;
     bool FD(decimal? d) => d.HasValue && d.Value > 0;
 
     int backId = ViewBag.BackId ?? 0;
+    string sourceQuery = Context?.Request?.Query["source"].ToString() ?? "";
+    bool isRequestsQuery = sourceQuery.Equals("requests", StringComparison.OrdinalIgnoreCase);
 
     bool showRec     = ViewBag.ShowRecommendation ?? false;
     bool isInMeeting = ViewBag.IsInMeeting  ?? false;
@@ -143,6 +146,9 @@
     static string BadgeCss(string s) => s switch {
         "Compliant" => "badge-compliant", "Needs Review" => "badge-review",
         "Not Compliant" => "badge-noncompliant", _ => "badge-na" };
+    static string ScoreCellClass(string s) => s switch {
+        "Compliant" => "sc-compliant", "Needs Review" => "sc-review",
+        "Not Compliant" => "sc-noncompliant", _ => "" };
     static string EnvMap(string? v) => (v ?? "").Trim() switch {
         "Meets Standards" => "Compliant", "Needs Improvement" => "Needs Review", _ => "Not Assessed" };
 }
@@ -165,7 +171,6 @@
             --muted: #6b7280;
             --bg: #f3f0eb;
             --white: #fff;
-            --sidebar-w: 240px;
             --header-h: 62px;
         }
 
@@ -199,28 +204,93 @@
         .layout { display: flex; padding-top: var(--header-h); min-height: 100vh; }
 
         /* ── Sidebar ── */
-        .sidebar {
-            position: fixed; top: var(--header-h); left: 0; bottom: 0;
-            width: var(--sidebar-w);
-            background: var(--white);
-            border-right: 1px solid var(--border);
-            overflow-y: auto;
-            z-index: 100;
-        }
-        .sidebar-inner { padding: 16px 0 60px; }
+        .sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; width: 260px; background: var(--white); border-right: 1px solid var(--border); overflow-y: auto; z-index: 100; }
+        .sidebar-inner { min-height: 100%; padding: 16px 0 70px; background: var(--white); }
         .sid-group { padding: 10px 16px 4px; font-size: 10px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: .6px; }
-        .sid-link {
-            display: flex; align-items: center; gap: 10px;
-            padding: 8px 16px; font-size: 12.5px; font-weight: 500; color: #374151;
-            text-decoration: none; border-left: 3px solid transparent;
-            transition: all .12s;
-        }
+        .sid-link { display: flex; align-items: center; gap: 10px; padding: 8px 16px; font-size: 12.5px; font-weight: 500; color: #374151; text-decoration: none; border-left: 3px solid transparent; transition: all .12s; }
         .sid-link:hover { background: var(--brand-light); color: var(--brand); border-left-color: var(--brand); }
         .sid-link.active { background: var(--brand-light); color: var(--brand); border-left-color: var(--brand); font-weight: 700; }
         .sid-num { width: 20px; height: 20px; border-radius: 50%; background: #f0e8e0; color: var(--brand); font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        /* Bachelor Doctor Recommendation: blue tone */
+        .sid-rec   { background: #dbeafe; color: #1e3a8a; }
+        .sid-link-rec:hover,
+        .sid-link-rec.active { background: #eff6ff; color: #1d4ed8; border-left-color: #2563eb; }
+        .sid-link-rec i { color: #2563eb; }
+        .sid-final { background: #fef3c7; color: #92400e; }
+        .requests-themed-sidebar .sidebar {
+            width: 312px;
+            background: transparent;
+            border-right: 0;
+            padding: 20px 0 0 20px;
+            padding-bottom: 96px;
+        }
+        .requests-themed-sidebar .sidebar-inner {
+            min-height: calc(100vh - var(--header-h) - 20px);
+            background: #f9fafb;
+            border: 1px solid #cbd5e1;
+            border-radius: 30px;
+            box-shadow: 0 6px 24px rgba(15, 23, 42, .06);
+            padding: 16px 10px 14px;
+        }
+        .requests-themed-sidebar .sid-group {
+            padding: 0 16px 12px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: .05em;
+        }
+        .requests-themed-sidebar .sid-group:not(:first-child) { margin-top: 10px; }
+        .requests-themed-sidebar .sid-link {
+            margin: 0 8px 10px;
+            border: 3px solid #232833;
+            border-radius: 24px;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 14px;
+            min-height: 52px;
+            transition: background .12s, color .12s, box-shadow .12s;
+        }
+        .requests-themed-sidebar .sid-link:hover { background: #f3f4f6; color: #334155; }
+        .requests-themed-sidebar .sid-link.active {
+            background: linear-gradient(90deg, #9a1f33 0 8px, #f9f2f2 8px);
+            background-clip: padding-box;
+            color: #8a2f28;
+            box-shadow: none;
+        }
+        .requests-themed-sidebar .sid-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            background: #e7e2db;
+            color: #7f1627;
+            font-size: 10.5px;
+        }
+        .requests-themed-sidebar .sid-link.active .sid-num { color: #8a2f28; }
+        .requests-themed-sidebar .sid-rec { background: #e7e2db; color: #7f1627; }
+        .requests-themed-sidebar .sid-link-rec:hover,
+        .requests-themed-sidebar .sid-link-rec.active {
+            background: linear-gradient(90deg, #9a1f33 0 8px, #f9f2f2 8px);
+            background-clip: padding-box;
+            color: #8a2f28;
+            box-shadow: none;
+        }
+        .requests-themed-sidebar .sid-link-rec i { color: #94a3b8; }
+        .requests-themed-sidebar .main { margin-left: 312px; padding-bottom: 36px; }
+        .requests-themed-sidebar .bottom-bar { display: none; }
+        /* ── Final Decision section ── */
+        .decision-section { background: var(--white); border: 2px solid #f59e0b; border-radius: 12px; margin-bottom: 20px; overflow: hidden; scroll-margin-top: calc(var(--header-h) + 16px); }
+        .decision-hd { background: linear-gradient(135deg, #78350f 0%, #d97706 100%); color: #fff; padding: 18px 22px; display: flex; align-items: center; gap: 14px; }
+        .decision-hd-icon { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .decision-hd h2 { font-size: 15px; font-weight: 700; }
+        .decision-hd p  { font-size: 11px; opacity: .75; margin-top: 2px; }
+        .decision-form { padding: 24px; }
+        .dec-save-btn { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #92400e 0%, #d97706 100%); color: #fff; border: none; border-radius: 9px; padding: 12px 26px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .15s; box-shadow: 0 4px 14px rgba(217,119,6,.35); text-decoration: none; }
+        .dec-save-btn:hover { background: linear-gradient(135deg, #78350f 0%, #b45309 100%); box-shadow: 0 6px 18px rgba(217,119,6,.45); transform: translateY(-1px); }
 
         /* ── Main content ── */
-        .main { margin-left: var(--sidebar-w); flex: 1; padding: 28px 28px 120px; max-width: 1060px; }
+        .main { margin-left: 260px; flex: 1; padding: 28px 28px 120px; max-width: none; }
 
         /* ── Summary strip ── */
         .summary-strip {
@@ -328,7 +398,7 @@
 
         /* ── Bottom action bar ── */
         .bottom-bar {
-            position: fixed; bottom: 0; left: var(--sidebar-w); right: 0; z-index: 150;
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 150;
             background: #fff; border-top: 2px solid var(--border);
             display: flex; align-items: center; justify-content: flex-end; gap: 10px;
             padding: 12px 28px;
@@ -339,44 +409,76 @@
         .btn-bar-decision { background: #F2C94C; color: #3A2500; border-color: #D6A800; font-weight: 700; }
         .btn-bar-decision:hover { background: #e6bb38; }
         /* ── Recommendation section ── */
-        .sec-hd-rec { background: #92400e; }
-        .sid-rec { background: #fef3c7 !important; color: #92400e !important; }
+        .sec-hd-rec { background: linear-gradient(135deg, #7f1627, #92400e); }
 
+        /* Badge */
         .badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 5px 11px; font-size: 11.5px; font-weight: 800; }
         .badge-compliant    { background: #dcfce7; color: #15803d; }
         .badge-review       { background: #fef9c3; color: #a16207; }
         .badge-noncompliant { background: #fee2e2; color: #b91c1c; }
         .badge-na           { background: #f3f4f6; color: #6b7280; }
 
-        .score-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
-        .score-cell { border: 1px solid #f0ece6; border-radius: 8px; padding: 14px; text-align: center; }
-        .score-num-r { font-size: 22px; font-weight: 900; color: #aaa; margin-bottom: 6px; }
-        .score-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #666; margin-bottom: 10px; }
+        /* Reviewer card */
+        .rec-reviewer { display: flex; align-items: center; gap: 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 20px; margin-bottom: 22px; }
+        .rec-reviewer-avatar { width: 46px; height: 46px; border-radius: 50%; background: #166534; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+        .rec-reviewer-info { flex: 1; min-width: 0; }
+        .rec-reviewer-name { font-size: 14.5px; font-weight: 800; color: #14532d; }
+        .rec-reviewer-role { font-size: 11.5px; color: #4ade80; font-weight: 600; margin-top: 2px; }
+        .rec-reviewer-date { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #166534; font-weight: 700; background: #dcfce7; border-radius: 999px; padding: 5px 12px; white-space: nowrap; }
 
-        .env-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
-        .env-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8f9fa; border-radius: 6px; font-size: 13px; }
-        .env-label { font-weight: 600; color: #444; }
+        /* Compliance score grid */
+        .score-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 22px; }
+        .score-cell { border-radius: 10px; padding: 16px 12px; text-align: center; background: #fff; border: 1px solid #e5e7eb; position: relative; overflow: hidden; }
+        .score-cell::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: #e5e7eb; }
+        .score-cell.sc-compliant::before { background: #22c55e; }
+        .score-cell.sc-review::before    { background: #eab308; }
+        .score-cell.sc-noncompliant::before { background: #ef4444; }
+        .score-num-r { font-size: 20px; font-weight: 900; color: #d1d5db; margin-bottom: 4px; }
+        .score-name { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #6b7280; margin-bottom: 10px; }
+
+        /* Environment */
+        .env-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; margin-bottom: 22px; }
+        .env-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; background: #f9fafb; border: 1px solid #f0ece6; border-radius: 8px; font-size: 13px; }
+        .env-label { font-weight: 700; color: #374151; }
         .env-note { font-size: 12px; color: #888; margin-top: 3px; }
 
-        .dec-badge { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 8px 20px; font-size: 14px; font-weight: 800; }
-        .dec-approve      { background: #dcfce7; color: #15803d; }
-        .dec-conditional  { background: #fef9c3; color: #a16207; }
-        .dec-reject       { background: #fee2e2; color: #b91c1c; }
-        .dec-na           { background: #f3f4f6; color: #6b7280; }
-        .dec-neutral      { background: #dbeafe; color: #1e40af; }
+        /* Big final verdict */
+        .rec-verdict-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; border-radius: 14px; padding: 30px 24px; margin: 4px 0 20px; text-align: center; }
+        .rec-verdict-wrap.verdict-approve     { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 2px solid #86efac; }
+        .rec-verdict-wrap.verdict-conditional { background: linear-gradient(135deg, #fefce8, #fef9c3); border: 2px solid #fde047; }
+        .rec-verdict-wrap.verdict-reject      { background: linear-gradient(135deg, #fff1f2, #fee2e2); border: 2px solid #fca5a5; }
+        .rec-verdict-wrap.verdict-na          { background: #f9fafb; border: 2px dashed #d1d5db; }
+        .rec-verdict-icon { font-size: 40px; margin-bottom: 4px; }
+        .verdict-approve .rec-verdict-icon, .verdict-approve .rec-verdict-label-main { color: #15803d; }
+        .verdict-conditional .rec-verdict-icon, .verdict-conditional .rec-verdict-label-main { color: #a16207; }
+        .verdict-reject .rec-verdict-icon, .verdict-reject .rec-verdict-label-main { color: #b91c1c; }
+        .verdict-na .rec-verdict-icon, .verdict-na .rec-verdict-label-main { color: #9ca3af; }
+        .rec-verdict-label-main { font-size: 24px; font-weight: 900; letter-spacing: -.3px; }
+        .rec-verdict-sublabel { font-size: 11.5px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .6px; }
 
+        /* Notes card */
+        .rec-notes-card { border-radius: 10px; overflow: hidden; border: 1.5px solid #e5e7eb; margin-top: 4px; }
+        .rec-notes-hd { background: #f8f9fa; padding: 10px 16px; display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid #e5e7eb; }
+        .rec-notes-body { padding: 14px 16px; font-size: 13.5px; line-height: 1.7; color: #1f2937; white-space: pre-wrap; word-break: break-word; }
+        .rec-notes-body.empty { color: #aaa; font-style: italic; }
+
+        /* Legacy compat */
+        .dec-badge { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 8px 20px; font-size: 14px; font-weight: 800; }
+        .dec-approve { background: #dcfce7; color: #15803d; } .dec-conditional { background: #fef9c3; color: #a16207; }
+        .dec-reject  { background: #fee2e2; color: #b91c1c; } .dec-na { background: #f3f4f6; color: #6b7280; } .dec-neutral { background: #dbeafe; color: #1e40af; }
         .note-box { background: #f8fbff; border: 1px solid #dbeafe; border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.6; color: #1f2937; white-space: pre-wrap; }
         .note-box.empty { color: #aaa; font-style: italic; background: #faf7f3; border-color: #ede4da; }
 
         @@media print {
             .pg-header, .sidebar, .hd-right, .bottom-bar { display: none !important; }
             .layout { padding-top: 0 !important; }
-            .main { margin-left: 0 !important; max-width: 100% !important; }
+            .main { margin-left: 0 !important; max-width: 100% !important; padding: 0 !important; }
             .section-card { break-inside: avoid; }
         }
         @@media (max-width: 900px) {
+            .layout { display: block; }
             .sidebar { display: none; }
-            .main { margin-left: 0; }
+            .main { margin-left: 0; padding: 20px 14px 100px; }
             .fg { grid-template-columns: 1fr 1fr; }
             .fg-4, .stat-grid, .score-grid { grid-template-columns: 1fr 1fr; }
         }
@@ -394,7 +496,7 @@
         }
     </style>
 </head>
-<body>
+<body class="@(isRequestsQuery ? "requests-themed-sidebar" : "")">
 
 <div class="pg-header">
     <div class="hd-left">
@@ -451,29 +553,47 @@
     <!-- ── Sidebar Navigation ── -->
     <nav class="sidebar">
         <div class="sidebar-inner">
-            <div class="sid-group">@(showRec ? "Overview" : "Application")</div>
-            <a class="sid-link active" href="#sec-overview"><span class="sid-num"><i class="bi bi-info-circle" style="font-size:9px"></i></span> @(showRec ? "Summary" : "Overview")</a>
 
-            <div class="sid-group">@(showRec ? "University Application" : "Sections")</div>
-            <a class="sid-link" href="#sec-public"><span class="sid-num">1</span> Public Info</a>
-            <a class="sid-link" href="#sec-academic"><span class="sid-num">2</span> Academic Info &amp; Accreditation</a>
+            <div class="sid-group">Application</div>
+            <a class="sid-link active" href="#sec-overview">
+                <span class="sid-num"><i class="bi bi-info-circle" style="font-size:9px"></i></span>
+                Overview
+            </a>
+
+            <div class="sid-group">Sections</div>
+            <a class="sid-link" href="#sec-public"><span class="sid-num">1</span> Institution Information</a>
+            <a class="sid-link" href="#sec-academic"><span class="sid-num">2</span> Academic Info</a>
             <a class="sid-link" href="#sec-admission"><span class="sid-num">3</span> Admission &amp; Duration</a>
             <a class="sid-link" href="#sec-faculties"><span class="sid-num">4</span> Colleges</a>
             <a class="sid-link" href="#sec-programs"><span class="sid-num">5</span> Programs</a>
             <a class="sid-link" href="#sec-medicine"><span class="sid-num">6</span> Medicine &amp; Dentistry</a>
             <a class="sid-link" href="#sec-hospitals"><span class="sid-num">7</span> Hospitals</a>
-            <a class="sid-link" href="#sec-infra"><span class="sid-num">8</span> University Infrastructure</a>
+            <a class="sid-link" href="#sec-infra"><span class="sid-num">8</span> Infrastructure</a>
             <a class="sid-link" href="#sec-labs"><span class="sid-num">9</span> Laboratories</a>
             <a class="sid-link" href="#sec-library"><span class="sid-num">10</span> Library</a>
             <a class="sid-link" href="#sec-photos"><span class="sid-num">11</span> Photos / Media</a>
             <a class="sid-link" href="#sec-documents"><span class="sid-num">12</span> Recognition &amp; Accreditation</a>
             <a class="sid-link" href="#sec-additional-notes"><span class="sid-num">13</span> Additional Notes</a>
+            <a class="sid-link" href="#sec-applicant"><span class="sid-num">14</span> Applicant Info</a>
 
             @if (showRec)
             {
-                <div class="sid-group">Recommendation</div>
-                <a class="sid-link sid-rec" href="#sec-recommendation"><span class="sid-num" style="background:#fde68a;color:#92400e">R</span> Doctor's Recommendation</a>
+                <div class="sid-group">Reviewer</div>
+                <a class="sid-link sid-link-rec" href="#sec-recommendation">
+                    <span class="sid-num sid-rec">R</span>
+                    Doctor's Recommendation
+                </a>
             }
+
+            @if (backId > 0)
+            {
+                <div class="sid-group">Final Action</div>
+                <a class="sid-link" href="#sec-finaldecision">
+                    <span class="sid-num sid-final">F</span>
+                    Final Decision
+                </a>
+            }
+
         </div>
     </nav>
 
@@ -515,55 +635,56 @@
             </div>
             <div class="sec-bd">
                 @{
-                    bool hasInstDetails = F(pub.InstitutionName)||F(pub.PartyForwardingForm)||F(pub.City)||F(pub.FoundationDate)||F(pub.DateOfEstablishment)||F(pub.StartOfTeaching)||F(pub.ModeOfStudy)||F(pub.LanguageOfInstruction)||F(pub.OversightRightsEntity);
-                    bool hasPresident   = F(pub.PresidentName)||F(pub.PresidentHighestAcademicDegree)||F(pub.PresidentMajorAreaOfStudy);
-                    bool hasContact     = F(pub.MailingFullAddress)||F(pub.DirectPhoneNumber)||F(pub.FaxNumber)||F(pub.EmailAddress)||F(pub.InstitutionalWebAddress)||F(pub.LastDateWebsiteUpdated);
-                    bool hasIdentity    = F(pub.InstitutionalVisionStatement)||F(pub.InstitutionalMissionStatement)||F(pub.InstitutionalTargettedObjectives)||F(pub.InstitutionalValues);
+                    bool hasPubInst     = F(pub.InstitutionName)||F(pub.PartyForwardingForm)||F(pub.Country)||F(pub.City)||F(pub.FoundationDate)||F(pub.DateOfEstablishment)||F(pub.StartOfTeaching)||F(pub.ModeOfStudy)||F(pub.LanguageOfInstruction)||F(pub.OversightRightsEntity);
+                    bool hasPubPres     = F(pub.PresidentName)||F(pub.PresidentHighestAcademicDegree)||F(pub.PresidentMajorAreaOfStudy);
+                    bool hasPubContact  = F(pub.MailingFullAddress)||F(pub.DirectPhoneNumber)||F(pub.FaxNumber)||F(pub.EmailAddress)||F(pub.InstitutionalWebAddress)||F(pub.LastDateWebsiteUpdated);
+                    bool hasPubIdentity = F(pub.InstitutionalVisionStatement)||F(pub.InstitutionalMissionStatement)||F(pub.InstitutionalTargettedObjectives)||F(pub.InstitutionalValues);
                 }
-                @if (hasInstDetails)
+                @if (hasPubInst)
                 {
                     <div class="sub-hd">Institution Details</div>
                     <div class="fg">
-                        @if (F(pub.InstitutionName))          { <div class="field"><div class="lbl">Institution Name</div><div class="val">@pub.InstitutionName</div></div> }
-                        @if (F(pub.PartyForwardingForm))       { <div class="field"><div class="lbl">Party Forwarding Form</div><div class="val">@pub.PartyForwardingForm</div></div> }
-                        @if (F(pub.City))                      { <div class="field"><div class="lbl">City</div><div class="val">@pub.City</div></div> }
-                        @if (F(pub.FoundationDate))            { <div class="field"><div class="lbl">Foundation Date</div><div class="val">@pub.FoundationDate</div></div> }
-                        @if (F(pub.DateOfEstablishment))       { <div class="field"><div class="lbl">Date of Establishment</div><div class="val">@pub.DateOfEstablishment</div></div> }
-                        @if (F(pub.StartOfTeaching))           { <div class="field"><div class="lbl">Start of Teaching</div><div class="val">@pub.StartOfTeaching</div></div> }
-                        @if (F(pub.ModeOfStudy))               { <div class="field"><div class="lbl">Mode of Study</div><div class="val">@pub.ModeOfStudy</div></div> }
-                        @if (F(pub.LanguageOfInstruction))     { <div class="field"><div class="lbl">Language of Instruction</div><div class="val">@pub.LanguageOfInstruction</div></div> }
-                        @if (F(pub.OversightRightsEntity))     { <div class="field"><div class="lbl">Oversight Rights Entity</div><div class="val">@pub.OversightRightsEntity</div></div> }
+                        @if (F(pub.InstitutionName))         { <div class="field"><div class="lbl">Institution Name</div><div class="val">@pub.InstitutionName</div></div> }
+                        @if (F(pub.PartyForwardingForm))     { <div class="field"><div class="lbl">Party Forwarding Form</div><div class="val">@pub.PartyForwardingForm</div></div> }
+                        @if (F(pub.Country))                 { <div class="field"><div class="lbl">Country</div><div class="val">@pub.Country</div></div> }
+                        @if (F(pub.City))                    { <div class="field"><div class="lbl">City</div><div class="val">@pub.City</div></div> }
+                        @if (F(pub.FoundationDate))          { <div class="field"><div class="lbl">Foundation Date</div><div class="val">@pub.FoundationDate</div></div> }
+                        @if (F(pub.DateOfEstablishment))     { <div class="field"><div class="lbl">Date of Establishment</div><div class="val">@pub.DateOfEstablishment</div></div> }
+                        @if (F(pub.StartOfTeaching))         { <div class="field"><div class="lbl">Start of Teaching</div><div class="val">@pub.StartOfTeaching</div></div> }
+                        @if (F(pub.ModeOfStudy))             { <div class="field"><div class="lbl">Mode of Study</div><div class="val">@pub.ModeOfStudy</div></div> }
+                        @if (F(pub.LanguageOfInstruction))   { <div class="field"><div class="lbl">Language of Instruction</div><div class="val">@pub.LanguageOfInstruction</div></div> }
+                        @if (F(pub.OversightRightsEntity))   { <div class="field"><div class="lbl">Oversight Rights Entity</div><div class="val">@pub.OversightRightsEntity</div></div> }
                     </div>
                 }
-                @if (hasPresident)
+                @if (hasPubPres)
                 {
                     <div class="sub-hd">President / Leadership</div>
                     <div class="fg">
-                        @if (F(pub.PresidentName))                     { <div class="field"><div class="lbl">President Name</div><div class="val">@pub.PresidentName</div></div> }
-                        @if (F(pub.PresidentHighestAcademicDegree))    { <div class="field"><div class="lbl">Highest Academic Degree</div><div class="val">@pub.PresidentHighestAcademicDegree</div></div> }
-                        @if (F(pub.PresidentMajorAreaOfStudy))         { <div class="field"><div class="lbl">Major Area of Study</div><div class="val">@pub.PresidentMajorAreaOfStudy</div></div> }
+                        @if (F(pub.PresidentName))                    { <div class="field"><div class="lbl">President Name</div><div class="val">@pub.PresidentName</div></div> }
+                        @if (F(pub.PresidentHighestAcademicDegree))   { <div class="field"><div class="lbl">Highest Academic Degree</div><div class="val">@pub.PresidentHighestAcademicDegree</div></div> }
+                        @if (F(pub.PresidentMajorAreaOfStudy))        { <div class="field"><div class="lbl">Major Area of Study</div><div class="val">@pub.PresidentMajorAreaOfStudy</div></div> }
                     </div>
                 }
-                @if (hasContact)
+                @if (hasPubContact)
                 {
                     <div class="sub-hd">Contact Information</div>
                     <div class="fg">
                         @if (F(pub.MailingFullAddress))        { <div class="field"><div class="lbl">Mailing Address</div><div class="val">@pub.MailingFullAddress</div></div> }
                         @if (F(pub.DirectPhoneNumber))         { <div class="field"><div class="lbl">Direct Phone</div><div class="val mono">@pub.DirectPhoneNumber</div></div> }
                         @if (F(pub.FaxNumber))                 { <div class="field"><div class="lbl">Fax Number</div><div class="val mono">@pub.FaxNumber</div></div> }
-                        @if (F(pub.EmailAddress))              { <div class="field"><div class="lbl">Email Address</div><div class="val"><a href="mailto:@pub.EmailAddress">@pub.EmailAddress</a></div></div> }
-                        @if (F(pub.InstitutionalWebAddress))   { <div class="field"><div class="lbl">Website</div><div class="val"><a href="@pub.InstitutionalWebAddress" target="_blank" rel="noopener">@pub.InstitutionalWebAddress</a></div></div> }
+                        @if (F(pub.EmailAddress))              { <div class="field"><div class="lbl">Email Address</div><div class="val">@pub.EmailAddress</div></div> }
+                        @if (F(pub.InstitutionalWebAddress))   { <div class="field"><div class="lbl">Website</div><div class="val">@pub.InstitutionalWebAddress</div></div> }
                         @if (F(pub.LastDateWebsiteUpdated))    { <div class="field"><div class="lbl">Last Website Update</div><div class="val">@pub.LastDateWebsiteUpdated</div></div> }
                     </div>
                 }
-                @if (hasIdentity)
+                @if (hasPubIdentity)
                 {
                     <div class="sub-hd">Institutional Identity</div>
                     <div class="fg-wide">
-                        @if (F(pub.InstitutionalVisionStatement))      { <div class="field"><div class="lbl">Vision Statement</div><div class="val">@pub.InstitutionalVisionStatement</div></div> }
-                        @if (F(pub.InstitutionalMissionStatement))     { <div class="field"><div class="lbl">Mission Statement</div><div class="val">@pub.InstitutionalMissionStatement</div></div> }
-                        @if (F(pub.InstitutionalTargettedObjectives))  { <div class="field"><div class="lbl">Targeted Objectives</div><div class="val">@pub.InstitutionalTargettedObjectives</div></div> }
-                        @if (F(pub.InstitutionalValues))               { <div class="field"><div class="lbl">Institutional Values</div><div class="val">@pub.InstitutionalValues</div></div> }
+                        @if (F(pub.InstitutionalVisionStatement))     { <div class="field"><div class="lbl">Vision Statement</div><div class="val">@pub.InstitutionalVisionStatement</div></div> }
+                        @if (F(pub.InstitutionalMissionStatement))    { <div class="field"><div class="lbl">Mission Statement</div><div class="val">@pub.InstitutionalMissionStatement</div></div> }
+                        @if (F(pub.InstitutionalTargettedObjectives)) { <div class="field"><div class="lbl">Targeted Objectives</div><div class="val">@pub.InstitutionalTargettedObjectives</div></div> }
+                        @if (F(pub.InstitutionalValues))              { <div class="field"><div class="lbl">Institutional Values</div><div class="val">@pub.InstitutionalValues</div></div> }
                     </div>
                 }
             </div>
@@ -576,7 +697,7 @@
             <div class="sec-hd">
                 <div class="sec-num">2</div>
                 <div>
-                    <h2>Academic Information</h2>
+                    <h2>Academic Info</h2>
                     <p>Institution type, student population, academic staff and curriculum details</p>
                 </div>
             </div>
@@ -605,9 +726,9 @@
                         new { Name = "Associate Professor",  Key = "AssociateProfessor", Ft = acad.StaffAssociateProfessorFullTimeCount,  Pt = acad.StaffAssociateProfessorPartTimeCount, FtFile = acad.AssociateProfessorFullTimeExcelFileName,  PtFile = acad.AssociateProfessorPartTimeExcelFileName },
                         new { Name = "Assistant Professor",  Key = "AssistantProfessor", Ft = acad.StaffAssistantProfessorFullTimeCount,  Pt = acad.StaffAssistantProfessorPartTimeCount, FtFile = acad.AssistantProfessorFullTimeExcelFileName,  PtFile = acad.AssistantProfessorPartTimeExcelFileName },
                         new { Name = "Lecturer (PhD)",       Key = "Teacher",            Ft = acad.StaffTeacherFullTimeCount,             Pt = acad.StaffTeacherPartTimeCount,            FtFile = acad.TeacherFullTimeExcelFileName,             PtFile = acad.TeacherPartTimeExcelFileName },
-                        new { Name = "Lecturer (MSc)",       Key = "Researcher",         Ft = acad.StaffResearcherFullTimeCount,          Pt = acad.StaffResearcherPartTimeCount,         FtFile = acad.ResearcherFullTimeExcelFileName,          PtFile = acad.ResearcherPartTimeExcelFileName },
-                        new { Name = "Asst. Lecturer (MSc)", Key = "AssistantTeacher",   Ft = acad.StaffAssistantTeacherFullTimeCount,    Pt = acad.StaffAssistantTeacherPartTimeCount,   FtFile = acad.AssistantTeacherFullTimeExcelFileName,    PtFile = acad.AssistantTeacherPartTimeExcelFileName },
-                        new { Name = "Asst. Lecturer (BSc)", Key = "Others",             Ft = acad.StaffOthersFullTimeCount,              Pt = acad.StaffOthersPartTimeCount,             FtFile = acad.OthersFullTimeExcelFileName,              PtFile = acad.OthersPartTimeExcelFileName },
+                        new { Name = "Lecturer (MSc)",       Key = "AssistantTeacher",   Ft = acad.StaffAssistantTeacherFullTimeCount,    Pt = acad.StaffAssistantTeacherPartTimeCount,   FtFile = acad.AssistantTeacherFullTimeExcelFileName,    PtFile = acad.AssistantTeacherPartTimeExcelFileName },
+                        new { Name = "Asst. Lecturer (MSc)", Key = "Others",             Ft = acad.StaffOthersFullTimeCount,              Pt = acad.StaffOthersPartTimeCount,             FtFile = acad.OthersFullTimeExcelFileName,              PtFile = acad.OthersPartTimeExcelFileName },
+                        new { Name = "Asst. Lecturer (BSc)", Key = "Researcher",         Ft = acad.StaffResearcherFullTimeCount,          Pt = acad.StaffResearcherPartTimeCount,         FtFile = acad.ResearcherFullTimeExcelFileName,          PtFile = acad.ResearcherPartTimeExcelFileName },
                         new { Name = "Practitioner (PSc)",   Key = "PractitionerPsc",    Ft = acad.StaffPractitionerPscFullTimeCount,     Pt = acad.StaffPractitionerPscPartTimeCount,    FtFile = acad.PractitionerPscFullTimeExcelFileName,     PtFile = acad.PractitionerPscPartTimeExcelFileName },
                         new { Name = "Practitioner (MSc)",   Key = "PractitionerMsc",    Ft = acad.StaffPractitionerMscFullTimeCount,     Pt = acad.StaffPractitionerMscPartTimeCount,    FtFile = acad.PractitionerMscFullTimeExcelFileName,     PtFile = acad.PractitionerMscPartTimeExcelFileName },
                     };
@@ -717,39 +838,6 @@
                         }
                     </div>
                 }
-                @if (accBodies.Any())
-                {
-                    <div class="sub-hd">Accreditation Bodies</div>
-                    <div class="tbl-wrap">
-                        <table class="tbl">
-                            <thead>
-                                <tr><th>#</th><th>Accreditation Body</th><th>Type</th><th style="width:160px">Document</th></tr>
-                            </thead>
-                            <tbody>
-                                @{ int abIdx = 1; }
-                                @foreach (var ab in accBodies)
-                                {
-                                    <tr>
-                                        <td style="color:var(--muted);width:36px">@abIdx</td>
-                                        <td style="font-weight:600">@V(ab.AccreditationBodyName)</td>
-                                        <td>@V(ab.AccreditationType)</td>
-                                        <td>
-                                            @if (!string.IsNullOrWhiteSpace(ab.PdfFileUrl))
-                                            {
-                                                <div style="display:flex;gap:6px">
-                                                    <a class="btn-view" href="@ab.PdfFileUrl" target="_blank" rel="noopener"><i class="bi bi-eye"></i> View</a>
-                                                    <a class="btn-view" href="@ab.PdfFileUrl" download="@ab.PdfOriginalFileName"><i class="bi bi-download"></i></a>
-                                                </div>
-                                            }
-                                            else { <span style="color:var(--muted);font-size:12px">No document</span> }
-                                        </td>
-                                    </tr>
-                                    abIdx++;
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
             </div>
         </div>
 
@@ -769,12 +857,12 @@
                     var adsr = Model.AdmissionStudyDurationReview;
                     var durRows = new[]
                     {
-                        new { Degree = "Diploma",        Duration = dur.DiplomaObtain,        Level = "Diploma",       PdfFile = adsr?.DiplomaSamplePdfFileName },
-                        new { Degree = "Bachelor (BSc)", Duration = dur.BachelorObtain,       Level = "BSc",           PdfFile = adsr?.BScSamplePdfFileName },
-                        new { Degree = "Higher Diploma", Duration = dur.HigherDiplomaObtain,  Level = "HigherDiploma", PdfFile = adsr?.HigherDiplomaSamplePdfFileName },
-                        new { Degree = "Master",         Duration = dur.MasterObtain,         Level = "Master",        PdfFile = adsr?.MasterSamplePdfFileName },
-                        new { Degree = "PhD",            Duration = dur.PhDObtain,            Level = "Phd",           PdfFile = adsr?.PhdSamplePdfFileName },
-                    }.Where(r => F(r.Duration) || F(r.PdfFile)).ToList();
+                        new { Degree = "Diploma",        Duration = dur.DiplomaObtain,        Level = "Diploma",       PdfFile = adsr?.DiplomaSamplePdfFileName,        Selected = acad.DegreeDiploma },
+                        new { Degree = "Bachelor (BSc)", Duration = dur.BachelorObtain,       Level = "BSc",           PdfFile = adsr?.BScSamplePdfFileName,            Selected = acad.DegreeBSC },
+                        new { Degree = "Higher Diploma", Duration = dur.HigherDiplomaObtain,  Level = "HigherDiploma", PdfFile = adsr?.HigherDiplomaSamplePdfFileName,  Selected = acad.DegreeHigherDiploma },
+                        new { Degree = "Master",         Duration = dur.MasterObtain,         Level = "Master",        PdfFile = adsr?.MasterSamplePdfFileName,         Selected = acad.DegreeMaster },
+                        new { Degree = "PhD",            Duration = dur.PhDObtain,            Level = "Phd",           PdfFile = adsr?.PhdSamplePdfFileName,             Selected = acad.DegreePhD },
+                    }.Where(r => r.Selected).ToList();
                 }
                 @if (durRows.Any())
                 {
@@ -910,8 +998,8 @@
                                         <td>@V(p.DegreeAwarded)</td>
                                         <td>@(p.NumberOfYears > 0 ? p.NumberOfYears.ToString() : "—")</td>
                                         <td>@V(p.EducationalSystem)</td>
-                                        <td>@(p.AccreditationDate.HasValue ? p.AccreditationDate.Value.ToString("dd MMM yyyy") : "—")</td>
-                                        <td>@(p.GraduationDateOfLastRegiment.HasValue ? p.GraduationDateOfLastRegiment.Value.ToString("dd MMM yyyy") : "—")</td>
+                                        <td>@(p.AccreditationDate.HasValue ? p.AccreditationDate.Value.ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) : "—")</td>
+                                        <td>@(p.GraduationDateOfLastRegiment.HasValue ? p.GraduationDateOfLastRegiment.Value.ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) : "—")</td>
                                     </tr>
                                     pi++;
                                 }
@@ -954,10 +1042,9 @@
                 ("Assistant Professor",     medDen.Med_FullTimeAssistantProfessor,       medDen.Den_FullTimeAssistantProfessor),
                 ("Lecturer (PhD)",          medDen.Med_FullTimeLecturerPhd,              medDen.Den_FullTimeLecturerPhd),
                 ("Asst. Lecturer (PhD)",    medDen.Med_FullTimeAssistantLecturerPhd,     medDen.Den_FullTimeAssistantLecturerPhd),
-                ("Lecturer (MSc)",          medDen.Med_FullTimeLecturerMsc,              medDen.Den_FullTimeLecturerMsc),
-                ("Asst. Lecturer (MSc)",    medDen.Med_FullTimeAssistantLecturerMsc,     medDen.Den_FullTimeAssistantLecturerMsc),
-                ("Practitioner (PSc)",      medDen.Med_FullTimePractitionerPsc,          medDen.Den_FullTimePractitionerPsc),
-                ("Practitioner (MSc)",      medDen.Med_FullTimePractitionerMsc,          medDen.Den_FullTimePractitionerMsc),
+                ("Lecturer (MSc)",                  medDen.Med_FullTimeLecturerMsc,              medDen.Den_FullTimeLecturerMsc),
+                ("Asst. Lecturer (MSc)",            medDen.Med_FullTimeAssistantLecturerMsc,     medDen.Den_FullTimeAssistantLecturerMsc),
+                ("Practitioner (MSc) [Clinical]",   medDen.Med_FullTimePractitionerMsc,          medDen.Den_FullTimePractitionerMsc),
             };
             var medPtAll = new[]
             {
@@ -966,18 +1053,17 @@
                 ("Assistant Professor",     medDen.Med_PartTimeClinicalAssistantProfessor,       medDen.Den_PartTimeClinicalAssistantProfessor),
                 ("Lecturer (PhD)",          medDen.Med_PartTimeClinicalLecturerPhd,              medDen.Den_PartTimeClinicalLecturerPhd),
                 ("Asst. Lecturer (PhD)",    medDen.Med_PartTimeClinicalAssistantLecturerPhd,     medDen.Den_PartTimeClinicalAssistantLecturerPhd),
-                ("Lecturer (MSc)",          medDen.Med_PartTimeClinicalLecturerMsc,              medDen.Den_PartTimeClinicalLecturerMsc),
-                ("Asst. Lecturer (MSc)",    medDen.Med_PartTimeClinicalAssistantLecturerMsc,     medDen.Den_PartTimeClinicalAssistantLecturerMsc),
-                ("Practitioner (PSc)",      medDen.Med_PartTimeClinicalPractitionerPsc,          medDen.Den_PartTimeClinicalPractitionerPsc),
-                ("Practitioner (MSc)",      medDen.Med_PartTimeClinicalPractitionerMsc,          medDen.Den_PartTimeClinicalPractitionerMsc),
+                ("Lecturer (MSc)",                  medDen.Med_PartTimeClinicalLecturerMsc,              medDen.Den_PartTimeClinicalLecturerMsc),
+                ("Asst. Lecturer (MSc)",            medDen.Med_PartTimeClinicalAssistantLecturerMsc,     medDen.Den_PartTimeClinicalAssistantLecturerMsc),
+                ("Practitioner (MSc) [Clinical]",   medDen.Med_PartTimeClinicalPractitionerMsc,          medDen.Den_PartTimeClinicalPractitionerMsc),
             };
-            var medFtFilled = medFtAll.Where(r => FN(r.Item2) || FN(r.Item3)).ToList();
-            var medPtFilled = medPtAll.Where(r => FN(r.Item2) || FN(r.Item3)).ToList();
-            bool hasMedRatio = medDen.Med_StudentFacultyRatio.HasValue || medDen.Den_StudentFacultyRatio.HasValue;
-            bool hasMedSection = FN(medDen.Med_TotalStudents) || FN(medDen.Den_TotalStudents) || medFtFilled.Any() || medPtFilled.Any() || hasMedRatio;
+            int medFtTotal = medFtAll.Sum(r => r.Item2 ?? 0);
+            int denFtTotal = medFtAll.Sum(r => r.Item3 ?? 0);
+            int medPtTotal = medPtAll.Sum(r => r.Item2 ?? 0);
+            int denPtTotal = medPtAll.Sum(r => r.Item3 ?? 0);
+            int medAllStaff = medFtTotal + medPtTotal;
+            int denAllStaff = denFtTotal + denPtTotal;
         }
-        @if (hasMedSection)
-        {
         <!-- ══════════════════════════════════════════════════════════ -->
         <!-- SECTION 6 — MEDICINE & DENTISTRY                          -->
         <!-- ══════════════════════════════════════════════════════════ -->
@@ -990,54 +1076,119 @@
                 </div>
             </div>
             <div class="sec-bd">
-                @if (FN(medDen.Med_TotalStudents) || FN(medDen.Den_TotalStudents))
+                <!-- Medicine-only qualification rules notice -->
+                <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#7c2d12;line-height:1.65;">
+                    <div style="font-weight:800;margin-bottom:5px;">🏥 Medicine only — Special Clinical Qualification Rules</div>
+                    MSc-level teaching staff (Lecturer MSc, Asst. Lecturer MSc, Practitioner MSc) must hold <strong>First Board / Specialist-level</strong> qualification.
+                    Assistant Lecturer (PhD) must hold <strong>Double Board / Consultant-level</strong> qualification.
+                    <strong>Practitioners are for clinical/practical training only — not counted as lecturers for theoretical teaching.</strong>
+                    Practitioner (BSc) is not applicable for Medicine programs.
+                    <em style="display:block;margin-top:4px;color:#9a3412;">These rules apply to Medicine only. Dentistry uses standard qualification rules.</em>
+                </div>
+
+                <!-- College selection badges -->
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+                    @if (medDen.HasMedicine)  { <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;background:#dbeafe;color:#1e40af;font-size:11px;font-weight:700;border:1px solid #bfdbfe;">🏥 College of Medicine</span> }
+                    @if (medDen.HasDentistry) { <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;background:#dcfce7;color:#166534;font-size:11px;font-weight:700;border:1px solid #bbf7d0;">🦷 College of Dentistry</span> }
+                    @if (!medDen.HasMedicine && !medDen.HasDentistry) { <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;background:#fef9c3;color:#78350f;font-size:11px;font-weight:700;border:1px solid #fde68a;">— None</span> }
+                </div>
+
+                @if (medDen.HasMedicine || medDen.HasDentistry)
                 {
-                    <div class="fg-2" style="margin-bottom:16px">
-                        @if (FN(medDen.Med_TotalStudents)) { <div class="stat-card light"><div class="sv">@N(medDen.Med_TotalStudents)</div><div class="sk">Medicine Students</div></div> }
-                        @if (FN(medDen.Den_TotalStudents)) { <div class="stat-card light"><div class="sv">@N(medDen.Den_TotalStudents)</div><div class="sk">Dentistry Students</div></div> }
+                <div class="fg-2" style="margin-bottom:16px">
+                    @if (medDen.HasMedicine)  { <div class="stat-card light"><div class="sv">@N0(medDen.Med_TotalStudents)</div><div class="sk">Medicine Students</div></div> }
+                    @if (medDen.HasDentistry) { <div class="stat-card light"><div class="sv">@N0(medDen.Den_TotalStudents)</div><div class="sk">Dentistry Students</div></div> }
+                </div>
+
+                <div class="sub-hd">Computed Read-Only Summary</div>
+                <div style="display:grid;grid-template-columns:@(medDen.HasMedicine && medDen.HasDentistry ? "1fr 1fr" : "1fr");gap:12px;margin-bottom:18px;">
+                    @if (medDen.HasMedicine)
+                    {
+                    <div style="border:1px solid var(--border);border-radius:10px;padding:14px;">
+                        <div style="font-size:11px;font-weight:800;color:var(--brand);margin-bottom:10px;"><i class="bi bi-heart-pulse"></i> College of Medicine</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                            <div class="field"><div class="lbl">Full-Time PhD</div><div class="val">@N0(medDen.Med_PhdHolders)</div></div>
+                            <div class="field"><div class="lbl">Full-Time MSc</div><div class="val">@N0(medDen.Med_MscLecturers)</div></div>
+                            <div class="field"><div class="lbl">Full-Time Practitioner</div><div class="val">@N0(medDen.Med_PractitionerTotal)</div></div>
+                            <div class="field"><div class="lbl">Part-Time Total</div><div class="val">@N0(medDen.Med_TotalPartTime)</div></div>
+                            <div class="field"><div class="lbl">Total Full-Time Staff</div><div class="val">@N0(medFtTotal)</div></div>
+                            <div class="field"><div class="lbl">Total Staff (FT + PT)</div><div class="val">@N0(medAllStaff)</div></div>
+                        </div>
+                    </div>
+                    }
+
+                    @if (medDen.HasDentistry)
+                    {
+                    <div style="border:1px solid var(--border);border-radius:10px;padding:14px;">
+                        <div style="font-size:11px;font-weight:800;color:var(--brand);margin-bottom:10px;"><i class="bi bi-tooth"></i> College of Dentistry</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                            <div class="field"><div class="lbl">Full-Time PhD</div><div class="val">@N0(medDen.Den_PhdHolders)</div></div>
+                            <div class="field"><div class="lbl">Full-Time MSc</div><div class="val">@N0(medDen.Den_MscLecturers)</div></div>
+                            <div class="field"><div class="lbl">Full-Time Practitioner</div><div class="val">@N0(medDen.Den_PractitionerTotal)</div></div>
+                            <div class="field"><div class="lbl">Part-Time Total</div><div class="val">@N0(medDen.Den_TotalPartTime)</div></div>
+                            <div class="field"><div class="lbl">Total Full-Time Staff</div><div class="val">@N0(denFtTotal)</div></div>
+                            <div class="field"><div class="lbl">Total Staff (FT + PT)</div><div class="val">@N0(denAllStaff)</div></div>
+                        </div>
+                    </div>
+                    }
+                </div>
+                }
+                @if (!medDen.HasMedicine && !medDen.HasDentistry)
+                {
+                    <div style="background:#fef9c3;border:1px solid #fde68a;color:#78350f;border-radius:8px;padding:12px 16px;font-size:13px;text-align:center;margin-bottom:16px;">
+                        <i class="bi bi-info-circle-fill"></i> No clinical college (Medicine or Dentistry) selected — staff table is not applicable.
                     </div>
                 }
-                @if (medFtFilled.Any())
+
+                @if (medDen.HasMedicine || medDen.HasDentistry)
                 {
-                    <div class="sub-hd">Full-Time Academic Staff</div>
-                    <div class="tbl-wrap">
-                        <table class="tbl rank-tbl">
-                            <thead><tr><th>Rank</th><th>Medicine</th><th>Dentistry</th></tr></thead>
-                            <tbody>
-                                @foreach (var (rn, mv, dv) in medFtFilled)
-                                {
-                                    <tr>
-                                        <td>@rn</td>
-                                        <td>@(FN(mv) ? mv!.Value.ToString() : "—")</td>
-                                        <td>@(FN(dv) ? dv!.Value.ToString() : "—")</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                @if (medPtFilled.Any())
-                {
-                    <div class="sub-hd">Part-Time Clinical Staff</div>
-                    <div class="tbl-wrap">
-                        <table class="tbl rank-tbl">
-                            <thead><tr><th>Rank</th><th>Medicine</th><th>Dentistry</th></tr></thead>
-                            <tbody>
-                                @foreach (var (rn, mv, dv) in medPtFilled)
-                                {
-                                    <tr>
-                                        <td>@rn</td>
-                                        <td>@(FN(mv) ? mv!.Value.ToString() : "—")</td>
-                                        <td>@(FN(dv) ? dv!.Value.ToString() : "—")</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="sub-hd">Full-Time Academic Staff</div>
+                <div class="tbl-wrap">
+                    <table class="tbl rank-tbl">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                @if (medDen.HasMedicine)  { <th>Medicine</th> }
+                                @if (medDen.HasDentistry) { <th>Dentistry</th> }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (rn, mv, dv) in medFtAll)
+                            {
+                                <tr>
+                                    <td>@rn</td>
+                                    @if (medDen.HasMedicine)  { <td>@N0(mv)</td> }
+                                    @if (medDen.HasDentistry) { <td>@N0(dv)</td> }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="sub-hd">Part-Time Clinical Staff</div>
+                <div class="tbl-wrap">
+                    <table class="tbl rank-tbl">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                @if (medDen.HasMedicine)  { <th>Medicine</th> }
+                                @if (medDen.HasDentistry) { <th>Dentistry</th> }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (rn, mv, dv) in medPtAll)
+                            {
+                                <tr>
+                                    <td>@rn</td>
+                                    @if (medDen.HasMedicine)  { <td>@N0(mv)</td> }
+                                    @if (medDen.HasDentistry) { <td>@N0(dv)</td> }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
                 }
             </div>
         </div>
-        }
 
         <!-- ══════════════════════════════════════════════════════════ -->
         <!-- SECTION 7 — HOSPITALS                                     -->
@@ -1130,7 +1281,7 @@
                         @if (F(infra.CampusesCount))                    { <div class="field"><div class="lbl">Campuses Count</div><div class="val">@infra.CampusesCount</div></div> }
                         @if (F(infra.StadiumsCount))                    { <div class="field"><div class="lbl">Stadiums Count</div><div class="val">@infra.StadiumsCount</div></div> }
                         @if (F(infra.ClassroomsAndLectureHallsCount))   { <div class="field"><div class="lbl">Classrooms &amp; Lecture Halls</div><div class="val">@infra.ClassroomsAndLectureHallsCount</div></div> }
-                        @if (F(infra.LibrariesCount))                   { <div class="field"><div class="lbl">Libraries Count</div><div class="val">@infra.LibrariesCount</div></div> }
+                        @if (F(infra.LibrariesCount))                   { <div class="field"><div class="lbl">Laboratories Count</div><div class="val">@infra.LibrariesCount</div></div> }
                     </div>
                 }
                 @if (!string.IsNullOrWhiteSpace(infra.LaboratoriesDetails))
@@ -1469,25 +1620,20 @@
             </div>
             <div class="sec-bd">
 
-                <div class="sub-hd">Reviewer</div>
-                <div class="fg-2">
-                    <div class="field">
-                        <div class="lbl">Reviewer Name</div>
-                        <div class="val">@reviewerName</div>
+                <!-- Reviewer card -->
+                <div class="rec-reviewer">
+                    <div class="rec-reviewer-avatar"><i class="bi bi-person-badge-fill"></i></div>
+                    <div class="rec-reviewer-info">
+                        <div class="rec-reviewer-name">@reviewerName</div>
+                        <div class="rec-reviewer-role">Assigned Recognition Member</div>
                     </div>
-                    <div class="field">
-                        <div class="lbl">Submitted to Admin</div>
-                        <div class="val">
-                            @if (Model.SubmittedToAdminAt.HasValue)
-                            {
-                                @Model.SubmittedToAdminAt.Value.ToString("dd MMM yyyy, HH:mm")
-                            }
-                            else
-                            {
-                                @:—
-                            }
+                    @if (Model.SubmittedToAdminAt.HasValue)
+                    {
+                        <div class="rec-reviewer-date">
+                            <i class="bi bi-calendar-check-fill"></i>
+                            @Model.SubmittedToAdminAt.Value.ToString("dd MMM yyyy, HH:mm")
                         </div>
-                    </div>
+                    }
                 </div>
 
                 @{
@@ -1502,35 +1648,11 @@
                 @if (hasRankings)
                 {
                     <div class="sub-hd">Global University Rankings</div>
-                    <div class="fg-4" style="margin-bottom:4px">
-                        @if (hasArwu)
-                        {
-                            <div class="field">
-                                <div class="lbl">ARWU (Shanghai)</div>
-                                <div class="val">@RankVal(recRankings.ArwuValue, recRankings.ArwuIsNa)</div>
-                            </div>
-                        }
-                        @if (hasQs)
-                        {
-                            <div class="field">
-                                <div class="lbl">QS World Rankings</div>
-                                <div class="val">@RankVal(recRankings.QsValue, recRankings.QsIsNa)</div>
-                            </div>
-                        }
-                        @if (hasThe)
-                        {
-                            <div class="field">
-                                <div class="lbl">THE Rankings</div>
-                                <div class="val">@RankVal(recRankings.TheValue, recRankings.TheIsNa)</div>
-                            </div>
-                        }
-                        @if (hasScopus)
-                        {
-                            <div class="field">
-                                <div class="lbl">Scopus h-Index</div>
-                                <div class="val">@RankVal(recRankings.ScopusValue, recRankings.ScopusIsNa)</div>
-                            </div>
-                        }
+                    <div class="fg-4" style="margin-bottom:20px">
+                        @if (hasArwu)   { <div class="field"><div class="lbl">ARWU (Shanghai)</div><div class="val">@RankVal(recRankings.ArwuValue, recRankings.ArwuIsNa)</div></div> }
+                        @if (hasQs)     { <div class="field"><div class="lbl">QS World Rankings</div><div class="val">@RankVal(recRankings.QsValue, recRankings.QsIsNa)</div></div> }
+                        @if (hasThe)    { <div class="field"><div class="lbl">THE Rankings</div><div class="val">@RankVal(recRankings.TheValue, recRankings.TheIsNa)</div></div> }
+                        @if (hasScopus) { <div class="field"><div class="lbl">Scopus h-Index</div><div class="val">@RankVal(recRankings.ScopusValue, recRankings.ScopusIsNa)</div></div> }
                     </div>
                 }
 
@@ -1550,7 +1672,7 @@
                     string docComp2 = totalFacFT == 0 ? "Not Assessed" : docPct2 >= 50 ? "Compliant" : "Not Compliant";
 
                     var ratioVal = A2.StudentsToFacultyRatio ?? 0m;
-                    var selCats  = (A2.CollegeCategoriesCsv ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var selCats  = (A2.CollegeCategoriesCsv ?? "").Split(new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                     var catRatio = new Dictionary<string,decimal>(StringComparer.OrdinalIgnoreCase) { ["Scientific"]=20m, ["Humanities"]=35m, ["Medical"]=25m, ["Applied"]=20m };
                     var avgRatio = selCats.Where(k => catRatio.ContainsKey(k)).Select(k => catRatio[k]).DefaultIfEmpty(0m).Average();
                     string ratioComp;
@@ -1572,30 +1694,30 @@
 
                 <div class="sub-hd">5-Point Compliance Assessment</div>
                 <div class="score-grid">
-                    <div class="score-cell">
+                    <div class="score-cell @ScoreCellClass(p1)">
                         <div class="score-num-r">1</div>
                         <div class="score-name">Accreditation</div>
                         <span class="badge @BadgeCss(p1)">@p1</span>
                         @if (!string.IsNullOrWhiteSpace(Model.AccreditationNote)) { <div style="font-size:11px;color:#888;margin-top:6px;">@Model.AccreditationNote</div> }
                     </div>
-                    <div class="score-cell">
+                    <div class="score-cell @ScoreCellClass(ratioComp)">
                         <div class="score-num-r">2</div>
                         <div class="score-name">Faculty Ratio</div>
                         <span class="badge @BadgeCss(ratioComp)">@ratioComp</span>
                         @if (ratioVal > 0) { <div style="font-size:11px;color:#888;margin-top:6px;">1:@((int)ratioVal)</div> }
                     </div>
-                    <div class="score-cell">
+                    <div class="score-cell @ScoreCellClass(docComp2)">
                         <div class="score-num-r">3</div>
                         <div class="score-name">Doctorate %</div>
                         <span class="badge @BadgeCss(docComp2)">@docComp2</span>
                         @if (totalFacFT > 0) { <div style="font-size:11px;color:#888;margin-top:6px;">@docPct2%</div> }
                     </div>
-                    <div class="score-cell">
+                    <div class="score-cell @ScoreCellClass(clinComp)">
                         <div class="score-num-r">4</div>
                         <div class="score-name">Clinical Capacity</div>
                         <span class="badge @BadgeCss(clinComp)">@clinComp</span>
                     </div>
-                    <div class="score-cell">
+                    <div class="score-cell @ScoreCellClass(envOverall2)">
                         <div class="score-num-r">5</div>
                         <div class="score-name">Environment</div>
                         <span class="badge @BadgeCss(envOverall2)">@envOverall2</span>
@@ -1651,28 +1773,83 @@
                     </div>
                 }
 
+                <!-- Final verdict -->
                 <div class="sub-hd">Final Recommendation Decision</div>
-                @if (!string.IsNullOrWhiteSpace(recDecision))
-                {
-                    <span class="dec-badge @DecCss(recDecision)"><i class="bi @DecIcon(recDecision)"></i> @recDecision</span>
+                @{
+                    var verdictCls = recDecision switch {
+                        "Approve" => "verdict-approve",
+                        "Conditional Approval" => "verdict-conditional",
+                        var x when x.Contains("Reject", StringComparison.OrdinalIgnoreCase) => "verdict-reject",
+                        _ => "verdict-na"
+                    };
+                    var verdictDisplay = string.IsNullOrWhiteSpace(recDecision) ? "Not Submitted Yet" : recDecision;
                 }
-                else
-                {
-                    <span class="dec-badge dec-na"><i class="bi bi-dash-circle"></i> Not Submitted Yet</span>
-                }
+                <div class="rec-verdict-wrap @verdictCls">
+                    <i class="bi @DecIcon(recDecision) rec-verdict-icon"></i>
+                    <div class="rec-verdict-label-main">@verdictDisplay</div>
+                    <div class="rec-verdict-sublabel">Doctor's Final Recommendation</div>
+                </div>
 
-                <div class="sub-hd">Justification / Notes</div>
-                @if (!string.IsNullOrWhiteSpace(Model.BasicInfoAssessmentReason))
-                {
-                    <div class="note-box">@Model.BasicInfoAssessmentReason</div>
-                }
-                else
-                {
-                    <div class="note-box empty">No justification note provided.</div>
-                }
+                <!-- Justification -->
+                <div class="rec-notes-card">
+                    <div class="rec-notes-hd"><i class="bi bi-chat-quote-fill"></i> Justification &amp; Notes</div>
+                    @if (!string.IsNullOrWhiteSpace(Model.BasicInfoAssessmentReason))
+                    {
+                        <div class="rec-notes-body">@Model.BasicInfoAssessmentReason</div>
+                    }
+                    else
+                    {
+                        <div class="rec-notes-body empty">No justification note provided.</div>
+                    }
+                </div>
 
             </div>
         </div>
+        }
+
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <!-- SECTION 14 — APPLICANT INFORMATION                         -->
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <div class="section-card" id="sec-applicant">
+            <div class="sec-hd">
+                <div class="sec-num">14</div>
+                <div>
+                    <h2>Applicant Information</h2>
+                    <p>Contact person for this submission</p>
+                </div>
+            </div>
+            <div class="sec-bd">
+                <div class="fg">
+                    @if (F(Model.ApplicantName))
+                    {
+                        <div class="field"><div class="lbl">Full Name</div><div class="val">@Model.ApplicantName</div></div>
+                    }
+                    @if (F(Model.ApplicantEmail))
+                    {
+                        <div class="field"><div class="lbl">Email</div><div class="val">@Model.ApplicantEmail</div></div>
+                    }
+                    @if (F(Model.WorkPlace))
+                    {
+                        <div class="field"><div class="lbl">Work Place</div><div class="val">@Model.WorkPlace</div></div>
+                    }
+                    @if (F(Model.ReferenceNumber))
+                    {
+                        <div class="field"><div class="lbl">Reference Number</div><div class="val">@Model.ReferenceNumber</div></div>
+                    }
+                    <div class="field"><div class="lbl">Submission Date</div><div class="val">@Model.SubmittedAt.ToString("dd MMM yyyy, HH:mm")</div></div>
+                </div>
+            </div>
+        </div>
+
+        @if (backId > 0)
+        {
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;padding:16px 0;">
+                <a href="/Home/AdminFinalDecision?id=@Model.Id&meetingId=@backId&viewOnly=@(string.IsNullOrWhiteSpace(Model.CommitteeFinalRecommendation) ? "false" : "true")"
+                   style="display:inline-flex;align-items:center;gap:8px;background:#d97706;color:#fff;border:none;border-radius:9px;padding:11px 26px;font-size:14px;font-weight:700;text-decoration:none;transition:background .15s;"
+                   onmouseover="this.style.background='#b45309'" onmouseout="this.style.background='#d97706'">
+                    <i class="bi bi-shield-fill-check"></i> Final Decision
+                </a>
+            </div>
         }
 
         <!-- Footer -->
@@ -1706,16 +1883,35 @@
 </div>
 
 <script>
-    // Highlight active sidebar link on scroll
     const links = document.querySelectorAll('.sid-link[href^="#"]');
-    const sections = Array.from(links).map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+    const sections = Array.from(links)
+        .map(l => document.querySelector(l.getAttribute('href')))
+        .filter(Boolean);
+
+    function setActive(id) {
+        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+    }
+
+    let clickLock = null;
+    links.forEach(link => {
+        link.addEventListener('click', function () {
+            const targetId = this.getAttribute('href').slice(1);
+            setActive(targetId);
+            clearTimeout(clickLock);
+            clickLock = setTimeout(() => { clickLock = null; }, 900);
+        });
+    });
 
     function onScroll() {
+        if (clickLock) return;
+        if (!sections.length) return;
+        const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 8;
+        if (atBottom) { setActive(sections[sections.length - 1].id); return; }
         let current = sections[0];
-        for (const s of sections) {
-            if (s.getBoundingClientRect().top <= 80) current = s;
+        for (const section of sections) {
+            if (section.getBoundingClientRect().top <= 90) current = section;
         }
-        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current.id));
+        setActive(current.id);
     }
 
     window.addEventListener('scroll', onScroll, { passive: true });

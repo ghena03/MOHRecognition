@@ -1,15 +1,15 @@
-﻿@{
+@{
     Layout = null;
     var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-    var isRtl = culture == "ar";
-    var dir = isRtl ? "rtl" : "ltr";
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
 }
 <!DOCTYPE html>
 <html lang="@culture" dir="@dir">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@S["Role_PageTitle"]</title>
+    <title>@(isRtl ? "بوابة الاعتراف" : "Recognition Portal")</title>
 
     <link rel="stylesheet" href="~/css/Role.css" />
     @if (isRtl)
@@ -17,10 +17,7 @@
         <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
     }
     <style>
-        /* Fix language switcher size and position */
-        .header__inner {
-            position: relative;
-        }
+        .header__inner          { position: relative; }
 
         .lang-switcher-wrap {
             position: absolute;
@@ -28,7 +25,6 @@
             right: 16px;
             transform: translateY(-50%);
         }
-
         [dir="rtl"] .lang-switcher-wrap {
             right: unset;
             left: 16px;
@@ -40,20 +36,9 @@
             border-radius: 6px;
             padding: 3px 6px;
         }
-
-        .lang-btn {
-            color: #333;
-            font-size: 0.75rem;
-            padding: 2px 7px;
-        }
-
-        .lang-btn--active {
-            background: rgba(0,0,0,0.12);
-        }
-
-        .lang-divider {
-            color: #999;
-        }
+        .lang-btn           { color: #333; font-size: 0.75rem; padding: 2px 7px; }
+        .lang-btn--active   { background: rgba(0,0,0,0.12); }
+        .lang-divider       { color: #999; }
     </style>
 </head>
 
@@ -65,7 +50,8 @@
             <div class="header__spacer"></div>
 
             <div class="header__brand">
-                <img class="header__logo" src="~/images/mohelogo.png" alt="Portal Logo" />
+                <img class="header__logo" src="~/images/mohelogo.png"
+                     alt="@(isRtl ? "شعار البوابة" : "Portal Logo")" />
             </div>
 
             @* Language switcher — compact, positioned at edge *@
@@ -78,15 +64,16 @@
     </header>
 
     <main class="wrap">
-        <section class="card" aria-label="Choose role">
-            <h1 class="h1">@S["Role_SignIn"]</h1>
-            <p class="lead">@S["Role_ChooseRole"]</p>
+        <section class="card" aria-label="@(isRtl ? "اختيار الدور" : "Choose role")">
+            <h1 class="h1">@(isRtl ? "تسجيل الدخول" : "Sign In")</h1>
+            <p class="lead">@(isRtl ? "اختر دورك للمتابعة" : "Choose your role to continue")</p>
 
             <div class="box">
                 <div class="box__title">
-                    @S["Role_SigningAs"]
+                    @(isRtl ? "تسجيل الدخول بصفة" : "Signing in as")
                 </div>
-                <div class="choices" role="radiogroup" aria-label="Role selection">
+                <div class="choices" role="radiogroup"
+                     aria-label="@(isRtl ? "اختيار الدور" : "Role selection")">
 
                     <!-- Admin -->
                     <input type="radio" name="role" id="roleAdmin" class="r" checked>
@@ -98,8 +85,11 @@
                             </svg>
                         </div>
                         <div>
-                            <div class="name">@S["Role_Admin"]</div>
-                            <div class="desc">@S["Role_AdminDesc"]</div>
+                            <div class="name">@(isRtl ? "مسؤول" : "Administrator")</div>
+                            <div class="desc">
+                                @(isRtl ? "إدارة النظام، المستخدمين، والطلبات"
+                                        : "Manage the system, users, and requests")
+                            </div>
                         </div>
                     </label>
 
@@ -117,19 +107,24 @@
                             </svg>
                         </div>
                         <div>
-                            <div class="name">@S["Role_RecognitionMember"]</div>
-                            <div class="desc">@S["Role_RecognitionMemberDesc"]</div>
+                            <div class="name">@(isRtl ? "عضو لجنة الاعتراف" : "Recognition Member")</div>
+                            <div class="desc">
+                                @(isRtl ? "مراجعة طلبات الاعتراف وإصدار التوصيات"
+                                        : "Review recognition requests and issue recommendations")
+                            </div>
                         </div>
                     </label>
                 </div>
 
                 <div class="actions">
-                    <button class="btn" id="continueBtn" type="button">@S["Role_Continue"]</button>
+                    <button class="btn" id="continueBtn" type="button">
+                        @(isRtl ? "متابعة" : "Continue")
+                    </button>
                 </div>
             </div>
 
             <footer class="footer">
-                @S["Site_Copyright"]
+                @(isRtl ? "© 2025 وزارة التعليم العالي والبحث العلمي" : "© 2025 Ministry of Higher Education and Scientific Research")
             </footer>
         </section>
     </main>

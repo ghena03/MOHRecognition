@@ -76,19 +76,18 @@
         return type;
     }
 
-    string HospitalDocLabel(string normalizedType) => normalizedType switch
-    {
-        "LocalRecognition" => "Local Recognition",
-        "LocalAccreditation" => "Local Accreditation",
-        "RegionalAccreditation" => "Regional Accreditation",
-        "InternationalAccreditation" => "International Accreditation",
-        "OtherAccreditation" => "Other Accreditation",
-        "HospitalAgreement" => "University-Hospital Agreement",
-        _ => string.IsNullOrWhiteSpace(normalizedType) ? "—" : normalizedType
-    };
+    var uniRecAcc = Model?.UniRecAcc ?? new DTOs.UniRecAccDto();
 
-    var typedHospitalDocuments = hosp.Documents
+    var allFlatDocs = hosp.Documents
         .Where(x => !string.IsNullOrWhiteSpace(x.FileUrl))
+        .Select(x => (OriginalFileName: x.OriginalFileName, FileUrl: x.FileUrl, DocumentType: x.DocumentType, UploadedAt: x.UploadedAt))
+        .Concat(uniRecAcc.Documents
+            .Where(x => !string.IsNullOrWhiteSpace(x.FileUrl))
+            .Select(x => (OriginalFileName: x.OriginalFileName, FileUrl: x.FileUrl, DocumentType: x.DocumentType, UploadedAt: x.UploadedAt)))
+        .GroupBy(x => x.FileUrl)
+        .Select(g => g.First());
+
+    var typedHospitalDocuments = allFlatDocs
         .Select(x => new { Doc = x, Type = NormalizeHospitalDocType(x.DocumentType) })
         .Where(x => !string.IsNullOrWhiteSpace(x.Type))
         .OrderBy(x => x.Type)
@@ -102,26 +101,52 @@
     var internationalAccreditationDocs = typedHospitalDocuments.Where(x => x.Type == "InternationalAccreditation").Select(x => x.Doc).ToList();
     var otherAccreditationDocs = typedHospitalDocuments.Where(x => x.Type == "OtherAccreditation").Select(x => x.Doc).ToList();
     var hospitalAgreementDocs = typedHospitalDocuments.Where(x => x.Type == "HospitalAgreement").Select(x => x.Doc).ToList();
+
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
+
+    string HospitalDocLabel(string normalizedType) => isRtl ? normalizedType switch
+    {
+        "LocalRecognition"          => "اعتراف محلي",
+        "LocalAccreditation"        => "اعتماد محلي",
+        "RegionalAccreditation"     => "اعتماد إقليمي",
+        "InternationalAccreditation"=> "اعتماد دولي",
+        "OtherAccreditation"        => "اعتماد آخر",
+        "HospitalAgreement"         => "اتفاقية جامعة-مستشفى",
+        _                           => string.IsNullOrWhiteSpace(normalizedType) ? "—" : normalizedType
+    } : normalizedType switch
+    {
+        "LocalRecognition"          => "Local Recognition",
+        "LocalAccreditation"        => "Local Accreditation",
+        "RegionalAccreditation"     => "Regional Accreditation",
+        "InternationalAccreditation"=> "International Accreditation",
+        "OtherAccreditation"        => "Other Accreditation",
+        "HospitalAgreement"         => "University-Hospital Agreement",
+        _                           => string.IsNullOrWhiteSpace(normalizedType) ? "—" : normalizedType
+    };
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "تفاصيل الطلب — هيئات الاعتماد" : "Request Details - Accreditation Bodies")</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
     <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/DetailsAcademicInfo.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
 </head>
 
-<body class="rm-page">
+<body class="rm-page @(isRtl ? "rtl-body" : "")">
     <header class="rm-header">
         <div class="rm-brandbar"></div>
 
@@ -132,14 +157,18 @@
                 </div>
 
                 <div class="rm-user">
-                    <div class="rm-userpill">
-                        <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>@(adminReadOnly ? "Admin Review" : (ViewBag.CurrentRecognitionMember ?? "Recognition Member"))</b></span>
-                    </div>
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@(adminReadOnly ? "A" : ((ViewBag.CurrentRecognitionMember as string)?.Substring(0,1)?.ToUpper() ?? "M"))</div>
+                        <div class="rm-user-card-text">
+                            <strong>@(adminReadOnly ? (isRtl ? "مراجعة المدير" : "Admin Review") : (ViewBag.CurrentRecognitionMember ?? (isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")))</strong>
+                            <span>@(adminReadOnly ? (isRtl ? "عرض المدير" : "Admin View") : (isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member"))</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
 
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
                         <i class="bi bi-box-arrow-right"></i>
-                        Logout
+                        @(isRtl ? "تسجيل الخروج" : "Logout")
                     </a>
                 </div>
             </div>
@@ -159,19 +188,19 @@
         <main class="rm-main">
             <section class="rm-card rd-head">
                 <div>
-                    <h1>Request Details</h1>
-                    <p class="rd-inst">Institution: <b>@inst</b></p>
-                    <p>Step 5 of 7 — Accreditation Bodies.</p>
+                    <h1>@(isRtl ? "تفاصيل الطلب" : "Request Details")</h1>
+                    <p class="rd-inst">@(isRtl ? "المؤسسة: " : "Institution: ")<b>@inst</b></p>
+                    <p>@(isRtl ? "الخطوة 5 من 7 — هيئات الاعتماد." : "Step 5 of 7 — Accreditation Bodies.")</p>
                 </div>
 
                 <div class="rd-meta">
                     <div class="meta-pill">
-                        <span>Request ID</span>
+                        <span>@(isRtl ? "رقم الطلب" : "Request ID")</span>
                         <b>#@requestId</b>
                     </div>
 
                     <div class="meta-pill">
-                        <span>Step</span>
+                        <span>@(isRtl ? "الخطوة" : "Step")</span>
                         <b>5 / 7</b>
                     </div>
                 </div>
@@ -180,7 +209,7 @@
             @if (readOnlyMode)
             {
                 <section class="rm-card" style="border:1px solid #fedf89; background:#fffaeb; color:#7a2e0e; font-weight:700;">
-                    <i class="bi bi-eye"></i> Read-only mode: this university is assigned to another member.
+                    <i class="bi bi-eye"></i> @(isRtl ? "وضع العرض فقط: هذه الجامعة معيّنة لعضو آخر." : "Read-only mode: this university is assigned to another member.")
                 </section>
             }
 
@@ -188,15 +217,14 @@
             {
                 <section class="rm-card" style="border:1px solid #bfdbfe; background:#eff6ff; color:#1e40af; font-weight:600; display:flex; align-items:center; gap:10px;">
                     <i class="bi bi-pencil-square" style="font-size:1.1rem;"></i>
-                    Manual Request — Accreditation documents are not available for manual entries. You may record global rankings below, then continue.
+                    @(isRtl ? "طلب يدوي — وثائق الاعتماد غير متاحة للإدخالات اليدوية. يمكنك تسجيل التصنيفات العالمية أدناه، ثم المتابعة." : "Manual Request — Accreditation documents are not available for manual entries. You may record global rankings below, then continue.")
                 </section>
             }
 
-            <!-- Recognition and Accreditation (unified table) -->
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2>Recognition and Accreditation</h2>
-                    <p>All submitted recognition certificates, accreditation documents, and university-hospital agreements.</p>
+                    <h2>@(isRtl ? "الاعتراف والاعتماد" : "Recognition and Accreditation")</h2>
+                    <p>@(isRtl ? "جميع شهادات الاعتراف ووثائق الاعتماد واتفاقيات الجامعة-المستشفى المُقدَّمة." : "All submitted recognition certificates, accreditation documents, and university-hospital agreements.")</p>
                 </div>
 
                 @{ var accredDocs = typedHospitalDocuments.Where(x => !x.Type.Equals("HospitalAgreement", StringComparison.OrdinalIgnoreCase)).ToList(); }
@@ -207,9 +235,9 @@
                             <thead>
                                 <tr>
                                     <th style="width:44px;">#</th>
-                                    <th>File Name</th>
-                                    <th style="width:220px;">Category</th>
-                                    <th style="width:180px;">Actions</th>
+                                    <th>@(isRtl ? "اسم الملف" : "File Name")</th>
+                                    <th style="width:220px;">@(isRtl ? "الفئة" : "Category")</th>
+                                    <th style="width:180px;">@(isRtl ? "الإجراءات" : "Actions")</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -223,8 +251,8 @@
                                         <td><span class="hosp-spec-tag" style="white-space:nowrap;">@HospitalDocLabel(item.Type)</span></td>
                                         <td class="cell-actions">
                                             <div class="table-actions">
-                                                <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">View</a>
-                                                <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
+                                                <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">@(isRtl ? "عرض" : "View")</a>
+                                                <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">@(isRtl ? "تنزيل" : "Download")</a>
                                             </div>
                                         </td>
                                     </tr>
@@ -236,14 +264,14 @@
                 }
                 else
                 {
-                    <div class="infra-empty" style="margin-top:14px;">No recognition or accreditation documents submitted.</div>
+                    <div class="infra-empty" style="margin-top:14px;">@(isRtl ? "لم يتم تقديم وثائق اعتراف أو اعتماد." : "No recognition or accreditation documents submitted.")</div>
                 }
             </section>
 
             <section id="sec-research-global-rankings" class="rm-card rd-card">
                 <div class="rd-card-hd">
-                    <h2>Research & Global Rankings</h2>
-                    <p>University ranking information submitted or reviewed for the request.</p>
+                    <h2>@(isRtl ? "البحث العلمي والتصنيفات العالمية" : "Research & Global Rankings")</h2>
+                    <p>@(isRtl ? "معلومات تصنيف الجامعة المُقدَّمة أو المُراجَعة للطلب." : "University ranking information submitted or reviewed for the request.")</p>
                 </div>
 
                 @if (TempData["RankingsSaved"] != null)
@@ -263,16 +291,14 @@
 
                     <div class="rank-stack">
                         <div class="rd-field">
-                            <label>Academic Ranking of World Universities (ARWU)</label>
-
+                            <label>@(isRtl ? "تصنيف ARWU للجامعات العالمية" : "Academic Ranking of World Universities (ARWU)")</label>
                             <div class="rank-input">
                                 <input type="text"
                                        name="arwuValue"
                                        value="@rankings.ArwuValue"
-                                       placeholder="Enter ranking"
+                                       placeholder="@(isRtl ? "أدخل التصنيف" : "Enter ranking")"
                                        data-rank-input="arwu"
                                        @(readOnlyMode ? "readonly disabled" : null) />
-
                                 <label class="na-toggle">
                                     <input type="checkbox"
                                            name="arwuIsNa"
@@ -280,22 +306,20 @@
                                            @(rankings.ArwuIsNa ? "checked" : null)
                                            data-rank-na="arwu"
                                            @(readOnlyMode ? "disabled" : null) />
-                                    N/A
+                                    @(isRtl ? "غير متاح" : "N/A")
                                 </label>
                             </div>
                         </div>
 
                         <div class="rd-field">
-                            <label>QS - World University Ranking</label>
-
+                            <label>@(isRtl ? "تصنيف QS للجامعات العالمية" : "QS - World University Ranking")</label>
                             <div class="rank-input">
                                 <input type="text"
                                        name="qsValue"
                                        value="@rankings.QsValue"
-                                       placeholder="Enter ranking"
+                                       placeholder="@(isRtl ? "أدخل التصنيف" : "Enter ranking")"
                                        data-rank-input="qs"
                                        @(readOnlyMode ? "readonly disabled" : null) />
-
                                 <label class="na-toggle">
                                     <input type="checkbox"
                                            name="qsIsNa"
@@ -303,22 +327,20 @@
                                            @(rankings.QsIsNa ? "checked" : null)
                                            data-rank-na="qs"
                                            @(readOnlyMode ? "disabled" : null) />
-                                    N/A
+                                    @(isRtl ? "غير متاح" : "N/A")
                                 </label>
                             </div>
                         </div>
 
                         <div class="rd-field">
-                            <label>THE - World University Ranking (Times)</label>
-
+                            <label>@(isRtl ? "تصنيف THE للجامعات العالمية (تايمز)" : "THE - World University Ranking (Times)")</label>
                             <div class="rank-input">
                                 <input type="text"
                                        name="theValue"
                                        value="@rankings.TheValue"
-                                       placeholder="Enter ranking"
+                                       placeholder="@(isRtl ? "أدخل التصنيف" : "Enter ranking")"
                                        data-rank-input="the"
                                        @(readOnlyMode ? "readonly disabled" : null) />
-
                                 <label class="na-toggle">
                                     <input type="checkbox"
                                            name="theIsNa"
@@ -326,22 +348,20 @@
                                            @(rankings.TheIsNa ? "checked" : null)
                                            data-rank-na="the"
                                            @(readOnlyMode ? "disabled" : null) />
-                                    N/A
+                                    @(isRtl ? "غير متاح" : "N/A")
                                 </label>
                             </div>
                         </div>
 
                         <div class="rd-field">
-                            <label>Scopus Ranking</label>
-
+                            <label>@(isRtl ? "تصنيف Scopus" : "Scopus Ranking")</label>
                             <div class="rank-input">
                                 <input type="text"
                                        name="scopusValue"
                                        value="@rankings.ScopusValue"
-                                       placeholder="Enter ranking"
+                                       placeholder="@(isRtl ? "أدخل التصنيف" : "Enter ranking")"
                                        data-rank-input="scopus"
                                        @(readOnlyMode ? "readonly disabled" : null) />
-
                                 <label class="na-toggle">
                                     <input type="checkbox"
                                            name="scopusIsNa"
@@ -349,7 +369,7 @@
                                            @(rankings.ScopusIsNa ? "checked" : null)
                                            data-rank-na="scopus"
                                            @(readOnlyMode ? "disabled" : null) />
-                                    N/A
+                                    @(isRtl ? "غير متاح" : "N/A")
                                 </label>
                             </div>
                         </div>
@@ -358,7 +378,7 @@
                     @if (!readOnlyMode)
                     {
                         <div style="display:flex; justify-content:flex-end; margin-top:14px;">
-                            <button class="rm-btn rm-btn-primary" type="submit"><i class="bi bi-save"></i> Save</button>
+                            <button class="rm-btn rm-btn-primary" type="submit"><i class="bi bi-save"></i> @(isRtl ? "حفظ" : "Save")</button>
                         </div>
                     }
 
@@ -367,33 +387,28 @@
 
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
-                    <a class="rm-btn rm-btn-light"
-                       href="@previousLink">
-                        Previous
-                    </a>
+                    <a class="rm-btn rm-btn-light" href="@previousLink">@(isRtl ? "السابق" : "Previous")</a>
                 </div>
 
                 <div class="rd-actions-right">
-                    <a class="rm-btn rm-btn-light"
-                       href="@nextLink">
-                        Next
-                    </a>
+                    <a class="rm-btn rm-btn-light" href="@nextLink">@(isRtl ? "التالي" : "Next")</a>
                 </div>
             </section>
         </main>
     </div>
 
     <div id="rank-toast" style="
-        position:fixed; bottom:28px; right:28px; z-index:9999;
+        position:fixed; bottom:28px; @(isRtl ? "left" : "right"):28px; z-index:9999;
         background:#2d6a4f; color:#fff; padding:12px 22px; border-radius:10px;
         font-size:15px; font-weight:500; box-shadow:0 4px 18px rgba(0,0,0,0.18);
         display:none; align-items:center; gap:10px;">
-        <i class="bi bi-check-circle-fill"></i> <span id="rank-toast-msg">Saved successfully.</span>
+        <i class="bi bi-check-circle-fill"></i> <span id="rank-toast-msg">@(isRtl ? "تم الحفظ بنجاح." : "Saved successfully.")</span>
     </div>
 
     <script>
         (function () {
             const isReadOnlyMode = "@readOnlyMode".toLowerCase() === "true";
+            const isRtl = @(isRtl ? "true" : "false");
             const pairs = ["arwu", "qs", "the", "scopus"];
 
             function syncPair(key) {
@@ -431,9 +446,9 @@
                     e.preventDefault();
                     try {
                         await fetch(rankForm.action, { method: 'POST', body: new FormData(rankForm) });
-                        showToast('Research & Global Rankings saved successfully.');
+                        showToast(isRtl ? 'تم حفظ التصنيفات العالمية بنجاح.' : 'Research & Global Rankings saved successfully.');
                     } catch (_) {
-                        showToast('Unable to save. Please try again.');
+                        showToast(isRtl ? 'تعذّر الحفظ. يرجى المحاولة مرة أخرى.' : 'Unable to save. Please try again.');
                     }
                 });
             }

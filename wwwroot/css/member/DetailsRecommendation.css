@@ -372,7 +372,7 @@
     min-height: 110px;
     border: 1.5px solid #e5e7eb;
     border-radius: 12px;
-    padding: 12px 14px;
+    padding: 12px 28px 12px 14px;
     resize: vertical;
     font-family: inherit;
     font-size: 14px;
@@ -473,10 +473,12 @@
 /* ── Doctor decision chooser ─────────────────────────────────────────────── */
 .fa-decision-wrap { margin-bottom: 22px; }
 .fa-decision-label {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 800;
-    color: #1f2937;
-    margin-bottom: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
     gap: 7px;
@@ -485,69 +487,93 @@
 .fa-decision-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: 14px;
 }
 .fa-dec-btn {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    padding: 16px 18px;
-    border: 1px solid #d1d5db;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px;
+    border: 2px solid #e5e7eb;
+    border-left-width: 4px;
     border-radius: 14px;
-    background: #fff;
+    background: #fafafa;
     cursor: pointer;
     font-family: inherit;
     text-align: left;
-    min-height: 138px;
-    transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+    transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .15s ease;
 }
-.fa-dec-btn i    { font-size: 22px; margin-bottom: 5px; color: #94a3b8; }
-.fa-dec-btn span { font-size: 15px; font-weight: 800; color: #1f2937; line-height: 1.25; }
-.fa-dec-btn small{ font-size: 12px; font-weight: 600; color: #94a3b8; line-height: 1.35; }
+.fa-dec-btn.approve    { border-left-color: #22c55e; padding: 26px 28px; }
+.fa-dec-btn.conditional{ border-left-color: #f59e0b; }
+.fa-dec-btn.reject     { border-left-color: #ef4444; }
+
+.fa-dec-icon {
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+.fa-dec-btn.approve     .fa-dec-icon { background: #dcfce7; color: #16a34a; }
+.fa-dec-btn.conditional .fa-dec-icon { background: #fef3c7; color: #d97706; }
+.fa-dec-btn.reject      .fa-dec-icon { background: #fee2e2; color: #dc2626; }
+
+.fa-dec-body { display: flex; flex-direction: column; gap: 3px; }
+.fa-dec-btn span  { font-size: 14px; font-weight: 800; color: #1f2937; line-height: 1.25; }
+.fa-dec-btn small { font-size: 11.5px; font-weight: 500; color: #9ca3af; line-height: 1.4; }
 
 .fa-dec-btn:hover {
-    border-color: #bb7d79;
-    background: #fbf3ee;
-    box-shadow: 0 10px 24px rgba(122,45,42,.14);
-    transform: translateY(-1px);
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,.08);
+    transform: translateY(-2px);
 }
-.fa-dec-btn:hover i    { color: #7a2d2a; }
-.fa-dec-btn:hover span { color: #7a2d2a; }
+.fa-dec-btn.approve:hover     { border-color: #4ade80; border-left-color: #16a34a; }
+.fa-dec-btn.conditional:hover { border-color: #fbbf24; border-left-color: #d97706; }
+.fa-dec-btn.reject:hover      { border-color: #f87171; border-left-color: #dc2626; }
 
 .fa-dec-btn.approve.selected {
     border-color: #4ade80;
-    background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
-    box-shadow: 0 8px 18px rgba(22,163,74,.16);
+    border-left-color: #16a34a;
+    background: #f0fdf4;
+    box-shadow: 0 6px 20px rgba(22,163,74,.14);
 }
-.fa-dec-btn.approve.selected i    { color: #166534; }
-.fa-dec-btn.approve.selected span { color: #166534; }
-.fa-dec-btn.approve.selected small{ color: #15803d; }
+.fa-dec-btn.approve.selected span  { color: #166534; }
+.fa-dec-btn.approve.selected small { color: #15803d; }
+.fa-dec-btn.approve.selected .fa-dec-icon { background: #bbf7d0; color: #15803d; }
 
 .fa-dec-btn.conditional.selected {
-    border-color: #c07d72;
-    background: linear-gradient(180deg, #fdf6f0 0%, #f5e3d8 100%);
-    box-shadow: 0 8px 18px rgba(122,45,42,.18);
+    border-color: #fbbf24;
+    border-left-color: #d97706;
+    background: #fffbeb;
+    box-shadow: 0 6px 20px rgba(245,158,11,.14);
 }
-.fa-dec-btn.conditional.selected i    { color: #7a2d2a; }
-.fa-dec-btn.conditional.selected span { color: #7a2d2a; }
-.fa-dec-btn.conditional.selected small{ color: #8f3434; }
+.fa-dec-btn.conditional.selected span  { color: #92400e; }
+.fa-dec-btn.conditional.selected small { color: #b45309; }
+.fa-dec-btn.conditional.selected .fa-dec-icon { background: #fde68a; color: #b45309; }
 
 .fa-dec-btn.reject.selected {
-    border-color: #ef4444;
-    background: linear-gradient(180deg, #fff1f2 0%, #fee2e2 100%);
-    box-shadow: 0 8px 18px rgba(153,27,27,.16);
+    border-color: #f87171;
+    border-left-color: #dc2626;
+    background: #fff1f2;
+    box-shadow: 0 6px 20px rgba(220,38,38,.12);
 }
-.fa-dec-btn.reject.selected i    { color: #991b1b; }
-.fa-dec-btn.reject.selected span { color: #991b1b; }
-.fa-dec-btn.reject.selected small{ color: #b91c1c; }
+.fa-dec-btn.reject.selected span  { color: #991b1b; }
+.fa-dec-btn.reject.selected small { color: #b91c1c; }
+.fa-dec-btn.reject.selected .fa-dec-icon { background: #fecaca; color: #b91c1c; }
 
 /* ── Justification section ───────────────────────────────────────────────── */
 .fa-justify-label {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 800;
-    color: #1f2937;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .06em;
     margin-bottom: 8px;
+    padding-right: 28px;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -559,16 +585,17 @@
 .fa-save-row {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
     gap: 12px;
-    padding-top: 16px;
-    border-top: 1px solid #f0e8e0;
-    margin-top: 20px;
+    padding: 16px 20px;
+    margin: 20px 0 0;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    border-radius: 0 0 12px 12px;
 }
 .fa-save-hint {
-    flex: 1;
     font-size: 12px;
-    color: #94a3b8;
+    color: #9ca3af;
     font-weight: 500;
     display: flex;
     align-items: center;
@@ -583,6 +610,36 @@
 .eq-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .5px; }
 .eq-value { color: #1f2937; line-height: 1.55; font-size: 12.5px; }
 .eq-threshold-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; border-radius: 999px; padding: 3px 9px; margin-right: 4px; margin-top: 3px; }
+
+/* ── Final Recommendation card — brand burgundy header ─────────────────────────── */
+.fa-final-card .rd-card-hd {
+    background: linear-gradient(135deg, #7f1627 0%, #a01e32 100%) !important;
+}
+
+/* System Suggestion banner — Approve variant */
+.fa-suggestion-banner.approve {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+.fa-suggestion-banner.approve .fa-banner-icon {
+    background: #dcfce7;
+    color: #15803d;
+}
+.fa-suggestion-banner.approve .fa-suggestion-badge { color: #166534; }
+
+/* KPI compliance pills in header */
+.fa-final-kpi.ok {
+    color: #15803d;
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+/* Compliance badge (used in bachelor view) */
+.fa-compliance-badge.compliant {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 860px) {

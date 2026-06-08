@@ -2,14 +2,14 @@
 @{
     Layout = null;
     ViewData["Title"] = "Request Details - Admission Requirements and Study Duration";
-    var adminReadOnly = (bool)(ViewBag.AdminReadOnly ?? false);
+    var adminReadOnly  = (bool)(ViewBag.AdminReadOnly  ?? false);
     var memberViewOnly = (bool)(ViewBag.MemberViewOnly ?? false);
-    var readOnlyMode = adminReadOnly || memberViewOnly;
+    var readOnlyMode   = adminReadOnly || memberViewOnly;
     ViewData["ActiveNav"] = memberViewOnly ? "archive" : "requests";
     var adminMeetingId = (int)(ViewBag.AdminMeetingId ?? 0);
-    var requestId = Model?.Id ?? 0;
-    var inst = Model?.UniversityName ?? "—";
-    var previousLink = adminReadOnly
+    var requestId      = Model?.Id ?? 0;
+    var inst           = Model?.UniversityName ?? "—";
+    var previousLink   = adminReadOnly
         ? Url.Action("AdminDetailsStatistics", "Home", new { id = requestId, meetingId = adminMeetingId })
         : Url.Action("DetailsStatistics", "Home", new { id = requestId });
     var nextLink = adminReadOnly
@@ -17,7 +17,7 @@
         : Url.Action("DetailsAcademicInfo", "Home", new { id = requestId });
 
     var isManual = (bool)(ViewBag.IsManual ?? false);
-    var review = Model?.AdmissionStudyDurationReview ?? new DTOs.AdmissionStudyDurationReviewDto();
+    var review   = Model?.AdmissionStudyDurationReview ?? new DTOs.AdmissionStudyDurationReviewDto();
     var submittedDuration = Model?.StudyDuration ?? new DTOs.StudyDurationDto();
 
     string PickDuration(string? reviewed, string? preferred, string? fallback)
@@ -27,33 +27,67 @@
         return fallback ?? string.Empty;
     }
 
-    var diplomaDuration = PickDuration(review.DiplomaDuration, submittedDuration.DiplomaObtain, submittedDuration.DiplomaEnrollment);
-    var bScDuration = PickDuration(review.BScDuration, submittedDuration.BachelorObtain, submittedDuration.BachelorEnrollment);
+    var diplomaDuration       = PickDuration(review.DiplomaDuration,       submittedDuration.DiplomaObtain,       submittedDuration.DiplomaEnrollment);
+    var bScDuration           = PickDuration(review.BScDuration,           submittedDuration.BachelorObtain,      submittedDuration.BachelorEnrollment);
     var higherDiplomaDuration = PickDuration(review.HigherDiplomaDuration, submittedDuration.HigherDiplomaObtain, submittedDuration.HigherDiplomaEnrollment);
-    var masterDuration = PickDuration(review.MasterDuration, submittedDuration.MasterObtain, submittedDuration.MasterEnrollment);
-    var phdDuration = PickDuration(review.PhdDuration, submittedDuration.PhDObtain, submittedDuration.PhDEnrollment);
+    var masterDuration        = PickDuration(review.MasterDuration,        submittedDuration.MasterObtain,        submittedDuration.MasterEnrollment);
+    var phdDuration           = PickDuration(review.PhdDuration,           submittedDuration.PhDObtain,           submittedDuration.PhDEnrollment);
+
+    var acad = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
+    var selectedLevels = new System.Collections.Generic.HashSet<string>();
+    if (acad.DegreeDiploma)       selectedLevels.Add("Diploma");
+    if (acad.DegreeBSC)           selectedLevels.Add("BSc");
+    if (acad.DegreeHigherDiploma) selectedLevels.Add("HigherDiploma");
+    if (acad.DegreeMaster)        selectedLevels.Add("Master");
+    if (acad.DegreePhD)           selectedLevels.Add("PhD");
+    bool filterByDegree = selectedLevels.Any();
+
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
+
+    string DegreeLevelLabel(string lbl) => isRtl ? lbl switch {
+        "Diploma"        => "دبلوم",
+        "BSc / Bachelor" => "بكالوريوس",
+        "BSc"            => "بكالوريوس",
+        "Higher Diploma" => "دبلوم عالي",
+        "Master"         => "ماجستير",
+        "PhD"            => "دكتوراه",
+        _                => lbl
+    } : lbl;
 }
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "تفاصيل الطلب — متطلبات القبول ومدة الدراسة" : "Request Details - Admission Requirements and Study Duration")</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/DetailsAdmissionDuration.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
 </head>
-<body class="rm-page">
+<body class="rm-page @(isRtl ? "rtl-body" : "")">
     <header class="rm-header">
         <div class="rm-brandbar"></div><div class="rm-top">
             <div class="rm-top-inner">
                 <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
                 <div class="rm-user">
-                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>@(adminReadOnly ? "Admin Review" : (ViewBag.CurrentRecognitionMember ?? "Recognition Member"))</b></span></div>
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@(adminReadOnly ? "A" : ((ViewBag.CurrentRecognitionMember as string)?.Substring(0,1)?.ToUpper() ?? "M"))</div>
+                        <div class="rm-user-card-text">
+                            <strong>@(adminReadOnly ? (isRtl ? "مراجعة المدير" : "Admin Review") : (ViewBag.CurrentRecognitionMember ?? (isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")))</strong>
+                            <span>@(adminReadOnly ? (isRtl ? "عرض المدير" : "Admin View") : (isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member"))</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> @(isRtl ? "تسجيل الخروج" : "Logout")</a>
                 </div>
             </div>
         </div>
@@ -72,20 +106,20 @@
         <main class="rm-main">
             <section class="rm-card rd-head">
                 <div>
-                    <h1>Request Details</h1>
-                    <p class="rd-inst">Institution: <b>@inst</b></p>
-                    <p>Step 3 of 7 — Admission Requirements and Study Duration.</p>
+                    <h1>@(isRtl ? "تفاصيل الطلب" : "Request Details")</h1>
+                    <p class="rd-inst">@(isRtl ? "المؤسسة: " : "Institution: ")<b>@inst</b></p>
+                    <p>@(isRtl ? "الخطوة 3 من 7 — متطلبات القبول ومدة الدراسة." : "Step 3 of 7 — Admission Requirements and Study Duration.")</p>
                 </div>
                 <div class="rd-meta">
-                    <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
-                    <div class="meta-pill"><span>Step</span><b>3 / 7</b></div>
+                    <div class="meta-pill"><span>@(isRtl ? "رقم الطلب" : "Request ID")</span><b>#@requestId</b></div>
+                    <div class="meta-pill"><span>@(isRtl ? "الخطوة" : "Step")</span><b>3 / 7</b></div>
                 </div>
             </section>
 
             @if (readOnlyMode)
             {
                 <section class="rm-card" style="border:1px solid #fedf89; background:#fffaeb; color:#7a2e0e; font-weight:700;">
-                    <i class="bi bi-eye"></i> Read-only mode: this university is assigned to another member.
+                    <i class="bi bi-eye"></i> @(isRtl ? "وضع العرض فقط: هذه الجامعة معيّنة لعضو آخر." : "Read-only mode: this university is assigned to another member.")
                 </section>
             }
 
@@ -93,7 +127,7 @@
             {
                 <section class="rm-card" style="border:1px solid #bfdbfe; background:#eff6ff; color:#1e40af; font-weight:600; display:flex; align-items:center; gap:10px;">
                     <i class="bi bi-pencil-square" style="font-size:1.1rem;"></i>
-                    Manual Request — Enter study durations for each degree level.
+                    @(isRtl ? "طلب يدوي — أدخل مدد الدراسة لكل مستوى درجة علمية." : "Manual Request — Enter study durations for each degree level.")
                 </section>
             }
             @if (TempData["ManualSaved"] != null)
@@ -110,8 +144,8 @@
                 <input type="hidden" name="id" value="@requestId" />
                 <section class="rm-card rd-card">
                     <div class="rd-card-hd">
-                        <h2>Study Duration Entry</h2>
-                        <p>Enter the study duration (e.g. "4 years") for each degree level offered.</p>
+                        <h2>@(isRtl ? "إدخال مدة الدراسة" : "Study Duration Entry")</h2>
+                        <p>@(isRtl ? "أدخل مدة الدراسة (مثال: «4 سنوات») لكل مستوى درجة علمية مُقدَّم." : "Enter the study duration (e.g. \"4 years\") for each degree level offered.")</p>
                     </div>
                     <div class="adm-grid">
                         @foreach (var (level, label, fieldName, existingVal) in new[]
@@ -121,23 +155,24 @@
                             ("HigherDiploma",  "Higher Diploma", "higherDiplomaDuration",  higherDiplomaDuration),
                             ("Master",         "Master",         "masterDuration",         masterDuration),
                             ("PhD",            "PhD",            "phdDuration",            phdDuration)
-                        })
+                        }.Where(e => !filterByDegree || selectedLevels.Contains(e.Item1)))
                         {
                             <article class="adm-card">
-                                <h3>@label</h3>
+                                <h3>@DegreeLevelLabel(label)</h3>
                                 <div class="rd-field">
-                                    <label>Study Duration (years)</label>
-                                    <input type="text" name="@fieldName" value="@existingVal" placeholder="e.g. 4 years" />
+                                    <label>@(isRtl ? "مدة الدراسة (سنوات)" : "Study Duration (years)")</label>
+                                    <input type="text" name="@fieldName" value="@existingVal"
+                                           placeholder="@(isRtl ? "مثال: 4 سنوات" : "e.g. 4 years")" />
                                 </div>
                             </article>
                         }
                     </div>
                     <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; padding-top:16px; border-top:1px solid #e5e7eb;">
                         <button type="submit" name="nextAction" value="save" class="rm-btn rm-btn-light">
-                            <i class="bi bi-floppy"></i> Save
+                            <i class="bi bi-floppy"></i> @(isRtl ? "حفظ" : "Save")
                         </button>
                         <button type="submit" name="nextAction" value="next" class="rm-btn rm-btn-primary">
-                            <i class="bi bi-arrow-right-circle"></i> Save &amp; Continue
+                            <i class="bi bi-arrow-@(isRtl ? "left" : "right")-circle"></i> @(isRtl ? "حفظ والمتابعة" : "Save &amp; Continue")
                         </button>
                     </div>
                 </section>
@@ -147,8 +182,8 @@
             {
                 <section class="rm-card rd-card">
                     <div class="rd-card-hd">
-                        <h2>Admission Requirements and Study Duration</h2>
-                        <p>Submitted admission documents and study durations (view / download only).</p>
+                        <h2>@(isRtl ? "متطلبات القبول ومدة الدراسة" : "Admission Requirements and Study Duration")</h2>
+                        <p>@(isRtl ? "وثائق القبول المُقدَّمة ومدد الدراسة (للعرض / التنزيل فقط)." : "Submitted admission documents and study durations (view / download only).")</p>
                     </div>
 
                     <div class="adm-grid">
@@ -159,29 +194,29 @@
                             ("HigherDiploma", "Higher Diploma", review.HigherDiplomaSamplePdfFileName, higherDiplomaDuration),
                             ("Master",        "Master",         review.MasterSamplePdfFileName,        masterDuration),
                             ("PhD",           "PhD",            review.PhdSamplePdfFileName,           phdDuration)
-                        })
+                        }.Where(e => !filterByDegree || selectedLevels.Contains(e.Item1)))
                         {
                             <article class="adm-card">
-                                <h3>@label</h3>
+                                <h3>@DegreeLevelLabel(label)</h3>
                                 <div class="rd-field">
-                                    <label>Sample requirement PDF</label>
+                                    <label>@(isRtl ? "نموذج متطلبات PDF" : "Sample requirement PDF")</label>
                                     @if (!string.IsNullOrWhiteSpace(sampleFile))
                                     {
                                         <div class="adm-file-row">
                                             <span class="adm-file-name"><i class="bi bi-file-earmark-pdf"></i> @sampleFile</span>
                                             <div class="adm-file-actions">
-                                                <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = level, inline = true })" target="_blank" rel="noopener">View</a>
-                                                <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = level })">Download</a>
+                                                <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = level, inline = true })" target="_blank" rel="noopener">@(isRtl ? "عرض" : "View")</a>
+                                                <a class="rm-mini" href="@Url.Action("DownloadAdmissionSamplePdf", "Home", new { id = requestId, level = level })">@(isRtl ? "تنزيل" : "Download")</a>
                                             </div>
                                         </div>
                                     }
                                     else
                                     {
-                                        <div class="adm-file-empty">No sample PDF uploaded.</div>
+                                        <div class="adm-file-empty">@(isRtl ? "لم يُرفع أي ملف PDF نموذجي." : "No sample PDF uploaded.")</div>
                                     }
                                 </div>
                                 <div class="rd-field">
-                                    <label>Study duration</label>
+                                    <label>@(isRtl ? "مدة الدراسة" : "Study duration")</label>
                                     <input type="text" value="@duration" placeholder="—" readonly />
                                 </div>
                             </article>
@@ -192,12 +227,12 @@
 
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
-                    <a class="rm-btn rm-btn-light" href="@previousLink">Previous</a>
+                    <a class="rm-btn rm-btn-light" href="@previousLink">@(isRtl ? "السابق" : "Previous")</a>
                 </div>
                 @if (!isManual || readOnlyMode)
                 {
                     <div class="rd-actions-right">
-                        <a class="rm-btn rm-btn-light" href="@nextLink">Next</a>
+                        <a class="rm-btn rm-btn-light" href="@nextLink">@(isRtl ? "التالي" : "Next")</a>
                     </div>
                 }
             </section>

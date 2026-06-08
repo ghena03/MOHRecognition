@@ -1,0 +1,902 @@
+@model MOHRecognition.Services.RecognitionRequestRecord
+@using System
+@using System.Text.Json
+@using MOHRecognition.DTOs
+@{
+    Layout = null;
+    ViewData["Title"] = "Online Recognition — Full View";
+
+    var ol = Model.OnlineEducationData ?? new OnlineEducationDto();
+
+    List<OnlineProgramDto> programs = new();
+    if (!string.IsNullOrWhiteSpace(ol.ProgramsJson) && ol.ProgramsJson != "[]")
+    {
+        try { programs = JsonSerializer.Deserialize<List<OnlineProgramDto>>(ol.ProgramsJson) ?? new(); }
+        catch { }
+    }
+
+    string YN(bool v)      => v ? "Yes" : "No";
+    string YNClass(bool v) => v ? "yn-yes" : "yn-no";
+
+    // ── Duration helpers (data resolved at save time into OnlineProgramDto) ────
+    int? TraditionalDur(OnlineProgramDto p) =>
+        p.Source == "Manual Entry" ? null : p.TraditionalDurationYears;
+
+    string DurStatusClass(int? trad, int? online)
+    {
+        if (!trad.HasValue || !online.HasValue) return "dur-missing";
+        return online.Value >= trad.Value ? "dur-valid" : "dur-invalid";
+    }
+    string DurStatusText(int? trad, int? online)
+    {
+        if (!trad.HasValue || !online.HasValue) return "Missing duration data";
+        return online.Value >= trad.Value ? "Valid" : "Invalid — online duration is shorter than traditional";
+    }
+
+    int backId    = ViewBag.BackId ?? 0;
+    int meetingId = ViewBag.MeetingId ?? 0;
+    bool hideDoctorRecommendation = (ViewBag.HideDoctorRecommendation as bool?) == true;
+    bool isRequestsSource = hideDoctorRecommendation && meetingId <= 0 && backId <= 0;
+    string backUrl = backId > 0 ? $"/Home/SessionDashboard?id={backId}" : isRequestsSource ? "/Home/Requests" : "/Home/SubmittedUniversities";
+    var existingDecision = ViewBag.ExistingDecision as MOHRecognition.DTOs.MeetingDecisionDto;
+    string fdViewOnly = !string.IsNullOrWhiteSpace(Model?.CommitteeFinalRecommendation) ? "true" : "false";
+
+    var savedDecisionOL      = Model.BasicInfoAssessmentDecision ?? "";
+    var savedJustificationOL = Model.BasicInfoAssessmentReason   ?? "";
+    bool hasRecommendationOL = !string.IsNullOrWhiteSpace(savedDecisionOL);
+    string decCssOL  = savedDecisionOL switch { "Approve" => "approve", "Conditional Approval" => "conditional", _ => hasRecommendationOL ? "reject" : "conditional" };
+    string decIconOL = savedDecisionOL switch { "Approve" => "bi-check2-circle", "Conditional Approval" => "bi-arrow-repeat", _ => hasRecommendationOL ? "bi-x-octagon-fill" : "bi-hourglass-split" };
+    string displayDecisionOL = hasRecommendationOL ? savedDecisionOL : "Not Yet Submitted";
+    string reviewerNameOL = ViewBag.ReviewerDisplayName as string ?? "Recognition Member";
+}
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] — #@Model.Id</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --brand: #7f1627; --brand-dark: #5a0e1b; --brand-light: #faf4f5;
+            --border: #ede4da; --text: #1a1a1a; --muted: #6b7280;
+            --bg: #f3f0eb; --white: #fff; --header-h: 62px;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .pg-header { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: var(--brand); color: #fff; height: var(--header-h); display: flex; align-items: center; justify-content: space-between; padding: 0 24px 0 16px; box-shadow: 0 2px 18px rgba(0,0,0,.25); }
+        .hd-left { display: flex; align-items: center; gap: 14px; }
+        .pg-header img { height: 38px; }
+        .hd-sep { width: 1px; height: 32px; background: rgba(255,255,255,.25); margin: 0 4px; }
+        .hd-text h1 { font-size: 16px; font-weight: 700; }
+        .hd-text p { font-size: 11px; opacity: .7; margin-top: 2px; }
+        .hd-right { display: flex; align-items: center; gap: 8px; }
+        .badge-view-only { background: rgba(255,255,255,.18); border: 1.5px solid rgba(255,255,255,.35); border-radius: 999px; padding: 4px 12px; font-size: 11px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 5px; }
+        .badge-online-type { background: rgba(16,185,129,.25); border: 1.5px solid rgba(110,231,183,.5); border-radius: 999px; padding: 4px 12px; font-size: 11px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 5px; }
+        .btn-hd { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); color: #fff; border: 1.5px solid rgba(255,255,255,.3); border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; text-decoration: none; transition: background .15s; white-space: nowrap; }
+        .btn-hd:hover { background: rgba(255,255,255,.22); }
+        .btn-hd-gold { background: #d97706; color: #fff; border-color: #b45309; font-weight: 700; }
+        .btn-hd-gold:hover { background: #b45309; }
+        .rm-navitem-final-dec { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important; border: 3px solid #d97706 !important; border-radius: 999px !important; color: #92400e !important; font-weight: 800 !important; margin: 4px 10px !important; }
+        .rm-navitem-final-dec:hover { background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%) !important; color: #78350f !important; border-color: #b45309 !important; }
+        .rm-navitem-final-dec i { color: #d97706 !important; }
+        .layout { display: flex; gap: 18px; padding-top: var(--header-h); min-height: 100vh; }
+        /* ── rm-sidebar base ── */
+        .rm-sidebar { background: #f9fafb; border: 1px solid #cbd5e1; border-radius: 28px; box-shadow: 0 6px 24px rgba(15,23,42,.07); padding: 16px 12px 14px; min-height: 100%; overflow: visible; }
+        .rm-side-label { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; padding: 0 16px 12px; white-space: nowrap; }
+        .rm-side-label:not(:first-child) { margin-top: 10px; }
+        .rm-nav { display: flex; flex-direction: column; gap: 10px; }
+        .rm-navitem { display: flex; align-items: center; gap: 12px; margin: 0 8px; border-radius: 999px; border: 3px solid #232833; background: #f8fafc; color: #475569; font-size: 13px; font-weight: 700; text-decoration: none; padding: 11px 14px; min-height: 54px; box-shadow: none; transition: background .12s, color .12s, box-shadow .12s; }
+        .rm-navitem:hover { background: #f3f4f6; color: #334155; }
+        .rm-navitem.active { background: linear-gradient(90deg, #9a1f33 0 8px, #f9f2f2 8px); color: #8a2f28; font-weight: 700; box-shadow: none; }
+        .rm-navitem i { width: 16px; font-size: 15px; color: #94a3b8; text-align: center; line-height: 1; flex-shrink: 0; }
+        .rm-navitem.active i { color: #8a2f28; }
+        .rm-navitem .rm-step { width: 22px; height: 22px; border-radius: 50%; background: #e7e2db; color: #7f1627; font-size: 10.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .rm-navitem.active .rm-step { color: #8a2f28; }
+        .rm-navitem .rm-step i { font-size: 12px; color: inherit; width: auto; }
+        .rm-navitem.rm-navitem-rec { background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%) !important; border: 3px solid #4f46e5 !important; border-radius: 999px !important; color: #312e81 !important; box-shadow: 0 2px 8px rgba(79,70,229,.18); margin: 4px 10px !important; }
+        .rm-navitem.rm-navitem-rec:hover, .rm-navitem.rm-navitem-rec.active { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important; color: #1e1b4b !important; border-color: #3730a3 !important; box-shadow: 0 4px 12px rgba(55,48,163,.24) !important; }
+        .rm-navitem.rm-navitem-rec i { color: #4f46e5 !important; }
+        .rm-navitem.rm-navitem-rec .rm-step { background: #e0e7ff; color: #312e81; }
+        .rm-review-divider { display: flex; align-items: center; gap: 8px; padding: 10px 16px 4px; }
+        .rm-review-divider-line { flex: 1; height: 1px; background: #e5e7eb; }
+        .rm-review-divider-label { font-size: 10px; font-weight: 800; color: #3730a3; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+        .fd-divider { display: flex; align-items: center; gap: 8px; padding: 10px 16px 4px; }
+        .fd-divider-line { flex: 1; height: 1px; background: #e5e7eb; }
+        .fd-divider-label { font-size: 10px; font-weight: 800; color: #d97706; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+        .final-decision-nav { margin: 0 8px !important; background: #f8fafc !important; border: 3px solid #232833 !important; color: #475569 !important; border-radius: 24px !important; box-shadow: none !important; font-weight: 700 !important; }
+        .final-decision-nav i { color: #94a3b8 !important; }
+        .final-decision-nav:hover, .final-decision-nav.active { background: linear-gradient(90deg, #9a1f33 0 8px, #f9f2f2 8px) !important; color: #8a2f28 !important; box-shadow: none !important; }
+        /* ── pg-legacy-sidebar layout ── */
+        .pg-legacy-sidebar .sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; width: 312px; min-width: 312px; padding: 20px 0 96px 20px; background: transparent; overflow-y: auto; z-index: 100; }
+        .pg-legacy-sidebar .rm-sidebar { background: #f9fafb; border: 1px solid #cbd5e1; border-radius: 30px; box-shadow: 0 6px 24px rgba(15,23,42,.06); padding: 16px 10px 14px; min-height: calc(100vh - var(--header-h) - 20px); }
+        .pg-legacy-sidebar .layout { display: block; gap: 0; }
+        .pg-legacy-sidebar .main { margin-left: 312px; padding: 28px 28px 60px; width: auto; flex: none; box-sizing: border-box; }
+        /* ── Recommendation section ── */
+        .sec-hd.sec-hd-rec { background: #dbeafe !important; color: #1e3a8a !important; border-bottom: 1.5px solid #bfdbfe !important; }
+        .sec-hd.sec-hd-rec .sec-num { background: rgba(30,58,138,.08) !important; border: 2px solid rgba(30,58,138,.18); color: #1e3a8a; }
+        #sec-recommendation.section-card { border: 1.5px solid #bfdbfe; box-shadow: 0 2px 16px rgba(30,58,138,.08); }
+        .rec-reviewer { display: flex; align-items: center; gap: 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 20px; margin-bottom: 22px; }
+        .rec-reviewer-avatar { width: 46px; height: 46px; border-radius: 50%; background: #1e40af; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+        .rec-reviewer-info { flex: 1; min-width: 0; }
+        .rec-reviewer-name { font-size: 14.5px; font-weight: 800; color: #1e3a8a; }
+        .rec-reviewer-role { font-size: 11.5px; color: #3b82f6; font-weight: 600; margin-top: 2px; }
+        .rec-reviewer-date { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #1e40af; font-weight: 700; background: #dbeafe; border-radius: 999px; padding: 5px 12px; white-space: nowrap; }
+        .final-rec-decision-label { font-size: 10.5px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+        .final-rec-decision-value { display: inline-flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; border-radius: 10px; padding: 10px 20px; }
+        .final-rec-val-approve,
+        .final-rec-val-conditional,
+        .final-rec-val-reject,
+        .final-rec-val-na          { background: #dbeafe; color: #1e3a8a; border: 1.5px solid #bfdbfe; }
+        .final-rec-just-label { font-size: 10.5px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .final-rec-just-body { background: #f8fafc; border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; font-size: 13.5px; line-height: 1.7; color: #1f2937; white-space: pre-wrap; word-break: break-word; }
+        .main { flex: 1; max-width: none; }
+        .summary-strip { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: start; }
+        .uni-title { font-size: 22px; font-weight: 800; color: #111; }
+        .uni-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+        .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .chip { background: #f3f0eb; border: 1px solid #e3d9cf; border-radius: 8px; padding: 5px 10px; font-size: 11.5px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 5px; }
+        .chip i { color: var(--brand); }
+        .status-badge { border-radius: 999px; padding: 5px 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; }
+        .sb-pending { background: #fef3c7; color: #92400e; }
+        .sb-review  { background: #dbeafe; color: #1e40af; }
+        .sb-done    { background: #dcfce7; color: #166534; }
+        .section-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow: hidden; scroll-margin-top: calc(var(--header-h) + 16px); }
+        .sec-hd { background: var(--brand); color: #fff; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+        .sec-hd .sec-num { width: 28px; height: 28px; background: rgba(255,255,255,.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+        .sec-hd h2 { font-size: 15px; font-weight: 700; }
+        .sec-hd p { font-size: 11px; opacity: .75; margin-top: 2px; }
+        .sec-bd { padding: 20px; }
+        .sub-hd { font-size: 11.5px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: .5px; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1.5px solid #f0e8de; }
+        .sub-hd:first-child { margin-top: 0; }
+        .fg   { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .fg-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .field { background: #faf7f3; border: 1px solid #eee7de; border-radius: 8px; padding: 10px 12px; }
+        .field .lbl { font-size: 10px; font-weight: 800; color: #999; text-transform: uppercase; letter-spacing: .5px; }
+        .field .val { margin-top: 5px; font-size: 13.5px; font-weight: 600; color: #111; line-height: 1.45; word-break: break-word; }
+        .field .val a { color: var(--brand); text-decoration: none; }
+        .yn-yes { color: #16a34a; font-weight: 700; }
+        .yn-no  { color: #9ca3af; font-weight: 600; }
+        .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .tag { display: inline-flex; align-items: center; gap: 5px; background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; font-size: 12px; border-radius: 6px; padding: 4px 10px; }
+        .tag.active { background: #dcfce7; border-color: #86efac; color: #166534; }
+        .tbl-wrap { overflow-x: auto; }
+        #sec-programs { overflow-x: auto !important; }
+/* ── Decision suggestion hint ── */
+        .dec-suggestion { border-radius: 10px; padding: 13px 16px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 12px; }
+        .dec-sug-pass { background: #f0fdf4; border: 1.5px solid #86efac; }
+        .dec-sug-fail { background: #fff1f2; border: 1.5px solid #fca5a5; }
+        .dec-sug-warn { background: #fffbeb; border: 1.5px solid #fcd34d; }
+        .dec-sug-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+        .dec-sug-pass .dec-sug-icon { color: #15803d; }
+        .dec-sug-fail .dec-sug-icon { color: #dc2626; }
+        .dec-sug-warn .dec-sug-icon { color: #d97706; }
+        .dec-sug-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; color: #9ca3af; }
+        .dec-sug-title { font-size: 13.5px; font-weight: 700; margin-bottom: 3px; }
+        .dec-sug-pass .dec-sug-title { color: #15803d; }
+        .dec-sug-fail .dec-sug-title { color: #b91c1c; }
+        .dec-sug-warn .dec-sug-title { color: #92400e; }
+        .dec-sug-body  { font-size: 12px; color: #6b7280; line-height: 1.5; }
+        table.tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+        table.tbl th { background: #faf7f4; color: var(--brand); font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; padding: 9px 10px; border-bottom: 2px solid #ede4da; text-align: left; white-space: nowrap; }
+        table.tbl td { padding: 9px 10px; border-bottom: 1px solid #f3ede6; color: #1f2937; vertical-align: top; }
+        table.tbl tr:last-child td { border-bottom: none; }
+        table.tbl tr:hover td { background: #faf7f3; }
+        .badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; white-space: nowrap; }
+        .badge-bach    { background: #eff6ff; color: #2563eb; }
+        .badge-pg      { background: #fdf4ff; color: #9333ea; }
+        .badge-online  { background: #f0fdf4; color: #15803d; }
+        .badge-blended { background: #fff7ed; color: #c2410c; }
+        .dur-valid   { display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0; }
+        .dur-invalid { display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;background:#fff1f2;color:#9f1239;border:1px solid #fecdd3; }
+        .dur-missing { display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0; }
+        .lms-access-box { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 16px; }
+        .lms-access-title { font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+        .file-grid { display: grid; gap: 8px; }
+        .file-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #ede4da; border-radius: 8px; padding: 10px 14px; background: #fdfbf8; }
+        .file-info .fn { font-size: 13px; font-weight: 700; color: #1f2937; }
+        .file-info .fs { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+        .btn-view-file { text-decoration: none; border-radius: 7px; padding: 5px 12px; font-size: 11.5px; font-weight: 700; border: 1.5px solid #d5c9bb; color: #5b4636; background: #fff; white-space: nowrap; }
+        .btn-view-file:hover { background: #f9f4ee; }
+        .empty-state { text-align: center; padding: 28px; color: var(--muted); font-size: 13px; }
+        .empty-state i { font-size: 28px; display: block; margin-bottom: 8px; opacity: .4; }
+        .empty-note { color: var(--muted); font-size: 13px; font-style: italic; padding: 20px 0; text-align: center; }
+        /* Final Decision */
+        .decision-section { background: var(--white); border: 2px solid var(--brand); border-radius: 12px; margin-bottom: 20px; overflow: hidden; scroll-margin-top: calc(var(--header-h) + 16px); }
+        .decision-hd { background: var(--brand); color: #fff; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+        .decision-hd h2 { font-size: 15px; font-weight: 700; }
+        .decision-hd p  { font-size: 11px; opacity: .75; margin-top: 2px; }
+        .decision-form { padding: 20px; }
+        .dec-label { font-size: 11px; font-weight: 800; color: #999; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; display: block; }
+        .dec-select { width: 100%; padding: 10px 14px; font-size: 14px; font-weight: 600; border: 1.5px solid #d1d5db; border-radius: 8px; background: #fff; color: #111; outline: none; cursor: pointer; }
+        .dec-select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(127,22,39,.12); }
+        .dec-textarea { width: 100%; margin-top: 14px; padding: 10px 14px; font-size: 13.5px; border: 1.5px solid #d1d5db; border-radius: 8px; resize: vertical; min-height: 100px; font-family: inherit; color: #111; outline: none; }
+        .dec-textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(127,22,39,.12); }
+        .dec-save-btn { margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; background: var(--brand); color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s; }
+        .dec-save-btn:hover { background: var(--brand-dark); }
+        .dec-existing { margin-bottom: 16px; padding: 12px 14px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; font-size: 12.5px; color: #166534; }
+        .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 150; background: #fff; border-top: 2px solid var(--border); display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 12px 28px; box-shadow: 0 -2px 16px rgba(0,0,0,.08); }
+        .btn-bar { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border: 1.5px solid var(--border); background: #fff; color: #374151; transition: background .15s; white-space: nowrap; cursor: pointer; }
+        .btn-bar:hover { background: #f5f0ea; }
+        /* ── Sidebar collapse ── */
+        .layout.sidebar-collapsed .sidebar { width: 108px; min-width: 108px; padding-left: 16px; }
+        .layout.sidebar-collapsed .main { margin-left: 108px; }
+        .rm-sidebar.collapsed .rm-side-label,
+        .rm-sidebar.collapsed .rm-review-divider { display: none; }
+        .rm-sidebar.collapsed .rm-navitem span:last-child { display: none; }
+        .rm-sidebar.collapsed .rm-navitem { justify-content: center; padding: 10px; min-height: 54px; }
+        .rm-sidebar.collapsed .rm-navitem i { width: auto; margin: 0; font-size: 20px; }
+        .rm-sidebar.collapsed .rm-step { width: 30px; height: 30px; font-size: 12px; }
+        .rm-sidebar.collapsed .rm-navitem .rm-step i { font-size: 15px; }
+        /* Match icon sizing from other admin pages exactly */
+        .pg-legacy-sidebar .rm-navitem i { width: 16px; font-size: 15px; }
+        .pg-legacy-sidebar .rm-sidebar.collapsed .rm-navitem i { width: auto; font-size: 20px; }
+        .sidebar-toggle {
+            position: fixed;
+            left: 322px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 52px; height: 52px;
+            border: none;
+            border-radius: 50%;
+            background: #981b31;
+            color: #fff;
+            z-index: 999;
+            cursor: pointer;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,.18);
+            transition: left .3s ease;
+        }
+        .layout.sidebar-collapsed .sidebar-toggle { left: 118px; }
+        @@media (max-width: 900px) {
+            .layout { display: block; }
+            .sidebar, .sidebar-toggle { display: none; }
+            .main { margin-left: 0; padding: 20px 14px 100px; }
+            .fg { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body class="pg-legacy-sidebar">
+
+<div class="pg-header">
+    <div class="hd-left">
+        <img src="/images/mohelogo.png" alt="Ministry Logo" />
+        <div class="hd-sep"></div>
+        <div class="hd-text">
+            <h1>Online Recognition — Full View</h1>
+            <p>Read-only · All sections · Request #@Model.Id</p>
+        </div>
+    </div>
+    <div class="hd-right">
+        <span class="badge-online-type"><i class="bi bi-laptop"></i> Online Recognition</span>
+        <span class="badge-view-only"><i class="bi bi-eye"></i> View Only</span>
+        <a class="btn-hd" href="@backUrl">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="layout">
+
+    <nav class="sidebar">
+        <aside class="rm-sidebar" id="rmSidebar">
+
+            <div class="rm-side-label">Application</div>
+            <div class="rm-nav">
+                <a class="rm-navitem" href="#sec-overview">
+                    <span class="rm-step"><i class="bi bi-info-circle"></i></span><span>Overview</span>
+                </a>
+            </div>
+
+            <div class="rm-side-label">Sections</div>
+            <div class="rm-nav">
+                <a class="rm-navitem active" href="#sec-institution">
+                    <span class="rm-step"><i class="bi bi-building"></i></span><span>Institution Information</span>
+                </a>
+                <a class="rm-navitem" href="#sec-programs">
+                    <span class="rm-step"><i class="bi bi-journal-bookmark"></i></span><span>Online Programs</span>
+                </a>
+                <a class="rm-navitem" href="#sec-numbers">
+                    <span class="rm-step"><i class="bi bi-bar-chart"></i></span><span>Recognition Numbers</span>
+                </a>
+                <a class="rm-navitem" href="#sec-communication">
+                    <span class="rm-step"><i class="bi bi-chat-left-text"></i></span><span>Communication</span>
+                </a>
+                <a class="rm-navitem" href="#sec-exam">
+                    <span class="rm-step"><i class="bi bi-file-earmark-check"></i></span><span>Examination System</span>
+                </a>
+                <a class="rm-navitem" href="#sec-platform">
+                    <span class="rm-step"><i class="bi bi-display"></i></span><span>Learning Platform</span>
+                </a>
+                <a class="rm-navitem" href="#sec-documents">
+                    <span class="rm-step"><i class="bi bi-folder2-open"></i></span><span>Supporting Documents</span>
+                </a>
+                <a class="rm-navitem" href="#sec-applicant">
+                    <span class="rm-step"><i class="bi bi-person-badge"></i></span><span>Applicant Info</span>
+                </a>
+                @if (!hideDoctorRecommendation)
+                {
+                    <div class="rm-review-divider">
+                        <div class="rm-review-divider-line"></div>
+                        <span class="rm-review-divider-label">Reviewer</span>
+                        <div class="rm-review-divider-line"></div>
+                    </div>
+                    <a class="rm-navitem rm-navitem-rec" href="#sec-recommendation">
+                        <span class="rm-step"><i class="bi bi-clipboard2-check"></i></span><span>Doctor's Recommendation</span>
+                    </a>
+                }
+                @if (meetingId > 0)
+                {
+                    <a class="rm-navitem rm-navitem-final-dec" href="/Home/AdminFinalDecision?id=@Model.Id&meetingId=@meetingId&viewOnly=@fdViewOnly">
+                        <i class="bi bi-shield-fill-check"></i><span>Final Decision</span>
+                    </a>
+                }
+            </div>
+
+        </aside>
+    </nav>
+    <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <main class="main">
+
+        <!-- Summary strip -->
+        <div id="sec-overview" class="summary-strip section-card" style="border-radius:12px;">
+            <div>
+                <div class="uni-title">@(string.IsNullOrWhiteSpace(ol.InstitutionName) ? Model.UniversityName : ol.InstitutionName)</div>
+                <div class="uni-sub">@Model.Country · Ref: @Model.ReferenceNumber</div>
+                <div class="meta-chips">
+                    <span class="chip"><i class="bi bi-laptop"></i> Online Recognition</span>
+                    <span class="chip"><i class="bi bi-calendar3"></i> @Model.SubmittedAt.ToString("dd MMM yyyy")</span>
+                    @if (!string.IsNullOrWhiteSpace(ol.LanguageOfInstruction)) { <span class="chip"><i class="bi bi-translate"></i> @ol.LanguageOfInstruction</span> }
+                </div>
+            </div>
+            <div>
+                @{
+                    var sbClass = Model.Status switch { "Pending" => "sb-pending", "Requires Admin Review" => "sb-review", _ => "sb-done" };
+                }
+                <span class="status-badge @sbClass">@Model.Status</span>
+            </div>
+        </div>
+
+        <!-- 1: Institution Info -->
+        <div id="sec-institution" class="section-card">
+            <div class="sec-hd">
+                <span class="sec-num">1</span>
+                <div><h2>Institution Information</h2><p>Public Info submitted by the applicant</p></div>
+            </div>
+            <div class="sec-bd">
+                <div class="fg">
+                    @if (!string.IsNullOrWhiteSpace(ol.InstitutionName))
+                    { <div class="field"><div class="lbl">Institution Name</div><div class="val">@ol.InstitutionName</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.OversightRightsEntity))
+                    { <div class="field"><div class="lbl">Oversight Entity</div><div class="val">@ol.OversightRightsEntity</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.FoundationDate))
+                    { <div class="field"><div class="lbl">Founding Date</div><div class="val">@ol.FoundationDate</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.DateOfEstablishment))
+                    { <div class="field"><div class="lbl">Date of Establishment</div><div class="val">@ol.DateOfEstablishment</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.ModeOfStudy))
+                    { <div class="field"><div class="lbl">Mode of Study</div><div class="val">@ol.ModeOfStudy</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.LanguageOfInstruction))
+                    { <div class="field"><div class="lbl">Language of Instruction</div><div class="val">@ol.LanguageOfInstruction</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.StartOfTeaching))
+                    { <div class="field"><div class="lbl">Start of Teaching</div><div class="val">@ol.StartOfTeaching</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.PresidentName))
+                    { <div class="field"><div class="lbl">President / Rector</div><div class="val">@ol.PresidentName</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.MailingFullAddress))
+                    { <div class="field"><div class="lbl">Mailing Address</div><div class="val">@ol.MailingFullAddress</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.DirectPhoneNumber))
+                    { <div class="field"><div class="lbl">Phone</div><div class="val">@ol.DirectPhoneNumber</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.EmailAddress))
+                    { <div class="field"><div class="lbl">Email</div><div class="val">@ol.EmailAddress</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(Model.Country))
+                    { <div class="field"><div class="lbl">Country</div><div class="val">@Model.Country</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.Location))
+                    { <div class="field"><div class="lbl">City</div><div class="val">@ol.Location</div></div> }
+                </div>
+                @if (!string.IsNullOrWhiteSpace(ol.InstitutionalWebAddress))
+                {
+                    <div class="sub-hd" style="margin-top:14px;">Website</div>
+                    <div class="field" style="max-width:500px;">
+                        <div class="lbl">Official Website</div>
+                        <div class="val"><a href="@ol.InstitutionalWebAddress" target="_blank">@ol.InstitutionalWebAddress</a></div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- 2: Online Programs -->
+        <div id="sec-programs" class="section-card">
+            <div class="sec-hd">
+                <span class="sec-num">2</span>
+                <div><h2>Online Programs</h2><p>Submitted program rows only</p></div>
+            </div>
+            <div class="sec-bd" style="padding:0;">
+                @if (!programs.Any())
+                {
+                    <div class="empty-state"><i class="bi bi-laptop"></i>No online programs were listed.</div>
+                }
+                else
+                {
+                    <div class="tbl-wrap" style="overflow-x:auto;">
+                        <table class="tbl" style="table-layout:auto;word-break:normal;overflow-wrap:normal;">
+                            <thead>
+                                <tr>
+                                    <th style="white-space:nowrap;">#</th>
+                                    <th style="white-space:nowrap;">Category</th>
+                                    <th style="min-width:170px;">Program Name</th>
+                                    <th style="white-space:nowrap;">Degree Level</th>
+                                    <th style="min-width:160px;">College / Faculty</th>
+                                    <th style="white-space:nowrap;">Delivery Mode</th>
+                                    <th style="text-align:center;white-space:nowrap;">Online Students</th>
+                                    <th style="text-align:center;white-space:nowrap;">Traditional Duration</th>
+                                    <th style="text-align:center;white-space:nowrap;">Online Duration</th>
+                                    <th style="white-space:nowrap;">Duration Status</th>
+                                    <th style="white-space:nowrap;">Sync Ratio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var (p, i) in programs.Select((p, i) => (p, i + 1)))
+                                {
+                                    bool isBach    = p.Source == "Bachelor";
+                                    int? tradDur   = TraditionalDur(p);
+                                    int? onlineDur = p.OnlineDurationYears;
+                                    string durClass = DurStatusClass(tradDur, onlineDur);
+                                    string durText  = DurStatusText(tradDur, onlineDur);
+                                    string syncCls2, syncTxt2;
+                                    if (!p.SynchronousRatioPercent.HasValue)
+                                    { syncCls2 = "dur-missing"; syncTxt2 = "No data"; }
+                                    else if (p.SynchronousRatioPercent.Value >= 33.33m)
+                                    { syncCls2 = "dur-valid"; syncTxt2 = p.SynchronousRatioPercent.Value.ToString("0.##") + "%"; }
+                                    else
+                                    { syncCls2 = "dur-invalid"; syncTxt2 = p.SynchronousRatioPercent.Value.ToString("0.##") + "% — Below 33%"; }
+                                    <tr>
+                                        <td style="color:#999;white-space:nowrap;">@i</td>
+                                        <td style="white-space:nowrap;">
+                                            @if (isBach) { <span class="badge badge-bach">Bachelor</span> }
+                                            else         { <span class="badge badge-pg">Postgraduate</span> }
+                                        </td>
+                                        <td style="font-weight:600;word-break:normal;overflow-wrap:anywhere;min-width:170px;">@p.ProgramName</td>
+                                        <td style="white-space:nowrap;">@p.DegreeLevel</td>
+                                        <td style="color:#6b7280;word-break:normal;overflow-wrap:anywhere;min-width:160px;">@(string.IsNullOrWhiteSpace(p.CollegeOrFaculty) ? "—" : p.CollegeOrFaculty)</td>
+                                        <td style="white-space:nowrap;">
+                                            <span class="badge @(p.DeliveryMode == "Fully Online" ? "badge-online" : "badge-blended")">@p.DeliveryMode</span>
+                                        </td>
+                                        <td style="text-align:center;font-weight:600;white-space:nowrap;">@(p.OnlineStudents.HasValue ? p.OnlineStudents.ToString() : "—")</td>
+                                        <td style="text-align:center;color:#6b7280;white-space:nowrap;">@(tradDur.HasValue ? tradDur.Value + " yr" : "—")</td>
+                                        <td style="text-align:center;font-weight:600;white-space:nowrap;">@(onlineDur.HasValue ? onlineDur.Value + " yr" : "—")</td>
+                                        <td style="white-space:nowrap;"><span class="@durClass">@durText</span></td>
+                                        <td style="white-space:nowrap;"><span class="@syncCls2">@syncTxt2</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+                    <span style="font-size:12.5px;font-weight:700;color:var(--text);">Synchronous Ratio Evidence PDF:</span>
+                    @if (!string.IsNullOrWhiteSpace(ol.SynchronousEvidenceFileName))
+                    {
+                        <a href="/uploads/online/@ol.SynchronousEvidenceFileName" target="_blank"
+                           style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--brand);text-decoration:underline;font-weight:700;">
+                            <i class="bi bi-file-earmark-pdf-fill"></i> View PDF
+                        </a>
+                    }
+                    else
+                    {
+                        <span style="font-size:12.5px;color:#9ca3af;font-style:italic;">Not uploaded</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- 3: Online Recognition Numbers -->
+        @{
+            var bachProgs = programs.Where(p => string.Equals(p.DegreeLevel?.Trim(), "Bachelor", StringComparison.OrdinalIgnoreCase)).ToList();
+            var pgProgs   = programs.Where(p => !string.Equals(p.DegreeLevel?.Trim(), "Bachelor", StringComparison.OrdinalIgnoreCase)).ToList();
+
+            int bachStudents = bachProgs.Sum(p => p.OnlineStudents ?? 0);
+            int pgStudents   = pgProgs.Sum(p   => p.OnlineStudents ?? 0);
+
+            int bStaffTotal  = ol.BachelorOnlineStaffProf + ol.BachelorOnlineStaffAssoc + ol.BachelorOnlineStaffAsst;
+            int pStaffTotal  = ol.PostgraduateOnlineStaffProf + ol.PostgraduateOnlineStaffAssoc + ol.PostgraduateOnlineStaffAsst;
+            int totalStaff   = bStaffTotal + pStaffTotal;
+        }
+        <div id="sec-numbers" class="section-card">
+            <div class="sec-hd">
+                <span class="sec-num">3</span>
+                <div><h2>Online Recognition Numbers</h2><p>Submitted numbers and program-level totals</p></div>
+            </div>
+            <div class="sec-bd">
+                @if (ol.TotalOnlineStudents.HasValue || ol.Professor.HasValue || ol.AssociateProfessor.HasValue || ol.AssistantProfessor.HasValue || ol.OnlineTrainedStaff.HasValue || programs.Count > 0)
+                {
+                    <div class="sub-hd">Overall Submitted Numbers</div>
+                    <div class="fg">
+                        @if (programs.Count > 0)              { <div class="field"><div class="lbl">Total Programs</div><div class="val">@programs.Count</div></div> }
+                        @if (ol.TotalOnlineStudents.HasValue) { <div class="field"><div class="lbl">Total Online Students</div><div class="val">@ol.TotalOnlineStudents</div></div> }
+                        @if (ol.Professor.HasValue)           { <div class="field"><div class="lbl">Professors</div><div class="val">@ol.Professor</div></div> }
+                        @if (ol.AssociateProfessor.HasValue)  { <div class="field"><div class="lbl">Associate Professors</div><div class="val">@ol.AssociateProfessor</div></div> }
+                        @if (ol.AssistantProfessor.HasValue)  { <div class="field"><div class="lbl">Assistant Professors</div><div class="val">@ol.AssistantProfessor</div></div> }
+                        @if (totalStaff > 0)                  { <div class="field"><div class="lbl">Total Teaching Staff</div><div class="val">@totalStaff</div></div> }
+                        @if (ol.OnlineTrainedStaff.HasValue)  { <div class="field"><div class="lbl">Online-Trained Staff</div><div class="val">@ol.OnlineTrainedStaff</div></div> }
+                    </div>
+                }
+
+                <div class="sub-hd">Academic Level Breakdown</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;">
+                        <div style="font-size:12px;font-weight:800;color:var(--brand);margin-bottom:12px;"><i class="bi bi-mortarboard"></i> Bachelor</div>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                            <div class="field"><div class="lbl">Programs</div><div class="val">@bachProgs.Count</div></div>
+                            <div class="field"><div class="lbl">Online Students</div><div class="val">@bachStudents</div></div>
+                            <div class="field"><div class="lbl">Total Staff</div><div class="val">@bStaffTotal</div></div>
+                            <div class="field"><div class="lbl">Professors</div><div class="val">@ol.BachelorOnlineStaffProf</div></div>
+                            <div class="field"><div class="lbl">Assoc. Professors</div><div class="val">@ol.BachelorOnlineStaffAssoc</div></div>
+                            <div class="field"><div class="lbl">Asst. Professors</div><div class="val">@ol.BachelorOnlineStaffAsst</div></div>
+                        </div>
+                    </div>
+
+                    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;">
+                        <div style="font-size:12px;font-weight:800;color:var(--brand);margin-bottom:12px;"><i class="bi bi-award"></i> Postgraduate</div>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                            <div class="field"><div class="lbl">Programs</div><div class="val">@pgProgs.Count</div></div>
+                            <div class="field"><div class="lbl">Online Students</div><div class="val">@pgStudents</div></div>
+                            <div class="field"><div class="lbl">Total Staff</div><div class="val">@pStaffTotal</div></div>
+                            <div class="field"><div class="lbl">Professors</div><div class="val">@ol.PostgraduateOnlineStaffProf</div></div>
+                            <div class="field"><div class="lbl">Assoc. Professors</div><div class="val">@ol.PostgraduateOnlineStaffAssoc</div></div>
+                            <div class="field"><div class="lbl">Asst. Professors</div><div class="val">@ol.PostgraduateOnlineStaffAsst</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4: Communication -->
+        <div id="sec-communication" class="section-card">
+            <div class="sec-hd">
+                <span class="sec-num">4</span>
+                <div><h2>Communication</h2><p>Communication type and methods submitted by the applicant</p></div>
+            </div>
+            <div class="sec-bd">
+                @if (!string.IsNullOrWhiteSpace(ol.CommunicationType))
+                {
+                    <div class="field" style="max-width:400px;">
+                        <div class="lbl">Communication Type</div>
+                        <div class="val">@(ol.CommunicationType == "Both" ? "Synchronous & Asynchronous" : ol.CommunicationType)</div>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(ol.CommunicationMethodsCsv))
+                {
+                    <div class="sub-hd">Communication Methods</div>
+                    <div class="tag-row">
+                        @foreach (var m in ol.CommunicationMethodsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                        { <span class="tag active">@m.Trim()</span> }
+                    </div>
+                }
+                @if (string.IsNullOrWhiteSpace(ol.CommunicationType) && string.IsNullOrWhiteSpace(ol.CommunicationMethodsCsv))
+                {
+                    <div class="empty-state" style="padding:16px 0;"><i class="bi bi-chat-dots"></i>No communication details were submitted.</div>
+                }
+            </div>
+        </div>
+
+        <!-- 5: Examination -->
+        <div id="sec-exam" class="section-card">
+            <div class="sec-hd">
+                <span class="sec-num">5</span>
+                <div><h2>Examination System</h2><p>Exam type and monitoring methods submitted by the applicant</p></div>
+            </div>
+            <div class="sec-bd">
+                <div class="fg">
+                    @if (!string.IsNullOrWhiteSpace(ol.ExamType))
+                    { <div class="field"><div class="lbl">Examination Type</div><div class="val" style="font-weight:800;">@ol.ExamType</div></div> }
+                    @if (ol.ExamType == "Online Exams" || ol.ExamType == "Hybrid Exams (Online + On-Campus)")
+                    {
+                        <div class="field"><div class="lbl">Online Exams Officially Approved</div><div class="val"><span class="@YNClass(ol.OnlineExamsOfficiallyApproved)">@YN(ol.OnlineExamsOfficiallyApproved)</span></div></div>
+                    }
+                </div>
+                @if (!string.IsNullOrWhiteSpace(ol.ExamLocations))
+                {
+                    <div class="sub-hd">Examination Locations / Centres</div>
+                    <div class="field" style="max-width:600px;"><div class="val">@ol.ExamLocations</div></div>
+                }
+                @if (!string.IsNullOrWhiteSpace(ol.ProctoringMethodsCsv))
+                {
+                    <div class="sub-hd">Online Examination Monitoring Methods</div>
+                    <div class="tag-row">
+                        @foreach (var m in ol.ProctoringMethodsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                        { <span class="tag active">@m.Trim()</span> }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- 6: Learning Platform -->
+        <div id="sec-platform" class="section-card">
+            <div class="sec-hd">
+                <span class="sec-num">6</span>
+                <div><h2>Learning Platform</h2><p>LMS details submitted by the applicant</p></div>
+            </div>
+            <div class="sec-bd">
+                <div class="fg">
+                    @if (!string.IsNullOrWhiteSpace(ol.PlatformName))
+                    { <div class="field"><div class="lbl">Platform Name</div><div class="val" style="font-weight:800;">@ol.PlatformName</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.PlatformUrl))
+                    {
+                        <div class="field">
+                            <div class="lbl">Platform Website</div>
+                            <div class="val"><a href="@ol.PlatformUrl" target="_blank">@ol.PlatformUrl</a></div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(ol.ResponsibleUnit))
+                    { <div class="field"><div class="lbl">Responsible Unit / Department</div><div class="val">@ol.ResponsibleUnit</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.PlatformType))
+                    { <div class="field"><div class="lbl">Technology Governance Level</div><div class="val">@ol.PlatformType</div></div> }
+                    <div class="field"><div class="lbl">Officially Adopted by University</div><div class="val"><span class="@YNClass(ol.PlatformOfficiallyAdopted)">@YN(ol.PlatformOfficiallyAdopted)</span></div></div>
+                    <div class="field"><div class="lbl">Technical Support Available</div><div class="val"><span class="@YNClass(ol.TechnicalSupportAvailable)">@YN(ol.TechnicalSupportAvailable)</span></div></div>
+                    <div class="field"><div class="lbl">Data Protection &amp; Privacy Policy</div><div class="val"><span class="@YNClass(ol.HasPrivacyPolicy)">@YN(ol.HasPrivacyPolicy)</span></div></div>
+                    <div class="field"><div class="lbl">University-Owned / Self-Hosted</div><div class="val"><span class="@YNClass(ol.IsUniversityOwned)">@YN(ol.IsUniversityOwned)</span></div></div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(ol.PlatformUsername) || !string.IsNullOrWhiteSpace(ol.PlatformPassword))
+                {
+                    <div style="border-top:1px solid var(--border);margin-top:18px;padding-top:16px;">
+                        <div style="font-size:12.5px;font-weight:800;color:var(--brand);margin-bottom:4px;"><i class="bi bi-key-fill"></i> LMS Review Access / Test Account</div>
+                        <p style="font-size:11.5px;color:#6b7280;margin:0 0 12px;">For recognition review use only. Do not share externally.</p>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+                            @if (!string.IsNullOrWhiteSpace(ol.PlatformUsername))
+                            {
+                                <div class="field">
+                                    <div class="lbl">Username / Email</div>
+                                    <div class="val" style="font-family:monospace;font-weight:700;">@ol.PlatformUsername</div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(ol.PlatformPassword))
+                            {
+                                <div class="field">
+                                    <div class="lbl">Password</div>
+                                    <div class="val" style="display:flex;align-items:center;gap:8px;">
+                                        <span id="lmsPassDisplay" style="letter-spacing:.12em;font-weight:700;flex:1;">••••••••</span>
+                                        <button type="button" id="lmsRevealBtn"
+                                            onclick="(function(){var d=document.getElementById('lmsPassDisplay'),b=document.getElementById('lmsRevealBtn');if(d.dataset.hidden==='false'){d.textContent='••••••••';d.dataset.hidden='true';b.textContent='Reveal';}else{d.textContent='@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(ol.PlatformPassword))';d.dataset.hidden='false';b.textContent='Hide';}})()"
+                                            data-pass=""
+                                            style="font-size:11px;padding:4px 10px;border:1.5px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;color:#374151;font-weight:600;white-space:nowrap;">Reveal</button>
+                                        <button type="button"
+                                            onclick="navigator.clipboard.writeText('@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(ol.PlatformPassword))').then(function(){var b=event.currentTarget;b.textContent='Copied!';setTimeout(function(){b.textContent='Copy';},1500);});"
+                                            style="font-size:11px;padding:4px 10px;border:1.5px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;color:#374151;font-weight:600;white-space:nowrap;">Copy</button>
+                                    </div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(ol.LmsAccessNotes))
+                            {
+                                <div class="field" style="grid-column:1/-1;">
+                                    <div class="lbl">Access Notes</div>
+                                    <div class="val" style="font-weight:700;">@ol.LmsAccessNotes</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- 7: Documents -->
+        <div id="sec-documents" class="section-card">
+            <div class="sec-hd">
+                <span class="sec-num">7</span>
+                <div><h2>Supporting Documents</h2><p>Uploaded files — each belongs to its respective application section</p></div>
+            </div>
+            <div class="sec-bd">
+                @{
+                    bool hasExamDoc     = !string.IsNullOrWhiteSpace(ol.ExamPolicyFileName);
+                    bool hasPlatformDoc = !string.IsNullOrWhiteSpace(ol.PlatformGuideFileName);
+                }
+                @if (!hasExamDoc && !hasPlatformDoc)
+                {
+                    <div class="empty-state"><i class="bi bi-file-earmark-x"></i>No files were uploaded with this submission.</div>
+                }
+                else
+                {
+                    @if (hasExamDoc)
+                    {
+                        <div class="sub-hd"><i class="bi bi-pencil-square" style="margin-right:5px;"></i>Section 5 — Examination System</div>
+                        <div class="file-grid" style="margin-bottom:18px;">
+                            <div class="file-row">
+                                <div class="file-info">
+                                    <div class="fn"><i class="bi bi-file-earmark-pdf" style="color:#e02020;margin-right:6px;"></i>@ol.ExamPolicyFileName</div>
+                                    <div class="fs">Online Examination Policy / Approval Document</div>
+                                </div>
+                                <a class="btn-view-file" href="/uploads/online/@ol.ExamPolicyFileName" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Open</a>
+                            </div>
+                        </div>
+                    }
+                    @if (hasPlatformDoc)
+                    {
+                        <div class="sub-hd"><i class="bi bi-laptop" style="margin-right:5px;"></i>Section 6 — Learning Platform</div>
+                        <div class="file-grid">
+                            <div class="file-row">
+                                <div class="file-info">
+                                    <div class="fn"><i class="bi bi-file-earmark-pdf" style="color:#e02020;margin-right:6px;"></i>@ol.PlatformGuideFileName</div>
+                                    <div class="fs">LMS / Online Learning Platform Policy or Approval Document</div>
+                                </div>
+                                <a class="btn-view-file" href="/uploads/online/@ol.PlatformGuideFileName" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Open</a>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- 8: Applicant Info -->
+        <div id="sec-applicant" class="section-card">
+            <div class="sec-hd">
+                <span class="sec-num">8</span>
+                <div><h2>Applicant Information</h2><p>Contact person details for this submission</p></div>
+            </div>
+            <div class="sec-bd">
+                <div class="fg">
+                    @if (!string.IsNullOrWhiteSpace(ol.Name))      { <div class="field"><div class="lbl">Full Name</div><div class="val">@ol.Name</div></div> }
+                    @if (!string.IsNullOrWhiteSpace(ol.WorkPlace)) { <div class="field"><div class="lbl">Work Place</div><div class="val">@ol.WorkPlace</div></div> }
+                    <div class="field"><div class="lbl">Reference Number</div><div class="val" style="font-family:monospace;">@Model.ReferenceNumber</div></div>
+                    <div class="field"><div class="lbl">Submission Date</div><div class="val">@Model.SubmittedAt.ToString("dd MMM yyyy, HH:mm")</div></div>
+                </div>
+            </div>
+        </div>
+
+
+        @if (!hideDoctorRecommendation)
+        {
+            <!-- Doctor's Submitted Recommendation -->
+            <div class="section-card" id="sec-recommendation">
+                <div class="sec-hd sec-hd-rec">
+                    <div class="sec-num" style="background:rgba(255,255,255,.2)">R</div>
+                    <div>
+                        <h2>Doctor's Final Recommendation</h2>
+                        <p>Decision and written justification submitted by the reviewing recognition member</p>
+                    </div>
+                </div>
+                <div class="sec-bd" style="display:grid;gap:20px;">
+
+                    <!-- Final verdict -->
+                    @{
+                        string olValCls = savedDecisionOL switch {
+                            "Approve"              => "final-rec-val-approve",
+                            "Conditional Approval" => "final-rec-val-conditional",
+                            var x when x.Contains("Reject", StringComparison.OrdinalIgnoreCase) => "final-rec-val-reject",
+                            _                      => "final-rec-val-na"
+                        };
+                    }
+                    <div>
+                        <div class="final-rec-decision-label">Decision</div>
+                        <div class="final-rec-decision-value @olValCls">
+                            <i class="bi @decIconOL"></i> @displayDecisionOL
+                        </div>
+                    </div>
+
+                    <!-- Justification -->
+                    @if (!string.IsNullOrWhiteSpace(savedJustificationOL))
+                    {
+                        <div>
+                            <div class="final-rec-just-label"><i class="bi bi-chat-quote-fill"></i> Justification / Notes</div>
+                            <div class="final-rec-just-body">@savedJustificationOL</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <p style="color:#9ca3af;font-size:13px;font-style:italic;">No justification note provided.</p>
+                    }
+
+                </div>
+            </div>
+        }
+
+        @if (meetingId > 0)
+        {
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;padding:16px 0;">
+                @if (!string.IsNullOrWhiteSpace(Model.CommitteeFinalRecommendation))
+                {
+                    <button type="button"
+                            onclick="printFinalDecision('@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CommitteeFinalRecommendation))')"
+                            style="display:inline-flex;align-items:center;gap:8px;background:#f0fdf4;color:#166534;border:1.5px solid #bbf7d0;border-radius:9px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;"
+                            onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
+                        <i class="bi bi-printer-fill"></i> Print Decision
+                    </button>
+                }
+                <a href="/Home/AdminFinalDecision?id=@Model.Id&meetingId=@meetingId&viewOnly=@fdViewOnly"
+                   style="display:inline-flex;align-items:center;gap:8px;background:#d97706;color:#fff;border:none;border-radius:9px;padding:11px 26px;font-size:14px;font-weight:700;text-decoration:none;transition:background .15s;"
+                   onmouseover="this.style.background='#b45309'" onmouseout="this.style.background='#d97706'">
+                    <i class="bi bi-shield-fill-check"></i> Final Decision
+                </a>
+            </div>
+        }
+
+    </main>
+</div>
+
+
+<script>
+    function printFinalDecision(text) {
+        const win = window.open('', '_blank');
+        win.document.write(`<!doctype html><html dir="rtl" lang="ar"><head>
+            <meta charset="utf-8"/>
+            <title>قرار لجنة الاعتراف</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 15px; line-height: 2; direction: rtl; text-align: right; color: #000; padding: 60px 80px; margin: 0; }
+                .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #7f1627; padding-bottom: 20px; }
+                .header h1 { font-size: 18px; font-weight: 800; color: #7f1627; margin: 0 0 6px; }
+                .header p  { font-size: 13px; color: #555; margin: 0; }
+                .body { white-space: pre-wrap; word-break: break-word; font-size: 15px; }
+            </style>
+        </head><body>
+            <div class="header">
+                <h1>المملكة الأردنية الهاشمية — وزارة التعليم العالي والبحث العلمي</h1>
+                <p>قرار لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية</p>
+            </div>
+            <div class="body">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        </body></html>`);
+        win.document.close();
+        win.focus();
+        win.print();
+    }
+
+    (function() {
+        var sel = document.getElementById('decSelectOL');
+        if (sel) sel.value = '@Html.Raw(((existingDecision?.Decision ?? "") switch { "Recognized" => "Approve", "Not Recognized" => "Reject", "Needs More Information" => "Pending", var x => x }).Replace("'", "\\'"))';
+    })();
+const links = document.querySelectorAll('.rm-navitem[href^="#"]');
+    const sections = Array.from(links)
+        .map(l => document.querySelector(l.getAttribute('href')))
+        .filter(Boolean);
+
+    function setActive(id) {
+        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+    }
+
+    let clickLock = null;
+    links.forEach(link => {
+        link.addEventListener('click', function () {
+            const targetId = this.getAttribute('href').slice(1);
+            setActive(targetId);
+            clearTimeout(clickLock);
+            clickLock = setTimeout(() => { clickLock = null; }, 900);
+        });
+    });
+
+    function onScroll() {
+        if (clickLock) return;
+        if (!sections.length) return;
+        const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 8;
+        if (atBottom) { setActive(sections[sections.length - 1].id); return; }
+        let current = sections[0];
+        for (const section of sections) {
+            if (section.getBoundingClientRect().top <= 90) current = section;
+        }
+        setActive(current.id);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    const sidebar = document.getElementById('rmSidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const layout = document.querySelector('.layout');
+    if (sidebar && toggleBtn && layout) {
+        toggleBtn.addEventListener('click', function () {
+            sidebar.classList.toggle('collapsed');
+            layout.classList.toggle('sidebar-collapsed');
+            const icon = toggleBtn.querySelector('i');
+            if (!icon) return;
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('bi-chevron-left');
+                icon.classList.add('bi-chevron-right');
+            } else {
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-left');
+            }
+        });
+    }
+</script>
+</body>
+</html>

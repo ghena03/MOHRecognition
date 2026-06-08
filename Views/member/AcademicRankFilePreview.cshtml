@@ -8,6 +8,7 @@
     var rows = ViewBag.Rows as List<List<string>> ?? new List<List<string>>();
     var rankKey = (string)(Context.Request.Query["rankKey"].ToString() ?? "");
     var employmentKey = (string)(Context.Request.Query["employmentType"].ToString() ?? "");
+    var previewError = ViewBag.PreviewError as string;
 }
 <!doctype html>
 <html lang="en">
@@ -126,7 +127,11 @@
                 </div>
             </div>
 
-            @if (headers.Any())
+            @if (!string.IsNullOrWhiteSpace(previewError))
+            {
+                <div class="empty" style="color:#b91c1c;padding:24px">⚠ @previewError</div>
+            }
+            else if (headers.Any())
             {
                 <div class="table-wrap">
                     <table>
@@ -162,7 +167,7 @@
                     </table>
                 </div>
             }
-            else
+            else if (string.IsNullOrWhiteSpace(previewError))
             {
                 <div class="empty">No readable data found in this Excel file.</div>
             }

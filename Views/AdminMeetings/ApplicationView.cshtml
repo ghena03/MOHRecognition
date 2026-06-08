@@ -8,6 +8,7 @@
 
     int meetingId = ViewBag.MeetingId ?? 0;
     bool hideFinalDecision = ViewBag.HideFinalDecision ?? false;
+    bool framedSidebar = ViewBag.FramedSidebar ?? false;
     var requestId = Model.Id;
     var inst = Model.UniversityName ?? "—";
 
@@ -19,8 +20,9 @@
     var hosp    = Model.Hospitals                   ?? new HospitalsDto();
     var infra   = Model.Infrastructure              ?? new InfrastructureDto();
     var labs    = Model.Laboratories                ?? new LaboratoriesDto();
-    var accBod  = Model.AccreditationBodies         ?? new List<AccreditationBodyRowDto>();
+    var accBod   = Model.AccreditationBodies         ?? new List<AccreditationBodyRowDto>();
     var rankings = Model.GlobalRankings             ?? new GlobalRankingsDto();
+    var uniRecAcc = Model.UniRecAcc                 ?? new UniRecAccDto();
 
     var faculties    = Model.Faculties    ?? new List<FacultyRowDto>();
     var programs     = Model.Programs     ?? new List<ProgramRowDto>();
@@ -181,7 +183,14 @@
     string SuggClass(string s) => s switch { "Approve" => "approve", "Conditional Approval" => "conditional", _ => "reject" };
     string SuggIcon(string s)  => s switch { "Approve" => "bi-check2-circle", "Conditional Approval" => "bi-arrow-repeat", _ => "bi-x-octagon-fill" };
     var existingDecision = ViewBag.ExistingDecision as MOHRecognition.DTOs.MeetingDecisionDto;
-    var committeeDecision = existingDecision?.Decision ?? "Needs More Information";
+    string fdViewOnly = !string.IsNullOrWhiteSpace(Model?.CommitteeFinalRecommendation) ? "true" : "false";
+    var committeeDecision = (existingDecision?.Decision ?? "Needs More Information") switch
+    {
+        "Recognized" => "Approve",
+        "Not Recognized" => "Reject",
+        "Needs More Information" => "Pending",
+        var x => x
+    };
     var committeeNotes    = existingDecision?.Notes    ?? "";
     var ratioDisplay = ratioValue > 0 ? $"1:{ratioValue:0}" : "—";
     string RatioExp(string c) => c switch {
@@ -233,12 +242,17 @@
         "HospitalAgreement"         => "University-Hospital Agreement",
         _ => string.IsNullOrWhiteSpace(n) ? "—" : n
     };
-    var t5Docs = hospDocs
+    var t5AllDocs = hospDocs
         .Where(x => !string.IsNullOrWhiteSpace(x.FileUrl))
+        .Select(x => (FileName: x.OriginalFileName, FileUrl: x.FileUrl, DocumentType: x.DocumentType, UploadedAt: x.UploadedAt))
+        .Concat((uniRecAcc.Documents ?? new List<UniRecAccDocumentDto>())
+            .Where(x => !string.IsNullOrWhiteSpace(x.FileUrl))
+            .Select(x => (FileName: x.OriginalFileName, FileUrl: x.FileUrl, DocumentType: x.DocumentType, UploadedAt: x.UploadedAt)));
+    var t5Docs = t5AllDocs
         .Select(x => new { Doc = x, Type = T5NormalizeType(x.DocumentType) })
         .Where(x => !string.IsNullOrWhiteSpace(x.Type) && !x.Type.Equals("HospitalAgreement", StringComparison.OrdinalIgnoreCase))
         .OrderBy(x => x.Type).ThenByDescending(x => x.Doc.UploadedAt ?? DateTime.MinValue)
-        .ThenBy(x => x.Doc.OriginalFileName)
+        .ThenBy(x => x.Doc.FileName)
         .ToList();
 }
 <!doctype html>
@@ -262,11 +276,12 @@
           href="~/css/admin/ApplicationView.css"
           asp-append-version="true" />
 </head>
-<body class="rm-page">
+<body class="rm-page @(framedSidebar ? "submitted-framed-sidebar" : "")">
 
     <div class="admin-topbar">
-        <span><i class="bi bi-bank2"></i> Ministry of Higher Education and Scientific Research — Admin Review</span>
-        <span class="admin-vo-badge"><i class="bi bi-shield-lock"></i> View Only</span>
+        <span class="atb-ministry"><i class="bi bi-bank2"></i> Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan</span>
+        <span class="atb-center"><i class="bi bi-person-badge"></i> Admin Review Session</span>
+        <span class="admin-vo-badge"><i class="bi bi-shield-lock-fill"></i> View Only</span>
     </div>
 
     <header class="rm-header">
@@ -281,7 +296,7 @@
                         <i class="bi bi-person-circle"></i>
                         <span>Application Review File — <b>#@requestId</b></span>
                     </div>
-<a class="rm-btn rm-btn-light" href="@backUrl">
+                    <a class="rm-btn rm-btn-light" href="@backUrl">
                         <i class="bi bi-arrow-left"></i> Back to Meeting
                     </a>
                 </div>
@@ -299,7 +314,7 @@
                     <i class="bi bi-building"></i><span>Institution Information</span>
                 </button>
                 <button class="rm-navitem" onclick="showTab('t2',this)">
-                    <i class="bi bi-bar-chart"></i><span>Students &amp; Ratios</span>
+                    <i class="bi bi-bar-chart"></i><span>Academic Structure &amp; Capacity</span>
                 </button>
                 <button class="rm-navitem" onclick="showTab('t3',this)">
                     <i class="bi bi-file-earmark-pdf"></i><span>Admission &amp; Duration</span>
@@ -313,23 +328,23 @@
                 <button class="rm-navitem" onclick="showTab('t6',this)">
                     <i class="bi bi-diagram-3"></i><span>Infrastructure</span>
                 </button>
-                <button class="rm-navitem" onclick="showTab('t7',this)">
-                    <i class="bi bi-clipboard2-check"></i><span>Doctors Recommendation</span>
+                <div class="rm-review-divider">
+                    <div class="fd-divider-line"></div>
+                    <span class="rm-review-divider-label">Reviewer</span>
+                    <div class="fd-divider-line"></div>
+                </div>
+                <button class="rm-navitem rm-navitem-rec" onclick="showTab('t7',this)">
+                    <i class="bi bi-clipboard2-check"></i><span>Doctor's Recommendation</span>
                 </button>
-                @if (!hideFinalDecision)
+                @if (!hideFinalDecision && meetingId > 0)
                 {
-                    <div class="fd-divider">
-                        <div class="fd-divider-line"></div>
-                        <span class="fd-divider-label">Final Action</span>
-                        <div class="fd-divider-line"></div>
-                    </div>
-                    <button class="rm-navitem final-decision-nav" onclick="showTab('t8',this)">
-                        <i class="bi bi-shield-check"></i><span>Final Decision</span>
-                    </button>
+                    <a class="rm-navitem final-decision-nav" href="/Home/AdminFinalDecision?id=@requestId&meetingId=@meetingId&viewOnly=@fdViewOnly">
+                        <i class="bi bi-shield-fill-check"></i><span>Final Decision</span>
+                    </a>
                 }
             </nav>
         </aside>
-        <button id="sidebarToggle" class="sidebar-toggle">
+        <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Toggle Sidebar">
             <i class="bi bi-chevron-left"></i>
         </button>
         <main class="rm-main">
@@ -576,7 +591,7 @@
                         </div>
 
                         @{
-                            var t2BachCount = programs.Count(p => string.Equals((p.DegreeAwarded ?? "").Trim(), "Bachelor", StringComparison.OrdinalIgnoreCase));
+                            var t2BachCount = programs.Count(p => { var d = (p.DegreeAwarded ?? "").Trim(); return d.StartsWith("B", StringComparison.OrdinalIgnoreCase) && (d.Contains("bachelor", StringComparison.OrdinalIgnoreCase) || d.Equals("BSc", StringComparison.OrdinalIgnoreCase) || d.Equals("BS", StringComparison.OrdinalIgnoreCase) || d.Equals("BA", StringComparison.OrdinalIgnoreCase) || d.Equals("B.Sc", StringComparison.OrdinalIgnoreCase) || d.Equals("B.A", StringComparison.OrdinalIgnoreCase) || d.Equals("B.A.", StringComparison.OrdinalIgnoreCase) || d.Equals("B.Sc.", StringComparison.OrdinalIgnoreCase) || d.Equals("BEng", StringComparison.OrdinalIgnoreCase) || d.Equals("B.Eng", StringComparison.OrdinalIgnoreCase)); });
                             var t2AvgPhd    = t2BachCount > 0 ? Math.Floor((double)totalPhd / t2BachCount) : 0.0;
                             string t2DppSt  = t2AvgPhd >= 1.0 ? "green" : (t2AvgPhd > 0 ? "orange" : "");
                         }
@@ -671,8 +686,8 @@
                                             <td>@programs[i].DegreeAwarded</td>
                                             <td>@programs[i].NumberOfYears</td>
                                             <td>@programs[i].EducationalSystem</td>
-                                            <td>@(programs[i].AccreditationDate?.ToString("dd/MM/yyyy") ?? "")</td>
-                                            <td>@(programs[i].GraduationDateOfLastRegiment?.ToString("dd/MM/yyyy") ?? "")</td>
+                                            <td>@(programs[i].AccreditationDate?.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture) ?? "")</td>
+                                            <td>@(programs[i].GraduationDateOfLastRegiment?.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture) ?? "")</td>
                                         </tr>
                                     }
                                 }
@@ -707,12 +722,12 @@
                         @{
                             var admItems = new[]
                             {
-                                new { Title="Diploma",        PDF=review.DiplomaSamplePdfFileName,       Level="Diploma",       Duration=dipDur },
-                                new { Title="BSc",            PDF=review.BScSamplePdfFileName,           Level="BSc",           Duration=bscDur },
-                                new { Title="Higher Diploma", PDF=review.HigherDiplomaSamplePdfFileName, Level="HigherDiploma", Duration=hidDur },
-                                new { Title="Master",         PDF=review.MasterSamplePdfFileName,        Level="Master",        Duration=mstDur },
-                                new { Title="PhD",            PDF=review.PhdSamplePdfFileName,           Level="PhD",           Duration=phdDur },
-                            };
+                                new { Title="Diploma",        PDF=review.DiplomaSamplePdfFileName,       Level="Diploma",       Duration=dipDur,  Selected=A.DegreeDiploma },
+                                new { Title="BSc",            PDF=review.BScSamplePdfFileName,           Level="BSc",           Duration=bscDur,  Selected=A.DegreeBSC },
+                                new { Title="Higher Diploma", PDF=review.HigherDiplomaSamplePdfFileName, Level="HigherDiploma", Duration=hidDur,  Selected=A.DegreeHigherDiploma },
+                                new { Title="Master",         PDF=review.MasterSamplePdfFileName,        Level="Master",        Duration=mstDur,  Selected=A.DegreeMaster },
+                                new { Title="PhD",            PDF=review.PhdSamplePdfFileName,           Level="PhD",           Duration=phdDur,  Selected=A.DegreePhD },
+                            }.Where(x => degrees.Any() ? x.Selected : true).ToArray();
                         }
                         @foreach (var item in admItems)
                         {
@@ -910,12 +925,12 @@
                                         var f = item.Doc;
                                         <tr>
                                             <td>@t5di</td>
-                                            <td class="file-cell" style="word-break:break-all;">@(string.IsNullOrWhiteSpace(f.OriginalFileName) ? "—" : f.OriginalFileName)</td>
+                                            <td class="file-cell" style="word-break:break-all;">@(string.IsNullOrWhiteSpace(f.FileName) ? "—" : f.FileName)</td>
                                             <td><span class="hosp-spec-tag" style="white-space:nowrap;">@T5DocLabel(item.Type)</span></td>
                                             <td class="cell-actions">
                                                 <div class="table-actions">
                                                     <a class="rm-mini" href="@f.FileUrl" target="_blank" rel="noopener">View</a>
-                                                    <a class="rm-mini" href="@f.FileUrl" download="@f.OriginalFileName">Download</a>
+                                                    <a class="rm-mini" href="@f.FileUrl" download="@f.FileName">Download</a>
                                                 </div>
                                             </td>
                                         </tr>
@@ -1362,105 +1377,86 @@
                     string decCss  = displayDecision switch { "Approve" => "approve", "Conditional Approval" => "conditional", _ => "reject" };
                     string decIcon = displayDecision switch { "Approve" => "bi-check2-circle", "Conditional Approval" => "bi-arrow-repeat", _ => "bi-x-octagon-fill" };
                 }
-                <section class="rm-card rd-card" style="border-top:3px solid @(decCss == "approve" ? "#86efac" : decCss == "conditional" ? "#fde047" : "#fca5a5");">
-                    <div class="rd-card-hd">
-                        <h2><i class="bi bi-clipboard2-check"></i> Doctor's Final Recommendation</h2>
-                        <p>The reviewing doctor's submitted decision and written justification.</p>
-                    </div>
-                    <div style="margin:16px 0;">
-                        <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Recommendation</div>
-                        <span class="rec-big-badge @decCss"><i class="bi @decIcon"></i> @displayDecision</span>
-                    </div>
-                    @if (!string.IsNullOrWhiteSpace(savedFinalJustification))
-                    {
-                        <div style="margin-top:16px;">
-                            <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Justification / Notes</div>
-                            <div class="ro-textarea">@savedFinalJustification</div>
+                <section class="final-rec-card final-rec-@decCss">
+                    <div class="final-rec-banner">
+                        <div class="final-rec-banner-icon"><i class="bi @decIcon"></i></div>
+                        <div class="final-rec-banner-text">
+                            <div class="final-rec-banner-title">Doctor's Final Recommendation</div>
+                            <div class="final-rec-banner-sub">Submitted decision and written justification by the reviewing recognition member</div>
                         </div>
-                    }
-                    @if (string.IsNullOrWhiteSpace(savedDecision))
-                    {
-                        <p style="font-size:12.5px;color:#aaa;margin-top:12px;font-style:italic;"><i class="bi bi-info-circle"></i> No final decision submitted yet — showing system suggestion.</p>
-                    }
+                        @if (string.IsNullOrWhiteSpace(savedDecision))
+                        {
+                            <span class="final-rec-suggestion-pill"><i class="bi bi-lightbulb"></i> System Suggestion</span>
+                        }
+                    </div>
+                    <div class="final-rec-body">
+                        <div class="final-rec-decision-block">
+                            <div class="final-rec-decision-label">Decision</div>
+                            <div class="final-rec-decision-value final-rec-val-@decCss">
+                                <i class="bi @decIcon"></i> @displayDecision
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(savedFinalJustification))
+                        {
+                            <div class="final-rec-just-block">
+                                <div class="final-rec-just-label"><i class="bi bi-chat-quote-fill"></i> Justification / Notes</div>
+                                <div class="final-rec-just-body">@savedFinalJustification</div>
+                            </div>
+                        }
+                    </div>
                 </section>
 
-                @if (!hideFinalDecision)
+                @if (!hideFinalDecision && meetingId > 0)
                 {
-                    <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-                        <button class="cd-btn-save" id="btn-goto-t8" style="padding:12px 32px;font-size:1em;display:inline-flex;align-items:center;gap:8px;">
-                            <i class="bi bi-check2-circle"></i> Proceed to Final Decision
-                        </button>
+                    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid #e8e0d8;">
+                        @if (!string.IsNullOrWhiteSpace(Model.CommitteeFinalRecommendation))
+                        {
+                            <button type="button"
+                                    onclick="printFinalDecision('@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CommitteeFinalRecommendation))')"
+                                    style="display:inline-flex;align-items:center;gap:8px;background:#f0fdf4;color:#166534;border:1.5px solid #bbf7d0;border-radius:9px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;"
+                                    onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
+                                <i class="bi bi-printer-fill"></i> Print Decision
+                            </button>
+                        }
+                        <a href="/Home/AdminFinalDecision?id=@requestId&meetingId=@meetingId&viewOnly=@fdViewOnly"
+                           style="display:inline-flex;align-items:center;gap:8px;background:#d97706;color:#fff;border-radius:9px;padding:11px 26px;font-size:14px;font-weight:700;text-decoration:none;transition:background .15s;"
+                           onmouseover="this.style.background='#b45309'" onmouseout="this.style.background='#d97706'">
+                            <i class="bi bi-shield-fill-check"></i> Final Decision
+                        </a>
                     </div>
                 }
 
             </div>
 
-            @if (!hideFinalDecision)
-            {
-            <div id="t8" class="tab-panel">
-
-                <section class="rm-card rd-head">
-                    <div>
-                        <h1>Final Decision</h1>
-                        <p class="rd-inst">Institution: <b>@inst</b></p>
-                        <p>Committee Decision — Record the official recognition outcome.</p>
-                    </div>
-                    <div class="rd-meta">
-                        <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
-                        <div class="meta-pill"><span>Stage</span><b>Final</b></div>
-                        @if (existingDecision != null)
-                        {
-                            <div class="cd-saved-badge"><i class="bi bi-check-circle-fill"></i> Decision Saved</div>
-                        }
-                    </div>
-                </section>
-
-                <section class="rm-card rd-card">
-                    <div class="rd-card-hd">
-                        <h2>Committee Decision</h2>
-                        <p>Select the committee's official decision and enter any supporting notes.</p>
-                    </div>
-
-                    <form method="post" action="/Home/SaveMeetingDecision">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="meetingId" value="@meetingId" />
-                        <input type="hidden" name="requestId" value="@requestId" />
-                        <input type="hidden" name="from" value="committee" />
-
-                        <div class="cd-form-group">
-                            <label for="cd-decision">Decision</label>
-                            @{
-                                string selRec   = committeeDecision == "Recognized"             ? " selected" : "";
-                                string selNot   = committeeDecision == "Not Recognized"         ? " selected" : "";
-                                string selNeeds = committeeDecision == "Needs More Information" ? " selected" : "";
-                                string cdSelectHtml =
-                                    "<select id=\"cd-decision\" name=\"decision\">" +
-                                    "<option value=\"Recognized\""            + selRec   + ">Recognized / معترف بها</option>" +
-                                    "<option value=\"Not Recognized\""        + selNot   + ">Not Recognized / غير معترف بها</option>" +
-                                    "<option value=\"Needs More Information\"" + selNeeds + ">Needs More Information / بحاجة لمعلومات إضافية</option>" +
-                                    "</select>";
-                            }
-                            @Html.Raw(cdSelectHtml)
-                        </div>
-
-                        <div class="cd-form-group">
-                            <label for="cd-notes">Committee Notes / Written Recommendation</label>
-                            <textarea id="cd-notes" name="notes" rows="8" placeholder="Enter the committee's written decision or notes here...">@committeeNotes</textarea>
-                        </div>
-
-                        <div class="cd-btn-row">
-                            <button type="submit" class="cd-btn-save"><i class="bi bi-check2-circle"></i> Save Decision</button>
-                        </div>
-                    </form>
-                </section>
-
-            </div>
-            }
 
         </main>
     </div>
 
     <script>
+        function printFinalDecision(text) {
+            const win = window.open('', '_blank');
+            win.document.write(`<!doctype html><html dir="rtl" lang="ar"><head>
+                <meta charset="utf-8"/>
+                <title>قرار لجنة الاعتراف</title>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 15px; line-height: 2; direction: rtl; text-align: right; color: #000; padding: 60px 80px; margin: 0; }
+                    .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #7f1627; padding-bottom: 20px; }
+                    .header h1 { font-size: 18px; font-weight: 800; color: #7f1627; margin: 0 0 6px; }
+                    .header p  { font-size: 13px; color: #555; margin: 0; }
+                    .body { white-space: pre-wrap; word-break: break-word; font-size: 15px; }
+                </style>
+            </head><body>
+                <div class="header">
+                    <h1>المملكة الأردنية الهاشمية — وزارة التعليم العالي والبحث العلمي</h1>
+                    <p>قرار لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية</p>
+                </div>
+                <div class="body">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+            </body></html>`);
+            win.document.close();
+            win.focus();
+            win.print();
+        }
+
         function showTab(id, btn) {
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.rm-navitem').forEach(b => b.classList.remove('active'));
@@ -1510,28 +1506,20 @@
             }
 
         });
-    </script>
-    <script>
 
-        const sidebar = document.getElementById("rmSidebar");
-        const toggle = document.getElementById("sidebarToggle");
-
-        toggle.addEventListener("click", function () {
-
-            sidebar.classList.toggle("collapsed");
-
-            const icon = toggle.querySelector("i");
-
-            if(sidebar.classList.contains("collapsed")){
-                icon.classList.remove("bi-chevron-left");
-                icon.classList.add("bi-chevron-right");
-            }else{
-                icon.classList.remove("bi-chevron-right");
-                icon.classList.add("bi-chevron-left");
+        // Colour-code the committee decision select on change
+        (function(){
+            var sel = document.getElementById('cd-decision');
+            if (!sel) return;
+            function applyColor(){
+                sel.className = 'cd-select';
+                if (sel.value === 'Approve')             sel.classList.add('cd-sel-green');
+                else if (sel.value === 'Reject')         sel.classList.add('cd-sel-red');
+                else if (sel.value === 'Pending')        sel.classList.add('cd-sel-amber');
             }
-
-        });
-
+            applyColor();
+            sel.addEventListener('change', applyColor);
+        })();
     </script>
 
 </body>

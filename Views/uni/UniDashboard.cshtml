@@ -28,10 +28,8 @@
             <div class="hdr-lang"></div>
 
             <nav class="hdr-nav">
-                <a class="hdr-link" href="@Url.Action("UniStatus", "Home")">← Back</a>
+                <a class="hdr-link" href="javascript:history.back()">← Back</a>
                 <a class="hdr-link" href="https://www.mohe.gov.jo/" target="_blank" rel="noopener">Ministry Website</a>
-                <a class="hdr-link" href="/Instructions">Instructions</a>
-                <a class="hdr-link" href="@Url.Action("UniStatus", "Home")#faqs">FAQs</a>
             </nav>
 
             <div class="hdr-logo">
@@ -1479,14 +1477,11 @@
 
             document.addEventListener('DOMContentLoaded', function () {
                 syncMedicalSections();
-                // Re-sync whenever a college-category checkbox changes
-                document.querySelectorAll('input[data-group="college-categories"]').forEach(cb => {
-                    cb.addEventListener('change', syncMedicalSections);
-                });
             });
 
-            // Expose for SubmitApplication.js validation
-            window.hasMedicalSelected = hasMedicalSelected;
+            // Expose for AcademicInfo.js and SubmitApplication.js
+            window.hasMedicalSelected  = hasMedicalSelected;
+            window.syncMedicalSections = syncMedicalSections;
         })();
     </script>
     <script src="~/js/uni/UniDashboard.js" asp-append-version="true"></script> 
@@ -1505,92 +1500,7 @@
     <script src="~/js/uni/AccreditationBodies.js" asp-append-version="true"></script>
     <script src="~/js/uni/SubmitApplication.js" asp-append-version="true"></script>
 
-    <!-- DEV TEST TOOL — REMOVE BEFORE FINAL DELIVERY -->
-    <script src="~/js/uni/DevTestTool.js" asp-append-version="true"></script>
-
-    <!-- Completeness Check Modal -->
-    <div id="completenessModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center;">
-        <div style="background:#fff; border-radius:16px; width:min(560px,92vw); box-shadow:0 20px 60px rgba(0,0,0,.25); overflow:hidden; animation:cmSlideIn .22s ease;">
-            <div style="background:#7b1428; padding:22px 28px 18px; display:flex; align-items:flex-start; gap:14px;">
-                <div style="font-size:22px; margin-top:1px;">⚠️</div>
-                <div>
-                    <div style="color:#fff; font-size:17px; font-weight:700; margin-bottom:3px;">Incomplete Application</div>
-                    <div style="color:#f3c4cc; font-size:13px; line-height:1.5;">The following sections must be completed before submitting. Please fill them and try again.</div>
-                </div>
-            </div>
-            <div style="padding:20px 28px 8px;">
-                <ul id="completenessModalList" style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;"></ul>
-            </div>
-            <div style="padding:18px 28px 24px; display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #f0ece8; margin-top:10px;">
-                <button type="button" id="completenessModalGoBtn"
-                    style="background:#7b1428; color:#fff; border:none; border-radius:8px; padding:10px 22px; font-size:14px; font-weight:600; cursor:pointer;">
-                    Go to First Incomplete Section
-                </button>
-                <button type="button" id="completenessModalCloseBtn"
-                    style="background:#fff; color:#374151; border:1.5px solid #d1d5db; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:500; cursor:pointer;">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-    <style>
-        @@keyframes cmSlideIn { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:translateY(0); } }
-    </style>
-    <script>
-    (function () {
-        var _firstAnchor = null;
-
-        function openModal(sections) {
-            var list = document.getElementById('completenessModalList');
-            list.innerHTML = '';
-            _firstAnchor = sections.length ? sections[0].anchor : null;
-
-            sections.forEach(function (s, i) {
-                var li = document.createElement('li');
-                li.style.cssText = 'display:flex;align-items:center;gap:10px;background:#fdf6f7;border:1px solid #f0d5da;border-radius:8px;padding:10px 14px;';
-                li.innerHTML =
-                    '<span style="background:#7b1428;color:#fff;font-size:11px;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">' + (i + 1) + '</span>' +
-                    '<a href="#' + s.anchor + '" onclick="document.getElementById(\'completenessModal\').style.display=\'none\'" style="color:#7b1428;font-weight:600;font-size:14px;text-decoration:none;">' + s.name + '</a>';
-                list.appendChild(li);
-            });
-
-            var modal = document.getElementById('completenessModal');
-            modal.style.display = 'flex';
-        }
-
-        document.getElementById('completenessModalCloseBtn').addEventListener('click', function () {
-            document.getElementById('completenessModal').style.display = 'none';
-        });
-
-        document.getElementById('completenessModalGoBtn').addEventListener('click', function () {
-            document.getElementById('completenessModal').style.display = 'none';
-            if (_firstAnchor) {
-                var el = document.getElementById(_firstAnchor);
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
-
-        document.getElementById('completenessModal').addEventListener('click', function (e) {
-            if (e.target === this) this.style.display = 'none';
-        });
-
-        window.checkAndSubmit = async function (continueCallback) {
-            var btn = document.getElementById('btnSubmitApplication') || document.getElementById('btnSaveAndApplyPostgraduate');
-            try {
-                var res = await fetch('@Url.Action("CheckApplicationCompleteness", "Home")', { cache: 'no-store' });
-                var data = await res.json();
-                if (data.incomplete && data.incomplete.length > 0) {
-                    openModal(data.incomplete);
-                    return false;
-                }
-                return true;
-            } catch (e) {
-                console.error('Completeness check failed', e);
-                return true; // allow submit if check itself fails
-            }
-        };
-    })();
-    </script>
+    <script src="~/js/uni/demo-fill.js" asp-append-version="true"></script>
 
 </body>
 </html>

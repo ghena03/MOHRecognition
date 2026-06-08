@@ -1,0 +1,440 @@
+@model MOHRecognition.Services.RecognitionRequestRecord
+@{
+    Layout = null;
+    ViewData["Title"] = "Final Decision";
+    var uniName   = Model?.UniversityName ?? "—";
+    var country   = Model?.Country        ?? "—";
+    var appType   = Model?.ApplicationType ?? "Bachelor";
+    var reqId     = Model?.Id ?? 0;
+    int meetingId      = ViewBag.MeetingId ?? 0;
+    bool viewOnly      = string.Equals(Context.Request.Query["viewOnly"].ToString(), "true", StringComparison.OrdinalIgnoreCase);
+    string sessionNum  = ViewBag.SessionNumber ?? "";
+    string sessionDate = ViewBag.SessionDate   ?? "";
+    var savedDec  = Model?.CommitteeFinalDecision       ?? "";
+    var savedRec  = Model?.CommitteeFinalRecommendation ?? "";
+    string backUrl = viewOnly ? "/Home/AllUniversities"
+        : meetingId > 0 ? $"/Home/AdminMeetingApplicationView?requestId={reqId}&meetingId={meetingId}"
+        : $"/Home/AdminViewRecommendation?id={reqId}";
+}
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f3f0eb; color: #1a1a1a; min-height: 100vh; direction: ltr; }
+
+        .ministry-bar { background: #5a0e1b; color: rgba(255,255,255,.7); font-size: 11.5px; font-weight: 500; letter-spacing: .4px; padding: 6px 40px; }
+
+        .pg-header {
+            background: linear-gradient(135deg, #7f1627 0%, #a01e32 100%);
+            color: #fff; padding: 0 40px; height: 68px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 3px 20px rgba(127,22,39,.35);
+        }
+        .hd-left { display: flex; align-items: center; gap: 16px; }
+        .pg-header img { height: 42px; }
+        .hd-sep { width: 1px; height: 34px; background: rgba(255,255,255,.28); }
+        .hd-text h1 { font-size: 17px; font-weight: 700; }
+        .hd-text p  { font-size: 11px; opacity: .72; margin-top: 2px; }
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(255,255,255,.15); color: #fff;
+            border: 1.5px solid rgba(255,255,255,.35); border-radius: 8px;
+            padding: 8px 18px; font-size: 13px; font-weight: 600;
+            text-decoration: none; transition: background .15s;
+        }
+        .btn-back:hover { background: rgba(255,255,255,.25); }
+
+        .pg-body { max-width: 940px; margin: 0 auto; padding: 32px 24px 72px; }
+
+        /* Identity strip */
+        .id-strip {
+            background: #fff; border: 1.5px solid #ede4da; border-radius: 14px;
+            padding: 18px 22px; display: flex; align-items: center; gap: 16px;
+            margin-bottom: 22px; box-shadow: 0 2px 10px rgba(0,0,0,.04);
+        }
+        .id-icon { width: 48px; height: 48px; border-radius: 12px; background: #fde8ec; color: #7f1627; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .id-text h2 { font-size: 18px; font-weight: 800; color: #111; margin-bottom: 3px; }
+        .id-text p  { font-size: 12px; color: #6b7280; }
+        .id-badge { margin-right: auto; display: inline-flex; align-items: center; gap: 5px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 700; background: #fde8ec; color: #7f1627; border: 1px solid #f5c6cf; }
+
+        /* Success banner */
+        .saved-banner { display: flex; align-items: center; gap: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 13px 18px; margin-bottom: 20px; font-size: 13px; font-weight: 700; color: #166534; }
+
+        /* Previous doctor rec */
+        .prev-card { background: #faf7f3; border: 1.5px solid #ede4da; border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; }
+        .prev-title { font-size: 10.5px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .prev-row { margin-bottom: 8px; }
+        .prev-lbl { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+        .prev-val { font-size: 13px; font-weight: 600; color: #1f2937; }
+        .prev-val.empty { color: #bbb; font-style: italic; font-weight: 400; }
+
+        /* Main card */
+        .fd-card { background: #fff; border: 1.5px solid #ede4da; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,.05); margin-bottom: 20px; }
+        .fd-card-hd { background: linear-gradient(135deg, #7f1627 0%, #a01e32 100%); color: #fff; padding: 16px 22px; display: flex; align-items: center; gap: 12px; }
+        .fd-card-hd i { font-size: 18px; }
+        .fd-card-hd h2 { font-size: 15px; font-weight: 700; }
+        .fd-card-hd p  { font-size: 11px; opacity: .75; margin-top: 2px; }
+        .fd-card-body { padding: 22px; }
+
+        /* Two-column grid for short fields */
+        .fd-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+
+        .fd-field { margin-bottom: 18px; }
+        .fd-label { display: block; font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 7px; }
+        .fd-label .req { color: #dc2626; }
+
+        .fd-select, .fd-input, .fd-textarea {
+            width: 100%; border: 1.5px solid #e5e7eb; border-radius: 10px;
+            padding: 10px 13px; font-size: 13.5px; font-family: inherit;
+            color: #111827; background: #fff; outline: none; transition: border-color .15s;
+        }
+        .fd-select:focus, .fd-input:focus, .fd-textarea:focus { border-color: #7f1627; box-shadow: 0 0 0 3px rgba(127,22,39,.08); }
+        .fd-textarea { min-height: 220px; resize: vertical; line-height: 1.8; direction: rtl; }
+
+        /* Conditional placeholder sections */
+        .ph-section { display: none; background: #fdf6f7; border: 1.5px solid #f5c6cf; border-radius: 12px; padding: 16px 18px; margin-bottom: 18px; }
+        .ph-section.active { display: block; }
+        .ph-section-title { font-size: 11px; font-weight: 800; color: #7f1627; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+        /* Divider */
+        .fd-divider { height: 1px; background: #f0ebe4; margin: 6px 0 20px; }
+
+        /* Save row */
+        .fd-save-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 22px; background: #f8f9fa; border-top: 1px solid #e9ecef; }
+        .fd-save-hint { font-size: 12px; color: #9ca3af; display: flex; align-items: center; gap: 5px; }
+        .btn-save { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #7f1627, #a01e32); color: #fff; border: none; border-radius: 10px; padding: 11px 26px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity .15s; }
+        .btn-save:hover { opacity: .88; }
+        .btn-print { display: inline-flex; align-items: center; gap: 7px; background: #f0fdf4; color: #166534; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 11px 22px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .15s; }
+        .btn-print:hover { background: #dcfce7; }
+
+        @@media (max-width: 640px) { .fd-grid2 { grid-template-columns: 1fr; } }
+
+        @@media print {
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea {
+                position: fixed; top: 0; left: 0; width: 100%;
+                padding: 40px 60px; font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+                font-size: 15px; line-height: 1.9; direction: rtl; text-align: right;
+                color: #000;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ministry-bar">
+        <i class="bi bi-bank2"></i>
+        Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan
+    </div>
+
+    <div class="pg-header">
+        <div class="hd-left">
+            <img src="/images/mohelogo.png" alt="MOHE Logo" />
+            <div class="hd-sep"></div>
+            <div class="hd-text">
+                <h1><i class="bi bi-shield-fill-check"></i> Final Committee Decision</h1>
+                <p>Official recognition decision — @uniName</p>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+            <a class="btn-back" href="@backUrl">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        </div>
+    </div>
+
+    <div class="pg-body">
+
+        @if (TempData["FinalDecisionSaved"] != null)
+        {
+            <div class="saved-banner">
+                <i class="bi bi-check-circle-fill"></i> @TempData["FinalDecisionSaved"]
+            </div>
+        }
+
+        <div class="id-strip">
+            <div class="id-icon"><i class="bi bi-building"></i></div>
+            <div class="id-text">
+                <h2>@uniName</h2>
+                <p>@country &nbsp;·&nbsp; Request #@reqId &nbsp;·&nbsp; @appType</p>
+            </div>
+            <div class="id-badge"><i class="bi bi-hash"></i> Request #@reqId</div>
+        </div>
+
+
+        <div class="fd-card">
+            <div class="fd-card-hd">
+                <i class="bi bi-shield-fill-check"></i>
+                <div>
+                    <h2>Recognition Committee — Final Decision</h2>
+                    <p>@(viewOnly ? "Official recorded decision — read only" : "Select a decision type and enter session details to auto-generate the official text")</p>
+                </div>
+            </div>
+
+            @if (viewOnly)
+            {
+                <!-- VIEW-ONLY: just show saved text + Print -->
+                <div class="fd-card-body">
+                    @if (!string.IsNullOrWhiteSpace(savedDec))
+                    {
+                        <div class="fd-field">
+                            <label class="fd-label">Decision Type</label>
+                            <div style="font-size:14px;font-weight:700;color:#1f2937;padding:10px 0;direction:rtl;">@savedDec</div>
+                        </div>
+                        <div class="fd-divider"></div>
+                    }
+                    <label class="fd-label">Official Decision Text</label>
+                    <div id="printArea" style="background:#faf7f3;border:1.5px solid #ede4da;border-radius:10px;padding:18px 20px;font-size:14.5px;color:#1f2937;line-height:2;white-space:pre-wrap;direction:rtl;text-align:right;min-height:120px;">@savedRec</div>
+                </div>
+                <div class="fd-save-row">
+                    <span class="fd-save-hint"><i class="bi bi-eye"></i> View only — no changes can be made.</span>
+                    <button type="button" class="btn-print" onclick="printDecision()">
+                        <i class="bi bi-printer-fill"></i> Print
+                    </button>
+                </div>
+            }
+            else
+            {
+
+            <form method="post" asp-action="SaveAdminFinalDecision" asp-controller="Home">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@reqId" />
+                <input type="hidden" name="meetingId" value="@meetingId" />
+
+                <div class="fd-card-body">
+
+                    <!-- Decision type -->
+                    <div class="fd-field">
+                        <label class="fd-label">Decision Type <span class="req">*</span></label>
+                        <select class="fd-select" name="decision" id="decisionSelect" required>
+                            <option value="">— اختر نوع القرار —</option>
+                            <option value="تقديم طلب اعتراف"                selected="@(savedDec == "تقديم طلب اعتراف"                ? "selected" : null)">١. تقديم طلب اعتراف</option>
+                            <option value="تحويل إلى عضو اللجنة"            selected="@(savedDec == "تحويل إلى عضو اللجنة"            ? "selected" : null)">٢. تحويل إلى عضو اللجنة</option>
+                            <option value="تأجيل الاعتراف (مستندات)"        selected="@(savedDec == "تأجيل الاعتراف (مستندات)"        ? "selected" : null)">٣. تأجيل الاعتراف (مستندات)</option>
+                            <option value="عدم الاعتراف"                     selected="@(savedDec == "عدم الاعتراف"                     ? "selected" : null)">٤. عدم الاعتراف</option>
+                            <option value="تأجيل الاعتراف (تخريج فوج)"      selected="@(savedDec == "تأجيل الاعتراف (تخريج فوج)"      ? "selected" : null)">٥. تأجيل الاعتراف (تخريج فوج)</option>
+                            <option value="الاعتراف - بكالوريوس فقط"        selected="@(savedDec == "الاعتراف - بكالوريوس فقط"        ? "selected" : null)">٦. الاعتراف - بكالوريوس فقط</option>
+                            <option value="الاعتراف - بكالوريوس وماجستير"   selected="@(savedDec == "الاعتراف - بكالوريوس وماجستير"   ? "selected" : null)">٧. الاعتراف - بكالوريوس وماجستير</option>
+                            <option value="الاعتراف للدراسات العليا"         selected="@(savedDec == "الاعتراف للدراسات العليا"         ? "selected" : null)">٨. الاعتراف للدراسات العليا</option>
+                            <option value="سحب الاعتراف كامل"               selected="@(savedDec == "سحب الاعتراف كامل"               ? "selected" : null)">٩. سحب الاعتراف كامل</option>
+                            <option value="سحب الاعتراف بالدراسات العليا"   selected="@(savedDec == "سحب الاعتراف بالدراسات العليا"   ? "selected" : null)">١٠. سحب الاعتراف بالدراسات العليا</option>
+                            <option value="التغييرات التي طرأت على المؤسسة" selected="@(savedDec == "التغييرات التي طرأت على المؤسسة" ? "selected" : null)">١١. التغييرات التي طرأت على المؤسسة</option>
+                            <option value="التأكيد على القرار السابق"        selected="@(savedDec == "التأكيد على القرار السابق"        ? "selected" : null)">١٢. التأكيد على القرار السابق</option>
+                        </select>
+                    </div>
+
+                    <!-- Session fields (auto-filled from meeting when available) -->
+                    <div class="fd-grid2">
+                        <div class="fd-field" style="margin-bottom:0">
+                            <label class="fd-label">Session Number <span class="req">*</span></label>
+                            <input type="text" class="fd-input" id="sessionNumber"
+                                   value="@sessionNum" placeholder="e.g. 12"
+                                   @(meetingId > 0 ? "readonly style=\"background:#f4f0eb;cursor:not-allowed;\"" : "") />
+                        </div>
+                        <div class="fd-field" style="margin-bottom:0">
+                            <label class="fd-label">Session Date <span class="req">*</span></label>
+                            <input type="text" class="fd-input" id="sessionDate"
+                                   value="@sessionDate" placeholder="e.g. 29/05/2026"
+                                   @(meetingId > 0 ? "readonly style=\"background:#f4f0eb;cursor:not-allowed;\"" : "") />
+                        </div>
+                    </div>
+
+                    <!-- University / Country (pre-filled, editable) -->
+                    <div class="fd-grid2" style="margin-top:14px;">
+                        <div class="fd-field" style="margin-bottom:0">
+                            <label class="fd-label">Institution Name</label>
+                            <input type="text" class="fd-input" id="uniNameInput" value="@uniName" />
+                        </div>
+                        <div class="fd-field" style="margin-bottom:0">
+                            <label class="fd-label">Country</label>
+                            <input type="text" class="fd-input" id="countryInput" value="@country" />
+                        </div>
+                    </div>
+
+                    <!-- Option 3 only: required documents -->
+                    <div class="ph-section" id="ph-docs" style="margin-top:18px;">
+                        <div class="ph-section-title"><i class="bi bi-file-earmark-text"></i> Required Documents (appended after the main text)</div>
+                        <textarea class="fd-textarea" id="requiredDocs" placeholder="Enter the additional required documents here..." style="min-height:90px;"></textarea>
+                    </div>
+
+                    <!-- Option 12 only: previous decision details -->
+                    <div class="ph-section" id="ph-prevdec" style="margin-top:18px;">
+                        <div class="ph-section-title"><i class="bi bi-clock-history"></i> Previous Decision Details</div>
+                        <input type="text" class="fd-input" id="prevDecisionDetails" placeholder="e.g. Recognition at Bachelor's level only, dated ..." />
+                    </div>
+
+                    <div class="fd-divider" style="margin-top:20px;"></div>
+
+                    <!-- Recommendation textarea -->
+                    <label class="fd-label">Official Decision Text <span class="req">*</span></label>
+                    <div id="printArea">
+                        <textarea class="fd-textarea" name="recommendation" id="recommendationText" required
+                                  placeholder="Select a decision type above and enter session details to auto-generate the official text...">@savedRec</textarea>
+                    </div>
+
+                </div>
+
+                <div class="fd-save-row">
+                    <span class="fd-save-hint"><i class="bi bi-lock-fill"></i> The final decision will be officially recorded upon saving.</span>
+                    <div style="display:flex;gap:10px;">
+                        <button type="button" class="btn-print" onclick="printDecision()">
+                            <i class="bi bi-printer-fill"></i> Print
+                        </button>
+                        <button type="submit" class="btn-save">
+                            <i class="bi bi-shield-fill-check"></i> Save Final Decision
+                        </button>
+                    </div>
+                </div>
+            </form>
+            } <!-- end else (editable) -->
+        </div>
+
+    </div>
+
+    <script>
+    const TEMPLATES = {
+        "تقديم طلب اعتراف":
+`أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) الاعتراف بالمؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY})، لحين تعبئة طلب الاعتراف الإلكتروني من خلال الرابط المباشر http://rnji.mohe.gov.jo، نظراً لوجود طلبة أردنيين خريجي المؤسسة التعليمية أعلاه لغاية معادلة شهاداتهم، ويتطلب من لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية دراسة الطلب واتخاذ القرار المناسب بشأنها.`,
+
+        "تحويل إلى عضو اللجنة":
+`أرجو التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) تحويل طلب المؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY}) إلى عضو اللجنة المختص لمزيد من الدراسة.`,
+
+        "تأجيل الاعتراف (مستندات)":
+`أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) تأجيل الاعتراف بالمؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY}) لحين تزويد اللجنة بالآتي:
+
+{REQUIRED_DOCUMENTS}
+
+ويجب أن تشمل المستندات المطلوبة حسب الحاجة:
+
+1. ما يثبت بأن الجامعة وكلياتها وبرامجها معتمدة من هيئات الاعتماد الوطنية والدولية إن وجدت.
+2. جدول يبين أعداد الطلبة في كل كلية وكل تخصص لمرحلة البكالوريوس والماجستير والدكتوراه.
+3. جدول يبين أعداد الطلبة الأردنيين في كل كلية وكل تخصص لمرحلة البكالوريوس والماجستير والدكتوراه.
+4. عدد الطلبة الأجانب في الجامعة.
+5. جدول يبين عدد أعضاء هيئة التدريس المتفرغين وغير المتفرغين حسب الرتبة الأكاديمية، وبيان درجاتهم العلمية.
+6. قائمة أعداد هيئة التدريس المسؤولين عن برامج الدراسات العليا حسب الرتبة الأكاديمية.
+7. معلومات حول البنية التحتية للجامعة.
+8. عدد المختبرات لجميع التخصصات ومساحتها ومكوناتها.
+9. قائمة بأماكن التدريب العملي لطلبة الطب.
+10. اتفاقيات التعاون مع المستشفيات الخاصة وأماكن التدريب العملي إن وجدت.
+11. قائمة بأبحاث أعضاء هيئة التدريس المنشورة في قواعد البيانات Scopus و ISI.
+12. وصف المواد للبرامج الأكاديمية.
+13. الهيئات المحلية والدولية التي تعتمد هذه الجامعة وتصنيفها ضمن التصنيفات العالمية المعترف بها مثل ARWU و Times Higher Education و QS.`,
+
+        "عدم الاعتراف":
+`أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) عدم الاعتراف بالمؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY})، وذلك لعدم تحقيقها أسس ومعايير الاعتراف بمؤسسات التعليم العالي غير الأردنية.`,
+
+        "تأجيل الاعتراف (تخريج فوج)":
+`أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) تأجيل البت بالاعتراف بالمؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY})، وذلك لحين تخريج فوج واحد على الأقل من كافة الكليات القائمة في الجامعة.`,
+
+        "الاعتراف - بكالوريوس فقط":
+`أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) الاعتراف بالمؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY}) لدرجة البكالوريوس فقط ولجميع التخصصات الأكاديمية على نظام التعليم التقليدي فقط.`,
+
+        "الاعتراف - بكالوريوس وماجستير":
+`أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) الاعتراف بالمؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY}) لدرجة البكالوريوس والماجستير فقط ولجميع التخصصات الأكاديمية على نظام التعليم التقليدي فقط.`,
+
+        "الاعتراف للدراسات العليا":
+`أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) الاعتراف بالمؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY}) لجميع الدرجات العلمية والتخصصات الأكاديمية على نظام التعليم التقليدي فقط.`,
+
+        "سحب الاعتراف كامل":
+`أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) سحب الاعتراف بالمؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY})، لعدم تحقيقها معايير الاعتراف بالتعليم التقليدي في تعليمات الاعتراف بمؤسسات التعليم العالي غير الأردنية لسنة 2023.`,
+
+        "سحب الاعتراف بالدراسات العليا":
+`أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) سحب الاعتراف بالدراسات العليا بالمؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY})، والاستمرار بالاعتراف بدرجة البكالوريوس فقط ولجميع التخصصات الأكاديمية على نظام التعليم التقليدي فقط.`,
+
+        "التغييرات التي طرأت على المؤسسة":
+`أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) مخاطبة المعنيين بتزويدنا بتفاصيل حول التغييرات التي طرأت على المؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY})، وفي حال وجود أي عمليات تقسيم أو دمج أو تغيير اسم أو إغلاق لأي فرع، تزويدنا بتفاصيل هذه العمليات وتواريخها.`,
+
+        "التأكيد على القرار السابق":
+`أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم ({SESSION_NUMBER}) تاريخ ({SESSION_DATE}) التأكيد على القرار السابق للمؤسسة التعليمية ({UNIVERSITY_NAME}) في ({COUNTRY})، والمتضمن {PREVIOUS_DECISION_DETAILS}.`
+    };
+
+    const sel       = document.getElementById('decisionSelect');
+    const sessNum   = document.getElementById('sessionNumber');
+    const sessDate  = document.getElementById('sessionDate');
+    const uniInput  = document.getElementById('uniNameInput');
+    const ctryInput = document.getElementById('countryInput');
+    const reqDocs   = document.getElementById('requiredDocs');
+    const prevDec   = document.getElementById('prevDecisionDetails');
+    const recTA     = document.getElementById('recommendationText');
+    const phDocs    = document.getElementById('ph-docs');
+    const phPrev    = document.getElementById('ph-prevdec');
+
+    function toggleSections(val) {
+        phDocs.classList.toggle('active', val === 'تأجيل الاعتراف (مستندات)');
+        phPrev.classList.toggle('active', val === 'التأكيد على القرار السابق');
+    }
+
+    function generateText() {
+        const val = sel.value;
+        if (!val) return;
+        const tpl = TEMPLATES[val];
+        if (!tpl) return;
+
+        const sn   = sessNum.value.trim()   || '{SESSION_NUMBER}';
+        const sd   = sessDate.value.trim()  || '{SESSION_DATE}';
+        const uni  = uniInput.value.trim()  || '{UNIVERSITY_NAME}';
+        const ctr  = ctryInput.value.trim() || '{COUNTRY}';
+        const docs = reqDocs.value.trim()   || '{REQUIRED_DOCUMENTS}';
+        const prev = prevDec.value.trim()   || '{PREVIOUS_DECISION_DETAILS}';
+
+        let text = tpl
+            .replace(/\{SESSION_NUMBER\}/g,           sn)
+            .replace(/\{SESSION_DATE\}/g,              sd)
+            .replace(/\{UNIVERSITY_NAME\}/g,           uni)
+            .replace(/\{COUNTRY\}/g,                   ctr)
+            .replace(/\{REQUIRED_DOCUMENTS\}/g,        docs)
+            .replace(/\{PREVIOUS_DECISION_DETAILS\}/g, prev);
+
+        recTA.value = text;
+    }
+
+    // On decision change: toggle conditional sections + auto-generate
+    sel.addEventListener('change', () => {
+        toggleSections(sel.value);
+        generateText();
+    });
+
+    // Re-generate when any field changes
+    [sessNum, sessDate, uniInput, ctryInput, reqDocs, prevDec].forEach(el =>
+        el.addEventListener('input', generateText)
+    );
+
+    // On load: restore conditional sections state
+    toggleSections(sel.value);
+
+    function printDecision() {
+        const text = recTA.value.trim();
+        if (!text) { alert('Please generate the decision text first.'); return; }
+
+        const win = window.open('', '_blank');
+        win.document.write(`<!doctype html><html dir="rtl" lang="ar"><head>
+            <meta charset="utf-8"/>
+            <title>قرار لجنة الاعتراف</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 15px; line-height: 2; direction: rtl; text-align: right; color: #000; padding: 60px 80px; margin: 0; }
+                .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #7f1627; padding-bottom: 20px; }
+                .header h1 { font-size: 18px; font-weight: 800; color: #7f1627; margin: 0 0 6px; }
+                .header p  { font-size: 13px; color: #555; margin: 0; }
+                .body { white-space: pre-wrap; word-break: break-word; font-size: 15px; }
+                @@media print { body { padding: 40px 60px; } }
+            </style>
+        </head><body>
+            <div class="header">
+                <h1>المملكة الأردنية الهاشمية — وزارة التعليم العالي والبحث العلمي</h1>
+                <p>قرار لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية</p>
+            </div>
+            <div class="body">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        </body></html>`);
+        win.document.close();
+        win.focus();
+        win.print();
+    }
+</script>
+</body>
+</html>

@@ -12,6 +12,18 @@
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/uni/UniDashboard.css" asp-append-version="true" />
+    <style>
+        .field-required-error { color:#dc2626; font-size:12px; font-weight:700; margin:6px 8px 0; }
+        .group-required-error { color:#dc2626; font-size:12px; font-weight:700; margin-top:8px; }
+        .section-readonly input[readonly],
+        .section-readonly select[disabled] {
+            background: #f9fafb !important;
+            color: #6b7280 !important;
+            cursor: default !important;
+            border-color: #e5e7eb !important;
+        }
+        .section-readonly .req { display: none; }
+    </style>
 </head>
 
 <body class="submitapp-page ltr">
@@ -42,11 +54,12 @@
                     <span class="user-link">Show account</span>
                 </div>
             </a>
-            <a class="side-item" href="#sec-general">Public Info</a>
-            <a class="side-item" href="#sec-programs">Postgraduate Programs</a>
-            <a class="side-item" href="#sec-students">Number of students</a>
-            <a class="side-item" href="#sec-faculty">Academic Staff</a>
-            <a class="side-item" href="#sec-user">Applicant Info</a>
+            <a class="side-item" href="#sec-intro"    data-section="sec-intro">Introduction</a>
+            <a class="side-item" href="#sec-general"  data-section="sec-general">Public Info</a>
+            <a class="side-item" href="#sec-programs" data-section="sec-programs">Postgraduate Programs</a>
+            <a class="side-item" href="#sec-students" data-section="sec-students">Number of students</a>
+            <a class="side-item" href="#sec-faculty"  data-section="sec-faculty">Academic Staff</a>
+            <a class="side-item" href="#sec-user"     data-section="sec-user">Applicant Info</a>
             <div class="side-footer">
                 <a class="logout" href="@Url.Action("Logout", "Home")">Logout</a>
             </div>
@@ -56,7 +69,7 @@
         <main class="content">
 
             <!-- WELCOME -->
-            <section class="welcome">
+            <section class="welcome" id="sec-intro">
                 <div class="welcome-card">
                     <div class="welcome-icon">📘</div>
                     <h1 class="welcome-title">Postgraduate Recognition Instructions</h1>
@@ -99,18 +112,21 @@
                 <section class="card" id="sec-general">
                     <div class="card-hd">
                         <h2>Public Info</h2>
-                        <p>Fields marked with (*) are required.</p>
+                        <p>Auto-filled from your bachelor's application. These fields cannot be edited here.</p>
                     </div>
-                    <div class="card-bd">
+                    <div class="card-bd section-readonly">
+                        <!-- Hidden inputs for disabled selects so values are submitted -->
+                        <input type="hidden" name="OversightRightsEntity" value="@P.OversightRightsEntity" />
+                        <input type="hidden" name="ModeOfStudy" value="@P.ModeOfStudy" />
+                        <input type="hidden" name="LanguageOfInstruction" value="@(isOtherLanguage ? languageOfInstruction : languageOfInstruction)" />
                         <div class="grid-2">
                             <div class="field">
-                                <label>Name of Institution <span class="req">*</span></label>
-                                <input name="InstitutionName" value="@P.InstitutionName" />
+                                <label>Name of Institution</label>
+                                <input name="InstitutionName" value="@P.InstitutionName" readonly />
                             </div>
                             <div class="field">
                                 <label>Official Entity Possessing Oversight Rights</label>
-                                <select name="OversightRightsEntity">
-                                    <option value="">-- Choose --</option>
+                                <select name="_OversightRightsEntity" disabled>
                                     <option selected="@(P.OversightRightsEntity == "Ministry")">Ministry</option>
                                     <option selected="@(P.OversightRightsEntity == "Accreditation Body")">Accreditation Body</option>
                                     <option selected="@(P.OversightRightsEntity == "Other")">Other</option>
@@ -119,81 +135,75 @@
                         </div>
                         <div class="grid-2">
                             <div class="field">
-                                <label>Founding Date <span class="req">*</span></label>
-                                <input name="FoundationDate" type="date" value="@P.FoundationDate" />
+                                <label>Founding Date</label>
+                                <input name="FoundationDate" type="date" value="@P.FoundationDate" readonly />
                             </div>
                             <div class="field">
-                                <label>Date of Establishment <span class="req">*</span></label>
-                                <input name="DateOfEstablishment" type="date" value="@P.DateOfEstablishment" />
+                                <label>Date of Establishment</label>
+                                <input name="DateOfEstablishment" type="date" value="@P.DateOfEstablishment" readonly />
                             </div>
                             <div class="field">
-                                <label>Mode of Study <span class="req">*</span></label>
-                                <select name="ModeOfStudy">
-                                    <option value="">-- Choose --</option>
+                                <label>Mode of Study</label>
+                                <select name="_ModeOfStudy" disabled>
                                     <option selected="@(P.ModeOfStudy == "On-campus")">On-campus</option>
                                     <option selected="@(P.ModeOfStudy == "Blended")">Blended</option>
                                     <option selected="@(P.ModeOfStudy == "Online")">Online</option>
                                 </select>
                             </div>
                             <div class="field">
-                                <label>Language of Instruction <span class="req">*</span></label>
-                                <select name="LanguageOfInstruction" id="LanguageOfInstruction">
-                                    <option value="">-- Choose --</option>
+                                <label>Language of Instruction</label>
+                                <select name="_LanguageOfInstruction" disabled>
                                     @foreach (var languageOption in languageInstructionOptions)
                                     {
                                         <option value="@languageOption" selected="@(languageOfInstruction.Equals(languageOption, StringComparison.OrdinalIgnoreCase))">@languageOption</option>
                                     }
                                     <option value="Others" selected="@showOtherLanguageInput">Others</option>
                                 </select>
-                                <div id="LanguageOfInstructionOtherWrap" style="margin-top:10px; display:@(showOtherLanguageInput ? "block" : "none");">
-                                    <input type="text" name="LanguageOfInstructionOther" id="LanguageOfInstructionOther" placeholder="Please specify" value="@(isOtherLanguage? languageOfInstruction : "")" />
-                                </div>
+                                @if (isOtherLanguage)
+                                {
+                                    <input type="text" name="LanguageOfInstructionOther" value="@languageOfInstruction" readonly style="margin-top:10px;" />
+                                }
                             </div>
                             <div class="field">
-                                <label>Start of Teaching <span class="req">*</span></label>
-                                <input name="StartOfTeaching" type="date" value="@P.StartOfTeaching" />
+                                <label>Start of Teaching</label>
+                                <input name="StartOfTeaching" type="date" value="@P.StartOfTeaching" readonly />
                             </div>
                         </div>
                         <div class="subhead">Information of President of Institution</div>
                         <div class="grid-3">
                             <div class="field">
                                 <label>Name</label>
-                                <input name="PresidentName" value="@P.PresidentName" />
+                                <input name="PresidentName" value="@P.PresidentName" readonly />
                             </div>
                         </div>
                         <div class="subhead">Contact Information</div>
                         <div class="grid-2">
                             <div class="field">
-                                <label>Mailing Full Address <span class="req">*</span></label>
-                                <input name="MailingFullAddress" value="@P.MailingFullAddress" />
+                                <label>Mailing Full Address</label>
+                                <input name="MailingFullAddress" value="@P.MailingFullAddress" readonly />
                             </div>
                             <div class="field">
-                                <label>Direct Phone Number <span class="req">*</span></label>
-                                <input name="DirectPhoneNumber" value="@P.DirectPhoneNumber" inputmode="tel" />
+                                <label>Direct Phone Number</label>
+                                <input name="DirectPhoneNumber" value="@P.DirectPhoneNumber" inputmode="tel" readonly />
                             </div>
                             <div class="field">
-                                <label>Email Address <span class="req">*</span></label>
-                                <input name="EmailAddress" value="@P.EmailAddress" type="email" />
+                                <label>Email Address</label>
+                                <input name="EmailAddress" value="@P.EmailAddress" type="email" readonly />
                             </div>
                             <div class="field">
-                                <label>Institutional Web Address <span class="req">*</span></label>
-                                <input name="InstitutionalWebAddress" value="@P.InstitutionalWebAddress" type="url" placeholder="https://..." />
+                                <label>Institutional Web Address</label>
+                                <input name="InstitutionalWebAddress" value="@P.InstitutionalWebAddress" type="url" readonly />
                             </div>
                             <div class="field">
-                                <label><i class="fa-solid fa-earth-americas" style="margin-right:4px;"></i> Country <span class="req">*</span></label>
-                                <input name="Country" type="text" placeholder="Country"
-                                       value="@(!string.IsNullOrWhiteSpace(Model?.Country) ? Model.Country : (ViewBag.Country as string ?? ""))" />
+                                <label><i class="fa-solid fa-earth-americas" style="margin-right:4px;"></i> Country</label>
+                                <input name="Country" type="text"
+                                       value="@(!string.IsNullOrWhiteSpace(Model?.Country) ? Model.Country : (ViewBag.Country as string ?? ""))" readonly />
                             </div>
                             <div class="field">
-                                <label><i class="fa-solid fa-location-dot" style="margin-right:4px;"></i> City <span class="req">*</span></label>
-                                <input name="City" type="text" placeholder="City"
-                                       value="@(!string.IsNullOrWhiteSpace(Model?.City) ? Model.City : (ViewBag.City as string ?? ""))" />
+                                <label><i class="fa-solid fa-location-dot" style="margin-right:4px;"></i> City</label>
+                                <input name="City" type="text"
+                                       value="@(!string.IsNullOrWhiteSpace(Model?.City) ? Model.City : (ViewBag.City as string ?? ""))" readonly />
                             </div>
-                        </div>
-                        <div class="actions" style="justify-content:center; margin-top:14px;">
-                            <button type="button" id="btnSavePublic" class="btn-primary">
-                                Save Public Info →
-                            </button>
                         </div>
                     </div>
                 </section>
@@ -202,8 +212,10 @@
                 <section class="card" id="sec-programs">
                     <div class="card-hd">
                         <h2>Postgraduate Programs</h2>
+                        <p>Select the degree levels offered, then add each program manually.</p>
                     </div>
                     <div class="card-bd">
+                        <!-- Degree pills -->
                         <div class="degree-options">
                             <label class="degree-pill">
                                 <input type="checkbox" id="chkMaster" hidden />
@@ -218,21 +230,176 @@
                                 <span>Higher Diploma</span>
                             </label>
                         </div>
-                        <div class="program-grid">
-                            <div id="masterCard" class="upload-card" style="display:none;">
-                                <h3>Master Programs *</h3>
-                                <input asp-for="MasterFile" type="file" />
+
+                        <!-- Programs JSON (submitted with form) -->
+                        <input type="hidden" name="PostgraduateProgramsJson" id="pgProgramsJson" value="[]" />
+
+                        <!-- ── MASTER SECTION ── -->
+                        <div id="masterProgSection" style="display:none; margin-top:22px;">
+                            <div style="background:#fdf4ff; border:1px solid #e9d5ff; border-radius:12px 12px 0 0; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                <div style="font-weight:700; font-size:14px; color:#7e22ce;">
+                                    <i class="fa-solid fa-graduation-cap" style="margin-right:8px;"></i> Master Programs
+                                </div>
+                                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                    <button type="button" id="pgAddBtn_master" onclick="showPgForm('master')"
+                                            style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:#fff;border:2px solid #9333ea;color:#9333ea;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">
+                                        <i class="fa-solid fa-plus"></i> Add Master Program
+                                    </button>
+                                </div>
                             </div>
-                            <div id="phdCard" class="upload-card" style="display:none;">
-                                <h3>PhD Programs *</h3>
-                                <input asp-for="PhDFile" type="file" />
+                            <div style="border:1px solid #e9d5ff; border-top:none; border-radius:0 0 12px 12px; overflow:hidden;">
+                                <div id="pgEmpty_master" style="padding:18px; text-align:center; color:#9ca3af; font-size:13px; background:#fafafa;">
+                                    <i class="fa-solid fa-circle-info" style="margin-right:6px; color:#94a3b8;"></i> No Master programs added yet.
+                                </div>
+                                <div id="pgTableWrap_master" style="display:none; overflow-x:auto;">
+                                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                                        <thead>
+                                            <tr>
+                                                <th style="background:#f1f0ec;color:#374151;font-weight:700;padding:9px 11px;border-bottom:2px solid #e2ddd8;text-align:left;">Program Name</th>
+                                                <th style="background:#f1f0ec;color:#374151;font-weight:700;padding:9px 11px;border-bottom:2px solid #e2ddd8;text-align:left;">College / Faculty</th>
+                                                <th style="background:#f1f0ec;color:#374151;font-weight:700;padding:9px 11px;border-bottom:2px solid #e2ddd8;text-align:center;width:72px;">Years</th>
+                                                <th style="background:#f1f0ec;padding:9px 11px;border-bottom:2px solid #e2ddd8;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pgTableBody_master"></tbody>
+                                    </table>
+                                </div>
                             </div>
-                            <div id="diplomaCard" class="upload-card" style="display:none;">
-                                <h3>Higher Diploma Programs *</h3>
-                                <input asp-for="DiplomaFile" type="file" />
+                            <div id="pgAddPanel_master" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-top:10px;">
+                                <div style="font-weight:700; font-size:13px; color:#111827; margin-bottom:12px;" id="pgPanelTitle_master">Add Master Program</div>
+                                <div class="grid-2">
+                                    <div class="field">
+                                        <label>Program Name <span class="req">*</span></label>
+                                        <input type="text" id="pgPName_master" placeholder="e.g. Business Administration" />
+                                    </div>
+                                    <div class="field">
+                                        <label>College / Faculty <span class="req">*</span></label>
+                                        <input type="text" id="pgPCollege_master" placeholder="e.g. Faculty of Commerce" />
+                                    </div>
+                                    <div class="field">
+                                        <label>Number of Years <span class="req">*</span></label>
+                                        <input type="number" id="pgPYears_master" min="1" max="10" placeholder="e.g. 2" />
+                                    </div>
+                                </div>
+                                <input type="hidden" id="pgPSpec_master" />
+                                <div class="actions" style="justify-content:flex-start; margin-top:12px; gap:10px;">
+                                    <button type="button" class="btn-primary" onclick="confirmPgAdd('master')">Save Program</button>
+                                    <button type="button" onclick="hidePgForm('master')" style="background:#fff;color:#374151;border:1px solid #d1d5db;padding:8px 18px;border-radius:8px;font-weight:600;cursor:pointer;">Cancel</button>
+                                </div>
                             </div>
                         </div>
-                        <div class="actions" style="justify-content:center; margin-top:20px;">
+
+                        <!-- ── PhD SECTION ── -->
+                        <div id="phdProgSection" style="display:none; margin-top:16px;">
+                            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px 12px 0 0; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                <div style="font-weight:700; font-size:14px; color:#15803d;">
+                                    <i class="fa-solid fa-book-open-reader" style="margin-right:8px;"></i> PhD Programs
+                                </div>
+                                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                    <button type="button" id="pgAddBtn_phd" onclick="showPgForm('phd')"
+                                            style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:#fff;border:2px solid #16a34a;color:#16a34a;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">
+                                        <i class="fa-solid fa-plus"></i> Add PhD Program
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="border:1px solid #bbf7d0; border-top:none; border-radius:0 0 12px 12px; overflow:hidden;">
+                                <div id="pgEmpty_phd" style="padding:18px; text-align:center; color:#9ca3af; font-size:13px; background:#fafafa;">
+                                    <i class="fa-solid fa-circle-info" style="margin-right:6px; color:#94a3b8;"></i> No PhD programs added yet.
+                                </div>
+                                <div id="pgTableWrap_phd" style="display:none; overflow-x:auto;">
+                                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                                        <thead>
+                                            <tr>
+                                                <th style="background:#f1f0ec;color:#374151;font-weight:700;padding:9px 11px;border-bottom:2px solid #e2ddd8;text-align:left;">Program Name</th>
+                                                <th style="background:#f1f0ec;color:#374151;font-weight:700;padding:9px 11px;border-bottom:2px solid #e2ddd8;text-align:left;">College / Faculty</th>
+                                                <th style="background:#f1f0ec;color:#374151;font-weight:700;padding:9px 11px;border-bottom:2px solid #e2ddd8;text-align:center;width:72px;">Years</th>
+                                                <th style="background:#f1f0ec;padding:9px 11px;border-bottom:2px solid #e2ddd8;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pgTableBody_phd"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div id="pgAddPanel_phd" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-top:10px;">
+                                <div style="font-weight:700; font-size:13px; color:#111827; margin-bottom:12px;" id="pgPanelTitle_phd">Add PhD Program</div>
+                                <div class="grid-2">
+                                    <div class="field">
+                                        <label>Program Name <span class="req">*</span></label>
+                                        <input type="text" id="pgPName_phd" placeholder="e.g. Computer Science" />
+                                    </div>
+                                    <div class="field">
+                                        <label>College / Faculty <span class="req">*</span></label>
+                                        <input type="text" id="pgPCollege_phd" placeholder="e.g. Faculty of Computers and AI" />
+                                    </div>
+                                    <div class="field">
+                                        <label>Number of Years <span class="req">*</span></label>
+                                        <input type="number" id="pgPYears_phd" min="1" max="10" placeholder="e.g. 4" />
+                                    </div>
+                                </div>
+                                <input type="hidden" id="pgPSpec_phd" />
+                                <div class="actions" style="justify-content:flex-start; margin-top:12px; gap:10px;">
+                                    <button type="button" class="btn-primary" onclick="confirmPgAdd('phd')">Save Program</button>
+                                    <button type="button" onclick="hidePgForm('phd')" style="background:#fff;color:#374151;border:1px solid #d1d5db;padding:8px 18px;border-radius:8px;font-weight:600;cursor:pointer;">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── HIGHER DIPLOMA SECTION ── -->
+                        <div id="diplomaProgSection" style="display:none; margin-top:16px;">
+                            <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px 12px 0 0; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                <div style="font-weight:700; font-size:14px; color:#c2410c;">
+                                    <i class="fa-solid fa-scroll" style="margin-right:8px;"></i> Higher Diploma Programs
+                                </div>
+                                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                    <button type="button" id="pgAddBtn_diploma" onclick="showPgForm('diploma')"
+                                            style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:#fff;border:2px solid #ea580c;color:#ea580c;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">
+                                        <i class="fa-solid fa-plus"></i> Add Higher Diploma Program
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="border:1px solid #fed7aa; border-top:none; border-radius:0 0 12px 12px; overflow:hidden;">
+                                <div id="pgEmpty_diploma" style="padding:18px; text-align:center; color:#9ca3af; font-size:13px; background:#fafafa;">
+                                    <i class="fa-solid fa-circle-info" style="margin-right:6px; color:#94a3b8;"></i> No Higher Diploma programs added yet.
+                                </div>
+                                <div id="pgTableWrap_diploma" style="display:none; overflow-x:auto;">
+                                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                                        <thead>
+                                            <tr>
+                                                <th style="background:#f1f0ec;color:#374151;font-weight:700;padding:9px 11px;border-bottom:2px solid #e2ddd8;text-align:left;">Program Name</th>
+                                                <th style="background:#f1f0ec;color:#374151;font-weight:700;padding:9px 11px;border-bottom:2px solid #e2ddd8;text-align:left;">College / Faculty</th>
+                                                <th style="background:#f1f0ec;color:#374151;font-weight:700;padding:9px 11px;border-bottom:2px solid #e2ddd8;text-align:center;width:72px;">Years</th>
+                                                <th style="background:#f1f0ec;padding:9px 11px;border-bottom:2px solid #e2ddd8;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pgTableBody_diploma"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div id="pgAddPanel_diploma" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-top:10px;">
+                                <div style="font-weight:700; font-size:13px; color:#111827; margin-bottom:12px;" id="pgPanelTitle_diploma">Add Higher Diploma Program</div>
+                                <div class="grid-2">
+                                    <div class="field">
+                                        <label>Program Name <span class="req">*</span></label>
+                                        <input type="text" id="pgPName_diploma" placeholder="e.g. Hospital Pharmacy" />
+                                    </div>
+                                    <div class="field">
+                                        <label>College / Faculty <span class="req">*</span></label>
+                                        <input type="text" id="pgPCollege_diploma" placeholder="e.g. Faculty of Pharmacy" />
+                                    </div>
+                                    <div class="field">
+                                        <label>Number of Years <span class="req">*</span></label>
+                                        <input type="number" id="pgPYears_diploma" min="1" max="10" placeholder="e.g. 1" />
+                                    </div>
+                                </div>
+                                <input type="hidden" id="pgPSpec_diploma" />
+                                <div class="actions" style="justify-content:flex-start; margin-top:12px; gap:10px;">
+                                    <button type="button" class="btn-primary" onclick="confirmPgAdd('diploma')">Save Program</button>
+                                    <button type="button" onclick="hidePgForm('diploma')" style="background:#fff;color:#374151;border:1px solid #d1d5db;padding:8px 18px;border-radius:8px;font-weight:600;cursor:pointer;">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="actions" style="justify-content:center; margin-top:24px;">
                             <button type="button" id="btnSavePrograms" class="btn-primary">
                                 Save Programs →
                             </button>
@@ -312,15 +479,15 @@
                             </div>
                             <div class="faculty-modern-grid">
                                 <div class="faculty-input-box">
-                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor</label>
+                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor <span class="req">*</span></label>
                                     <input asp-for="MasterProfessor" type="number" />
                                 </div>
                                 <div class="faculty-input-box">
-                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor</label>
+                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor <span class="req">*</span></label>
                                     <input asp-for="MasterAssociate" type="number" />
                                 </div>
                                 <div class="faculty-input-box">
-                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor</label>
+                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor <span class="req">*</span></label>
                                     <input asp-for="MasterAssistant" type="number" />
                                 </div>
                             </div>
@@ -336,15 +503,15 @@
                             </div>
                             <div class="faculty-modern-grid">
                                 <div class="faculty-input-box">
-                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor</label>
+                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor <span class="req">*</span></label>
                                     <input asp-for="PhDProfessor" type="number" />
                                 </div>
                                 <div class="faculty-input-box">
-                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor</label>
+                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor <span class="req">*</span></label>
                                     <input asp-for="PhDAssociate" type="number" />
                                 </div>
                                 <div class="faculty-input-box">
-                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor</label>
+                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor <span class="req">*</span></label>
                                     <input asp-for="PhDAssistant" type="number" />
                                 </div>
                             </div>
@@ -360,15 +527,15 @@
                             </div>
                             <div class="faculty-modern-grid">
                                 <div class="faculty-input-box">
-                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor</label>
+                                    <label><i class="fa-solid fa-chalkboard-user"></i> Professor <span class="req">*</span></label>
                                     <input asp-for="DiplomaProfessor" type="number" />
                                 </div>
                                 <div class="faculty-input-box">
-                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor</label>
+                                    <label><i class="fa-solid fa-user-graduate"></i> Associate Professor <span class="req">*</span></label>
                                     <input asp-for="DiplomaAssociate" type="number" />
                                 </div>
                                 <div class="faculty-input-box">
-                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor</label>
+                                    <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor <span class="req">*</span></label>
                                     <input asp-for="DiplomaAssistant" type="number" />
                                 </div>
                             </div>
@@ -387,34 +554,31 @@
                         <div class="applicant-title-wrap">
                             <div>
                                 <h2>Applicant Information</h2>
-                                <p>Review and confirm the applicant details for this request.</p>
+                                <p>Auto-filled from your account. These fields cannot be edited here.</p>
                             </div>
                         </div>
                     </div>
-                    <div class="card-bd applicant-modern-body">
+                    <div class="card-bd applicant-modern-body section-readonly">
                         <div class="applicant-grid">
                             <div class="applicant-field">
                                 <label><i class="fa-solid fa-user"></i> Full Name</label>
-                                <input asp-for="Name" type="text" placeholder="Enter applicant name"
-                                       value="@(ViewBag.ApplicantName ?? "")" />
+                                <input asp-for="Name" type="text"
+                                       value="@(ViewBag.ApplicantName ?? "")" readonly />
                             </div>
                             <div class="applicant-field">
                                 <label><i class="fa-solid fa-building"></i> Work Place</label>
-                                <input asp-for="WorkPlace" type="text" placeholder="Enter work place"
-                                       value="@(ViewBag.WorkPlace ?? "")" />
+                                <input asp-for="WorkPlace" type="text"
+                                       value="@(ViewBag.WorkPlace ?? "")" readonly />
                             </div>
                         </div>
 
-                        <!-- Online Education question -->
-                        <div style="margin-top:12px;">
-                            <label style="font-weight:600; display:block; margin-bottom:6px;">
+                        <div style="margin-top:18px;">
+                            <label style="font-weight:600; display:block; margin-bottom:8px;">
                                 Would you like to continue to Online Education Recognition?
                             </label>
-
-                            <label style="margin-right:12px;">
+                            <label style="margin-right:16px;">
                                 <input type="radio" name="ApplyOnline" value="yes" id="applyOnlineYes" /> Yes
                             </label>
-
                             <label>
                                 <input type="radio" name="ApplyOnline" value="no" id="applyOnlineNo" checked /> No
                             </label>
@@ -422,7 +586,7 @@
 
                         <div style="display:flex; justify-content:flex-start; margin-top:18px; gap:12px;">
                             <button type="submit" id="btnSubmitPostgrad" class="btn-primary">
-                                Finish Submission
+                                Submit Application
                             </button>
                             <button type="submit" id="btnContinueOnline" class="btn-primary" style="display:none;">
                                 Save &amp; Continue to Online Education
@@ -442,14 +606,158 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/uni/PostgraduatePrograms.js" asp-append-version="true"></script>
 
-    <!-- DEV TEST TOOL — REMOVE BEFORE FINAL DELIVERY -->
-    <script src="~/js/uni/PostgraduateDevTestTool.js" asp-append-version="true"></script>
+    <script src="~/js/uni/demo-fill.js" asp-append-version="true"></script>
 
     <script>
         function scrollToNext(sectionId) {
             const el = document.getElementById(sectionId);
             if (el) el.scrollIntoView({ behavior: 'smooth' });
         }
+
+        // ── Sidebar scroll-spy ────────────────────────────────────────────────
+        (function () {
+            var ids    = ['sec-intro','sec-general','sec-programs','sec-students','sec-faculty','sec-user'];
+            var OFFSET = 150;
+            var locked = false;
+
+            function activate(id) {
+                document.querySelectorAll('.side-item[data-section]').forEach(function (el) {
+                    el.classList.toggle('active', el.dataset.section === id);
+                });
+            }
+
+            function onScroll() {
+                if (locked) return;
+                var scrollY  = window.pageYOffset;
+                var activeId = ids[0];
+                ids.forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el && el.offsetTop <= scrollY + OFFSET) activeId = id;
+                });
+                activate(activeId);
+            }
+
+            window.addEventListener('scroll', onScroll, { passive: true });
+
+            document.querySelectorAll('.side-item[data-section]').forEach(function (el) {
+                el.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var target = document.getElementById(el.dataset.section);
+                    if (!target) return;
+                    locked = true;
+                    activate(el.dataset.section);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setTimeout(function () { locked = false; }, 700);
+                });
+            });
+
+            onScroll();
+        })();
+
+        // ── PG Programs CRUD (per-level) ──────────────────────────────────────
+        var pgLevelData = {
+            master:  { key: 'Master',         progs: [], editIdx: -1 },
+            phd:     { key: 'PhD',            progs: [], editIdx: -1 },
+            diploma: { key: 'Higher Diploma', progs: [], editIdx: -1 }
+        };
+
+        function showPgForm(lv) {
+            var d = pgLevelData[lv];
+            d.editIdx = -1;
+            document.getElementById('pgAddPanel_' + lv).style.display = 'block';
+            document.getElementById('pgAddBtn_'   + lv).style.display = 'none';
+            document.getElementById('pgPanelTitle_' + lv).textContent  = 'Add ' + d.key + ' Program';
+            document.getElementById('pgPName_'    + lv).value = '';
+            document.getElementById('pgPCollege_' + lv).value = '';
+            document.getElementById('pgPSpec_'    + lv).value = '';
+            document.getElementById('pgPYears_'   + lv).value = '';
+            document.getElementById('pgAddPanel_' + lv).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function showPgFormEdit(lv, idx) {
+            var d = pgLevelData[lv];
+            d.editIdx = idx;
+            var p = d.progs[idx];
+            document.getElementById('pgAddPanel_' + lv).style.display = 'block';
+            document.getElementById('pgAddBtn_'   + lv).style.display = 'none';
+            document.getElementById('pgPanelTitle_' + lv).textContent  = 'Edit ' + d.key + ' Program';
+            document.getElementById('pgPName_'    + lv).value = p.name;
+            document.getElementById('pgPCollege_' + lv).value = p.college;
+            document.getElementById('pgPYears_'   + lv).value = p.years || '';
+        }
+
+        function hidePgForm(lv) {
+            document.getElementById('pgAddPanel_' + lv).style.display = 'none';
+            document.getElementById('pgAddBtn_'   + lv).style.display = 'inline-flex';
+            pgLevelData[lv].editIdx = -1;
+        }
+
+        function confirmPgAdd(lv) {
+            var d       = pgLevelData[lv];
+            var name    = (document.getElementById('pgPName_'    + lv).value || '').trim();
+            var college = (document.getElementById('pgPCollege_' + lv).value || '').trim();
+            var yearsRaw = (document.getElementById('pgPYears_'  + lv).value || '').trim();
+            var years   = parseInt(yearsRaw, 10);
+            if (!name)              { alert('Program Name is required.');        return; }
+            if (!college)           { alert('College / Faculty is required.');   return; }
+            if (!yearsRaw || isNaN(years) || years < 1) { alert('Number of Years is required and must be at least 1.'); return; }
+            if (d.editIdx >= 0) {
+                d.progs[d.editIdx] = { name: name, college: college, years: years };
+            } else {
+                d.progs.push({ name: name, college: college, years: years });
+            }
+            hidePgForm(lv);
+            renderPgTable(lv);
+            serializePgProgs();
+        }
+
+        function deletePgProg(lv, idx) {
+            if (!confirm('Delete this program?')) return;
+            pgLevelData[lv].progs.splice(idx, 1);
+            renderPgTable(lv);
+            serializePgProgs();
+        }
+
+        function renderPgTable(lv) {
+            var d     = pgLevelData[lv];
+            var empty = document.getElementById('pgEmpty_'     + lv);
+            var wrap  = document.getElementById('pgTableWrap_' + lv);
+            var tbody = document.getElementById('pgTableBody_' + lv);
+            if (!empty || !wrap || !tbody) return;
+            if (d.progs.length === 0) {
+                empty.style.display = 'block';
+                wrap.style.display  = 'none';
+                return;
+            }
+            empty.style.display = 'none';
+            wrap.style.display  = 'block';
+            tbody.innerHTML = d.progs.map(function(p, i) {
+                return '<tr>' +
+                    '<td style="padding:9px 11px;border-bottom:1px solid #f0ede8;font-weight:600;">'  + escPg(p.name)    + '</td>' +
+                    '<td style="padding:9px 11px;border-bottom:1px solid #f0ede8;">'                  + escPg(p.college) + '</td>' +
+                    '<td style="padding:9px 11px;border-bottom:1px solid #f0ede8;text-align:center;font-weight:600;">' + (p.years || '—') + '</td>' +
+                    '<td style="padding:9px 11px;border-bottom:1px solid #f0ede8;white-space:nowrap;">' +
+                        '<button type="button" onclick="showPgFormEdit(\'' + lv + '\',' + i + ')" style="background:none;border:1px solid #93c5fd;color:#2563eb;border-radius:6px;padding:3px 9px;font-size:11.5px;font-weight:600;cursor:pointer;margin-right:4px;">Edit</button>' +
+                        '<button type="button" onclick="deletePgProg(\'' + lv + '\',' + i + ')" style="background:none;border:1px solid #fca5a5;color:#dc2626;border-radius:6px;padding:3px 9px;font-size:11.5px;font-weight:600;cursor:pointer;">Delete</button>' +
+                    '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        function serializePgProgs() {
+            var all = [];
+            ['master', 'phd', 'diploma'].forEach(function(lv) {
+                var d = pgLevelData[lv];
+                d.progs.forEach(function(p) {
+                    all.push({ ProgramName: p.name, DegreeLevel: d.key, CollegeOrFaculty: p.college, Specialization: p.spec || '', NumberOfYears: p.years || null });
+                });
+            });
+            document.getElementById('pgProgramsJson').value = JSON.stringify(all);
+        }
+
+        function escPg(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+        document.querySelector('form')?.addEventListener('submit', function() { serializePgProgs(); });
     </script>
 
 </body>

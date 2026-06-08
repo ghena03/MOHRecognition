@@ -31,7 +31,6 @@ namespace MOHRecognition.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -44,9 +43,18 @@ namespace MOHRecognition.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Position")
+                        .HasMaxLength(500)
+                        .HasDefaultValue("")
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("Specialization")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("SortOrder")
+                        .HasDefaultValue(0)
+                        .HasColumnType("integer");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -57,10 +65,17 @@ namespace MOHRecognition.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Password")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"Email\" IS NOT NULL AND \"Email\" <> ''");
+
+                    b.HasIndex("SortOrder");
 
                     b.HasIndex("Type");
 
@@ -283,6 +298,14 @@ namespace MOHRecognition.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("CommitteeFinalDecision")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CommitteeFinalRecommendation")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("City")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -379,10 +402,20 @@ namespace MOHRecognition.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("MedicineDentistryJson");
 
+                    b.Property<string>("OnlineEducationData")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("OnlineEducationJson");
+
                     b.Property<string>("Pictures")
                         .IsRequired()
                         .HasColumnType("TEXT")
                         .HasColumnName("PicturesJson");
+
+                    b.Property<string>("PostgraduateData")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("PostgraduateDataJson");
 
                     b.Property<string>("ProgramHours")
                         .IsRequired()

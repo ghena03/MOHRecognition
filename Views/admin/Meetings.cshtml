@@ -7,15 +7,32 @@
     var meetingError = TempData["MeetingError"] as string;
     var lastMeeting  = Model.OrderByDescending(m => m.SessionNumber).FirstOrDefault();
     var canCreate    = lastMeeting == null || string.Equals(lastMeeting.Status, "Closed", StringComparison.OrdinalIgnoreCase);
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
+
+    string StatusLabel(string? s) => isRtl
+        ? (s ?? "") switch
+        {
+            "Open"      => "مفتوح",
+            "Closed"    => "مُغلق",
+            "Scheduled" => "مجدول",
+            _           => s ?? ""
+        }
+        : (s ?? "");
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Meetings</title>
+    <title>@(isRtl ? "الاجتماعات" : "Meetings")</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -63,16 +80,14 @@
             border-radius: 8px; padding: 9px 16px;
             font-size: 13px; font-weight: 600;
             text-decoration: none; transition: background .15s;
-            margin-right: 10px;
+            margin-@(isRtl ? "left" : "right"): 10px;
         }
         .btn-back:hover { background: rgba(255,255,255,.22); }
 
         .hd-actions { display: flex; align-items: center; gap: 0; }
 
-        /* ── Body ── */
         .pg-body { max-width: 1080px; margin: 0 auto; padding: 40px 24px 72px; }
 
-        /* ── Table card ── */
         .tbl-card {
             background: #fff;
             border-radius: 16px;
@@ -102,7 +117,7 @@
             color: #7f1627;
             font-size: 11px; font-weight: 700;
             letter-spacing: .8px; text-transform: uppercase;
-            padding: 14px 28px; text-align: left;
+            padding: 14px 28px; text-align: @(isRtl ? "right" : "left");
             border-bottom: 2px solid #ecddd5; white-space: nowrap;
         }
 
@@ -114,7 +129,7 @@
         tbody tr:last-child { border-bottom: none; }
         tbody tr:hover { background: #fdf8f5; }
 
-        tbody td { padding: 20px 28px; vertical-align: middle; }
+        tbody td { padding: 20px 28px; vertical-align: middle; text-align: @(isRtl ? "right" : "left"); }
 
         .cell-num { font-size: 24px; font-weight: 900; color: #7f1627; letter-spacing: -1px; line-height: 1; }
         .cell-year { font-size: 15px; font-weight: 700; color: #444; }
@@ -130,28 +145,28 @@
         .sb-closed    { background: #f0f0f0; color: #777; }    .sb-closed    .sdot { background: #aaa; }
         .sb-other     { background: #fff3cd; color: #856404; } .sb-other     .sdot { background: #856404; }
 
-        /* Edit / Delete buttons */
         .edit-btn {
-            display: inline-flex; align-items: center; gap: 6px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            width: 110px;
             background: #fff; color: #7f1627;
             border: 1.5px solid #e0b4be; border-radius: 8px;
-            padding: 8px 16px; font-size: 12.5px; font-weight: 700;
+            padding: 8px 0; font-size: 12.5px; font-weight: 700;
             text-decoration: none; transition: background .12s, border-color .12s;
             white-space: nowrap;
         }
         .edit-btn:hover { background: #fde8ec; border-color: #c08090; }
 
         .del-btn {
-            display: inline-flex; align-items: center; gap: 6px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            width: 110px;
             background: #fff; color: #b91c1c;
             border: 1.5px solid #fecaca; border-radius: 8px;
-            padding: 8px 14px; font-size: 12.5px; font-weight: 700;
+            padding: 8px 0; font-size: 12.5px; font-weight: 700;
             cursor: pointer; transition: background .12s, border-color .12s;
-            white-space: nowrap; margin-left: 6px;
+            white-space: nowrap; margin-@(isRtl ? "right" : "left"): 6px;
         }
         .del-btn:hover { background: #fef2f2; border-color: #f87171; }
 
-        /* Confirm delete overlay */
         .del-overlay {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,.45); z-index: 1000;
@@ -172,7 +187,6 @@
         .btn-confirm-del { padding: 10px 24px; border-radius: 8px; border: none; background: #b91c1c; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
         .btn-confirm-del:hover { background: #991b1b; }
 
-        /* Empty state */
         .empty-state { padding: 80px 32px; text-align: center; }
         .empty-state i  { font-size: 56px; color: #d4bec4; display: block; margin-bottom: 18px; }
         .empty-state h3 { font-size: 17px; font-weight: 700; color: #666; margin-bottom: 10px; }
@@ -187,11 +201,11 @@
         .empty-state a:hover { background: #6a1020; }
     </style>
 </head>
-<body>
+<body class="@(isRtl ? "rtl-body" : "")">
 
     <div class="ministry-bar">
         <i class="bi bi-bank2"></i>
-        Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan
+        @(isRtl ? "وزارة التعليم العالي والبحث العلمي — المملكة الأردنية الهاشمية" : "Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan")
     </div>
 
     <div class="pg-header">
@@ -199,25 +213,28 @@
             <img src="/images/mohelogo.png" alt="Logo" />
             <div class="hd-sep"></div>
             <div class="hd-text">
-                <h1>Meetings</h1>
-                <p>Schedule and manage committee meetings</p>
+                <h1>@(isRtl ? "الاجتماعات" : "Meetings")</h1>
+                <p>@(isRtl ? "جدولة اجتماعات اللجنة وإدارتها" : "Schedule and manage committee meetings")</p>
             </div>
         </div>
         <div class="hd-actions">
-            <a href="/Home/AdminDashboard" class="btn-back">
-                <i class="bi bi-arrow-left"></i> Dashboard
+                        <div style="display:flex;align-items:center;gap:10px;">
+                @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+                <a href="/Home/AdminDashboard" class="btn-back">
+                <i class="bi bi-arrow-@(isRtl ? "right" : "left")"></i> @(isRtl ? "لوحة التحكم" : "Dashboard")
             </a>
+            </div>
             @if (canCreate)
             {
                 <a href="/Home/CreateMeeting" class="btn-new">
-                    <i class="bi bi-plus-lg"></i> New Meeting
+                    <i class="bi bi-plus-lg"></i> @(isRtl ? "اجتماع جديد" : "New Meeting")
                 </a>
             }
             else
             {
                 <span class="btn-new" style="opacity:.45;cursor:not-allowed;pointer-events:none;"
-                      title="Close Session @(lastMeeting!.SessionNumber) before creating a new meeting">
-                    <i class="bi bi-lock-fill"></i> New Meeting
+                      title="@(isRtl ? $"أغلق الجلسة {lastMeeting!.SessionNumber} قبل إنشاء اجتماع جديد" : $"Close Session {lastMeeting!.SessionNumber} before creating a new meeting")">
+                    <i class="bi bi-lock-fill"></i> @(isRtl ? "اجتماع جديد" : "New Meeting")
                 </span>
             }
         </div>
@@ -235,14 +252,14 @@
         <div class="tbl-card">
             <div class="tbl-card-top">
                 <div>
-                    <h3>Scheduled Meetings</h3>
-                    <p>Click any row to open the meeting workspace</p>
+                    <h3>@(isRtl ? "الاجتماعات المجدولة" : "Scheduled Meetings")</h3>
+                    <p>@(isRtl ? "انقر على أي صف لفتح مساحة عمل الاجتماع" : "Click any row to open the meeting workspace")</p>
                 </div>
                 @if (Model != null && Model.Count > 0)
                 {
                     <span class="count-pill">
                         <i class="bi bi-calendar3"></i>
-                        @Model.Count @(Model.Count == 1 ? "meeting" : "meetings")
+                        @Model.Count @(isRtl ? (Model.Count == 1 ? "اجتماع" : "اجتماعات") : (Model.Count == 1 ? "meeting" : "meetings"))
                     </span>
                 }
             </div>
@@ -251,13 +268,13 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Year</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Location</th>
-                        <th>Status</th>
-                        <th>Universities</th>
-                        <th style="text-align:right; padding-right:32px;"></th>
+                        <th>@(isRtl ? "السنة" : "Year")</th>
+                        <th>@(isRtl ? "التاريخ" : "Date")</th>
+                        <th>@(isRtl ? "الوقت" : "Time")</th>
+                        <th>@(isRtl ? "الموقع" : "Location")</th>
+                        <th>@(isRtl ? "الحالة" : "Status")</th>
+                        <th>@(isRtl ? "الجامعات" : "Universities")</th>
+                        <th style="text-align:@(isRtl ? "left" : "right"); padding-@(isRtl ? "left" : "right"):32px;"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -297,19 +314,19 @@
                                 </td>
                                 <td>
                                     <span class="sbadge @sc">
-                                        <span class="sdot"></span>@m.Status
+                                        <span class="sdot"></span>@StatusLabel(m.Status)
                                     </span>
                                 </td>
                                 <td>
                                     <div class="cell-uni-count">@uniCount</div>
-                                    <div class="cell-uni-lbl">@(uniCount == 1 ? "university" : "universities")</div>
+                                    <div class="cell-uni-lbl">@(isRtl ? "جامعة" : (uniCount == 1 ? "university" : "universities"))</div>
                                 </td>
-                                <td style="text-align:right;" onclick="event.stopPropagation()">
+                                <td style="text-align:@(isRtl ? "left" : "right");" onclick="event.stopPropagation()">
                                     <a class="edit-btn" href="/Home/EditMeeting/@m.Id">
-                                        <i class="bi bi-pencil"></i> Edit
+                                        <i class="bi bi-pencil"></i> @(isRtl ? "تعديل" : "Edit")
                                     </a>
                                     <button class="del-btn" onclick="confirmDelete(@m.Id, '@Html.Raw(m.SessionNumber)')">
-                                        <i class="bi bi-trash3"></i> Remove
+                                        <i class="bi bi-trash3"></i> @(isRtl ? "حذف" : "Remove")
                                     </button>
                                 </td>
                             </tr>
@@ -321,12 +338,12 @@
                             <td colspan="8">
                                 <div class="empty-state">
                                     <i class="bi bi-calendar2-plus"></i>
-                                    <h3>No meetings yet</h3>
-                                    <p>Schedule your first committee meeting to get started.</p>
+                                    <h3>@(isRtl ? "لا توجد اجتماعات بعد" : "No meetings yet")</h3>
+                                    <p>@(isRtl ? "جدوِل اجتماع اللجنة الأول للبدء." : "Schedule your first committee meeting to get started.")</p>
                                     @if (canCreate)
                                     {
                                         <a href="/Home/CreateMeeting">
-                                            <i class="bi bi-plus-lg"></i> New Meeting
+                                            <i class="bi bi-plus-lg"></i> @(isRtl ? "اجتماع جديد" : "New Meeting")
                                         </a>
                                     }
                                 </div>
@@ -339,26 +356,28 @@
 
     </div>
 
-    <!-- Delete confirmation modal -->
     <div class="del-overlay" id="delOverlay">
         <div class="del-modal">
             <i class="bi bi-trash3-fill"></i>
-            <h3>Remove Meeting?</h3>
-            <p id="delModalMsg">This will permanently delete the meeting and all its decisions. This action cannot be undone.</p>
+            <h3>@(isRtl ? "حذف الاجتماع؟" : "Remove Meeting?")</h3>
+            <p id="delModalMsg">@(isRtl ? "سيؤدي ذلك إلى حذف الاجتماع وجميع قراراته نهائياً. لا يمكن التراجع عن هذا الإجراء." : "This will permanently delete the meeting and all its decisions. This action cannot be undone.")</p>
             <div class="del-modal-btns">
-                <button class="btn-cancel" onclick="closeDelete()">Cancel</button>
+                <button class="btn-cancel" onclick="closeDelete()">@(isRtl ? "إلغاء" : "Cancel")</button>
                 <form id="delForm" method="post">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="btn-confirm-del">Yes, Remove</button>
+                    <button type="submit" class="btn-confirm-del">@(isRtl ? "نعم، احذف" : "Yes, Remove")</button>
                 </form>
             </div>
         </div>
     </div>
 
     <script>
+        var _isRtl = @(isRtl ? "true" : "false");
         function confirmDelete(id, sessionNum) {
-            document.getElementById('delModalMsg').textContent =
-                'This will permanently delete Meeting #' + sessionNum + ' and all its associated decisions. This cannot be undone.';
+            var msg = _isRtl
+                ? 'سيؤدي ذلك إلى حذف الاجتماع #' + sessionNum + ' وجميع قراراته المرتبطة نهائياً. لا يمكن التراجع عن هذا الإجراء.'
+                : 'This will permanently delete Meeting #' + sessionNum + ' and all its associated decisions. This cannot be undone.';
+            document.getElementById('delModalMsg').textContent = msg;
             document.getElementById('delForm').action = '/Home/DeleteMeeting/' + id;
             document.getElementById('delOverlay').classList.add('show');
         }

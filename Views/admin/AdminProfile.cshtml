@@ -1,18 +1,21 @@
-﻿@model DTOs.AdminProfileDto
+@model DTOs.AdminProfileDto
 
 @{
     ViewData["Title"] = "Admin Profile";
     Layout = null;
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@culture" dir="@dir">
 <head>
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Admin Profile</title>
+    <title>@(isRtl ? "الملف الشخصي للمدير" : "Admin Profile")</title>
 
     <link rel="stylesheet"
           href="~/css/admin/AdminProfile.css"
@@ -25,14 +28,17 @@
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
+
 </head>
 
-<body>
+<body class="@(isRtl ? "rtl-body" : "")">
 
-    <!-- TOP BAR -->
     <div class="top-bar"></div>
 
-    <!-- HEADER -->
     <div class="header">
 
         <div class="header-left">
@@ -43,21 +49,24 @@
             <div class="divider"></div>
 
             <div class="title-box">
-                <h1>Admin Profile</h1>
+                <h1>@(isRtl ? "الملف الشخصي للمدير" : "Admin Profile")</h1>
             </div>
 
         </div>
 
-        <a class="back-btn"
+        <div style="display:flex;align-items:center;gap:10px;">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+            <a class="back-btn"
            href="@Url.Action("AdminDashboard", "Home")">
 
-            ← Back to Dashboard
+            @(isRtl ? "→ العودة إلى لوحة التحكم" : "← Back to Dashboard")
 
         </a>
+        </div>
 
     </div>
 
-   
+
     @if (TempData["ProfileSuccess"] != null)
     {
         <div class="success-alert">
@@ -69,11 +78,9 @@
         </div>
     }
 
-   
-    <!-- MAIN -->
+
     <div class="profile-container">
 
-        <!-- PROFILE HEADER -->
         <div class="profile-header">
 
             <div class="profile-avatar">
@@ -84,12 +91,11 @@
 
             <div class="profile-name">
                 <h1>@Model.Username</h1>
-                <p>System Administrator</p>
+                <p>@(isRtl ? "مدير النظام" : "System Administrator")</p>
             </div>
 
         </div>
 
-        <!-- GRID -->
         <div class="profile-grid">
 
             <!-- ACCOUNT INFO -->
@@ -97,14 +103,14 @@
 
                 <div class="card-top">
 
-                    <h3>Account Information</h3>
+                    <h3>@(isRtl ? "معلومات الحساب" : "Account Information")</h3>
 
                     <button type="button"
                             class="edit-btn"
                             onclick="toggleEditMode()">
 
                         <i class="bi bi-pencil-square"></i>
-                        Edit
+                        @(isRtl ? "تعديل" : "Edit")
 
                     </button>
 
@@ -113,11 +119,10 @@
                 <form method="post"
                       asp-action="SaveProfile">
 
-                    <!-- USERNAME -->
                     <div class="info-row">
 
                         <div class="info-label">
-                            Username
+                            @(isRtl ? "اسم المستخدم" : "Username")
                         </div>
 
                         <input type="text"
@@ -128,11 +133,10 @@
 
                     </div>
 
-                    <!-- EMAIL -->
                     <div class="info-row">
 
                         <div class="info-label">
-                            Email
+                            @(isRtl ? "البريد الإلكتروني" : "Email")
                         </div>
 
                         <input type="email"
@@ -143,11 +147,10 @@
 
                     </div>
 
-                    <!-- PHONE -->
                     <div class="info-row">
 
                         <div class="info-label">
-                            Phone Number
+                            @(isRtl ? "رقم الهاتف" : "Phone Number")
                         </div>
 
                         <input type="text"
@@ -158,14 +161,13 @@
 
                     </div>
 
-                    <!-- SAVE BUTTON -->
                     <button type="submit"
                             id="saveBtn"
                             class="save-btn"
                             style="display:none;">
 
                         <i class="bi bi-check-circle"></i>
-                        Save Changes
+                        @(isRtl ? "حفظ التغييرات" : "Save Changes")
 
                     </button>
 
@@ -176,16 +178,16 @@
             <!-- SYSTEM INFO -->
             <div class="profile-card">
 
-                <h3>System Information</h3>
+                <h3>@(isRtl ? "معلومات النظام" : "System Information")</h3>
 
                 <div class="info-row">
 
                     <div class="info-label">
-                        Access Level
+                        @(isRtl ? "مستوى الوصول" : "Access Level")
                     </div>
 
                     <div class="info-value">
-                        Full Access
+                        @(isRtl ? "وصول كامل" : "Full Access")
                     </div>
 
                 </div>
@@ -193,11 +195,11 @@
                 <div class="info-row">
 
                     <div class="info-label">
-                        Department
+                        @(isRtl ? "القسم" : "Department")
                     </div>
 
                     <div class="info-value">
-                        Recognition Committee
+                        @(isRtl ? "لجنة الاعتراف" : "Recognition Committee")
                     </div>
 
                 </div>
@@ -205,11 +207,11 @@
                 <div class="info-row">
 
                     <div class="info-label">
-                        Status
+                        @(isRtl ? "الحالة" : "Status")
                     </div>
 
                     <div class="info-value">
-                        Active
+                        @(isRtl ? "نشط" : "Active")
                     </div>
 
                 </div>
@@ -224,7 +226,7 @@
                         onclick="togglePasswordSection()">
 
                     <i class="bi bi-shield-lock"></i>
-                    Change Password
+                    @(isRtl ? "تغيير كلمة المرور" : "Change Password")
 
                 </button>
 
@@ -256,11 +258,10 @@
                             </div>
                         }
 
-                        <!-- CURRENT PASSWORD -->
                         <div class="info-row">
 
                             <div class="info-label">
-                                Current Password
+                                @(isRtl ? "كلمة المرور الحالية" : "Current Password")
                             </div>
 
                             <input type="password"
@@ -269,11 +270,10 @@
 
                         </div>
 
-                        <!-- NEW PASSWORD -->
                         <div class="info-row">
 
                             <div class="info-label">
-                                New Password
+                                @(isRtl ? "كلمة المرور الجديدة" : "New Password")
                             </div>
 
                             <input type="password"
@@ -282,11 +282,10 @@
 
                         </div>
 
-                        <!-- CONFIRM PASSWORD -->
                         <div class="info-row">
 
                             <div class="info-label">
-                                Confirm Password
+                                @(isRtl ? "تأكيد كلمة المرور" : "Confirm Password")
                             </div>
 
                             <input type="password"
@@ -295,12 +294,11 @@
 
                         </div>
 
-                        <!-- UPDATE BUTTON -->
                         <button type="submit"
                                 class="save-btn">
 
                             <i class="bi bi-check-circle"></i>
-                            Update Password
+                            @(isRtl ? "تحديث كلمة المرور" : "Update Password")
 
                         </button>
 
@@ -314,10 +312,8 @@
 
     </div>
 
-    <!-- JAVASCRIPT -->
     <script>
 
-        // PASSWORD TOGGLE
         function togglePasswordSection() {
 
             const section =
@@ -336,7 +332,6 @@
             }
         }
 
-        // EDIT MODE
         function toggleEditMode() {
 
             const username =

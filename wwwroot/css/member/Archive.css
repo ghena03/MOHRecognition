@@ -85,6 +85,15 @@
         min-width: 260px;
     }
 
+.arc-table td {
+    padding: 16px 18px;
+    vertical-align: middle;
+}
+
+.arc-table th {
+    padding: 13px 18px;
+}
+
 .arc-table td b {
     font-weight: 1000;
 }

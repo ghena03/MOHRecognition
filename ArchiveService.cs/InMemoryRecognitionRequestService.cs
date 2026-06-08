@@ -26,8 +26,6 @@ namespace MOHRecognition.Services
             lock (_lock)
             {
                 request.Id = _nextId++;
-                if (string.IsNullOrWhiteSpace(request.ReferenceNumber))
-                    request.ReferenceNumber = $"REQ-{DateTime.Now:yyyy}-{request.Id:D4}";
                 if (request.SubmittedAt == default)
                     request.SubmittedAt = DateTime.Now;
                 if (request.Year <= 0)
@@ -35,6 +33,18 @@ namespace MOHRecognition.Services
                 request.AssignedMember = NormalizeAssignedMember(request.AssignedMember);
                 request.Status = NormalizeStatusForAssignment(request.Status, request.AssignedMember);
                 _requests.Add(request);
+                if (string.IsNullOrWhiteSpace(request.ReferenceNumber))
+                {
+                    if (string.Equals(request.UniversityName, "Draft", StringComparison.OrdinalIgnoreCase))
+                        request.ReferenceNumber = $"DRAFT-{request.Id}";
+                    else
+                    {
+                        // Count only real (non-draft) records for gapless reference numbers
+                        var realCount = _requests.Count(r =>
+                            !string.Equals(r.UniversityName, "Draft", StringComparison.OrdinalIgnoreCase));
+                        request.ReferenceNumber = $"REQ-{request.SubmittedAt:yyyy}-{realCount:D4}";
+                    }
+                }
                 return Task.FromResult(request);
             }
         }
@@ -216,6 +226,18 @@ namespace MOHRecognition.Services
             if (string.Equals(currentStatus, "Requires Admin Review", StringComparison.OrdinalIgnoreCase))
                 return "Requires Admin Review";
             return "Assigned";
+        }
+
+        public Task<bool> SaveCommitteeFinalDecision(int id, string decision, string recommendation)
+        {
+            lock (_lock)
+            {
+                var req = _requests.FirstOrDefault(r => r.Id == id);
+                if (req is null) return Task.FromResult(false);
+                req.CommitteeFinalDecision       = decision?.Trim()       ?? "";
+                req.CommitteeFinalRecommendation = recommendation?.Trim() ?? "";
+                return Task.FromResult(true);
+            }
         }
 
         private static string NormalizeAssessmentStatus(string? value)

@@ -329,10 +329,14 @@
                     <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
                 </div>
                 <div class="rm-user">
-                    <div class="rm-userpill">
-                        <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>Recognition Member</b></span>
-                    </div>
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@((ViewBag.CurrentRecognitionMember as string)?.Substring(0,1)?.ToUpper() ?? "M")</div>
+                        <div class="rm-user-card-text">
+                            <strong>@(ViewBag.CurrentRecognitionMember ?? "Recognition Member")</strong>
+                            <span>Recognition Committee Member</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
                         <i class="bi bi-box-arrow-right"></i> Logout
                     </a>
@@ -387,6 +391,66 @@
                     <span class="not-submitted-tag"><i class="bi bi-hourglass-split"></i> Not yet submitted</span>
                 }
             </div>
+
+            <!-- ═══════════════ PUBLIC INFORMATION ═══════════════ -->
+            @{ var pi = Model?.PublicInfo ?? new DTOs.PublicInfoDto(); }
+            <section class="rm-card rd-card">
+                <span class="rd-readonly-tag"><i class="bi bi-eye"></i> Read Only</span>
+                <div class="rd-card-hd">
+                    <h2><i class="bi bi-building"></i> Public Information</h2>
+                    <p>General institution and contact details.</p>
+                </div>
+                <div class="rd-grid3">
+                    <div class="rd-field">
+                        <label>Institution Name</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.InstitutionName) ? inst : pi.InstitutionName)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Country</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.Country) ? (Model?.Country ?? "—") : pi.Country)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>City</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.City) ? (Model?.City ?? "—") : pi.City)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Founding Date</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.FoundationDate) ? "—" : pi.FoundationDate)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Date of Establishment</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.DateOfEstablishment) ? "—" : pi.DateOfEstablishment)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Mode of Study</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.ModeOfStudy) ? "—" : pi.ModeOfStudy)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Language of Instruction</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.LanguageOfInstruction) ? "—" : pi.LanguageOfInstruction)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Oversight Entity</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.OversightRightsEntity) ? "—" : pi.OversightRightsEntity)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>President</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.PresidentName) ? "—" : pi.PresidentName)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Phone</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.DirectPhoneNumber) ? "—" : pi.DirectPhoneNumber)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Email</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.EmailAddress) ? "—" : pi.EmailAddress)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Website</label>
+                        <input type="text" value="@(string.IsNullOrWhiteSpace(pi.InstitutionalWebAddress) ? "—" : pi.InstitutionalWebAddress)" readonly />
+                    </div>
+                </div>
+            </section>
 
             <!-- ═══════════════════════════ SCORECARD ═══════════════════════════ -->
             <div class="fa-scorecard" style="margin-bottom:0">

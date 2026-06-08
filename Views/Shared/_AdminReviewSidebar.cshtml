@@ -2,6 +2,8 @@
     var requestId = (int)(ViewBag.RequestId ?? 0);
     var meetingId = (int)(ViewBag.AdminMeetingId ?? 0);
     var currentStep = (string)(ViewBag.AdminCurrentStep ?? string.Empty);
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
 
     string IsActive(string step) => string.Equals(currentStep, step, StringComparison.OrdinalIgnoreCase) ? " active" : string.Empty;
     var basicClass = "rm-navitem" + IsActive("basic");
@@ -14,28 +16,31 @@
 }
 
 <aside class="rm-sidebar">
-    <div class="rm-side-label">Admin Review</div>
+    <div class="rm-side-label">@(isRtl ? "مراجعة المدير" : "Admin Review")</div>
     <nav class="rm-nav">
         <a class="@basicClass" href="@Url.Action("AdminDetailsBasicInfo", "Home", new { id = requestId, meetingId })">
-            <i class="bi bi-building"></i><span>Institution Information</span>
+            <i class="bi bi-building"></i><span>@(isRtl ? "معلومات المؤسسة" : "Institution Information")</span>
         </a>
         <a class="@statisticsClass" href="@Url.Action("AdminDetailsStatistics", "Home", new { id = requestId, meetingId })">
-            <i class="bi bi-bar-chart"></i><span>Students & Ratios</span>
+            <i class="bi bi-bar-chart"></i><span>@(isRtl ? "الهيكل الأكاديمي والطاقة الاستيعابية" : "Academic Structure & Capacity")</span>
         </a>
         <a class="@admissionClass" href="@Url.Action("AdminDetailsAdmissionDuration", "Home", new { id = requestId, meetingId })">
-            <i class="bi bi-file-earmark-pdf"></i><span>Admission & Duration</span>
+            <i class="bi bi-file-earmark-pdf"></i><span>@(isRtl ? "شروط القبول ومدة الدراسة" : "Admission & Duration")</span>
         </a>
         <a class="@academicClass" href="@Url.Action("AdminDetailsAcademicInfo", "Home", new { id = requestId, meetingId })">
-            <i class="bi bi-journal-text"></i><span>Academic Review</span>
+            <i class="bi bi-journal-text"></i><span>@(isRtl ? "المراجعة الأكاديمية" : "Academic Review")</span>
         </a>
         <a class="@accreditationClass" href="@Url.Action("AdminDetailsAccreditationBodies", "Home", new { id = requestId, meetingId })">
-            <i class="bi bi-award"></i><span>Accreditation & Rankings</span>
+            <i class="bi bi-award"></i><span>@(isRtl ? "الاعتماد والتصنيفات" : "Accreditation & Rankings")</span>
         </a>
         <a class="@infrastructureClass" href="@Url.Action("AdminDetailsInfrastructure", "Home", new { id = requestId, meetingId })">
-            <i class="bi bi-diagram-3"></i><span>University Infrastructure</span>
+            <i class="bi bi-diagram-3"></i><span>@(isRtl ? "البنية التحتية للجامعة" : "University Infrastructure")</span>
         </a>
         <a class="@recommendationClass" href="@Url.Action("AdminDetailsRecommendation", "Home", new { id = requestId, meetingId })">
-            <i class="bi bi-clipboard2-check"></i><span>Final Assessment</span>
+            <i class="bi bi-clipboard2-check"></i><span>@(isRtl ? "التقييم النهائي" : "Final Assessment")</span>
         </a>
     </nav>
+    <div style="padding:10px 14px 6px;">
+        @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+    </div>
 </aside>

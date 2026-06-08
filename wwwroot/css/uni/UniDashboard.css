@@ -1421,6 +1421,13 @@ html {
     box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.12) !important;
 }
 
+.field-required-error {
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 6px;
+}
+
 /* ================= MEDICINE / DENTISTRY ================= */
 #sec-med .tbl thead th {
     background: #f4eadc;
@@ -5415,6 +5422,23 @@ html {
 
 #picturesContainer .pic-drop-zone .btn-ghost {
     min-width: 160px;
+}
+
+#picturesContainer .pic-selected {
+    width: 100%;
+    margin-top: 4px;
+}
+
+#picturesContainer .pic-selected-line {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #374151;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    padding: 4px 10px;
+    margin-top: 4px;
+    word-break: break-all;
 }
 
 #picturesContainer .pic-actions-row {

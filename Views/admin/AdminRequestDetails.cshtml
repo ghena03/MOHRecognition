@@ -1,138 +1,258 @@
 @using MOHRecognition.DTOs
+@using System.Text.Json
 @model MOHRecognition.Services.RecognitionRequestRecord
 
 @{
     Layout = null;
     ViewData["Title"] = "Admin Request Details";
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
+
+    var appType = Model.ApplicationType ?? "Bachelor";
+
+    List<PostgraduateProgramEntry> pgPrograms = new();
+    if (appType == "Postgraduate" && !string.IsNullOrWhiteSpace(Model.PostgraduateData?.PostgraduateProgramsJson))
+    {
+        try { pgPrograms = JsonSerializer.Deserialize<List<PostgraduateProgramEntry>>(Model.PostgraduateData.PostgraduateProgramsJson) ?? new(); }
+        catch { }
+    }
+
+    List<OnlineProgramDto> olPrograms = new();
+    if (appType == "Online" && !string.IsNullOrWhiteSpace(Model.OnlineEducationData?.ProgramsJson))
+    {
+        try { olPrograms = JsonSerializer.Deserialize<List<OnlineProgramDto>>(Model.OnlineEducationData.ProgramsJson) ?? new(); }
+        catch { }
+    }
+
+    string atStyle = appType switch
+    {
+        "Postgraduate" => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
+        "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
+        _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
+    };
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
+
+    bool F(string? s) => !string.IsNullOrWhiteSpace(s);
 }
 
-
 <!doctype html>
-<html lang="en">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "تفاصيل الطلب" : "Admin Request Details")</title>
     <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
 </head>
 
-<body class="admin-page">
+<body class="admin-page @(isRtl ? "rtl-body" : "")">
 
-    <!-- HEADER -->
     <div class="admin-header">
         <div class="header-left">
             <img src="~/images/mohelogo.png" class="logo" />
             <div class="header-text">
-                <h1>Request Details</h1>
-                <p>Review full request information</p>
+                <h1>@(isRtl ? "تفاصيل الطلب" : "Request Details")</h1>
+                <p>@(isRtl ? "مراجعة معلومات الطلب الكاملة" : "Review full request information")</p>
             </div>
         </div>
-
-        <a class="back-btn" href="@Url.Action("Requests", "Home")">← Back</a>
+        <a class="back-btn" href="@Url.Action("Requests", "Home")">@(isRtl ? "→ رجوع" : "← Back")</a>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="details-container">
 
-        <!-- BASIC INFO -->
+        <!-- ── BASIC INFO ─────────────────────────────────────────── -->
         <div class="details-card">
-            <h2>Basic Information</h2>
-
+            <h2>@(isRtl ? "المعلومات الأساسية" : "Basic Information")</h2>
             <div class="details-grid">
-                <div><strong>Reference:</strong> @Model.ReferenceNumber</div>
-                <div><strong>University:</strong> @Model.UniversityName</div>
-                <div><strong>Country:</strong> @Model.Country</div>
-                <div><strong>Applicant:</strong> @Model.ApplicantName</div>
-                <div><strong>Email:</strong> @Model.ApplicantEmail</div>
-                <div><strong>Status:</strong> @Model.Status</div>
+                <div><strong>@(isRtl ? "الرقم المرجعي:" : "Reference:")</strong> @Model.ReferenceNumber</div>
+                <div><strong>@(isRtl ? "الجامعة:" : "University:")</strong> @Model.UniversityName</div>
+                <div><strong>@(isRtl ? "الدولة:" : "Country:")</strong> @Model.Country</div>
+                <div><strong>@(isRtl ? "مقدّم الطلب:" : "Applicant:")</strong> @Model.ApplicantName</div>
+                <div><strong>@(isRtl ? "البريد الإلكتروني:" : "Email:")</strong> @Model.ApplicantEmail</div>
+                <div><strong>@(isRtl ? "الحالة:" : "Status:")</strong> @Model.Status</div>
+                <div><strong>@(isRtl ? "تاريخ التقديم:" : "Submitted:")</strong> @Model.SubmittedAt.ToString("dd MMM yyyy")</div>
                 <div>
-                    <strong>Application Type:</strong>
-                    @{
-                        var atStyle = (Model.ApplicationType ?? "Bachelor") switch
-                        {
-                            "Postgraduate" => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
-                            "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
-                            _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
-                        };
-                    }
-                    <span style="display:inline-block;border-radius:20px;padding:2px 10px;font-size:11.5px;font-weight:700;@atStyle">@(Model.ApplicationType ?? "Bachelor")</span>
+                    <strong>@(isRtl ? "نوع الطلب:" : "Application Type:")</strong>
+                    <span style="display:inline-block;border-radius:20px;padding:2px 10px;font-size:11.5px;font-weight:700;@atStyle">@AppTypeLabel(appType)</span>
                 </div>
+
                 @if (ViewBag.MemberLoads != null)
                 {
-                    <div style="grid-column:1/-1; margin-top:12px; margin-bottom:4px;">
-                        <strong style="display:block; margin-bottom:8px;">Member Workload</strong>
-                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <div style="grid-column:1/-1;margin-top:12px;margin-bottom:4px;">
+                        <strong style="display:block;margin-bottom:8px;">@(isRtl ? "عبء عمل العضو" : "Member Workload")</strong>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;">
                             @foreach (var m in ViewBag.MemberLoads)
                             {
-                                <div style="display:flex; align-items:center; gap:8px; background:#f5f5f5; border:1px solid #ddd; border-radius:8px; padding:8px 14px; min-width:190px;">
-                                    <span style="font-size:13px; color:#555;">@m.FullName</span>
-                                    <span style="margin-left:auto; background:#8b1a1a; color:#fff; border-radius:12px; padding:2px 10px; font-size:13px; font-weight:700;">@m.Count</span>
+                                <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:8px 14px;min-width:190px;">
+                                    <span style="font-size:13px;color:#555;">@m.FullName</span>
+                                    <span style="margin-@(isRtl ? "right" : "left"):auto;background:#8b1a1a;color:#fff;border-radius:12px;padding:2px 10px;font-size:13px;font-weight:700;">@m.Count</span>
                                 </div>
                             }
                         </div>
                     </div>
                 }
 
-                <form asp-controller="Home"
-                      asp-action="AssignToMember"
-                      method="post"
-                      style="margin-bottom:20px;">
-
+                <form asp-controller="Home" asp-action="AssignToMember" method="post" style="margin-bottom:20px;">
                     @Html.AntiForgeryToken()
-
                     <input type="hidden" name="id" value="@Model.Id" />
-
-                    <label style="font-weight:600;">Assign to:</label>
-
+                    <label style="font-weight:600;">@(isRtl ? "تعيين إلى:" : "Assign to:")</label>
                     <select name="assignedMember" class="mini-select">
-                        <option value="Unassigned" selected="@(Model.AssignedMember == "Unassigned" || string.IsNullOrWhiteSpace(Model.AssignedMember))">Unassigned</option>
+                        <option value="Unassigned" selected="@(Model.AssignedMember == "Unassigned" || string.IsNullOrWhiteSpace(Model.AssignedMember))">@(isRtl ? "غير معيّن" : "Unassigned")</option>
                         @if (ViewBag.RecognitionMembers != null)
                         {
                             foreach (var rm in (IReadOnlyList<AdvisorDto>)ViewBag.RecognitionMembers)
                             {
-                                <option value="@rm.Email"
-                                        selected="@(string.Equals(Model.AssignedMember, rm.Email, StringComparison.OrdinalIgnoreCase))">
+                                <option value="@rm.Email" selected="@(string.Equals(Model.AssignedMember, rm.Email, StringComparison.OrdinalIgnoreCase))">
                                     @rm.FullName
                                 </option>
                             }
                         }
                     </select>
-
-                    <button type="submit" class="mini-save-btn">Assign</button>
+                    <button type="submit" class="mini-save-btn">@(isRtl ? "تعيين" : "Assign")</button>
                 </form>
             </div>
         </div>
 
-        <!-- ACADEMIC INFO -->
-        <div class="details-card">
-            <h2>Academic Info (Student Population)</h2>
-
-            <div class="details-grid">
-                <div><strong>Total Students:</strong> @Model.AcademicInfo.TotalStudentPopulation</div>
-                <div><strong>Local Students:</strong> @Model.AcademicInfo.LocalStudentPopulation</div>
-                <div><strong>Jordanian Students:</strong> @Model.AcademicInfo.JordanianStudentPopulation</div>
-                <div><strong>Foreign Students:</strong> @Model.AcademicInfo.ForeignStudentPopulation</div>
+        <!-- ── BACHELOR: Academic Info + Colleges ─────────────────── -->
+        @if (appType == "Bachelor")
+        {
+            <div class="details-card">
+                <h2>@(isRtl ? "المعلومات الأكاديمية (أعداد الطلاب)" : "Academic Info (Student Population)")</h2>
+                <div class="details-grid">
+                    <div><strong>@(isRtl ? "إجمالي الطلاب:" : "Total Students:")</strong> @Model.AcademicInfo.TotalStudentPopulation</div>
+                    <div><strong>@(isRtl ? "الطلاب المحليون:" : "Local Students:")</strong> @Model.AcademicInfo.LocalStudentPopulation</div>
+                    <div><strong>@(isRtl ? "الطلاب الأردنيون:" : "Jordanian Students:")</strong> @Model.AcademicInfo.JordanianStudentPopulation</div>
+                    <div><strong>@(isRtl ? "الطلاب الأجانب:" : "Foreign Students:")</strong> @Model.AcademicInfo.ForeignStudentPopulation</div>
+                </div>
             </div>
-        </div>
 
-        <!-- COLLEGES -->
-        <div class="details-card">
-            <h2>Submitted Colleges</h2>
+            <div class="details-card">
+                <h2>@(isRtl ? "الكليات المقدّمة" : "Submitted Colleges")</h2>
+                @if (Model.Faculties != null && Model.Faculties.Any())
+                {
+                    <ul class="college-list">
+                        @foreach (var f in Model.Faculties)
+                        {
+                            <li>@f.FacultyName</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="empty-text">@(isRtl ? "لم يتم تقديم أي كليات." : "No colleges were submitted.")</p>
+                }
+            </div>
+        }
 
-            @if (Model.Faculties != null && Model.Faculties.Any())
+        <!-- ── POSTGRADUATE: Programs Summary ─────────────────────── -->
+        @if (appType == "Postgraduate")
+        {
+            @if (pgPrograms.Any())
             {
-                <ul class="college-list">
-                    @foreach (var f in Model.Faculties)
-                    {
-                        <li>@f.FacultyName</li>
-                    }
-                </ul>
+                <div class="details-card">
+                    <h2>@(isRtl ? "برامج الدراسات العليا" : "Postgraduate Programs")</h2>
+                    <table style="width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px;">
+                        <thead>
+                            <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
+                                <th style="text-align:left;padding:10px 12px;font-size:12px;color:#6b7280;text-transform:uppercase;">#</th>
+                                <th style="text-align:left;padding:10px 12px;font-size:12px;color:#6b7280;text-transform:uppercase;">@(isRtl ? "نوع الدرجة" : "Degree Type")</th>
+                                <th style="text-align:left;padding:10px 12px;font-size:12px;color:#6b7280;text-transform:uppercase;">@(isRtl ? "اسم البرنامج" : "Program Name")</th>
+                                <th style="text-align:left;padding:10px 12px;font-size:12px;color:#6b7280;text-transform:uppercase;">@(isRtl ? "الكلية / الجامعة" : "College / Faculty")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int pgIdx = 1; }
+                            @foreach (var p in pgPrograms)
+                            {
+                                <tr style="border-bottom:1px solid #f3f4f6;">
+                                    <td style="padding:10px 12px;color:#9ca3af;">@pgIdx</td>
+                                    <td style="padding:10px 12px;">
+                                        @{
+                                            var degreeStyle = p.DegreeLevel switch
+                                            {
+                                                "PhD"            => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
+                                                "Higher Diploma" => "background:#fef9c3;color:#92400e;border:1px solid #fde68a",
+                                                _                => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
+                                            };
+                                        }
+                                        <span style="display:inline-block;border-radius:20px;padding:2px 9px;font-size:11.5px;font-weight:700;@degreeStyle">@(F(p.DegreeLevel) ? p.DegreeLevel : "—")</span>
+                                    </td>
+                                    <td style="padding:10px 12px;font-weight:600;">@(F(p.ProgramName) ? p.ProgramName : "—")</td>
+                                    <td style="padding:10px 12px;">@(F(p.CollegeOrFaculty) ? p.CollegeOrFaculty : "—")</td>
+                                </tr>
+                                pgIdx++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
             }
             else
             {
-                <p class="empty-text">No colleges were submitted.</p>
+                <div class="details-card">
+                    <h2>@(isRtl ? "برامج الدراسات العليا" : "Postgraduate Programs")</h2>
+                    <p class="empty-text">@(isRtl ? "لم يتم تقديم أي برامج." : "No programs were submitted.")</p>
+                </div>
             }
-        </div>
+        }
+
+        <!-- ── ONLINE: Programs Summary ────────────────────────────── -->
+        @if (appType == "Online")
+        {
+            @if (olPrograms.Any())
+            {
+                <div class="details-card">
+                    <h2>@(isRtl ? "البرامج الإلكترونية" : "Online Programs")</h2>
+                    <table style="width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px;">
+                        <thead>
+                            <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
+                                <th style="text-align:left;padding:10px 12px;font-size:12px;color:#6b7280;text-transform:uppercase;">#</th>
+                                <th style="text-align:left;padding:10px 12px;font-size:12px;color:#6b7280;text-transform:uppercase;">@(isRtl ? "اسم البرنامج" : "Program Name")</th>
+                                <th style="text-align:left;padding:10px 12px;font-size:12px;color:#6b7280;text-transform:uppercase;">@(isRtl ? "مستوى الدرجة" : "Degree Level")</th>
+                                <th style="text-align:left;padding:10px 12px;font-size:12px;color:#6b7280;text-transform:uppercase;">@(isRtl ? "الكلية / الجامعة" : "College / Faculty")</th>
+                                <th style="text-align:left;padding:10px 12px;font-size:12px;color:#6b7280;text-transform:uppercase;">@(isRtl ? "نمط التعليم" : "Delivery Mode")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int olIdx = 1; }
+                            @foreach (var p in olPrograms)
+                            {
+                                <tr style="border-bottom:1px solid #f3f4f6;">
+                                    <td style="padding:10px 12px;color:#9ca3af;">@olIdx</td>
+                                    <td style="padding:10px 12px;font-weight:600;">@(F(p.ProgramName) ? p.ProgramName : "—")</td>
+                                    <td style="padding:10px 12px;">@(F(p.DegreeLevel) ? p.DegreeLevel : "—")</td>
+                                    <td style="padding:10px 12px;">@(F(p.CollegeOrFaculty) ? p.CollegeOrFaculty : "—")</td>
+                                    <td style="padding:10px 12px;">
+                                        @{
+                                            var dmStyle = p.DeliveryMode switch
+                                            {
+                                                "Blended"          => "background:#fef9c3;color:#92400e;border:1px solid #fde68a",
+                                                "Totally Distance" => "background:#dcfce7;color:#166534;border:1px solid #86efac",
+                                                _                  => "background:#f3f4f6;color:#374151;border:1px solid #d1d5db"
+                                            };
+                                        }
+                                        <span style="display:inline-block;border-radius:20px;padding:2px 9px;font-size:11.5px;font-weight:700;@dmStyle">@(F(p.DeliveryMode) ? p.DeliveryMode : "—")</span>
+                                    </td>
+                                </tr>
+                                olIdx++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="details-card">
+                    <h2>@(isRtl ? "البرامج الإلكترونية" : "Online Programs")</h2>
+                    <p class="empty-text">@(isRtl ? "لم يتم تقديم أي برامج." : "No programs were submitted.")</p>
+                </div>
+            }
+        }
 
     </div>
 

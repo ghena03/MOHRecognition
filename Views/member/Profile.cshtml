@@ -1,99 +1,295 @@
-﻿@{
+@{
     Layout = null;
-    ViewData["Title"] = "Recognition Member Profile";
-    var memberName      = ViewBag.CurrentRecognitionMember as string ?? "Recognition Member";
-    var memberEmail     = ViewBag.CurrentMemberEmail     as string ?? "";
-    var memberPhone     = ViewBag.CurrentMemberPhone     as string ?? "";
-    var memberSpec      = ViewBag.CurrentMemberSpec      as string ?? "";
-    var memberWorkplace = ViewBag.CurrentMemberWorkplace as string ?? "";
+    ViewData["Title"] = "Account Settings";
+    var memberName  = ViewBag.CurrentRecognitionMember as string ?? "Recognition Member";
+    var memberEmail = ViewBag.CurrentMemberEmail       as string ?? "";
+
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
 }
 
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(isRtl ? "إعدادات الحساب" : "Account Settings")</title>
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
+    <style>
+        body.rm-page { background: #f6f7fb; }
 
-    <title>@ViewData["Title"]</title>
+        /* ── CONTAINER ── */
+        .ap-container { max-width: 1100px; margin: 32px auto; padding: 0 30px; }
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        /* ── TOP ALERT ── */
+        .ap-banner { max-width: 1100px; margin: 16px auto 0; padding: 0 30px; }
+        .ap-alert-success, .ap-alert-error {
+            border-radius: 10px; padding: 13px 18px; font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .ap-alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .ap-alert-error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet">
+        /* ── IDENTITY ── */
+        .ap-identity {
+            background: #fff; border: 1.5px solid #f0ebe4; border-radius: 16px;
+            padding: 22px 28px; display: flex; align-items: center; gap: 18px;
+            margin-bottom: 22px; box-shadow: 0 2px 12px rgba(0,0,0,.04);
+        }
+        .ap-identity-avatar {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: #7f1627; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; font-weight: 800; flex-shrink: 0;
+        }
+        .ap-identity-text { flex: 1; }
+        .ap-identity-text h2 { margin: 0; font-size: 20px; font-weight: 800; color: #111827; }
+        .ap-identity-text span { font-size: 13px; color: #888; }
+        .ap-identity-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; background: #fde8ec; color: #7f1627;
+            border: 1px solid #f5c6cf; border-radius: 999px; font-size: 12px; font-weight: 700;
+        }
 
-    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" />
+        /* ── GRID ── */
+        .ap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+        /* ── CARD ── */
+        .ap-card { background: #fff; border: 1.5px solid #f0ebe4; border-radius: 16px; padding: 26px 28px; box-shadow: 0 2px 12px rgba(0,0,0,.04); }
+        .ap-card-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+        .ap-card-icon { width: 40px; height: 40px; border-radius: 10px; background: #fde8ec; color: #7f1627; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+        .ap-card-icon-amber { background: #fffbeb; color: #d97706; }
+        .ap-card-head h3 { margin: 0 0 3px; font-size: 15px; font-weight: 800; color: #111827; }
+        .ap-card-head p  { margin: 0; font-size: 12px; color: #888; }
+
+        /* ── FIELDS ── */
+        .ap-field { margin-bottom: 16px; }
+        .ap-field label { display: block; font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .ap-input-wrap { position: relative; }
+        .ap-input {
+            width: 100%; padding: 9px 12px;
+            border: 1.5px solid #e5e7eb; border-radius: 10px;
+            font-size: 13.5px; color: #111827; background: #fff;
+            box-sizing: border-box; transition: border-color .15s; outline: none; font-family: inherit;
+        }
+        .ap-input:focus { border-color: #7f1627; box-shadow: 0 0 0 3px rgba(127,22,39,.08); }
+        .ap-input-readonly { background: #f9fafb; color: #6b7280; cursor: default; }
+        .ap-input-wrap .ap-input { padding-right: 38px; }
+        html[dir="rtl"] .ap-input-wrap .ap-input { padding-right: 12px; padding-left: 38px; }
+        .ap-eye {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: #9ca3af;
+            cursor: pointer; font-size: 14px; padding: 0; line-height: 1; transition: color .15s;
+        }
+        html[dir="rtl"] .ap-eye { right: auto; left: 10px; }
+        .ap-eye:hover { color: #7f1627; }
+
+        /* ── ACTIONS ── */
+        .ap-card-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+        /* ── BUTTONS ── */
+        .ap-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; transition: background .15s; font-family: inherit; }
+        .ap-btn-primary   { background: #7f1627; color: #fff; }
+        .ap-btn-primary:hover { background: #6a1221; }
+        .ap-btn-secondary { background: #fde8ec; color: #7f1627; border: 1.5px solid #f5c6cf; }
+        .ap-btn-secondary:hover { background: #fad3da; }
+        .ap-btn-ghost     { background: #fff; color: #6b7280; border: 1.5px solid #e5e7eb; }
+        .ap-btn-ghost:hover { background: #f3f4f6; }
+
+        /* ── INLINE ALERTS ── */
+        .ap-inline-alert { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+        .ap-inline-error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .ap-inline-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+
+        @@media (max-width: 860px) {
+            .ap-grid { grid-template-columns: 1fr; }
+            .ap-container { padding: 0 16px; }
+        }
+    </style>
 </head>
 
-<body class="profile-page">
+<body class="rm-page @(isRtl ? "rtl-body" : "")">
 
-    <div class="top-bar"></div>
-
-    <div class="profile-container">
-
-        <div class="profile-card">
-
-            <div class="profile-header">
-                <div class="profile-avatar">
-                    <i class="bi bi-person-circle"></i>
+    <header class="rm-header">
+        <div class="rm-brandbar"></div>
+        <div class="rm-top">
+            <div class="rm-top-inner">
+                <div class="rm-brand">
+                    <img class="rm-logo" src="/images/mohelogo.png" alt="MOHE Logo" />
                 </div>
-
-                <div>
-                    <h1>@memberName</h1>
-                    <p>@(string.IsNullOrWhiteSpace(memberWorkplace) ? "Academic Recognition Department" : memberWorkplace)</p>
+                <div class="rm-user">
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@(memberName.Length > 0 ? memberName.Substring(0, 1).ToUpper() : "M")</div>
+                        <div class="rm-user-card-text">
+                            <strong>@memberName</strong>
+                            <span>@(isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("RecognitionMemberDashboard", "Home")">
+                        <i class="bi bi-arrow-@(isRtl ? "right" : "left")"></i> @(isRtl ? "لوحة التحكم" : "Dashboard")
+                    </a>
                 </div>
             </div>
+        </div>
+    </header>
 
-            <div class="profile-info">
+    @if (TempData["ProfileSuccess"] != null)
+    {
+        <div class="ap-banner">
+            <div class="ap-alert-success">
+                <i class="bi bi-check-circle-fill"></i> @TempData["ProfileSuccess"]
+            </div>
+        </div>
+    }
+    @if (TempData["ProfileError"] != null)
+    {
+        <div class="ap-banner">
+            <div class="ap-alert-error">
+                <i class="bi bi-exclamation-circle-fill"></i> @TempData["ProfileError"]
+            </div>
+        </div>
+    }
 
-                @if (!string.IsNullOrWhiteSpace(memberEmail))
-                {
-                    <div class="info-box">
-                        <span>Email</span>
-                        <strong>@memberEmail</strong>
+    <div class="ap-container">
+
+        <!-- IDENTITY BANNER -->
+        <div class="ap-identity">
+            <div class="ap-identity-avatar">@(memberName.Length > 0 ? memberName.Substring(0, 1).ToUpper() : "M")</div>
+            <div class="ap-identity-text">
+                <h2>@memberName</h2>
+                <span>@(isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")</span>
+            </div>
+            <div class="ap-identity-badge">
+                <i class="bi bi-person-badge-fill"></i> @(isRtl ? "عضو الاعتراف" : "Recognition Member")
+            </div>
+        </div>
+
+        <!-- TWO COLUMN GRID -->
+        <div class="ap-grid">
+
+            <!-- LEFT: CHANGE EMAIL -->
+            <div class="ap-card">
+                <div class="ap-card-head">
+                    <div class="ap-card-icon"><i class="bi bi-envelope-fill"></i></div>
+                    <div>
+                        <h3>@(isRtl ? "عنوان البريد الإلكتروني" : "Email Address")</h3>
+                        <p>@(isRtl ? "تحديث بريدك الإلكتروني للدخول" : "Update your login email")</p>
                     </div>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(memberPhone))
-                {
-                    <div class="info-box">
-                        <span>Phone</span>
-                        <strong>@memberPhone</strong>
-                    </div>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(memberSpec))
-                {
-                    <div class="info-box">
-                        <span>Specialization</span>
-                        <strong>@memberSpec</strong>
-                    </div>
-                }
-
-                <div class="info-box">
-                    <span>Role</span>
-                    <strong>Recognition Member</strong>
                 </div>
 
+                <form method="post" asp-action="UpdateMemberEmail" asp-controller="Home">
+                    @Html.AntiForgeryToken()
+                    <div class="ap-field">
+                        <label>@(isRtl ? "البريد الإلكتروني الحالي" : "Current Email")</label>
+                        <input type="email" class="ap-input ap-input-readonly" value="@memberEmail" readonly />
+                    </div>
+                    <div class="ap-field" id="newEmailField" style="display:none;">
+                        <label>@(isRtl ? "البريد الإلكتروني الجديد" : "New Email")</label>
+                        <input type="email" name="newEmail" id="newEmailInput" class="ap-input"
+                               placeholder="@(isRtl ? "أدخل عنوان البريد الإلكتروني الجديد" : "Enter new email address")" />
+                    </div>
+                    <div class="ap-card-actions">
+                        <button type="button" class="ap-btn ap-btn-secondary" id="changeEmailBtn" onclick="showEmailField()">
+                            <i class="bi bi-pencil"></i> @(isRtl ? "تغيير البريد الإلكتروني" : "Change Email")
+                        </button>
+                        <button type="submit" class="ap-btn ap-btn-primary" id="saveEmailBtn" style="display:none;">
+                            <i class="bi bi-check2"></i> @(isRtl ? "حفظ البريد الإلكتروني" : "Save Email")
+                        </button>
+                        <button type="button" class="ap-btn ap-btn-ghost" id="cancelEmailBtn" style="display:none;" onclick="hideEmailField()">
+                            @(isRtl ? "إلغاء" : "Cancel")
+                        </button>
+                    </div>
+                </form>
             </div>
 
-            <div class="profile-actions">
+            <!-- RIGHT: CHANGE PASSWORD -->
+            <div class="ap-card">
+                <div class="ap-card-head">
+                    <div class="ap-card-icon ap-card-icon-amber"><i class="bi bi-shield-lock-fill"></i></div>
+                    <div>
+                        <h3>@(isRtl ? "كلمة المرور" : "Password")</h3>
+                        <p>@(isRtl ? "حافظ على أمان حسابك" : "Keep your account secure")</p>
+                    </div>
+                </div>
 
-                <button class="profile-btn">
-                    <i class="bi bi-key"></i>
-                    Change Password
-                </button>
+                @if (TempData["PasswordError"] != null)
+                {
+                    <div class="ap-inline-alert ap-inline-error">
+                        <i class="bi bi-exclamation-triangle-fill"></i> @TempData["PasswordError"]
+                    </div>
+                }
+                @if (TempData["PasswordSuccess"] != null)
+                {
+                    <div class="ap-inline-alert ap-inline-success">
+                        <i class="bi bi-check-circle-fill"></i> @TempData["PasswordSuccess"]
+                    </div>
+                }
 
-                <button class="profile-btn secondary">
-                    <i class="bi bi-arrow-left"></i>
-                    Back to Dashboard
-                </button>
-
+                <form method="post" asp-action="UpdateMemberPassword" asp-controller="Home">
+                    @Html.AntiForgeryToken()
+                    <div class="ap-field">
+                        <label>@(isRtl ? "كلمة المرور الحالية" : "Current Password")</label>
+                        <div class="ap-input-wrap">
+                            <input type="password" name="currentPassword" id="currentPwd" class="ap-input"
+                                   placeholder="@(isRtl ? "أدخل كلمة المرور الحالية" : "Enter current password")" />
+                            <button type="button" class="ap-eye" onclick="togglePwd('currentPwd',this)"><i class="bi bi-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="ap-field">
+                        <label>@(isRtl ? "كلمة المرور الجديدة" : "New Password")</label>
+                        <div class="ap-input-wrap">
+                            <input type="password" name="newPassword" id="newPwd" class="ap-input"
+                                   placeholder="@(isRtl ? "أدخل كلمة المرور الجديدة" : "Enter new password")" />
+                            <button type="button" class="ap-eye" onclick="togglePwd('newPwd',this)"><i class="bi bi-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="ap-field">
+                        <label>@(isRtl ? "تأكيد كلمة المرور الجديدة" : "Confirm New Password")</label>
+                        <div class="ap-input-wrap">
+                            <input type="password" name="confirmPassword" id="confirmPwd" class="ap-input"
+                                   placeholder="@(isRtl ? "أكد كلمة المرور الجديدة" : "Confirm new password")" />
+                            <button type="button" class="ap-eye" onclick="togglePwd('confirmPwd',this)"><i class="bi bi-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="ap-card-actions">
+                        <button type="submit" class="ap-btn ap-btn-primary">
+                            <i class="bi bi-shield-check"></i> @(isRtl ? "تحديث كلمة المرور" : "Update Password")
+                        </button>
+                    </div>
+                </form>
             </div>
 
         </div>
-
     </div>
+
+    <script>
+        function showEmailField() {
+            document.getElementById('newEmailField').style.display = 'block';
+            document.getElementById('changeEmailBtn').style.display = 'none';
+            document.getElementById('saveEmailBtn').style.display = 'inline-flex';
+            document.getElementById('cancelEmailBtn').style.display = 'inline-flex';
+            document.getElementById('newEmailInput').focus();
+        }
+        function hideEmailField() {
+            document.getElementById('newEmailField').style.display = 'none';
+            document.getElementById('changeEmailBtn').style.display = 'inline-flex';
+            document.getElementById('saveEmailBtn').style.display = 'none';
+            document.getElementById('cancelEmailBtn').style.display = 'none';
+        }
+        function togglePwd(id, btn) {
+            const input = document.getElementById(id);
+            const isText = input.type === 'text';
+            input.type = isText ? 'password' : 'text';
+            btn.querySelector('i').className = isText ? 'bi bi-eye' : 'bi bi-eye-slash';
+        }
+    </script>
 
 </body>
 </html>

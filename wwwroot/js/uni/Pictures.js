@@ -285,6 +285,11 @@
         updateProgressAndSubmitState();
     };
 
+    window.PictureOnFileChange = function (input) {
+        updateSelectedNames(input.id);
+        updateProgressAndSubmitState();
+    };
+
     async function uploadFilesForSubject(url, subject, files) {
         let lastHtml = "";
         for (const file of files) {

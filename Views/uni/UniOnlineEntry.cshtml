@@ -2,449 +2,1636 @@
     Layout = null;
 }
 @model MOHRecognition.DTOs.OnlineEducationDto
-
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Online Education Application</title>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <title>Online / Blended Learning Recognition — Ministry of Higher Education</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/uni/UniDashboard.css" asp-append-version="true" />
     <style>
-        /* ── Yes/No toggle ── */
-        .online-gate {
+        /* ── Category select buttons ── */
+        .cat-row { display: flex; gap: 12px; }
+        .cat-btn {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid #e2ddd6;
+            border-radius: 14px;
             background: #fff;
-            border: 1px solid #e2ddd8;
-            border-top: 3px solid #7f1627;
-            border-radius: 12px;
-            padding: 32px 28px;
-            margin-bottom: 28px;
+            cursor: pointer;
             text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #374151;
+            transition: all .12s;
         }
-        .online-gate-title {
-            font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 8px;
+        .cat-btn:hover, .cat-btn.active {
+            border-color: #9e1b32;
+            background: #fdf5f6;
+            color: #9e1b32;
         }
-        .online-gate-sub {
-            font-size: 13.5px; color: #6b7280; margin-bottom: 24px;
-        }
-        .online-gate-btns {
-            display: inline-flex; gap: 14px; justify-content: center;
-        }
-        .gate-btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 12px 32px; border-radius: 9px; font-size: 14px; font-weight: 700;
-            cursor: pointer; border: 2px solid transparent; transition: all .15s;
-        }
-        .gate-btn-yes {
-            background: #7f1627; color: #fff; border-color: #7f1627;
-        }
-        .gate-btn-yes:hover { background: #6a1020; border-color: #6a1020; }
-        .gate-btn-yes.selected {
-            box-shadow: 0 0 0 3px rgba(127,22,39,.25);
-        }
-        .gate-btn-no {
-            background: #fff; color: #374151; border-color: #d1d5db;
-        }
-        .gate-btn-no:hover { background: #f9fafb; }
-        .gate-btn-no.selected {
-            background: #f1f5f9; border-color: #94a3b8; color: #374151;
-            box-shadow: 0 0 0 3px rgba(100,116,139,.2);
-        }
-        /* hidden until Yes is chosen */
-        .online-form-sections { display: none; }
-        .online-form-sections.visible { display: block; }
 
-        .decline-note {
-            display: none;
-            background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 10px;
-            padding: 20px 24px; text-align: center; color: #64748b;
-            font-size: 13.5px; margin-top: 16px;
+        /* ── Add program panel ── */
+        .add-panel {
+            background: #faf7f2;
+            border: 1px solid #eee7dd;
+            border-radius: 14px;
+            padding: 18px;
+            margin-top: 16px;
         }
-        .decline-note.visible { display: block; }
-        .decline-note strong { color: #374151; }
+        .add-panel-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: #9e1b32;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee7dd;
+        }
+        .step-lbl {
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: #9e1b32;
+            margin-bottom: 10px;
+        }
+
+        /* ── No-match message ── */
+        .no-match-msg {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: #991b1b;
+            font-size: 13.5px;
+            margin-top: 8px;
+        }
+
+        /* ── Delivery / category badges ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+        .badge-bach    { background: #fdf5f6; color: #9e1b32;  border: 1px solid #f5c6ce; }
+        .badge-pg      { background: #faf7f2; color: #7b2030;  border: 1px solid #eee7dd; }
+        .badge-online  { background: #f0fdf4; color: #15803d;  border: 1px solid #86efac; }
+        .badge-blended { background: #fff7ed; color: #c2410c;  border: 1px solid #fed7aa; }
+        .badge-src     { background: #faf7f2; color: #5a4a43;  border: 1px solid #eee7dd; font-size: 11px; }
+        .badge-sync-pass { background:#f0fdf4; color:#15803d; border:1px solid #86efac; }
+        .badge-sync-fail { background:#fff1f2; color:#b91c1c; border:1px solid #fca5a5; }
+        .badge-sync-warn { background:#fffbeb; color:#92400e; border:1px solid #fcd34d; }
+
+        /* ── Checkbox / radio items ── */
+        .check-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .chk-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            background: #faf7f2;
+            border: 1px solid #e6ddd1;
+            border-radius: 10px;
+            padding: 9px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: border-color .1s;
+        }
+        .chk-item:hover { border-color: #9e1b32; background: #fdf5f6; }
+        .chk-item input[type=checkbox] {
+            accent-color: #9e1b32;
+            width: 15px; height: 15px;
+            flex-shrink: 0;
+            display: inline-block;
+            margin: 0;
+        }
+        .radio-row { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 10px; }
+        .radio-row label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .radio-row input[type=radio] { accent-color: #9e1b32; width: 15px; height: 15px; }
+
+        /* ── Academic level numbers ── */
+        .num-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        @@media (max-width: 640px) { .num-grid { grid-template-columns: 1fr; } }
+        .num-box {
+            background: #faf7f2;
+            border: 1px solid #eee7dd;
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+        .num-box-hd {
+            font-size: 13px;
+            font-weight: 900;
+            color: #9e1b32;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee7dd;
+        }
+        .num-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .ns {
+            text-align: center;
+            background: #fff;
+            border: 1px solid #eee7dd;
+            border-radius: 10px;
+            padding: 10px 6px;
+        }
+        .ns-lbl {
+            font-size: 10px;
+            color: #6b7280;
+            font-weight: 700;
+            margin-bottom: 3px;
+            line-height: 1.3;
+            text-transform: uppercase;
+            letter-spacing: .02em;
+        }
+        .ns-val { font-size: 22px; font-weight: 900; color: #9e1b32; }
+        .overall-box {
+            background: #faf7f2;
+            border: 1px solid #eee7dd;
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+        .overall-box-hd {
+            font-size: 13px;
+            font-weight: 900;
+            color: #374151;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee7dd;
+        }
+
+        /* ── Import badge ── */
+        .import-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: #15803d;
+            font-weight: 700;
+            background: rgba(21,128,61,.08);
+            border: 1px solid rgba(21,128,61,.25);
+            border-radius: 8px;
+            padding: 3px 10px;
+        }
+
+        /* ── Section separator ── */
+        .form-sep { border: none; border-top: 1px solid #eee7dd; margin: 18px 0; }
+
+        /* ── Programs table (softer than global .tbl) ── */
+        .prog-tbl { width: 100%; border-collapse: collapse; }
+        .prog-tbl th {
+            background: #faf7f2;
+            color: #6b7280;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            padding: 10px 14px;
+            border-bottom: 1px solid #eee7dd;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .prog-tbl td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f5f0ea;
+            vertical-align: middle;
+            font-size: 13.5px;
+            color: #111;
+        }
+        .prog-tbl tbody tr:hover td { background: #fdf9f5; }
+        .prog-tbl tbody tr:last-child td { border-bottom: none; }
+        .prog-tbl .col-act { width: 72px; text-align: center; white-space: nowrap; }
+        .prog-tbl .col-students { text-align: center; }
+        .del-btn {
+            display: inline-block;
+            padding: 4px 12px;
+            border: 1px solid #f5c6ce;
+            background: #fdf5f6;
+            color: #9e1b32;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background .1s;
+        }
+        .del-btn:hover { background: #fbe8ea; border-color: #e8a0aa; }
+        .field-required-error { color:#dc2626; font-size:12px; font-weight:700; margin:6px 8px 0; }
+        .group-required-error { color:#dc2626; font-size:12px; font-weight:700; margin-top:8px; }
+        .section-readonly input[readonly],
+        .section-readonly select[disabled] {
+            background: #f9fafb !important;
+            color: #6b7280 !important;
+            cursor: default !important;
+            border-color: #e5e7eb !important;
+        }
+        .section-readonly .req { display: none; }
     </style>
 </head>
 
 <body class="submitapp-page ltr">
 
-    <!-- HEADER -->
     <header class="top-header en">
         <div class="hdr-grid">
             <div></div>
             <nav class="hdr-nav">
-                <a class="hdr-link" href="@Url.Action("UniStatus", "Home")">← Back</a>
+                <a class="hdr-link" href="@Url.Action("UniStatus","Home")">← Back</a>
                 <a class="hdr-link" href="https://www.mohe.gov.jo/" target="_blank">Ministry Website</a>
             </nav>
-            <div class="hdr-logo">
-                <img class="rm-logo" src="~/images/mohelogo.png" />
-            </div>
+            <div class="hdr-logo"><img class="rm-logo" src="~/images/mohelogo.png" /></div>
         </div>
         <div class="brand-bar"></div>
     </header>
 
     <div class="layout">
 
-        <!-- SIDEBAR -->
         <aside class="sidebar">
-            <a href="@Url.Action("UniStatus", "Home")" class="side-user">
+            <a href="@Url.Action("UniStatus","Home")" class="side-user">
                 <div class="user-avatar">UN</div>
                 <div class="user-info">
                     <span class="user-name">University Account</span>
                     <span class="user-link">Show account</span>
                 </div>
             </a>
-            <a class="side-item" href="#sec-gate">Application Intent</a>
-            <a class="side-item" href="#sec-general">Public Info</a>
-            <a class="side-item" href="#sec-programs">Online Programs</a>
-            <a class="side-item" href="#sec-students">Number of Students</a>
-            <a class="side-item" href="#sec-faculty">Academic Staff</a>
-            <a class="side-item" href="#sec-user">Applicant Info</a>
+            <a class="side-item" href="#sec-intro"         data-section="sec-intro">Introduction</a>
+            <a class="side-item" href="#sec-pubinfo"       data-section="sec-pubinfo">Public Info</a>
+            <a class="side-item" href="#sec-programs"      data-section="sec-programs">Online Programs</a>
+            <a class="side-item" href="#sec-numbers"       data-section="sec-numbers">Online Recognition Numbers</a>
+            <a class="side-item" href="#sec-communication" data-section="sec-communication">Communication</a>
+            <a class="side-item" href="#sec-exam"          data-section="sec-exam">Examination System</a>
+            <a class="side-item" href="#sec-platform"      data-section="sec-platform">Learning Platform</a>
+            <a class="side-item" href="#sec-documents"     data-section="sec-documents">Supporting Documents</a>
+            <a class="side-item" href="#sec-applicant"     data-section="sec-applicant">Applicant Info</a>
             <div class="side-footer">
-                <a class="logout" href="@Url.Action("Logout", "Home")">Logout</a>
+                <a class="logout" href="@Url.Action("Logout","Home")">Logout</a>
             </div>
         </aside>
 
-        <!-- MAIN -->
         <main class="content">
 
-            <!-- WELCOME -->
-            <section class="welcome">
+            <section class="welcome" id="sec-intro">
                 <div class="welcome-card">
-                    <div class="welcome-icon">🖥️</div>
-                    <h1 class="welcome-title">Online Education Recognition Application</h1>
-                    <p class="welcome-text">
-                        Apply for recognition of online education programs offered by your institution.
-                        Shared institution information is pre-filled from your previous application.
-                    </p>
+                    <div class="welcome-icon">🌐</div>
+                    <h1 class="welcome-title">Online / Blended Learning Recognition</h1>
+                    <p class="welcome-text">Declare which existing Bachelor or Postgraduate programs are delivered fully online or blended.</p>
                 </div>
             </section>
 
             @{
-                var P = ViewBag.Public as DTOs.PublicInfoDto ?? new DTOs.PublicInfoDto();
-                var languageOfInstruction = (P.LanguageOfInstruction ?? "").Trim();
-                var languageInstructionOptions = new[]
-                {
-                    "English only", "Arabic only", "English + Arabic", "English + Spanish",
-                    "English + French", "English + Hindi", "English + Turkish", "English + German",
-                    "English + Portuguese", "English + Chinese (Mandarin)", "English + Russian",
-                    "English + Japanese", "English + Korean", "English + Italian", "English + Urdu",
-                    "English + Bengali", "English + Persian", "English + Indonesian", "English + Malay",
-                    "English + Dutch", "English + Swahili", "English + Tamil", "English + Punjabi",
-                    "English + Vietnamese", "English + Thai", "English + Filipino (Tagalog)",
-                    "English + Greek", "English + Polish", "English + Ukrainian"
-                };
-                var isKnownLanguageOption = languageInstructionOptions.Any(opt =>
-                    languageOfInstruction.Equals(opt, StringComparison.OrdinalIgnoreCase));
-                var isOtherLanguage = !string.IsNullOrWhiteSpace(languageOfInstruction)
-                    && !isKnownLanguageOption
-                    && !languageOfInstruction.Equals("Others", StringComparison.OrdinalIgnoreCase);
-                var showOtherLanguageInput = isOtherLanguage || languageOfInstruction.Equals("Others", StringComparison.OrdinalIgnoreCase);
+                var pub = ViewBag.Public as DTOs.PublicInfoDto ?? new DTOs.PublicInfoDto();
             }
 
-            <!-- ── Gate: Does this institution want to apply for Online Education? ── -->
-            <div class="online-gate" id="sec-gate">
-                <div class="online-gate-title">Does your institution want to apply for Online Education recognition?</div>
-                <div class="online-gate-sub">
-                    Select <strong>Yes</strong> to fill in the application. Select <strong>No</strong> to return to your dashboard.
+            <!-- ── PUBLIC INFO ────────────────────────────────────────────── -->
+            <section class="card" id="sec-pubinfo">
+                <div class="card-hd">
+                    <h2>Public Info</h2>
+                    <p>Auto-filled from your bachelor's application. These fields cannot be edited here.</p>
                 </div>
-                <div class="online-gate-btns">
-                    <button type="button" class="gate-btn gate-btn-yes" id="gateYes" onclick="setGate(true)">
-                        <i class="fa-solid fa-circle-check"></i> Yes, Apply for Online Education
-                    </button>
-                    <button type="button" class="gate-btn gate-btn-no" id="gateNo" onclick="setGate(false)">
-                        <i class="fa-solid fa-circle-xmark"></i> No, Not at This Time
-                    </button>
-                </div>
-                <div class="decline-note" id="declineNote">
-                    <strong>No problem.</strong> You can always return to start an Online Education application when you are ready.
-                    <br><a href="@Url.Action("UniStatus", "Home")" style="color:#7f1627;font-weight:700;text-decoration:none;">← Return to Dashboard</a>
-                </div>
-            </div>
-
-            <!-- ===================== ENTIRE FORM STARTS HERE ===================== -->
-            <div class="online-form-sections" id="onlineFormSections">
-                <form method="post"
-                      asp-controller="Home"
-                      asp-action="SaveOnlineApplication"
-                      enctype="multipart/form-data"
-                      id="mainOnlineForm">
-
-                    <!-- ================= PUBLIC INFO ================= -->
-                    <section class="card" id="sec-general">
-                        <div class="card-hd">
-                            <h2>Public Info</h2>
-                            <p>Fields marked with (*) are required. Pre-filled from your previous application.</p>
+                <div class="card-bd section-readonly">
+                    <!-- Hidden inputs for disabled selects so values are submitted -->
+                    <input type="hidden" name="OversightRightsEntity" value="@pub.OversightRightsEntity" />
+                    <input type="hidden" name="ModeOfStudy" value="@pub.ModeOfStudy" />
+                    <input type="hidden" name="LanguageOfInstruction" value="@pub.LanguageOfInstruction" />
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Name of Institution</label>
+                            <input name="InstitutionName" value="@pub.InstitutionName" readonly />
                         </div>
-                        <div class="card-bd">
+                        <div class="field">
+                            <label>Official Entity Possessing Oversight Rights</label>
+                            <select name="_OversightRightsEntity" disabled>
+                                <option selected="@(pub.OversightRightsEntity == "Ministry")">Ministry</option>
+                                <option selected="@(pub.OversightRightsEntity == "Accreditation Body")">Accreditation Body</option>
+                                <option selected="@(pub.OversightRightsEntity == "Other")">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Founding Date</label>
+                            <input name="FoundationDate" type="date" value="@pub.FoundationDate" readonly />
+                        </div>
+                        <div class="field">
+                            <label>Date of Establishment</label>
+                            <input name="DateOfEstablishment" type="date" value="@pub.DateOfEstablishment" readonly />
+                        </div>
+                        <div class="field">
+                            <label>Mode of Study</label>
+                            <select name="_ModeOfStudy" disabled>
+                                <option selected="@(pub.ModeOfStudy == "On-campus")">On-campus</option>
+                                <option selected="@(pub.ModeOfStudy == "Blended")">Blended</option>
+                                <option selected="@(pub.ModeOfStudy == "Online")">Online</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Language of Instruction</label>
+                            <select name="_LanguageOfInstruction" disabled>
+                                @foreach (var opt in new[]{"English only","Arabic only","English + Arabic","English + French","English + German","English + Spanish","English + Turkish","English + Hindi","English + Portuguese","English + Chinese (Mandarin)","English + Russian","English + Japanese","English + Korean","English + Italian","English + Urdu","Others"})
+                                {
+                                    <option value="@opt" selected="@(pub.LanguageOfInstruction == opt)">@opt</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Start of Teaching</label>
+                            <input name="StartOfTeaching" type="date" value="@pub.StartOfTeaching" readonly />
+                        </div>
+                    </div>
+                    <div class="subhead">Information of President of Institution</div>
+                    <div class="grid-3">
+                        <div class="field">
+                            <label>Name</label>
+                            <input name="PresidentName" value="@pub.PresidentName" readonly />
+                        </div>
+                    </div>
+                    <div class="subhead">Contact Information</div>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>Mailing Full Address</label>
+                            <input name="MailingFullAddress" value="@pub.MailingFullAddress" readonly />
+                        </div>
+                        <div class="field">
+                            <label>Direct Phone Number</label>
+                            <input name="DirectPhoneNumber" value="@pub.DirectPhoneNumber" inputmode="tel" readonly />
+                        </div>
+                        <div class="field">
+                            <label>Email Address</label>
+                            <input name="EmailAddress" value="@pub.EmailAddress" type="email" readonly />
+                        </div>
+                        <div class="field">
+                            <label>Institutional Web Address</label>
+                            <input name="InstitutionalWebAddress" value="@pub.InstitutionalWebAddress" type="url" readonly />
+                        </div>
+                        <div class="field">
+                            <label><i class="fa-solid fa-earth-americas" style="margin-right:4px;"></i> Country</label>
+                            <input name="Country" type="text" value="@pub.Country" readonly />
+                        </div>
+                        <div class="field">
+                            <label><i class="fa-solid fa-location-dot" style="margin-right:4px;"></i> City</label>
+                            <input name="Location" type="text" value="@pub.City" readonly />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            @{
+                var bachelorProgs = ViewBag.BachelorPrograms as List<DTOs.ProgramRowDto> ?? new List<DTOs.ProgramRowDto>();
+
+                int impProf  = ViewBag.ImportedProfessor          is int a ? a : 0;
+                int impAssoc = ViewBag.ImportedAssociateProfessor is int b ? b : 0;
+                int impAsst  = ViewBag.ImportedAssistantProfessor is int c ? c : 0;
+
+                int pgMasterProf   = ViewBag.PgMasterProf   is int l  ? l  : 0;
+                int pgMasterAssoc  = ViewBag.PgMasterAssoc  is int m  ? m  : 0;
+                int pgMasterAsst   = ViewBag.PgMasterAsst   is int n  ? n  : 0;
+                int pgPhDProf      = ViewBag.PgPhDProf      is int o  ? o  : 0;
+                int pgPhDAssoc     = ViewBag.PgPhDAssoc     is int p2 ? p2 : 0;
+                int pgPhDAsst      = ViewBag.PgPhDAsst      is int q  ? q  : 0;
+                int pgDiplomaProf  = ViewBag.PgDiplomaProf  is int r  ? r  : 0;
+                int pgDiplomaAssoc = ViewBag.PgDiplomaAssoc is int s  ? s  : 0;
+                int pgDiplomaAsst  = ViewBag.PgDiplomaAsst  is int t2 ? t2 : 0;
+
+                int pgTotalProf  = pgMasterProf  + pgPhDProf  + pgDiplomaProf;
+                int pgTotalAssoc = pgMasterAssoc + pgPhDAssoc + pgDiplomaAssoc;
+                int pgTotalAsst  = pgMasterAsst  + pgPhDAsst  + pgDiplomaAsst;
+
+                string applicantName      = ViewBag.ApplicantName as string ?? "";
+                string applicantWorkPlace = ViewBag.WorkPlace     as string ?? "";
+                string pgProgsJson        = ViewBag.PostgraduateProgramsJson as string ?? "[]";
+
+                var bachProgJson = System.Text.Json.JsonSerializer.Serialize(
+                    bachelorProgs.Select(p => new { name = p.Program ?? "", college = p.FacultyName ?? "", years = p.NumberOfYears > 0 ? (int?)p.NumberOfYears : null }).ToList()
+                );
+            }
+
+            <form method="post" asp-controller="Home" asp-action="SaveOnlineApplication"
+                  enctype="multipart/form-data" id="mainForm">
+
+                <!-- Hidden computed fields populated by JS before submit -->
+                <input type="hidden" name="ProgramsJson"                id="programsJsonInput" value="[]" />
+                <input type="hidden" name="TotalOnlineStudents"          id="hTotalStudents"    value="0" />
+                <input type="hidden" name="BachelorOnlineStaffProf"      id="hBachProf"         value="0" />
+                <input type="hidden" name="BachelorOnlineStaffAssoc"     id="hBachAssoc"        value="0" />
+                <input type="hidden" name="BachelorOnlineStaffAsst"      id="hBachAsst"         value="0" />
+                <input type="hidden" name="PostgraduateOnlineStaffProf"  id="hPgProf"           value="0" />
+                <input type="hidden" name="PostgraduateOnlineStaffAssoc" id="hPgAssoc"          value="0" />
+                <input type="hidden" name="PostgraduateOnlineStaffAsst"  id="hPgAsst"           value="0" />
+                <input type="hidden" name="Professor"                    id="hTotalProf"        value="0" />
+                <input type="hidden" name="AssociateProfessor"           id="hTotalAssoc"       value="0" />
+                <input type="hidden" name="AssistantProfessor"           id="hTotalAsst"        value="0" />
+                <input type="hidden" name="SynchronousEvidenceFileName"  id="syncEvidenceFileNameHidden" value="" />
+
+                <!-- ── 1. ONLINE PROGRAMS ─────────────────────────────────── -->
+                <section class="card" id="sec-programs">
+                    <div class="card-hd">
+                        <h2>Online Programs</h2>
+                        <p>Select from your existing Bachelor or Postgraduate programs. Staff numbers are shown at academic level, not per program.</p>
+                    </div>
+                    <div class="card-bd">
+
+                        <!-- Note -->
+                        <div style="display:flex; align-items:flex-start; gap:10px; background:#fef9ec; border:1px solid #fde68a; border-radius:10px; padding:12px 16px; margin-bottom:18px;">
+                            <span style="font-size:16px; flex-shrink:0;">📌</span>
+                            <span style="font-size:13px; color:#78350f; line-height:1.6;">
+                                Online programs must be selected from existing <strong>Bachelor</strong> or <strong>Postgraduate</strong> programs already entered in the request.
+                            </span>
+                        </div>
+
+                        <!-- Empty state -->
+                        <div id="emptyState" class="empty-state">
+                            No online programs added yet. Use <strong>Add Online Program</strong> below to begin.
+                        </div>
+
+                        <!-- Programs table -->
+                        <div style="overflow-x:auto;margin-top:4px;" id="progTableWrap">
+                            <table class="prog-tbl" id="progTable">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Program Name</th>
+                                        <th>Degree Level</th>
+                                        <th>College / Faculty</th>
+                                        <th>Delivery Mode</th>
+                                        <th class="col-students">Online Students</th>
+                                        <th style="text-align:center;">Years</th>
+                                        <th class="col-act"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="progTableBody"></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Add button -->
+                        <div class="actions" style="margin-top:14px;">
+                            <button type="button" class="btn-ghost" id="addProgBtn" onclick="showAddForm()">
+                                + Add Online Program
+                            </button>
+                        </div>
+
+                        <!-- Add panel -->
+                        <div id="addPanel" style="display:none;">
+                            <div class="add-panel">
+                                <div class="add-panel-title">Add Online Program</div>
+
+                                <!-- Step 1: Category -->
+                                <div class="field">
+                                    <div class="step-lbl">Step 1 — Select Category</div>
+                                    <div class="cat-row">
+                                        <button type="button" class="cat-btn" id="catBachBtn" onclick="selectCategory('Bachelor')">Bachelor</button>
+                                        <button type="button" class="cat-btn" id="catPGBtn"   onclick="selectCategory('Postgraduate')">Postgraduate</button>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2: Program -->
+                                <div id="step2" style="display:none;">
+                                    <div class="field">
+                                        <div class="step-lbl">Step 2 — Select Program</div>
+
+                                        <div id="bachProgWrap" style="display:none;">
+                                            <select id="bachProgSel" onchange="onBachProgramChange()"
+                                                    style="width:calc(100% - 16px);margin-left:8px;padding:11px 12px;border:1px solid #e2ddd6;border-radius:12px;font-size:14px;background:#fff;outline:none;">
+                                                <option value="">-- Select Bachelor Program --</option>
+                                            </select>
+                                        </div>
+
+                                        <div id="pgProgWrap" style="display:none;">
+                                            <select id="pgProgSel" onchange="onPgProgramChange()"
+                                                    style="width:calc(100% - 16px);margin-left:8px;padding:11px 12px;border:1px solid #e2ddd6;border-radius:12px;font-size:14px;background:#fff;outline:none;">
+                                                <option value="">-- Select Postgraduate Program --</option>
+                                            </select>
+                                        </div>
+
+                                        <div id="noMatchMsg" class="no-match-msg" style="display:none;">
+                                            No programs found. Please add programs first in the Bachelor or Postgraduate section,
+                                            or use <a href="#" style="color:#9e1b32;font-weight:700;" onclick="enableManualEntry();return false;">Manual Entry</a> as an exception.
+                                        </div>
+
+                                        <div id="manualEntryLink" style="display:none;margin-top:10px;padding-left:8px;">
+                                            <a href="#" style="font-size:13px;color:#9e1b32;font-weight:700;text-decoration:none;" onclick="enableManualEntry();return false;">
+                                                Program not listed — Manual Entry (exception only)
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Manual name -->
+                                <div id="manualNameWrap" class="field" style="display:none;">
+                                    <label>Program Name <span class="req">*</span></label>
+                                    <input type="text" id="manualProgName" placeholder="Enter program name" />
+                                </div>
+
+                                <!-- Step 3: Details -->
+                                <div id="step3" style="display:none;">
+                                    <hr class="form-sep" />
+                                    <div class="step-lbl">Step 3 — Online Details</div>
+                                    <div class="grid-2">
+                                        <div class="field">
+                                            <label>College / Faculty <span class="req">*</span></label>
+                                            <input type="text" id="addCollege" placeholder="e.g. College of Engineering" />
+                                        </div>
+                                        <div class="field">
+                                            <label>No. of Enrolled Online Students <span class="req">*</span></label>
+                                            <input type="number" id="addStudents" min="0" placeholder="0" />
+                                        </div>
+                                        <div class="field" id="addDurationField">
+                                            <label>Online Program Duration (Years) <span class="req">*</span></label>
+                                            <input type="number" id="addDuration" min="1" placeholder="e.g. 2" />
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <label>Delivery Mode <span class="req">*</span></label>
+                                        <div class="radio-row">
+                                            <label><input type="radio" name="addDelivery" value="Fully Online" checked /> Fully Online</label>
+                                            <label><input type="radio" name="addDelivery" value="Blended" /> Blended</label>
+                                        </div>
+                                    </div>
+
+                                    <hr class="form-sep" style="margin:14px 0;" />
+                                    <div class="step-lbl" style="margin-bottom:10px;">Synchronous Learning Ratio</div>
+                                    <div class="grid-2">
+                                        <div class="field">
+                                            <label>Total Contact Hours</label>
+                                            <input type="number" id="addTotalHours" min="1" placeholder="e.g. 120" oninput="recalcSyncRatio()" />
+                                        </div>
+                                        <div class="field">
+                                            <label>Synchronous Live Hours</label>
+                                            <input type="number" id="addSyncHours" min="0" placeholder="e.g. 45" oninput="recalcSyncRatio()" />
+                                        </div>
+                                    </div>
+                                    <div class="actions" style="margin-top:16px;">
+                                        <button type="button" class="btn-primary" onclick="confirmAdd()">Add Program</button>
+                                        <button type="button" class="btn-ghost" onclick="hideAddForm()">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shared Synchronous Ratio Evidence PDF -->
+                        <div style="margin-top:22px;background:#fafaf8;border:1px solid #eee7dd;border-radius:12px;padding:16px 18px;">
+                            <div style="font-size:13px;font-weight:900;color:#9e1b32;margin-bottom:4px;">
+                                Synchronous Ratio Evidence PDF <span class="req">*</span>
+                            </div>
+                            <p style="font-size:12.5px;color:#6b7280;margin:0 0 12px;">
+                                Upload one shared PDF that documents the synchronous learning ratio across all programs. Required if any online or blended programs are listed.
+                            </p>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <input type="file" id="syncEvidenceFile" accept=".pdf" style="flex:1;" onchange="uploadSharedSyncEvidence(this)" />
+                                <span id="syncEvidenceStatus" style="font-size:12px;color:#6b7280;white-space:nowrap;"></span>
+                            </div>
+                        </div>
+
+                        <div class="actions" style="justify-content:center;margin-top:22px;">
+                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-numbers')">Save Programs →</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── 3. ONLINE RECOGNITION NUMBERS ─────────────────────── -->
+                <section class="card" id="sec-numbers">
+                    <div class="card-hd">
+                        <h2>Online Recognition Numbers</h2>
+                        <p>Staff is counted once per academic level, not per program. All values are 0 until at least one program is added.</p>
+                    </div>
+                    <div class="card-bd">
+                        <div class="num-grid">
+
+                            <!-- Bachelor -->
+                            <div class="num-box">
+                                <div class="num-box-hd">Bachelor Online Numbers</div>
+                                <div class="num-stats-grid">
+                                    <div class="ns"><div class="ns-lbl">Programs</div><div class="ns-val" id="bn-count">0</div></div>
+                                    <div class="ns"><div class="ns-lbl">Online Students</div><div class="ns-val" id="bn-students">0</div></div>
+                                    <div class="ns"><div class="ns-lbl">Teaching Staff</div><div class="ns-val" id="bn-staff">0</div></div>
+                                    <div class="ns"><div class="ns-lbl">Professors</div><div class="ns-val" id="bn-prof">0</div></div>
+                                    <div class="ns"><div class="ns-lbl">Assoc. Professors</div><div class="ns-val" id="bn-assoc">0</div></div>
+                                    <div class="ns"><div class="ns-lbl">Asst. Professors</div><div class="ns-val" id="bn-asst">0</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Postgraduate -->
+                            <div class="num-box">
+                                <div class="num-box-hd">Postgraduate Online Numbers</div>
+                                <div class="num-stats-grid">
+                                    <div class="ns"><div class="ns-lbl">Programs</div><div class="ns-val" id="pg-count">0</div></div>
+                                    <div class="ns"><div class="ns-lbl">Online Students</div><div class="ns-val" id="pg-students">0</div></div>
+                                    <div class="ns"><div class="ns-lbl">Teaching Staff</div><div class="ns-val" id="pg-staff">0</div></div>
+                                    <div class="ns"><div class="ns-lbl">Professors</div><div class="ns-val" id="pg-prof">0</div></div>
+                                    <div class="ns"><div class="ns-lbl">Assoc. Professors</div><div class="ns-val" id="pg-assoc">0</div></div>
+                                    <div class="ns"><div class="ns-lbl">Asst. Professors</div><div class="ns-val" id="pg-asst">0</div></div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Overall -->
+                        <div class="overall-box">
+                            <div class="overall-box-hd">Overall Totals</div>
+                            <div class="num-stats-grid">
+                                <div class="ns"><div class="ns-lbl">Total Programs</div><div class="ns-val" id="ov-count">0</div></div>
+                                <div class="ns"><div class="ns-lbl">Total Online Students</div><div class="ns-val" id="ov-students">0</div></div>
+                                <div class="ns"><div class="ns-lbl">Total Teaching Staff</div><div class="ns-val" id="ov-staff">0</div></div>
+                            </div>
+                        </div>
+
+                        <div class="actions" style="justify-content:center;margin-top:22px;">
+                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-communication')">Save Numbers →</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── 4. COMMUNICATION ──────────────────────────────────── -->
+                <section class="card" id="sec-communication">
+                    <div class="card-hd"><h2>Communication</h2></div>
+                    <div class="card-bd">
+                        <div class="field">
+                            <label>Communication Type <span class="req">*</span></label>
+                            <div class="radio-row">
+                                <label><input type="radio" name="CommunicationType" value="Synchronous" /> Synchronous</label>
+                                <label><input type="radio" name="CommunicationType" value="Asynchronous" /> Asynchronous</label>
+                                <label><input type="radio" name="CommunicationType" value="Both" /> Both (Synchronous &amp; Asynchronous)</label>
+                            </div>
+                        </div>
+                        <div class="field" style="margin-top:18px;">
+                            <label>Communication Methods <span class="req">*</span></label>
+                            <div class="check-grid">
+                                @foreach (var cm in new[]{"Video Meetings","Email","Discussion Forums","Chat / Messaging","LMS Internal Messaging"})
+                                {
+                                    <label class="chk-item">
+                                        <input type="checkbox" class="comm-chk" value="@cm" onchange="updateCsv('comm-chk','commCsv')" />
+                                        @cm
+                                    </label>
+                                }
+                            </div>
+                            <input type="hidden" asp-for="CommunicationMethodsCsv" id="commCsv" />
+                        </div>
+                        <div class="actions" style="justify-content:center;margin-top:22px;">
+                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-exam')">Save Communication →</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── 5. EXAMINATION SYSTEM ─────────────────────────────── -->
+                <section class="card" id="sec-exam">
+                    <div class="card-hd"><h2>Examination System</h2></div>
+                    <div class="card-bd">
+                        <div class="field">
+                            <label>Examination Type <span class="req">*</span></label>
+                            <div class="radio-row">
+                                <label><input type="radio" name="ExamType" value="Online Exams" /> Online Exams</label>
+                                <label><input type="radio" name="ExamType" value="On-Campus Exams" /> On-Campus Exams</label>
+                                <label><input type="radio" name="ExamType" value="Hybrid Exams" /> Hybrid Exams (Online + On-Campus)</label>
+                            </div>
+                        </div>
+                        <div class="field" style="margin-top:18px;">
+                            <label>Examination Locations / Centres</label>
+                            <textarea asp-for="ExamLocations" rows="2"
+                                      placeholder="e.g. Home, approved testing centres, university campuses"
+                                      style="resize:vertical;"></textarea>
+                        </div>
+                        <div id="onlineExamFields" style="display:none;">
+                            <div class="field" style="margin-top:18px;">
+                                <label>Are online exams officially approved by the university?</label>
+                                <div class="radio-row">
+                                    <label><input type="radio" name="OnlineExamsOfficiallyApproved" value="true" /> Yes</label>
+                                    <label><input type="radio" name="OnlineExamsOfficiallyApproved" value="false" checked /> No</label>
+                                </div>
+                            </div>
+                            <div class="field" style="margin-top:18px;">
+                                <label>Online Examination Monitoring</label>
+                                <div class="check-grid">
+                                    @foreach (var pm in new[]{"Live Remote Proctoring","AI Monitoring","Camera Monitoring","Screen Monitoring","Browser Lockdown"})
+                                    {
+                                        <label class="chk-item">
+                                            <input type="checkbox" class="proctor-chk" value="@pm" onchange="updateCsv('proctor-chk','proctorCsv')" />
+                                            @pm
+                                        </label>
+                                    }
+                                </div>
+                                <input type="hidden" asp-for="ProctoringMethodsCsv" id="proctorCsv" />
+                            </div>
+                        </div>
+                        <div class="actions" style="justify-content:center;margin-top:22px;">
+                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-platform')">Save Examination →</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── 6. LEARNING PLATFORM ──────────────────────────────── -->
+                <section class="card" id="sec-platform">
+                    <div class="card-hd"><h2>Learning Platform</h2></div>
+                    <div class="card-bd">
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Platform Name <span class="req">*</span></label>
+                                <input asp-for="PlatformName" placeholder="e.g. Moodle, Blackboard, Canvas" />
+                            </div>
+                            <div class="field">
+                                <label>Platform Website <span class="req">*</span></label>
+                                <input asp-for="PlatformUrl" type="url" placeholder="https://lms.youruni.edu" />
+                            </div>
+                            <div class="field">
+                                <label>Responsible Unit / Department <span class="req">*</span></label>
+                                <input asp-for="ResponsibleUnit" placeholder="e.g. Centre for Online Learning" />
+                            </div>
+                            <div class="field">
+                                <label>Technology Governance Level</label>
+                                <select asp-for="PlatformType">
+                                    <option value="">-- Choose --</option>
+                                    <option value="Not documented">Not documented</option>
+                                    <option value="Basic policy exists">Basic policy exists</option>
+                                    <option value="Formal governance framework">Formal governance framework</option>
+                                    <option value="Dedicated e-learning / IT unit">Dedicated e-learning / IT unit</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field" style="margin-top:6px;">
+                            <label>Is the platform officially adopted by the university?</label>
+                            <div class="radio-row">
+                                <label><input type="radio" name="PlatformOfficiallyAdopted" value="true" /> Yes</label>
+                                <label><input type="radio" name="PlatformOfficiallyAdopted" value="false" checked /> No</label>
+                            </div>
+                        </div>
+                        <div class="field" style="margin-top:18px;">
+                            <label>Additional Details</label>
+                            <div class="check-grid">
+                                <label class="chk-item">
+                                    <input asp-for="TechnicalSupportAvailable" type="checkbox" />
+                                    Technical support available to students
+                                </label>
+                                <label class="chk-item">
+                                    <input asp-for="HasPrivacyPolicy" type="checkbox" />
+                                    Data protection &amp; privacy policy in place
+                                </label>
+                                <label class="chk-item">
+                                    <input asp-for="IsUniversityOwned" type="checkbox" />
+                                    Platform is university-owned / self-hosted
+                                </label>
+                            </div>
+                        </div>
+                        <!-- LMS Review Access / Test Account -->
+                        <div style="border-top:1px solid #e8ddd4;margin-top:26px;padding-top:22px;">
+                            <div style="font-size:13px;font-weight:700;color:#9e1b32;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px;">LMS Review Access / Test Account</div>
+                            <p style="font-size:13px;color:#666;margin:0 0 16px;">Please provide a temporary LMS test account if available. This account will be used only for recognition review purposes.</p>
                             <div class="grid-2">
                                 <div class="field">
-                                    <label>Name of Institution <span class="req">*</span></label>
-                                    <input name="InstitutionName" value="@P.InstitutionName" />
+                                    <label>Test Account Username / Email</label>
+                                    <input asp-for="PlatformUsername" placeholder="e.g. reviewer@lms.edu" autocomplete="off" />
                                 </div>
-                                <div class="field">
-                                    <label>Official Entity Possessing Oversight Rights</label>
-                                    <select name="OversightRightsEntity">
-                                        <option value="">-- Choose --</option>
-                                        <option selected="@(P.OversightRightsEntity == "Ministry")">Ministry</option>
-                                        <option selected="@(P.OversightRightsEntity == "Accreditation Body")">Accreditation Body</option>
-                                        <option selected="@(P.OversightRightsEntity == "Other")">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="grid-2">
-                                <div class="field">
-                                    <label>Founding Date <span class="req">*</span></label>
-                                    <input name="FoundationDate" type="date" value="@P.FoundationDate" />
-                                </div>
-                                <div class="field">
-                                    <label>Date of Establishment <span class="req">*</span></label>
-                                    <input name="DateOfEstablishment" type="date" value="@P.DateOfEstablishment" />
-                                </div>
-                                <div class="field">
-                                    <label>Mode of Study <span class="req">*</span></label>
-                                    <select name="ModeOfStudy">
-                                        <option value="">-- Choose --</option>
-                                        <option selected="@(P.ModeOfStudy == "On-campus")">On-campus</option>
-                                        <option selected="@(P.ModeOfStudy == "Blended")">Blended</option>
-                                        <option value="Online" selected="@(P.ModeOfStudy == "Online")">Online</option>
-                                    </select>
-                                </div>
-                                <div class="field">
-                                    <label>Language of Instruction <span class="req">*</span></label>
-                                    <select name="LanguageOfInstruction" id="LanguageOfInstruction">
-                                        <option value="">-- Choose --</option>
-                                        @foreach (var langOpt in languageInstructionOptions)
-                                        {
-                                            <option value="@langOpt" selected="@(languageOfInstruction.Equals(langOpt, StringComparison.OrdinalIgnoreCase))">@langOpt</option>
-                                        }
-                                        <option value="Others" selected="@showOtherLanguageInput">Others</option>
-                                    </select>
-                                    <div id="LanguageOfInstructionOtherWrap" style="margin-top:10px; display:@(showOtherLanguageInput ? "block" : "none");">
-                                        <input type="text" name="LanguageOfInstructionOther" id="LanguageOfInstructionOther"
-                                               placeholder="Please specify"
-                                               value="@(isOtherLanguage ? languageOfInstruction : "")" />
+                                <div class="field" style="position:relative;">
+                                    <label>Test Account Password</label>
+                                    <div style="position:relative;">
+                                        <input asp-for="PlatformPassword" type="password" id="lmsPassInput"
+                                               placeholder="Temporary password"
+                                               autocomplete="new-password"
+                                               style="padding-right:42px;width:100%;box-sizing:border-box;" />
+                                        <button type="button" onclick="toggleLmsPass()" title="Show / Hide"
+                                                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;padding:0;font-size:15px;">
+                                            <i class="fa-regular fa-eye" id="lmsPassEyeIcon"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="field">
-                                    <label>Start of Teaching <span class="req">*</span></label>
-                                    <input name="StartOfTeaching" type="date" value="@P.StartOfTeaching" />
-                                </div>
                             </div>
-                            <div class="subhead">Information of President of Institution</div>
-                            <div class="grid-3">
-                                <div class="field">
-                                    <label>Name</label>
-                                    <input name="PresidentName" value="@P.PresidentName" />
-                                </div>
-                            </div>
-                            <div class="subhead">Contact Information</div>
-                            <div class="grid-2">
-                                <div class="field">
-                                    <label>Mailing Full Address <span class="req">*</span></label>
-                                    <input name="MailingFullAddress" value="@P.MailingFullAddress" />
-                                </div>
-                                <div class="field">
-                                    <label>Direct Phone Number <span class="req">*</span></label>
-                                    <input name="DirectPhoneNumber" value="@P.DirectPhoneNumber" inputmode="tel" />
-                                </div>
-                                <div class="field">
-                                    <label>Email Address <span class="req">*</span></label>
-                                    <input name="EmailAddress" value="@P.EmailAddress" type="email" />
-                                </div>
-                                <div class="field">
-                                    <label>Institutional Web Address <span class="req">*</span></label>
-                                    <input name="InstitutionalWebAddress" value="@P.InstitutionalWebAddress" type="url" placeholder="https://..." />
-                                </div>
-                                <div class="field">
-                                    <label><i class="fa-solid fa-location-dot" style="margin-right:4px;"></i> Location (Country / City) <span class="req">*</span></label>
-                                    <input name="Location" type="text" placeholder="Country / City"
-                                           value="@(!string.IsNullOrWhiteSpace(Model?.Location) ? Model.Location : P.City)" />
-                                </div>
-                            </div>
-                            <div class="actions" style="justify-content:center; margin-top:14px;">
-                                <button type="button" class="btn-primary" onclick="scrollToNext('sec-programs')">
-                                    Save Public Info →
-                                </button>
+                            <div class="field" style="margin-top:6px;">
+                                <label>Access Notes / Instructions</label>
+                                <textarea asp-for="LmsAccessNotes" rows="2"
+                                          placeholder="Use this account only for recognition review. Access is temporary."
+                                          style="resize:vertical;"></textarea>
                             </div>
                         </div>
-                    </section>
 
-                    <!-- ================= ONLINE PROGRAMS ================= -->
-                    <section class="card" id="sec-programs">
-                        <div class="card-hd">
-                            <h2>Online Programs</h2>
-                            <p>Upload the list of online programs offered by the institution.</p>
+                        <div class="actions" style="justify-content:center;margin-top:22px;">
+                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-documents')">Save Platform →</button>
                         </div>
-                        <div class="card-bd">
-                            <div class="upload-card" style="max-width:480px;">
-                                <h3>Online Program Files <span class="req">*</span></h3>
-                                <input asp-for="ProgramFile" type="file" />
-                            </div>
-                            <div class="actions" style="justify-content:center; margin-top:20px;">
-                                <button type="button" class="btn-primary" onclick="scrollToNext('sec-students')">
-                                    Save Programs →
-                                </button>
-                            </div>
-                        </div>
-                    </section>
+                    </div>
+                </section>
 
-                    <!-- ================= STUDENTS ================= -->
-                    <section class="card" id="sec-students">
-                        <div class="card-hd modern-hd">
-                            <div class="students-title-wrap">
-                                <div>
-                                    <h2>Number of Students</h2>
-                                    <p>Enter the total number of enrolled online students.</p>
-                                </div>
+                <!-- ── 7. SUPPORTING DOCUMENTS ──────────────────────────── -->
+                <section class="card" id="sec-documents">
+                    <div class="card-hd">
+                        <h2>Supporting Documents</h2>
+                        <p>Optional — maximum 2 documents.</p>
+                    </div>
+                    <div class="card-bd">
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Online Examination Policy / Approval Document</label>
+                                <input asp-for="ExamPolicyFile" type="file" accept=".pdf,.doc,.docx" />
+                                <span class="file-note">PDF or Word document</span>
+                            </div>
+                            <div class="field">
+                                <label>LMS / Online Learning Platform Policy or Approval Document</label>
+                                <input asp-for="PlatformGuideFile" type="file" accept=".pdf,.doc,.docx" />
+                                <span class="file-note">PDF or Word document</span>
                             </div>
                         </div>
-                        <div class="card-bd students-modern-body">
-                            <div class="student-modern-row" style="border-bottom:none;">
-                                <div class="student-left">
-                                    <div class="student-mini-icon">
-                                        <i class="fa-solid fa-laptop"></i>
-                                    </div>
-                                    <div>
-                                        <label>Online Students <span class="required">*</span></label>
-                                        <small>Total enrolled online students</small>
-                                    </div>
-                                </div>
-                                <input asp-for="OnlineStudents" type="number" />
-                            </div>
-                            <div class="actions" style="justify-content:center; margin-top:20px;">
-                                <button type="button" class="btn-primary" onclick="scrollToNext('sec-faculty')">
-                                    Save Students →
-                                </button>
-                            </div>
+                        <div class="actions" style="justify-content:center;margin-top:22px;">
+                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-applicant')">Save Documents →</button>
                         </div>
-                    </section>
+                    </div>
+                </section>
 
-                    <!-- ================= FACULTY ================= -->
-                    <section class="card" id="sec-faculty">
-                        <div class="card-hd">
-                            <h2>Academic Staff</h2>
-                            <p>Academic staff assigned to online programs.</p>
-                        </div>
-                        <div class="card-bd">
-                            <div class="faculty-modern-card">
-                                <div class="faculty-modern-grid">
-                                    <div class="faculty-input-box">
-                                        <label><i class="fa-solid fa-chalkboard-user"></i> Professor</label>
-                                        <input asp-for="Professor" type="number" />
-                                    </div>
-                                    <div class="faculty-input-box">
-                                        <label><i class="fa-solid fa-user-graduate"></i> Associate Professor</label>
-                                        <input asp-for="AssociateProfessor" type="number" />
-                                    </div>
-                                    <div class="faculty-input-box">
-                                        <label><i class="fa-solid fa-book-open-reader"></i> Assistant Professor</label>
-                                        <input asp-for="AssistantProfessor" type="number" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="actions" style="justify-content:center; margin-top:20px;">
-                                <button type="button" class="btn-primary" onclick="scrollToNext('sec-user')">
-                                    Save Academic Staff →
-                                </button>
+                <!-- ── 8. APPLICANT INFO ─────────────────────────────────── -->
+                <section class="card" id="sec-applicant">
+                    <div class="card-hd modern-applicant-hd">
+                        <div class="applicant-title-wrap">
+                            <div>
+                                <h2>Applicant Information</h2>
+                                <p>Auto-filled from your account. These fields cannot be edited here.</p>
                             </div>
                         </div>
-                    </section>
+                    </div>
+                    <div class="card-bd applicant-modern-body section-readonly">
+                        <div class="applicant-grid">
+                            <div class="applicant-field">
+                                <label><i class="fa-solid fa-user"></i> Full Name</label>
+                                <input name="Name" type="text" value="@applicantName" readonly />
+                            </div>
+                            <div class="applicant-field">
+                                <label><i class="fa-solid fa-building"></i> Work Place</label>
+                                <input name="WorkPlace" type="text" value="@applicantWorkPlace" readonly />
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:flex-start; margin-top:18px;">
+                            <button type="submit" class="btn-primary">
+                                Finish Submission
+                            </button>
+                        </div>
+                    </div>
+                </section>
 
-                    <!-- ================= USER INFO ================= -->
-                    <section class="card" id="sec-user">
-                        <div class="card-hd modern-applicant-hd">
-                            <div class="applicant-title-wrap">
-                                <div>
-                                    <h2>Applicant Information</h2>
-                                    <p>Please enter the official applicant details.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-bd applicant-modern-body">
-                            <div class="applicant-grid">
-                                <div class="applicant-field">
-                                    <label><i class="fa-solid fa-user"></i> Full Name</label>
-                                    <input asp-for="Name" type="text" placeholder="Enter applicant name" />
-                                </div>
-                                <div class="applicant-field">
-                                    <label><i class="fa-solid fa-envelope"></i> Email Address</label>
-                                    <input asp-for="Email" type="email" placeholder="example@email.com" />
-                                </div>
-                            </div>
-                            <div class="submit-area">
-                                <button type="submit" class="submit-modern-btn">
-                                    <i class="fa-solid fa-paper-plane"></i>
-                                    Submit Application
-                                </button>
-                            </div>
-                        </div>
-                    </section>
-
-                </form>
-            </div>
-            <!-- ===================== ENTIRE FORM ENDS HERE ===================== -->
+            </form>
 
             <footer class="foot">© Ministry of Higher Education</footer>
-
         </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- DEV TEST TOOL — REMOVE BEFORE FINAL DELIVERY -->
-    <script src="~/js/uni/OnlineDevTestTool.js" asp-append-version="true"></script>
-
     <script>
-        function setGate(yes) {
-            var formSections = document.getElementById('onlineFormSections');
-            var declineNote  = document.getElementById('declineNote');
-            var btnYes = document.getElementById('gateYes');
-            var btnNo  = document.getElementById('gateNo');
+        // ── Server-injected data ──────────────────────────────────────────
+        var bachelorProgs = @Html.Raw(bachProgJson);
+        var pgPrograms    = @Html.Raw(pgProgsJson);
+        var staffLevels   = {
+            Bach: { prof: @impProf, assoc: @impAssoc, asst: @impAsst },
+            PG:   { prof: @pgTotalProf, assoc: @pgTotalAssoc, asst: @pgTotalAsst }
+        };
+        staffLevels.Bach.total = staffLevels.Bach.prof + staffLevels.Bach.assoc + staffLevels.Bach.asst;
+        staffLevels.PG.total   = staffLevels.PG.prof   + staffLevels.PG.assoc   + staffLevels.PG.asst;
 
-            if (yes) {
-                formSections.classList.add('visible');
-                declineNote.classList.remove('visible');
-                btnYes.classList.add('selected');
-                btnNo.classList.remove('selected');
-                setTimeout(function () {
-                    document.getElementById('sec-general').scrollIntoView({ behavior: 'smooth' });
-                }, 80);
+        // ── State ─────────────────────────────────────────────────────────
+        var programs    = [];
+        var addCategory = null;
+        var addLevel    = null;
+        var isManual    = false;
+
+        // Expose for dev tool — single function with direct scope access
+        window.devFillOnlinePrograms = function(list) {
+            programs.length = 0;
+            list.forEach(function(p) { programs.push(p); });
+            renderTable();
+            updateAll();
+        };
+
+        // ── Sidebar active highlight ───────────────────────────────────────
+        (function () {
+            var OFFSET = 150; // px from top of viewport a section must reach before becoming active
+            var ids    = ['sec-intro','sec-pubinfo','sec-programs','sec-numbers',
+                          'sec-communication','sec-exam','sec-platform','sec-documents','sec-applicant'];
+            var links  = document.querySelectorAll('.sidebar .side-item[data-section]');
+            var locked = false; // suppresses scroll-spy briefly after a click
+
+            function activate(id) {
+                links.forEach(function (a) {
+                    a.classList.toggle('active', a.dataset.section === id);
+                });
+            }
+
+            // Scroll-spy: active = last section whose top <= scrollY + OFFSET
+            function onScroll() {
+                if (locked) return;
+                var scrollY  = window.pageYOffset;
+                var activeId = ids[0];
+                ids.forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el && el.offsetTop <= scrollY + OFFSET) activeId = id;
+                });
+                activate(activeId);
+            }
+
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll(); // set correct item on page load
+
+            // Sidebar click: set active immediately, scroll, then re-enable spy
+            links.forEach(function (a) {
+                a.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var id = this.dataset.section;
+                    activate(id);
+                    locked = true;
+                    var el = document.getElementById(id);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Re-enable scroll spy after animation finishes (~600 ms)
+                    setTimeout(function () { locked = false; }, 700);
+                });
+            });
+        })();
+
+        // ── Scroll helper (used by in-section buttons) ────────────────────
+        function getFieldContainer(el) {
+            return el?.closest('.field, .applicant-field') || null;
+        }
+
+        function clearFieldError(el) {
+            if (!el) return;
+            el.classList.remove('input-invalid');
+            var container = getFieldContainer(el);
+            if (!container) return;
+            var msg = container.querySelector('.field-required-error');
+            if (msg) msg.remove();
+        }
+
+        function setFieldError(el, message) {
+            if (!el) return;
+            el.classList.add('input-invalid');
+            var container = getFieldContainer(el);
+            if (!container) return;
+
+            var msg = container.querySelector('.field-required-error');
+            if (!msg) {
+                msg = document.createElement('div');
+                msg.className = 'field-required-error';
+                container.appendChild(msg);
+            }
+            msg.textContent = message || 'This field is required.';
+        }
+
+        function clearSectionValidation(sectionId) {
+            var section = document.getElementById(sectionId);
+            if (!section) return;
+            section.querySelectorAll('.input-invalid').forEach(function(el) { el.classList.remove('input-invalid'); });
+            section.querySelectorAll('.field-required-error, .group-required-error').forEach(function(el) { el.remove(); });
+        }
+
+        function focusFirstInvalid(firstInvalid) {
+            if (!firstInvalid) return;
+            firstInvalid.focus({ preventScroll: true });
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function appendGroupError(targetEl, message) {
+            if (!targetEl) return;
+            var msg = targetEl.parentElement?.querySelector('.group-required-error');
+            if (!msg) {
+                msg = document.createElement('div');
+                msg.className = 'group-required-error';
+                targetEl.insertAdjacentElement('afterend', msg);
+            }
+            msg.textContent = message || 'This field is required.';
+        }
+
+        function validateRequiredFieldByName(sectionId, fieldName, firstInvalidRef) {
+            var el = document.querySelector('[name=\"' + fieldName + '\"]');
+            var value = (el?.value || '').toString().trim();
+            if (value.length > 0) {
+                clearFieldError(el);
+                return true;
+            }
+
+            setFieldError(el, 'This field is required.');
+            if (!firstInvalidRef.value) firstInvalidRef.value = el;
+            return false;
+        }
+
+        function validatePublicInfoSection() {
+            clearSectionValidation('sec-pubinfo');
+            var firstInvalidRef = { value: null };
+            var ok = true;
+
+            [
+                'InstitutionName', 'OversightRightsEntity', 'FoundationDate', 'DateOfEstablishment',
+                'ModeOfStudy', 'LanguageOfInstruction', 'StartOfTeaching', 'MailingFullAddress',
+                'DirectPhoneNumber', 'EmailAddress', 'InstitutionalWebAddress', 'Country', 'Location'
+            ].forEach(function(name) {
+                if (!validateRequiredFieldByName('sec-pubinfo', name, firstInvalidRef)) ok = false;
+            });
+
+            return { ok: ok, firstInvalid: firstInvalidRef.value };
+        }
+
+        function validateProgramsSection() {
+            clearSectionValidation('sec-programs');
+            if (programs.length > 0) return { ok: true, firstInvalid: null };
+
+            var target = document.getElementById('addProgBtn');
+            appendGroupError(target, 'This field is required.');
+            return { ok: false, firstInvalid: target };
+        }
+
+        function validateCommunicationSection() {
+            clearSectionValidation('sec-communication');
+            var firstInvalidRef = { value: null };
+            var ok = true;
+
+            var communicationType = document.querySelector('input[name=\"CommunicationType\"]:checked');
+            if (!communicationType) {
+                var typeAnchor = document.querySelector('#sec-communication .radio-row');
+                appendGroupError(typeAnchor, 'This field is required.');
+                firstInvalidRef.value = firstInvalidRef.value || document.querySelector('input[name=\"CommunicationType\"]');
+                ok = false;
+            }
+
+            var commMethods = document.querySelectorAll('.comm-chk:checked');
+            if (!commMethods.length) {
+                var methodsAnchor = document.querySelector('#sec-communication .check-grid');
+                appendGroupError(methodsAnchor, 'This field is required.');
+                firstInvalidRef.value = firstInvalidRef.value || document.querySelector('.comm-chk');
+                ok = false;
+            }
+
+            return { ok: ok, firstInvalid: firstInvalidRef.value };
+        }
+
+        function validateExamSection() {
+            clearSectionValidation('sec-exam');
+            var firstInvalidRef = { value: null };
+            var ok = true;
+
+            var examType = document.querySelector('input[name=\"ExamType\"]:checked');
+            if (!examType) {
+                var anchor = document.querySelector('#sec-exam .radio-row');
+                appendGroupError(anchor, 'This field is required.');
+                firstInvalidRef.value = firstInvalidRef.value || document.querySelector('input[name=\"ExamType\"]');
+                ok = false;
             } else {
-                formSections.classList.remove('visible');
-                declineNote.classList.add('visible');
-                btnNo.classList.add('selected');
-                btnYes.classList.remove('selected');
+                var value = examType.value || '';
+                if ((value === 'Online Exams' || value === 'Hybrid Exams') && !document.querySelector('.proctor-chk:checked')) {
+                    var proctorAnchor = document.querySelector('#onlineExamFields .check-grid');
+                    appendGroupError(proctorAnchor, 'This field is required.');
+                    firstInvalidRef.value = firstInvalidRef.value || document.querySelector('.proctor-chk');
+                    ok = false;
+                }
+            }
+
+            return { ok: ok, firstInvalid: firstInvalidRef.value };
+        }
+
+        function validatePlatformSection() {
+            clearSectionValidation('sec-platform');
+            var firstInvalidRef = { value: null };
+            var ok = true;
+
+            ['PlatformName', 'PlatformUrl', 'ResponsibleUnit'].forEach(function(name) {
+                if (!validateRequiredFieldByName('sec-platform', name, firstInvalidRef)) ok = false;
+            });
+
+            return { ok: ok, firstInvalid: firstInvalidRef.value };
+        }
+
+        function validateApplicantSection() {
+            clearSectionValidation('sec-applicant');
+            var firstInvalidRef = { value: null };
+            var ok = true;
+
+            ['Name', 'WorkPlace'].forEach(function(name) {
+                if (!validateRequiredFieldByName('sec-applicant', name, firstInvalidRef)) ok = false;
+            });
+
+            return { ok: ok, firstInvalid: firstInvalidRef.value };
+        }
+
+        function validateFullOnlineForm() {
+            var checks = [
+                validatePublicInfoSection(),
+                validateProgramsSection(),
+                validateCommunicationSection(),
+                validateExamSection(),
+                validatePlatformSection(),
+                validateApplicantSection()
+            ];
+
+            return {
+                ok: checks.every(function(c) { return c.ok; }),
+                firstInvalid: checks.map(function(c) { return c.firstInvalid; }).find(Boolean) || null
+            };
+        }
+
+        function scrollToNext(sectionId) {
+            var mapping = {
+                'sec-programs': validatePublicInfoSection,
+                'sec-numbers': validateProgramsSection,
+                'sec-exam': validateCommunicationSection,
+                'sec-platform': validateExamSection,
+                'sec-documents': validatePlatformSection
+            };
+
+            if (mapping[sectionId]) {
+                var result = mapping[sectionId]();
+                if (!result.ok) {
+                    focusFirstInvalid(result.firstInvalid);
+                    return;
+                }
+            }
+
+            var el = document.getElementById(sectionId);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ── Compute numbers (staff counted once per level) ─────────────────
+        function computeNumbers() {
+            var bachProgs = programs.filter(function(p){ return p.category === 'Bachelor'; });
+            var pgProgs   = programs.filter(function(p){ return p.category === 'Postgraduate'; });
+            var hasBach   = bachProgs.length > 0;
+            var hasPG     = pgProgs.length   > 0;
+
+            var bachStudents = bachProgs.reduce(function(s,p){ return s + (p.OnlineStudents||0); }, 0);
+            var pgStudents   = pgProgs.reduce(function(s,p){   return s + (p.OnlineStudents||0); }, 0);
+
+            var bProf  = hasBach ? staffLevels.Bach.prof  : 0;
+            var bAssoc = hasBach ? staffLevels.Bach.assoc : 0;
+            var bAsst  = hasBach ? staffLevels.Bach.asst  : 0;
+            var bTotal = bProf + bAssoc + bAsst;
+
+            var pProf  = hasPG ? staffLevels.PG.prof  : 0;
+            var pAssoc = hasPG ? staffLevels.PG.assoc : 0;
+            var pAsst  = hasPG ? staffLevels.PG.asst  : 0;
+            var pTotal = pProf + pAssoc + pAsst;
+
+            return {
+                bachCount: bachProgs.length,    pgCount: pgProgs.length,
+                bachStudents: bachStudents,       pgStudents: pgStudents,
+                bProf: bProf, bAssoc: bAssoc, bAsst: bAsst, bTotal: bTotal,
+                pProf: pProf, pAssoc: pAssoc, pAsst: pAsst, pTotal: pTotal,
+                totalProgs:    programs.length,
+                totalStudents: bachStudents + pgStudents,
+                totalStaff:    bTotal + pTotal
+            };
+        }
+
+        function updateAll() {
+            var n = computeNumbers();
+            setTxt('bn-count',    n.bachCount);   setTxt('bn-students', n.bachStudents);
+            setTxt('bn-staff',    n.bTotal);       setTxt('bn-prof',     n.bProf);
+            setTxt('bn-assoc',    n.bAssoc);       setTxt('bn-asst',     n.bAsst);
+            setTxt('pg-count',    n.pgCount);      setTxt('pg-students', n.pgStudents);
+            setTxt('pg-staff',    n.pTotal);       setTxt('pg-prof',     n.pProf);
+            setTxt('pg-assoc',    n.pAssoc);       setTxt('pg-asst',     n.pAsst);
+            setTxt('ov-count',    n.totalProgs);
+            setTxt('ov-students', n.totalStudents);
+            setTxt('ov-staff',    n.totalStaff);
+        }
+        function setTxt(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+        // ── Add form ───────────────────────────────────────────────────────
+        function showAddForm() {
+            document.getElementById('addPanel').style.display   = 'block';
+            document.getElementById('addProgBtn').parentElement.style.display = 'none';
+            resetAddForm();
+        }
+        function hideAddForm() {
+            document.getElementById('addPanel').style.display   = 'none';
+            document.getElementById('addProgBtn').parentElement.style.display = 'flex';
+        }
+        function resetAddForm() {
+            addCategory = null; addLevel = null; isManual = false;
+            document.getElementById('catBachBtn').classList.remove('active');
+            document.getElementById('catPGBtn').classList.remove('active');
+            document.getElementById('step2').style.display           = 'none';
+            document.getElementById('step3').style.display           = 'none';
+            document.getElementById('bachProgWrap').style.display    = 'none';
+            document.getElementById('pgProgWrap').style.display      = 'none';
+            document.getElementById('noMatchMsg').style.display      = 'none';
+            document.getElementById('manualEntryLink').style.display = 'none';
+            document.getElementById('manualNameWrap').style.display  = 'none';
+            document.getElementById('addCollege').value  = '';
+            document.getElementById('addStudents').value = '';
+            document.getElementById('addDuration').value = '';
+            document.getElementById('addTotalHours').value = '';
+            document.getElementById('addSyncHours').value  = '';
+            document.getElementById('addSyncRatioVal').style.color = '#6b7280';
+            pgTraditionalYears = null;
+            var fo = document.querySelector('[name=addDelivery][value="Fully Online"]');
+            if (fo) fo.checked = true;
+        }
+
+        function selectCategory(cat) {
+            addCategory = cat;
+            isManual    = false;
+            addLevel    = null;
+            document.getElementById('catBachBtn').classList.toggle('active', cat === 'Bachelor');
+            document.getElementById('catPGBtn').classList.toggle('active',   cat === 'Postgraduate');
+            document.getElementById('step2').style.display           = 'block';
+            document.getElementById('step3').style.display           = 'none';
+            document.getElementById('noMatchMsg').style.display      = 'none';
+            document.getElementById('manualEntryLink').style.display = 'none';
+            document.getElementById('manualNameWrap').style.display  = 'none';
+            document.getElementById('addCollege').value = '';
+
+            if (cat === 'Bachelor') {
+                document.getElementById('pgProgWrap').style.display = 'none';
+                var sel = document.getElementById('bachProgSel');
+                sel.innerHTML = '<option value="">-- Select Bachelor Program --</option>';
+                if (bachelorProgs.length === 0) {
+                    document.getElementById('bachProgWrap').style.display = 'none';
+                    document.getElementById('noMatchMsg').style.display   = 'block';
+                } else {
+                    bachelorProgs.forEach(function(p) {
+                        sel.innerHTML += '<option value="' + escA(p.name) + '" data-college="' + escA(p.college) + '" data-years="' + (p.years || '') + '">' + esc(p.name) + '</option>';
+                    });
+                    document.getElementById('bachProgWrap').style.display    = 'block';
+                    document.getElementById('manualEntryLink').style.display = 'block';
+                }
+                addLevel = 'Bachelor';
+            } else {
+                document.getElementById('bachProgWrap').style.display = 'none';
+                var pgSel = document.getElementById('pgProgSel');
+                pgSel.innerHTML = '<option value="">-- Select Postgraduate Program --</option>';
+                if (pgPrograms.length === 0) {
+                    document.getElementById('pgProgWrap').style.display = 'none';
+                    document.getElementById('noMatchMsg').style.display = 'block';
+                } else {
+                    var pgGroups = {};
+                    pgPrograms.forEach(function(p) {
+                        var lv = p.degreeLevel || 'Other';
+                        if (!pgGroups[lv]) pgGroups[lv] = [];
+                        pgGroups[lv].push(p);
+                    });
+                    ['Master','PhD','Higher Diploma'].forEach(function(lv) {
+                        if (!pgGroups[lv] || pgGroups[lv].length === 0) return;
+                        var grp = document.createElement('optgroup');
+                        grp.label = lv;
+                        pgGroups[lv].forEach(function(p) {
+                            var opt = document.createElement('option');
+                            opt.value           = p.name;
+                            opt.dataset.level   = p.degreeLevel;
+                            opt.dataset.college = p.college;
+                            opt.dataset.years   = p.years || '';
+                            opt.textContent     = p.name;
+                            grp.appendChild(opt);
+                        });
+                        pgSel.appendChild(grp);
+                    });
+                    document.getElementById('pgProgWrap').style.display      = 'block';
+                    document.getElementById('manualEntryLink').style.display = 'block';
+                }
             }
         }
 
-        document.getElementById('LanguageOfInstruction').addEventListener('change', function () {
-            var wrap = document.getElementById('LanguageOfInstructionOtherWrap');
-            wrap.style.display = this.value === 'Others' ? 'block' : 'none';
-        });
-
-        function scrollToNext(sectionId) {
-            var el = document.getElementById(sectionId);
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        function onBachProgramChange() {
+            var sel = document.getElementById('bachProgSel');
+            if (!sel.value) { document.getElementById('step3').style.display = 'none'; return; }
+            var opt = sel.selectedOptions[0];
+            document.getElementById('addCollege').value = opt.dataset.college || '';
+            pgTraditionalYears = opt.dataset.years ? parseInt(opt.dataset.years, 10) : null;
+            document.getElementById('step3').style.display = 'block';
         }
 
-        document.getElementById('mainOnlineForm')
-            ?.addEventListener('submit', function (e) {
-                e.preventDefault();
-                var form = this;
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Application Submitted!',
-                    html: "<p style='font-size:14px;color:#555;margin:0'>Your online education application has been submitted successfully.<br>You will be redirected to your dashboard.</p>",
-                    confirmButtonText: 'Go to Dashboard',
-                    confirmButtonColor: '#7f1627',
-                    allowOutsideClick: false
-                }).then(function () {
-                    form.submit();
-                });
+        var pgTraditionalYears = null;
+
+        function onPgProgramChange() {
+            var sel = document.getElementById('pgProgSel');
+            if (!sel.value) { document.getElementById('step3').style.display = 'none'; return; }
+            var opt = sel.selectedOptions[0];
+            addLevel = opt.dataset.level || 'Master';
+            document.getElementById('addCollege').value = opt.dataset.college || '';
+            pgTraditionalYears = opt.dataset.years ? parseInt(opt.dataset.years, 10) : null;
+            document.getElementById('step3').style.display = 'block';
+        }
+
+        function enableManualEntry() {
+            isManual = true;
+            document.getElementById('bachProgWrap').style.display    = 'none';
+            document.getElementById('pgProgWrap').style.display      = 'none';
+            document.getElementById('manualEntryLink').style.display = 'none';
+            document.getElementById('noMatchMsg').style.display      = 'none';
+            document.getElementById('manualNameWrap').style.display  = 'block';
+            if (!addLevel) addLevel = addCategory === 'Bachelor' ? 'Bachelor' : 'Master';
+            document.getElementById('step3').style.display = 'block';
+        }
+
+        function confirmAdd() {
+            clearSectionValidation('sec-programs');
+            if (!addCategory) {
+                appendGroupError(document.querySelector('.cat-row'), 'This field is required.');
+                return;
+            }
+
+            var progName;
+            if (isManual) {
+                progName = (document.getElementById('manualProgName').value || '').trim();
+                if (!progName) {
+                    setFieldError(document.getElementById('manualProgName'), 'This field is required.');
+                    focusFirstInvalid(document.getElementById('manualProgName'));
+                    return;
+                }
+            } else if (addCategory === 'Bachelor') {
+                progName = document.getElementById('bachProgSel').value;
+                if (!progName) {
+                    appendGroupError(document.getElementById('bachProgWrap'), 'This field is required.');
+                    focusFirstInvalid(document.getElementById('bachProgSel'));
+                    return;
+                }
+            } else {
+                progName = document.getElementById('pgProgSel').value;
+                if (!progName) {
+                    appendGroupError(document.getElementById('pgProgWrap'), 'This field is required.');
+                    focusFirstInvalid(document.getElementById('pgProgSel'));
+                    return;
+                }
+                if (!addLevel) addLevel = 'Master';
+            }
+
+            var collegeInput   = document.getElementById('addCollege');
+            var studentsInput  = document.getElementById('addStudents');
+            var durationInput  = document.getElementById('addDuration');
+            var college     = collegeInput.value.trim();
+            var studentsRaw = studentsInput.value.trim();
+            var students    = parseInt(studentsRaw, 10) || 0;
+            var durationRaw = durationInput.value.trim();
+            var duration    = parseInt(durationRaw, 10);
+
+            if (!college) {
+                setFieldError(collegeInput, 'This field is required.');
+                focusFirstInvalid(collegeInput);
+                return;
+            }
+            clearFieldError(collegeInput);
+
+            if (!studentsRaw) {
+                setFieldError(studentsInput, 'This field is required.');
+                focusFirstInvalid(studentsInput);
+                return;
+            }
+            clearFieldError(studentsInput);
+
+            if (!durationRaw || isNaN(duration) || duration < 1) {
+                setFieldError(durationInput, 'Duration is required and must be at least 1 year.');
+                focusFirstInvalid(durationInput);
+                return;
+            }
+            clearFieldError(durationInput);
+
+            // Synchronous ratio fields (optional — reviewed on admin/member side)
+            var totalHoursRaw = document.getElementById('addTotalHours').value.trim();
+            var syncHoursRaw  = document.getElementById('addSyncHours').value.trim();
+            var totalHours    = parseInt(totalHoursRaw, 10);
+            var syncHours     = parseInt(syncHoursRaw, 10);
+            var syncRatio     = null;
+            if (!isNaN(totalHours) && totalHours > 0 && !isNaN(syncHours) && syncHours >= 0 && syncHours <= totalHours) {
+                syncRatio = Math.round((syncHours / totalHours) * 10000) / 100;
+            }
+
+            var delivery = (document.querySelector('[name=addDelivery]:checked') || {}).value || 'Fully Online';
+            var src      = isManual ? 'Manual Entry'
+                         : addCategory === 'Bachelor' ? 'Bachelor' : 'Postgraduate';
+
+            programs.push({
+                ProgramName:             progName,
+                DegreeLevel:             addLevel || (addCategory === 'Bachelor' ? 'Bachelor' : 'Master'),
+                Source:                  src,
+                CollegeOrFaculty:        college,
+                DeliveryMode:            delivery,
+                OnlineStudents:          students,
+                OnlineDurationYears:     duration,
+                TraditionalDurationYears: pgTraditionalYears || null,
+                TotalContactHours:       (!isNaN(totalHours) && totalHours > 0) ? totalHours : null,
+                SynchronousHours:        (!isNaN(syncHours) && syncHours >= 0) ? syncHours : null,
+                SynchronousRatioPercent: syncRatio,
+                category:                addCategory,
+                isManual:                isManual
             });
+
+            hideAddForm();
+            renderTable();
+            updateAll();
+        }
+
+        function removeProgram(idx) {
+            programs.splice(idx, 1);
+            renderTable();
+            updateAll();
+        }
+
+        function renderTable() {
+            var empty = document.getElementById('emptyState');
+            var wrap  = document.getElementById('progTableWrap');
+            var tbody = document.getElementById('progTableBody');
+
+            if (programs.length === 0) {
+                empty.style.display = 'block';
+                wrap.style.display  = 'none';
+                return;
+            }
+            empty.style.display = 'none';
+            wrap.style.display  = 'block';
+
+            tbody.innerHTML = programs.map(function(p, i) {
+                var catBadge = p.category === 'Bachelor'
+                    ? '<span class="badge badge-bach">Bachelor</span>'
+                    : '<span class="badge badge-pg">Postgraduate</span>';
+
+                var modeBadge = p.DeliveryMode === 'Fully Online'
+                    ? '<span class="badge badge-online">Fully Online</span>'
+                    : '<span class="badge badge-blended">Blended</span>';
+
+                return '<tr>' +
+                    '<td>' + catBadge + '</td>' +
+                    '<td style="font-weight:700;">' + esc(p.ProgramName) + '</td>' +
+                    '<td>' + esc(p.DegreeLevel) + '</td>' +
+                    '<td style="color:#5b6472;">' + esc(p.CollegeOrFaculty || '—') + '</td>' +
+                    '<td>' + modeBadge + '</td>' +
+                    '<td style="text-align:center;font-weight:700;">' + (p.OnlineStudents || 0) + '</td>' +
+                    '<td style="text-align:center;font-weight:600;">' + (p.OnlineDurationYears || '—') + '</td>' +
+                    '<td class="col-act"><button type="button" class="del-btn" onclick="removeProgram(' + i + ')">Delete</button></td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        // ── CSV helpers ────────────────────────────────────────────────────
+        // ── LMS password toggle ────────────────────────────────────────────
+        function toggleLmsPass() {
+            var inp  = document.getElementById('lmsPassInput');
+            var icon = document.getElementById('lmsPassEyeIcon');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                icon.className = 'fa-regular fa-eye-slash';
+            } else {
+                inp.type = 'password';
+                icon.className = 'fa-regular fa-eye';
+            }
+        }
+
+        // ── Examination Type: show online-only fields for Online/Hybrid ────
+        (function () {
+            var panel = document.getElementById('onlineExamFields');
+            function syncExamFields() {
+                var checked = document.querySelector('input[name="ExamType"]:checked');
+                var val = checked ? checked.value : '';
+                var show = val === 'Online Exams' || val === 'Hybrid Exams';
+                panel.style.display = show ? '' : 'none';
+            }
+            document.querySelectorAll('input[name="ExamType"]').forEach(function (r) {
+                r.addEventListener('change', syncExamFields);
+            });
+            syncExamFields();
+        })();
+
+        function updateCsv(cls, targetId) {
+            document.getElementById(targetId).value =
+                Array.from(document.querySelectorAll('.' + cls + ':checked'))
+                     .map(function(c){ return c.value; }).join(',');
+        }
+
+        // ── Pre-submit: populate hidden inputs ─────────────────────────────
+        function buildSubmitData() {
+            // Copy Public Info fields (outside the form) into hidden inputs inside the form
+            ['InstitutionName', 'OversightRightsEntity', 'FoundationDate', 'DateOfEstablishment',
+             'ModeOfStudy', 'LanguageOfInstruction', 'StartOfTeaching', 'PresidentName',
+             'MailingFullAddress', 'DirectPhoneNumber', 'EmailAddress', 'InstitutionalWebAddress',
+             'Country', 'Location'].forEach(function(fieldName) {
+                var src = document.querySelector('#sec-pubinfo [name="' + fieldName + '"]');
+                if (!src) return;
+                var form = document.getElementById('mainForm');
+                var hidden = form.querySelector('input[type="hidden"][name="' + fieldName + '"]');
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = fieldName;
+                    form.appendChild(hidden);
+                }
+                hidden.value = src.value;
+            });
+
+            var n = computeNumbers();
+            document.getElementById('hBachProf').value      = n.bProf;
+            document.getElementById('hBachAssoc').value     = n.bAssoc;
+            document.getElementById('hBachAsst').value      = n.bAsst;
+            document.getElementById('hPgProf').value        = n.pProf;
+            document.getElementById('hPgAssoc').value       = n.pAssoc;
+            document.getElementById('hPgAsst').value        = n.pAsst;
+            document.getElementById('hTotalProf').value     = n.bProf  + n.pProf;
+            document.getElementById('hTotalAssoc').value    = n.bAssoc + n.pAssoc;
+            document.getElementById('hTotalAsst').value     = n.bAsst  + n.pAsst;
+            document.getElementById('hTotalStudents').value = n.totalStudents;
+
+            document.getElementById('programsJsonInput').value = JSON.stringify(
+                programs.map(function(p) {
+                    return {
+                        ProgramName:             p.ProgramName,
+                        DegreeLevel:             p.DegreeLevel,
+                        Source:                  p.Source,
+                        CollegeOrFaculty:        p.CollegeOrFaculty,
+                        DeliveryMode:            p.DeliveryMode,
+                        OnlineStudents:          p.OnlineStudents,
+                        OnlineDurationYears:     p.OnlineDurationYears || null,
+                        TraditionalDurationYears: p.TraditionalDurationYears || null,
+                        TotalContactHours:       p.TotalContactHours || null,
+                        SynchronousHours:        p.SynchronousHours || null,
+                        SynchronousRatioPercent: p.SynchronousRatioPercent || null,
+                        Professor:               null,
+                        AssociateProfessor:      null,
+                        AssistantProfessor:      null,
+                        StudyPlanFileName:       null,
+                        AccreditationEvidenceFileName: null
+                    };
+                })
+            );
+        }
+
+        // ── Synchronous ratio helpers ─────────────────────────────────────
+        function recalcSyncRatio() {
+            // Ratio is computed silently and stored when the program is added.
+            // No display shown on the university side — visible only to admin/member reviewers.
+        }
+
+        function uploadSharedSyncEvidence(input) {
+            var statusEl = document.getElementById('syncEvidenceStatus');
+            var hiddenEl = document.getElementById('syncEvidenceFileNameHidden');
+            if (!input.files || !input.files[0]) { hiddenEl.value = ''; statusEl.textContent = ''; return; }
+            var file = input.files[0];
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                statusEl.textContent = '✗ Only PDF files accepted';
+                statusEl.style.color = '#b91c1c';
+                hiddenEl.value = '';
+                return;
+            }
+            statusEl.textContent = 'Uploading…';
+            statusEl.style.color = '#6b7280';
+            var fd = new FormData();
+            fd.append('file', file);
+            fetch('/Home/UploadSynchronousEvidence', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        hiddenEl.value = data.fileName;
+                        statusEl.textContent = '✓ Uploaded';
+                        statusEl.style.color = '#15803d';
+                    } else {
+                        hiddenEl.value = '';
+                        statusEl.textContent = '✗ ' + (data.message || 'Upload failed');
+                        statusEl.style.color = '#b91c1c';
+                    }
+                })
+                .catch(function() {
+                    hiddenEl.value = '';
+                    statusEl.textContent = '✗ Upload error';
+                    statusEl.style.color = '#b91c1c';
+                });
+        }
+
+        function esc(s)  { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        function escA(s) { return (s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+        // ── Submit confirmation ────────────────────────────────────────────
+        document.getElementById('mainForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var validation = validateFullOnlineForm();
+            if (!validation.ok) {
+                focusFirstInvalid(validation.firstInvalid);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Incomplete Form',
+                    text: 'Please complete all required fields before submitting.'
+                });
+                return;
+            }
+
+            buildSubmitData();
+            var form = this;
+            Swal.fire({
+                icon: 'question',
+                title: 'Submit Application?',
+                html: "<p style='font-size:14px;color:#555;margin:0'>Your Online Education application will be submitted to the Ministry for review.</p>",
+                confirmButtonText: 'Yes, Submit',
+                cancelButtonText: 'Review First',
+                showCancelButton: true,
+                confirmButtonColor: '#9e1b32'
+            }).then(function(r){ if (r.isConfirmed) form.submit(); });
+        });
     </script>
+
+    <script src="~/js/uni/demo-fill.js" asp-append-version="true"></script>
 
 </body>
 </html>

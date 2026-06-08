@@ -5,6 +5,9 @@
 @{
     ViewData["Title"] = "Session Agenda";
     Layout = null;
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
 
     var meeting   = (MeetingDto)ViewBag.Meeting;
     var meetingId = meeting.Id;
@@ -27,27 +30,58 @@
               : meeting.Status == "Scheduled" ? "sb-scheduled"
               : "sb-other";
 
+    string MeetingStatusLabel(string? s) => isRtl
+        ? s switch { "Open" => "مفتوح", "Closed" => "مُغلق", "Scheduled" => "مجدول", _ => s ?? "" }
+        : s ?? "";
+
     string AppTypeStyle(string? t) => (t ?? "Bachelor") switch
     {
         "Postgraduate" => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
         "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
         _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
     };
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
     string RowClass(string? t) => (t ?? "Bachelor") switch
     {
         "Postgraduate" => "app-row-postgraduate",
         "Online"       => "app-row-online",
         _              => "app-row-bachelor"
     };
+    string PgRatioLabel(RecognitionRequestRecord r)
+    {
+        if (!string.Equals(r.ApplicationType, "Postgraduate", StringComparison.OrdinalIgnoreCase))
+            return string.Empty;
+        var pg = r.PostgraduateData;
+        if (pg == null) return isRtl ? "النسبة: —" : "Ratio: —";
+
+        string Part(string label, int? students, int faculty)
+        {
+            if (!students.HasValue || faculty <= 0) return string.Empty;
+            var ratio = (int)Math.Floor((double)students.Value / faculty);
+            return $"{label} 1:{ratio}";
+        }
+
+        var master = Part("M", pg.MasterStudents, (pg.MasterProfessor ?? 0) + (pg.MasterAssociate ?? 0) + (pg.MasterAssistant ?? 0));
+        var phd    = Part("PhD", pg.PhDStudents, (pg.PhDProfessor ?? 0) + (pg.PhDAssociate ?? 0) + (pg.PhDAssistant ?? 0));
+        var dip    = Part("Dip", pg.DiplomaStudents, (pg.DiplomaProfessor ?? 0) + (pg.DiplomaAssociate ?? 0) + (pg.DiplomaAssistant ?? 0));
+        var parts = new[] { master, phd, dip }.Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+        return parts.Any() ? string.Join(" | ", parts) : (isRtl ? "النسبة: —" : "Ratio: —");
+    }
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"] — Session #@meeting.SessionNumber</title>
+    <title>@(isRtl ? "جدول أعمال الجلسة" : "Session Agenda") — @(isRtl ? "جلسة #" : "Session #")@meeting.SessionNumber</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -334,11 +368,11 @@
         .app-row-online       { border-left: 5px solid #10b981 !important; }
     </style>
 </head>
-<body>
+<body class="@(isRtl ? "rtl-body" : "")">
 
     <div class="ministry-bar">
         <i class="bi bi-bank2"></i>
-        Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan
+        @(isRtl ? "وزارة التعليم العالي والبحث العلمي — المملكة الأردنية الهاشمية" : "Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan")
     </div>
 
     <div class="pg-header">
@@ -346,8 +380,8 @@
             <img src="/images/mohelogo.png" alt="Logo" />
             <div class="hd-sep"></div>
             <div class="hd-text">
-                <h1>Session Agenda</h1>
-                <p>Committee Working Area — Phase 2</p>
+                <h1>@(isRtl ? "جدول أعمال الجلسة" : "Session Agenda")</h1>
+                <p>@(isRtl ? "منطقة عمل اللجنة — المرحلة الثانية" : "Committee Working Area — Phase 2")</p>
             </div>
         </div>
         @if (meeting.Status != "Closed")
@@ -356,25 +390,25 @@
             {
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
                     <button class="btn-close-meeting" disabled style="opacity:.4;cursor:not-allowed;pointer-events:none;">
-                        <i class="bi bi-lock-fill"></i> Close Meeting
+                        <i class="bi bi-lock-fill"></i> @(isRtl ? "إغلاق الاجتماع" : "Close Meeting")
                     </button>
                     <span style="font-size:12px;color:#fca5a5;font-weight:600;">
                         <i class="bi bi-exclamation-circle"></i>
-                        @pending decision@(pending == 1 ? "" : "s") still pending
+                        @pending @(isRtl ? "قرار لا يزال معلّقًا" : $"decision{(pending == 1 ? "" : "s")} still pending")
                     </span>
                 </div>
             }
             else
             {
                 <button class="btn-close-meeting" onclick="document.getElementById('cmOverlay').classList.add('show')">
-                    <i class="bi bi-lock-fill"></i> Close Meeting
+                    <i class="bi bi-lock-fill"></i> @(isRtl ? "إغلاق الاجتماع" : "Close Meeting")
                 </button>
             }
         }
         else
         {
             <span style="background:rgba(255,255,255,.15);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">
-                <i class="bi bi-lock-fill"></i> Meeting Closed
+                <i class="bi bi-lock-fill"></i> @(isRtl ? "الاجتماع مُغلق" : "Meeting Closed")
             </span>
         }
     </div>
@@ -383,32 +417,55 @@
     <div class="cm-overlay" id="cmOverlay">
         <div class="cm-box">
             <div class="cm-icon"><i class="bi bi-lock-fill"></i></div>
-            <div class="cm-title">Close This Meeting?</div>
+            <div class="cm-title">@(isRtl ? "إغلاق هذا الاجتماع؟" : "Close This Meeting?")</div>
             <div class="cm-desc">
-                You are about to close <strong>Session #@meeting.SessionNumber</strong>.<br>
-                This action will finalise all decisions and cannot be undone.
+                @if (isRtl)
+                {
+                    <text>أنت على وشك إغلاق <strong>الجلسة #@meeting.SessionNumber</strong>.<br>
+                    هذا الإجراء سيُنهي جميع القرارات ولا يمكن التراجع عنه.</text>
+                }
+                else
+                {
+                    <text>You are about to close <strong>Session #@meeting.SessionNumber</strong>.<br>
+                    This action will finalise all decisions and cannot be undone.</text>
+                }
             </div>
             @if (pending > 0)
             {
                 <div class="cm-warn">
                     <i class="bi bi-exclamation-triangle-fill"></i>
-                    <strong>@pending</strong> @(pending == 1 ? "university has" : "universities have") no decision recorded yet.
-                    You can still close, but those requests will be marked as incomplete.
+                    @if (isRtl)
+                    {
+                        <text><strong>@pending</strong> @(pending == 1 ? "جامعة لا تزال بدون قرار." : "جامعة لا تزال بدون قرارات مسجّلة.")
+                        لا يزال بإمكانك الإغلاق، لكن تلك الطلبات ستُعلَّم كناقصة.</text>
+                    }
+                    else
+                    {
+                        <text><strong>@pending</strong> @(pending == 1 ? "university has" : "universities have") no decision recorded yet.
+                        You can still close, but those requests will be marked as incomplete.</text>
+                    }
                 </div>
             }
             else
             {
                 <div class="cm-warn" style="background:#e8f5ea;border-color:#a7f3d0;color:#166534;">
                     <i class="bi bi-check-circle-fill"></i>
-                    All @total @(total == 1 ? "university has" : "universities have") a recorded decision. Safe to close.
+                    @if (isRtl)
+                    {
+                        <text>جميع @total @(total == 1 ? "جامعة لديها" : "جامعات لديها") قرار مسجّل. آمن للإغلاق.</text>
+                    }
+                    else
+                    {
+                        <text>All @total @(total == 1 ? "university has" : "universities have") a recorded decision. Safe to close.</text>
+                    }
                 </div>
             }
             <div class="cm-actions">
-                <button class="cm-btn-cancel" onclick="document.getElementById('cmOverlay').classList.remove('show')">Cancel</button>
+                <button class="cm-btn-cancel" onclick="document.getElementById('cmOverlay').classList.remove('show')">@(isRtl ? "إلغاء" : "Cancel")</button>
                 <form method="post" action="/Home/CloseMeeting?id=@meetingId" style="margin:0;">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="cm-btn-confirm">
-                        <i class="bi bi-lock-fill"></i> Yes, Close Meeting
+                        <i class="bi bi-lock-fill"></i> @(isRtl ? "نعم، أغلق الاجتماع" : "Yes, Close Meeting")
                     </button>
                 </form>
             </div>
@@ -416,19 +473,19 @@
     </div>
 
     <div class="breadcrumb-bar">
-        <a class="bc-item" href="/Home/Meetings"><i class="bi bi-calendar3"></i> Committee Sessions</a>
-        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <a class="bc-item" href="/Home/SessionDashboard?id=@meetingId"><i class="bi bi-grid-1x2"></i> Session #@meeting.SessionNumber</a>
-        <span class="bc-sep"><i class="bi bi-chevron-right"></i></span>
-        <span class="bc-item bc-current"><i class="bi bi-journal-text"></i> Session Agenda</span>
+        <a class="bc-item" href="/Home/Meetings"><i class="bi bi-calendar3"></i> @(isRtl ? "جلسات اللجنة" : "Committee Sessions")</a>
+        <span class="bc-sep"><i class="bi bi-chevron-@(isRtl ? "left" : "right")"></i></span>
+        <a class="bc-item" href="/Home/SessionDashboard?id=@meetingId"><i class="bi bi-grid-1x2"></i> @(isRtl ? "جلسة #" : "Session #")@meeting.SessionNumber</a>
+        <span class="bc-sep"><i class="bi bi-chevron-@(isRtl ? "left" : "right")"></i></span>
+        <span class="bc-item bc-current"><i class="bi bi-journal-text"></i> @(isRtl ? "جدول أعمال الجلسة" : "Session Agenda")</span>
     </div>
 
     <!-- Agenda banner -->
     <div class="agenda-banner">
         <div class="ab-top">
             <div>
-                <div class="ab-label"><i class="bi bi-journal-text"></i> Committee Agenda</div>
-                <div class="ab-title">Session #@meeting.SessionNumber — @meeting.MeetingDate.Year</div>
+                <div class="ab-label"><i class="bi bi-journal-text"></i> @(isRtl ? "جدول أعمال اللجنة" : "Committee Agenda")</div>
+                <div class="ab-title">@(isRtl ? "جلسة #" : "Session #")@meeting.SessionNumber — @meeting.MeetingDate.Year</div>
                 <div class="ab-meta">
                     <div class="ab-meta-item"><i class="bi bi-calendar3"></i> @meeting.MeetingDate.ToString("dd MMMM yyyy")</div>
                     @if (!string.IsNullOrWhiteSpace(meeting.LocationOrPlatform))
@@ -436,7 +493,7 @@
                         <div class="ab-meta-item"><i class="bi bi-geo-alt"></i> @meeting.LocationOrPlatform</div>
                     }
                     <div class="ab-meta-item">
-                        <span class="sbadge @sb"><span class="sdot"></span>@meeting.Status</span>
+                        <span class="sbadge @sb"><span class="sdot"></span>@MeetingStatusLabel(meeting.Status)</span>
                     </div>
                 </div>
             </div>
@@ -444,7 +501,7 @@
             {
                 <div style="min-width:240px;">
                     <div class="prog-label">
-                        <span>Decision Progress</span>
+                        <span>@(isRtl ? "تقدّم اتخاذ القرارات" : "Decision Progress")</span>
                         <span class="prog-pct">@pct%</span>
                     </div>
                     <div class="prog-track"><div class="prog-fill"></div></div>
@@ -454,19 +511,19 @@
         <div class="stats-strip">
             <div class="stat-cell">
                 <div class="stat-val">@total</div>
-                <div class="stat-lbl">Universities</div>
+                <div class="stat-lbl">@(isRtl ? "الجامعات" : "Universities")</div>
             </div>
             <div class="stat-cell">
                 <div class="stat-val">@decided</div>
-                <div class="stat-lbl">Decided</div>
+                <div class="stat-lbl">@(isRtl ? "تم البت بها" : "Decided")</div>
             </div>
             <div class="stat-cell">
                 <div class="stat-val">@pending</div>
-                <div class="stat-lbl">Pending</div>
+                <div class="stat-lbl">@(isRtl ? "معلّقة" : "Pending")</div>
             </div>
             <div class="stat-cell">
                 <div class="stat-val">@pct%</div>
-                <div class="stat-lbl">Complete</div>
+                <div class="stat-lbl">@(isRtl ? "مكتمل" : "Complete")</div>
             </div>
         </div>
     </div>
@@ -486,15 +543,29 @@
                         bool hasDecision = dec != null && !string.IsNullOrWhiteSpace(dec.Decision);
 
                         string decBadge = "dec-pending";
-                        string decLabel = "Pending Decision";
+                        string decLabel = isRtl ? "قرار معلّق" : "Pending Decision";
                         if (hasDecision)
                         {
                             switch (dec!.Decision)
                             {
-                                case "Recognized":          decBadge = "dec-recognized";     decLabel = "Recognized"; break;
-                                case "Not Recognized":      decBadge = "dec-not-recognized"; decLabel = "Not Recognized"; break;
-                                case "Needs More Information": decBadge = "dec-needs-more";  decLabel = "Needs More Info"; break;
-                                default: decLabel = dec.Decision; break;
+                                case "Recognized":
+                                case "Approve":
+                                    decBadge = "dec-recognized";
+                                    decLabel = isRtl ? "موافقة" : "Approve";
+                                    break;
+                                case "Not Recognized":
+                                case "Reject":
+                                    decBadge = "dec-not-recognized";
+                                    decLabel = isRtl ? "رفض" : "Reject";
+                                    break;
+                                case "Needs More Information":
+                                case "Pending":
+                                    decBadge = "dec-needs-more";
+                                    decLabel = isRtl ? "يحتاج مزيدًا من المعلومات" : "Pending";
+                                    break;
+                                default:
+                                    decLabel = dec.Decision;
+                                    break;
                             }
                         }
 
@@ -505,26 +576,33 @@
                                 <div class="uni-idx">@rowNum</div>
                                 <div class="uni-info">
                                     <div class="uni-name" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                                        @(string.IsNullOrWhiteSpace(r.UniversityName) ? "Unnamed University" : r.UniversityName)
-                                        <span style="display:inline-block;border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:700;@AppTypeStyle(r.ApplicationType)">@(r.ApplicationType ?? "Bachelor")</span>
+                                        @(string.IsNullOrWhiteSpace(r.UniversityName) ? (isRtl ? "جامعة غير مسمّاة" : "Unnamed University") : r.UniversityName)
+                                        <span style="display:inline-block;border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:700;@AppTypeStyle(r.ApplicationType)">@AppTypeLabel(r.ApplicationType)</span>
                                     </div>
                                     <div class="uni-sub">
                                         @if (!string.IsNullOrWhiteSpace(r.Country))
                                         {
                                             <span class="uni-sub-item"><i class="bi bi-geo-alt"></i> @r.Country</span>
                                         }
-                                        <span class="uni-sub-item"><i class="bi bi-hash"></i> Request ID: @r.Id</span>
+                                        <span class="uni-sub-item"><i class="bi bi-hash"></i> @(isRtl ? "معرّف الطلب:" : "Request ID:") @r.Id</span>
                                         @if (!string.IsNullOrWhiteSpace(r.ReferenceNumber))
                                         {
-                                            <span class="uni-sub-item"><i class="bi bi-file-text"></i> Ref: @r.ReferenceNumber</span>
+                                            <span class="uni-sub-item"><i class="bi bi-file-text"></i> @(isRtl ? "المرجع:" : "Ref:") @r.ReferenceNumber</span>
+                                        }
+                                        @{
+                                            var pgRatio = PgRatioLabel(r);
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(pgRatio))
+                                        {
+                                            <span class="uni-sub-item"><i class="bi bi-calculator"></i> @pgRatio</span>
                                         }
                                     </div>
                                 </div>
                                 <div class="uni-rec">
-                                    <div class="uni-rec-lbl">Doctor's Recommendation</div>
+                                    <div class="uni-rec-lbl">@(isRtl ? "توصية العضو" : "Doctor's Recommendation")</div>
                                     @if (string.IsNullOrWhiteSpace(docRec))
                                     {
-                                        <div class="uni-rec-val empty">Not submitted</div>
+                                        <div class="uni-rec-val empty">@(isRtl ? "لم يُقدَّم بعد" : "Not submitted")</div>
                                     }
                                     else
                                     {
@@ -534,20 +612,20 @@
                                 <div class="uni-actions">
                                     <span class="dec-badge @decBadge">@decLabel</span>
                                     <a class="btn-view" href="/Home/CommitteeApplicationView?requestId=@r.Id&meetingId=@meetingId">
-                                        <i class="bi bi-eye"></i> View Application
+                                        <i class="bi bi-eye"></i> @(isRtl ? "عرض الطلب" : "View Application")
                                     </a>
                                     @if (hasDecision)
                                     {
                                         <a class="btn-decide btn-decide-edit"
                                            href="/Home/MeetingDecision?meetingId=@meetingId&requestId=@r.Id">
-                                            <i class="bi bi-pencil"></i> Edit Decision
+                                            <i class="bi bi-pencil"></i> @(isRtl ? "تعديل القرار" : "Edit Decision")
                                         </a>
                                     }
                                     else
                                     {
                                         <a class="btn-decide"
                                            href="/Home/MeetingDecision?meetingId=@meetingId&requestId=@r.Id">
-                                            <i class="bi bi-check2-circle"></i> Record Decision
+                                            <i class="bi bi-check2-circle"></i> @(isRtl ? "تسجيل القرار" : "Record Decision")
                                         </a>
                                     }
                                 </div>
@@ -563,13 +641,12 @@
         {
             <div class="empty-wrap">
                 <i class="bi bi-journal-x"></i>
-                <h3>No University Requests Linked</h3>
+                <h3>@(isRtl ? "لا توجد طلبات جامعات مرتبطة" : "No University Requests Linked")</h3>
                 <p>
-                    No university requests have been linked to this session yet.<br>
-                    Return to session preparation to add universities to this agenda.
+                    @(isRtl ? "لم يتم ربط أي طلبات جامعات بهذه الجلسة بعد. عُد إلى تحضير الجلسة لإضافة جامعات إلى جدول الأعمال." : "No university requests have been linked to this session yet. Return to session preparation to add universities to this agenda.")
                 </p>
                 <a href="/Home/SessionDashboard?id=@meetingId" class="btn-add-uni">
-                    <i class="bi bi-arrow-left"></i> Back to Session Dashboard
+                    <i class="bi bi-arrow-@(isRtl ? "right" : "left")"></i> @(isRtl ? "العودة إلى لوحة تحكم الجلسة" : "Back to Session Dashboard")
                 </a>
             </div>
         }

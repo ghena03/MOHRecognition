@@ -43,8 +43,103 @@
     }
 
     function validate(data) {
-        return data.ApplicantName !== "" &&
-            data.WorkPlace !== "";
+        const firstInvalidRef = { value: null };
+        let ok = true;
+
+        const nameInput = document.getElementById("subapp_name");
+        const workplaceInput = document.getElementById("subapp_workplace");
+        const ackInput = document.getElementById("subapp_ack");
+
+        clearFieldError(nameInput);
+        clearFieldError(workplaceInput);
+        clearFieldError(ackInput);
+
+        if (!data.ApplicantName) {
+            setFieldError(nameInput, "This field is required.");
+            firstInvalidRef.value = firstInvalidRef.value || nameInput;
+            ok = false;
+        }
+
+        if (!data.WorkPlace) {
+            setFieldError(workplaceInput, "This field is required.");
+            firstInvalidRef.value = firstInvalidRef.value || workplaceInput;
+            ok = false;
+        }
+
+        if (!data.IsAcknowledged) {
+            setFieldError(ackInput, "This field is required.");
+            firstInvalidRef.value = firstInvalidRef.value || ackInput;
+            ok = false;
+        }
+
+        return { ok, firstInvalid: firstInvalidRef.value };
+    }
+
+    function getFieldContainer(el) {
+        return el?.closest(".field, .submitapp-check, .submitapp-grid > div") || null;
+    }
+
+    function clearFieldError(el) {
+        if (!el) return;
+        el.classList.remove("input-invalid");
+        const container = getFieldContainer(el);
+        if (!container) return;
+        const msg = container.querySelector(".field-required-error");
+        if (msg) msg.remove();
+    }
+
+    function setFieldError(el, message) {
+        if (!el) return;
+        el.classList.add("input-invalid");
+        const container = getFieldContainer(el);
+        if (!container) return;
+
+        let msg = container.querySelector(".field-required-error");
+        if (!msg) {
+            msg = document.createElement("div");
+            msg.className = "field-required-error";
+            container.appendChild(msg);
+        }
+        msg.textContent = message || "This field is required.";
+    }
+
+    function focusFirstInvalid(el) {
+        if (!el) return;
+        el.focus({ preventScroll: true });
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    async function checkBachelorCompleteness() {
+        const url = "/Home/CheckApplicationCompleteness";
+        try {
+            const res = await fetch(url, { cache: "no-store" });
+            if (!res.ok) return true;
+
+            const payload = await res.json();
+            const incomplete = Array.isArray(payload?.incomplete) ? payload.incomplete : [];
+            if (incomplete.length === 0) return true;
+
+            const first = incomplete[0];
+            const firstAnchor = first?.anchor ? String(first.anchor) : "";
+            if (firstAnchor) {
+                const target = document.getElementById(firstAnchor);
+                if (target) {
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                    const firstInput = target.querySelector("input, select, textarea, button");
+                    if (firstInput) firstInput.focus({ preventScroll: true });
+                }
+            }
+
+            const names = incomplete.map(x => x?.name).filter(Boolean);
+            const message = names.length
+                ? `Please complete all required sections before submitting: ${names.join(", ")}.`
+                : "Please complete all required sections before submitting.";
+            showBanner(message, true);
+            return false;
+        } catch (err) {
+            console.error(err);
+            return true;
+        }
     }
 
     // ── Additional files ──────────────────────────────────────────────────────
@@ -225,21 +320,14 @@
         const btnPost = document.getElementById("btnSaveAndApplyPostgraduate");
 
         async function handleClick(overrideContinueToPostgraduate = null) {
-            // Run full completeness check first — shows modal with missing sections if any
-            if (typeof window.checkAndSubmit === 'function') {
-                const ready = await window.checkAndSubmit();
-                if (!ready) return;
-            }
+            const complete = await checkBachelorCompleteness();
+            if (!complete) return;
 
             const data = collectData();
-
-            if (!validate(data)) {
+            const validation = validate(data);
+            if (!validation.ok) {
                 showBanner("Please fill all required fields.", true);
-                return;
-            }
-
-            if (!data.IsAcknowledged) {
-                showBanner("Please confirm that all data are correct.", true);
+                focusFirstInvalid(validation.firstInvalid);
                 return;
             }
 

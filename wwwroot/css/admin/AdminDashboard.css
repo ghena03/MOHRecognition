@@ -62,21 +62,81 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #eee;
-    padding: 8px 15px;
-    border-radius: 25px;
 }
 
 /* AVATAR */
 .avatar {
-    background: #8b1e1e;
-    color: white;
-    width: 35px;
-    height: 35px;
+    background: #7f1627;
+    color: #fff;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* PROFILE SETTINGS BUTTON */
+.profile-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: #fff;
+    border: 1.5px solid #e2d9d3;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #1a1a1a;
+    transition: background .15s, border-color .15s;
+}
+.profile-btn:hover {
+    background: #fdf5f6;
+    border-color: #c9a0aa;
+}
+.profile-btn-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+.profile-btn-text strong {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+.profile-btn-text span {
+    font-size: 11px;
+    color: #888;
+}
+.profile-gear-icon {
+    font-size: 15px;
+    color: #7f1627;
+    margin-left: 4px;
+    transition: transform .3s;
+}
+.profile-btn:hover .profile-gear-icon {
+    transform: rotate(60deg);
+}
+
+/* LOGOUT BUTTON */
+.logout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #fff;
+    border: 1.5px solid #d1d5db;
+    border-radius: 10px;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .15s;
+}
+.logout-btn:hover {
+    background: #f3f4f6;
 }
 
 /* ================= MAIN ================= */

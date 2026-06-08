@@ -18,6 +18,7 @@ public class PublicInfoDto
     public string DateOfEstablishment { get; set; } = "";
     public string StartOfTeaching { get; set; } = ""; // UI: Start of Teaching (Conventional and Non-Conventional)
 
+    public string Country { get; set; } = "";
     public string City { get; set; } = "";
 
     // Study mode / language

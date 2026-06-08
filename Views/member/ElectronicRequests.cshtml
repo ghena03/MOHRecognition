@@ -1,10 +1,13 @@
-﻿@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
+@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
 
 @{
     Layout = null;
     ViewData["Title"] = "My Assigned Requests";
     ViewData["ActiveNav"] = "requests";
     var currentMember = ViewBag.CurrentRecognitionMember as string ?? "Recognition Member";
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
 
     string AppTypeStyle(string? t) => (t ?? "Bachelor") switch
     {
@@ -18,14 +21,17 @@
         "Online"       => "app-row-online",
         _              => "app-row-bachelor"
     };
+    string TypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "طلباتي المعيّنة" : "My Assigned Requests")</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,9 +40,13 @@
 
     <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/ElectronicRequests.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
 </head>
 
-<body class="rm-page">
+<body class="rm-page@(isRtl ? " rtl-body" : "")">
 
     <header class="rm-header">
         <div class="rm-brandbar"></div>
@@ -47,13 +57,17 @@
                 </div>
 
                 <div class="rm-user">
-                    <div class="rm-userpill">
-                        <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>@currentMember</b></span>
-                    </div>
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@(currentMember?.Length > 0 ? currentMember.Substring(0,1).ToUpper() : "M")</div>
+                        <div class="rm-user-card-text">
+                            <strong>@currentMember</strong>
+                            <span>@(isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
 
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                        <i class="bi bi-box-arrow-right"></i> @(isRtl ? "تسجيل الخروج" : "Logout")
                     </a>
                 </div>
             </div>
@@ -69,21 +83,21 @@
             <section class="rm-card er-hero">
                 <div class="er-hero-top">
                     <div class="er-hero-left">
-                        <h1>My Assigned Requests</h1>
-                        <p>Only requests assigned to <b>@currentMember</b> appear here.</p>
+                        <h1>@(isRtl ? "طلباتي المعيّنة" : "My Assigned Requests")</h1>
+                        <p>@(isRtl ? $"تظهر هنا فقط الطلبات المعيّنة إلى {currentMember}." : $"Only requests assigned to {currentMember} appear here.")</p>
                     </div>
 
                     <div class="er-stats">
                         <div class="er-stat">
-                            <span>Assigned</span>
+                            <span>@(isRtl ? "معيّن" : "Assigned")</span>
                             <b>@Model.Count</b>
                         </div>
                         <div class="er-stat">
-                            <span>Pending</span>
+                            <span>@(isRtl ? "قيد الانتظار" : "Pending")</span>
                             <b>@Model.Count(x => x.Status == "Pending" || x.Status == "Assigned")</b>
                         </div>
                         <div class="er-stat">
-                            <span>Missing Docs</span>
+                            <span>@(isRtl ? "مستندات ناقصة" : "Missing Docs")</span>
                             <b>@Model.Count(x => x.Status == "Missing Docs")</b>
                         </div>
                     </div>
@@ -94,8 +108,8 @@
             <section class="rm-card">
                 <div class="rm-card-hd row">
                     <div>
-                        <h2>Assigned Requests</h2>
-                        <p>These are the requests already assigned to you by admin.</p>
+                        <h2>@(isRtl ? "الطلبات المعيّنة" : "Assigned Requests")</h2>
+                        <p>@(isRtl ? "هذه الطلبات معيّنة إليك من قِبَل المدير." : "These are the requests already assigned to you by admin.")</p>
                     </div>
                 </div>
 
@@ -103,13 +117,13 @@
                     <table class="rm-table">
                         <thead>
                             <tr>
-                                <th>Reference</th>
-                                <th>Type</th>
-                                <th>University</th>
-                                <th>Country</th>
-                                <th>Status</th>
-                                <th>Submitted</th>
-                                <th style="text-align:center;">Action</th>
+                                <th>@(isRtl ? "الرقم المرجعي" : "Reference")</th>
+                                <th>@(isRtl ? "النوع" : "Type")</th>
+                                <th>@(isRtl ? "الجامعة" : "University")</th>
+                                <th>@(isRtl ? "الدولة" : "Country")</th>
+                                <th>@(isRtl ? "الحالة" : "Status")</th>
+                                <th>@(isRtl ? "تاريخ التقديم" : "Submitted")</th>
+                                <th style="text-align:center;">@(isRtl ? "إجراء" : "Action")</th>
                             </tr>
                         </thead>
 
@@ -120,7 +134,7 @@
                                 {
                                     <tr class="@RowClass(item.ApplicationType)">
                                         <td><b>@item.ReferenceNumber</b></td>
-                                        <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
+                                        <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@TypeLabel(item.ApplicationType)</span></td>
                                         <td>@item.UniversityName</td>
                                         <td>@item.Country</td>
                                         @{
@@ -128,22 +142,22 @@
                                         string decLabel, decClass;
                                         if (string.IsNullOrWhiteSpace(dec))
                                         {
-                                            decLabel = "Pending Review";
+                                            decLabel = isRtl ? "قيد المراجعة" : "Pending Review";
                                             decClass = "badge-neutral";
                                         }
                                         else if (dec.Contains("Approve", StringComparison.OrdinalIgnoreCase) && !dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase))
                                         {
-                                            decLabel = "Approved";
+                                            decLabel = isRtl ? "مقبول" : "Approved";
                                             decClass = "badge-ok";
                                         }
                                         else if (dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase))
                                         {
-                                            decLabel = "Conditional Approval";
+                                            decLabel = isRtl ? "قبول مشروط" : "Conditional Approval";
                                             decClass = "badge-warn";
                                         }
                                         else if (dec.Contains("Reject", StringComparison.OrdinalIgnoreCase))
                                         {
-                                            decLabel = "Rejected";
+                                            decLabel = isRtl ? "مرفوض" : "Rejected";
                                             decClass = "badge-returned";
                                         }
                                         else
@@ -155,7 +169,15 @@
                                     <td><span class="badge @decClass">@decLabel</span></td>
                                         <td>@item.SubmittedAt.ToString("yyyy-MM-dd")</td>
                                         <td style="text-align:center;">
-                                            <a class="rm-mini" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">Open</a>
+                                            @{
+                                                var detailAction = (item.ApplicationType ?? "Bachelor") switch
+                                                {
+                                                    "Postgraduate" => "DetailsPostgraduateRequest",
+                                                    "Online"       => "DetailsOnlineRequest",
+                                                    _              => "DetailsBasicInfo"
+                                                };
+                                            }
+                                            <a class="rm-mini" href="@Url.Action(detailAction, "Home", new { id = item.Id })">@(isRtl ? "فتح" : "Open")</a>
                                         </td>
                                     </tr>
                                 }
@@ -164,7 +186,7 @@
                             {
                                 <tr>
                                     <td colspan="7" style="text-align:center; padding:24px;">
-                                        No assigned requests yet.
+                                        @(isRtl ? "لا توجد طلبات معيّنة حتى الآن." : "No assigned requests yet.")
                                     </td>
                                 </tr>
                             }
@@ -174,11 +196,11 @@
 
                 <div class="er-footer">
                     <button class="rm-btn rm-btn-light" type="button" disabled>
-                        <i class="bi bi-chevron-left"></i> Prev
+                        <i class="bi bi-chevron-@(isRtl ? "right" : "left")"></i> @(isRtl ? "السابق" : "Prev")
                     </button>
-                    <div class="er-pages">Page <b>1</b> of <b>1</b></div>
+                    <div class="er-pages">@(isRtl ? "الصفحة" : "Page") <b>1</b> @(isRtl ? "من" : "of") <b>1</b></div>
                     <button class="rm-btn rm-btn-light" type="button" disabled>
-                        Next <i class="bi bi-chevron-right"></i>
+                        @(isRtl ? "التالي" : "Next") <i class="bi bi-chevron-@(isRtl ? "left" : "right")"></i>
                     </button>
                 </div>
             </section>

@@ -197,6 +197,18 @@ public sealed class AppDbContext : DbContext
              .HasColumnType("TEXT")
              .HasConversion(JsonList<AccreditationBodyRowDto>())
              .Metadata.SetValueComparer(JsonComparer<List<AccreditationBodyRowDto>>());
+
+            e.Property(x => x.OnlineEducationData)
+             .HasColumnName("OnlineEducationJson")
+             .HasColumnType("TEXT")
+             .HasConversion(Json<OnlineEducationDto>())
+             .Metadata.SetValueComparer(JsonComparer<OnlineEducationDto>());
+
+            e.Property(x => x.PostgraduateData)
+             .HasColumnName("PostgraduateDataJson")
+             .HasColumnType("TEXT")
+             .HasConversion(Json<PostgraduateApplicationDto>())
+             .Metadata.SetValueComparer(JsonComparer<PostgraduateApplicationDto>());
         });
     }
 
@@ -208,11 +220,15 @@ public sealed class AppDbContext : DbContext
             e.ToTable("Advisors");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).ValueGeneratedOnAdd();
-            e.Property(x => x.Email).HasMaxLength(500);
+            e.Property(x => x.Email).HasMaxLength(500).IsRequired(false);
             e.Property(x => x.FullName).HasMaxLength(300);
+            e.Property(x => x.Position).HasMaxLength(500).IsRequired(false).HasDefaultValue("");
+            e.Property(x => x.SortOrder).HasDefaultValue(0);
             e.Property(x => x.Type).HasConversion<string>().HasMaxLength(50);
-            e.HasIndex(x => x.Email).IsUnique();
+            e.Property(x => x.Password).HasMaxLength(500).IsRequired(false);
+            e.HasIndex(x => x.Email).IsUnique().HasFilter("\"Email\" IS NOT NULL AND \"Email\" <> ''");
             e.HasIndex(x => x.Type);
+            e.HasIndex(x => x.SortOrder);
         });
     }
 
@@ -286,14 +302,14 @@ public sealed class AppDbContext : DbContext
 
     private static ValueConverter<T, string> Json<T>() where T : new() =>
         new(
-            v  => JsonSerializer.Serialize(v,  JsonOpts),
-            s  => JsonSerializer.Deserialize<T>(s, JsonOpts) ?? new T()
+            v  => JsonSerializer.Serialize(v, JsonOpts),
+            s  => string.IsNullOrWhiteSpace(s) ? new T() : JsonSerializer.Deserialize<T>(s, JsonOpts) ?? new T()
         );
 
     private static ValueConverter<List<T>, string> JsonList<T>() =>
         new(
             v  => JsonSerializer.Serialize(v ?? new List<T>(), JsonOpts),
-            s  => JsonSerializer.Deserialize<List<T>>(s, JsonOpts) ?? new List<T>()
+            s  => string.IsNullOrWhiteSpace(s) ? new List<T>() : JsonSerializer.Deserialize<List<T>>(s, JsonOpts) ?? new List<T>()
         );
 
     private static ValueComparer<T> JsonComparer<T>() =>

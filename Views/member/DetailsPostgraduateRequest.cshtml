@@ -1,286 +1,259 @@
-﻿@model MOHRecognition.DTOs.PostgraduateApplicationDto
+@model MOHRecognition.DTOs.PostgraduateApplicationDto
 @{
     Layout = null;
     ViewData["Title"] = "Postgraduate Request Details";
+    ViewData["ActiveNav"] = "requests";
+    var currentMember = ViewBag.CurrentRecognitionMember as string ?? "Recognition Member";
+    var requestId     = (int)(ViewBag.RequestId ?? 0);
+    var saveDecisionUrl = Url.Action("SavePostgraduateDecision", "Home");
 
-    // =========================
-    // STUDENTS
-    // =========================
+    // Parse postgraduate programs JSON
+    List<MOHRecognition.DTOs.PostgraduateProgramEntry> pgPrograms = new();
+    if (!string.IsNullOrWhiteSpace(Model.PostgraduateProgramsJson) && Model.PostgraduateProgramsJson != "[]")
+    {
+        try { pgPrograms = System.Text.Json.JsonSerializer.Deserialize<List<MOHRecognition.DTOs.PostgraduateProgramEntry>>(Model.PostgraduateProgramsJson) ?? new(); }
+        catch { }
+    }
 
-    var masterStudents = Model.MasterStudents ?? 0;
-
-    var phdStudents = Model.PhDStudents ?? 0;
-
+    var masterStudents  = Model.MasterStudents  ?? 0;
+    var phdStudents     = Model.PhDStudents     ?? 0;
     var diplomaStudents = Model.DiplomaStudents ?? 0;
 
+    var masterProfessor  = Model.MasterProfessor  ?? 0;
+    var masterAssociate  = Model.MasterAssociate  ?? 0;
+    var masterAssistant  = Model.MasterAssistant  ?? 0;
+    var masterFaculty    = masterProfessor + masterAssociate + masterAssistant;
 
-    // =========================
-    // MASTER STAFF
-    // =========================
+    var phdProfessor  = Model.PhDProfessor  ?? 0;
+    var phdAssociate  = Model.PhDAssociate  ?? 0;
+    var phdAssistant  = Model.PhDAssistant  ?? 0;
+    var phdFaculty    = phdProfessor + phdAssociate + phdAssistant;
 
-    var masterProfessor = Model.MasterProfessor ?? 0;
+    var diplomaProfessor  = Model.DiplomaProfessor  ?? 0;
+    var diplomaAssociate  = Model.DiplomaAssociate  ?? 0;
+    var diplomaAssistant  = Model.DiplomaAssistant  ?? 0;
+    var diplomaFaculty    = diplomaProfessor + diplomaAssociate + diplomaAssistant;
 
-    var masterAssociate = Model.MasterAssociate ?? 0;
+    string FieldVal(string? v) => string.IsNullOrWhiteSpace(v) ? "—" : v;
 
-    var masterAssistant = Model.MasterAssistant ?? 0;
+    // Badge color for degree level
+    string DegreeBadgeClass(string? level) => (level ?? "") switch
+    {
+        "Master"          => "ol-badge-master",
+        "PhD"             => "ol-badge-phd",
+        "Higher Diploma"  => "ol-badge-diploma",
+        _                 => "ol-badge-bach"
+    };
 
-    var masterFaculty =
-        masterProfessor +
-        masterAssociate +
-        masterAssistant;
+    // ── Which degree types have submitted data ────────────────────────────────
+    bool hasMaster  = Model.MasterStudents  != null || Model.MasterProfessor  != null || Model.MasterAssociate  != null || Model.MasterAssistant  != null;
+    bool hasPhD     = Model.PhDStudents     != null || Model.PhDProfessor     != null || Model.PhDAssociate     != null || Model.PhDAssistant     != null;
+    bool hasDiploma = Model.DiplomaStudents != null || Model.DiplomaProfessor != null || Model.DiplomaAssociate != null || Model.DiplomaAssistant != null;
 
-
-    // =========================
-    // PHD STAFF
-    // =========================
-
-    var phdProfessor = Model.PhDProfessor ?? 0;
-
-    var phdAssociate = Model.PhDAssociate ?? 0;
-
-    var phdAssistant = Model.PhDAssistant ?? 0;
-
-    var phdFaculty =
-        phdProfessor +
-        phdAssociate +
-        phdAssistant;
-
-
-    // =========================
-    // DIPLOMA STAFF
-    // =========================
-
-    var diplomaProfessor = Model.DiplomaProfessor ?? 0;
-
-    var diplomaAssociate = Model.DiplomaAssociate ?? 0;
-
-    var diplomaAssistant = Model.DiplomaAssistant ?? 0;
-
-    var diplomaFaculty =
-        diplomaProfessor +
-        diplomaAssociate +
-        diplomaAssistant;
-
-
-    // =========================
-    // RATIOS
-    // =========================
-
-    double masterRatio = masterFaculty == 0 ? 0 : Math.Floor((double)masterStudents / masterFaculty);
-    double phdRatio = phdFaculty == 0 ? 0 : Math.Floor((double)phdStudents / phdFaculty);
-    double diplomaRatio = diplomaFaculty == 0 ? 0 : Math.Floor((double)diplomaStudents / diplomaFaculty);
-
-
-
-    // =========================
-    // REQUIRED LIMITS
-    // =========================
-
-    int masterAllowed = 15;
-
-    int phdAllowed = 15;
-
+    // ── Ratios (only for submitted degree types) ──────────────────────────────
+    int masterAllowed  = 15;
+    int phdAllowed     = 15;
     int diplomaAllowed = 20;
 
-
-    // =========================
-    // STATUS COLORS
-    // =========================
+    double masterRatio  = hasMaster  && masterFaculty  > 0 ? Math.Floor((double)masterStudents  / masterFaculty)  : 0;
+    double phdRatio     = hasPhD     && phdFaculty     > 0 ? Math.Floor((double)phdStudents     / phdFaculty)     : 0;
+    double diplomaRatio = hasDiploma && diplomaFaculty > 0 ? Math.Floor((double)diplomaStudents / diplomaFaculty) : 0;
 
     string GetRatioStatus(double ratio, int allowed)
     {
-        if (ratio <= allowed)
-        {
-            return "green";
-        }
-
-        if (ratio <= allowed * 1.25)
-        {
-            return "orange";
-        }
-
+        if (ratio <= allowed)        return "green";
+        if (ratio <= allowed * 1.25) return "orange";
         return "red";
     }
 
-    var masterStatus =
-        GetRatioStatus(masterRatio, masterAllowed);
+    var masterStatus  = hasMaster  ? GetRatioStatus(masterRatio,  masterAllowed)  : "";
+    var phdStatus     = hasPhD     ? GetRatioStatus(phdRatio,     phdAllowed)     : "";
+    var diplomaStatus = hasDiploma ? GetRatioStatus(diplomaRatio, diplomaAllowed) : "";
 
-    var phdStatus =
-        GetRatioStatus(phdRatio, phdAllowed);
+    // Only include active degree types in overall compliance
+    var statuses = new[] { masterStatus, phdStatus, diplomaStatus }
+        .Where(s => !string.IsNullOrEmpty(s)).ToArray();
 
-    var diplomaStatus =
-        GetRatioStatus(diplomaRatio, diplomaAllowed);
-
-
-    // =========================
-    // FINAL ASSESSMENT
-    // =========================
-
-    var statuses = new[]
+    string overallStatus, overallText, overallMessage;
+    if (!statuses.Any())
     {
-        masterStatus,
-        phdStatus,
-        diplomaStatus
-    };
-
-    string overallStatus;
-
-    string overallText;
-
-    string overallMessage;
-
-    if (statuses.Contains("red"))
+        overallStatus  = "orange";
+        overallText    = "No Data";
+        overallMessage = "No postgraduate degree data has been submitted yet.";
+    }
+    else if (statuses.Contains("red"))
     {
-        overallStatus = "red";
-
-        overallText = "Not Compliant";
-
-        overallMessage =
-            "One or more postgraduate ratios exceed the allowed tolerance.";
+        overallStatus  = "red";
+        overallText    = "Not Compliant";
+        overallMessage = "One or more postgraduate ratios exceed the allowed tolerance.";
     }
     else if (statuses.Contains("orange"))
     {
-        overallStatus = "orange";
-
-        overallText = "Needs Review";
-
-        overallMessage =
-            "Some ratios exceed the standard limits but remain within tolerance.";
+        overallStatus  = "orange";
+        overallText    = "Needs Review";
+        overallMessage = "Some ratios exceed the standard limits but remain within tolerance.";
     }
     else
     {
-        overallStatus = "green";
-
-        overallText = "Compliant";
-
-        overallMessage =
-            "All postgraduate ratios are within the acceptable range.";
-   
-}}
-
+        overallStatus  = "green";
+        overallText    = "Compliant";
+        overallMessage = "All postgraduate ratios are within the acceptable range.";
+    }
+}
 
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
     <title>@ViewData["Title"]</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/DetailsBasicInfo.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/DetailsStatistics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/DetailsRecommendation.css" asp-append-version="true" />
+    <style>
+        /* ── Badge chips ── */
+        .ol-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+        .ol-badge-bach    { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+        .ol-badge-master  { background: #f5f3ff; color: #6d28d9; border: 1px solid #c4b5fd; }
+        .ol-badge-phd     { background: #fdf2f2; color: #7a2d2a; border: 1px solid #e8c5c5; }
+        .ol-badge-diploma { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet">
+        /* ── Section card overrides ── */
+        .rm-card.rd-card,
+        .rm-card.fa-final-card {
+            border: 1px solid #ede4da !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,.05) !important;
+            margin-bottom: 20px !important;
+            padding: 0 !important;
+        }
+        .rd-card-hd {
+            background: #7f1627 !important;
+            color: #fff !important;
+            padding: 14px 20px !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+        }
+        .rd-card-hd h2 { font-size: 15px !important; font-weight: 700 !important; color: #fff !important; margin: 0 !important; }
+        .rd-card-hd p  { font-size: 11px !important; color: rgba(255,255,255,.75) !important; margin: 2px 0 0 !important; }
+        .rd-card-hd-row { display: flex !important; align-items: center !important; justify-content: space-between !important; }
+        /* ── Final Recommendation card: brand burgundy header ── */
+        .rm-card.fa-final-card .rd-card-hd { background: linear-gradient(135deg, #7f1627 0%, #a01e32 100%) !important; }
+        .rd-grid4 { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; padding: 16px 20px !important; }
+        .rd-grid3 { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; padding: 16px 20px !important; }
+        .rd-field { background: #faf7f3 !important; border: 1px solid #eee7de !important; border-radius: 8px !important; padding: 10px 12px !important; }
+        .rd-field label { font-size: 10px !important; font-weight: 800 !important; color: #9ca3af !important; text-transform: uppercase !important; letter-spacing: .5px !important; display: block !important; margin-bottom: 5px !important; }
+        .rd-field input[readonly],
+        .rd-field input[type="text"][readonly] { border: none !important; background: transparent !important; padding: 0 !important; font-size: 13.5px !important; font-weight: 600 !important; color: #111 !important; cursor: default !important; width: 100% !important; outline: none !important; box-shadow: none !important; -webkit-appearance: none !important; }
+        .rd-field textarea[readonly] { border: none !important; background: transparent !important; padding: 0 !important; font-size: 13.5px !important; font-weight: 600 !important; color: #111 !important; cursor: default !important; width: 100% !important; outline: none !important; resize: none !important; }
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        /* ── Page-head strip ── */
+        .rm-card.rd-head { background: #fff !important; border: 1px solid #ede4da !important; border-left: 5px solid #7f1627 !important; border-radius: 12px !important; padding: 20px 22px !important; display: flex !important; align-items: flex-start !important; justify-content: space-between !important; gap: 16px !important; box-shadow: 0 2px 12px rgba(0,0,0,.05) !important; margin-bottom: 20px !important; }
+        .rm-card.rd-head h1 { font-size: 20px !important; font-weight: 800 !important; color: #1a1a1a !important; }
+        .rd-inst { font-size: 13.5px !important; color: #555 !important; margin-top: 4px !important; }
+        .rd-inst b { color: #7f1627 !important; }
+        .rm-card.rd-head > div > p:not(.rd-inst) { font-size: 12px !important; color: #888 !important; margin-top: 3px !important; }
+        .rd-meta { display: flex !important; flex-direction: column !important; gap: 6px !important; align-items: flex-end !important; }
+        .meta-pill { background: #faf7f3 !important; border: 1px solid #ede4da !important; border-radius: 8px !important; padding: 6px 12px !important; font-size: 12px !important; display: flex !important; align-items: center !important; gap: 8px !important; white-space: nowrap !important; }
+        .meta-pill span { color: #888 !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: .4px !important; }
+        .meta-pill b { color: #1a1a1a !important; font-size: 13px !important; font-weight: 700 !important; }
+        .info-block { background: #fdf8f3 !important; border: 1px solid #ede4da !important; border-left: 3px solid #7f1627 !important; border-radius: 8px !important; padding: 10px 14px !important; font-size: 12.5px !important; color: #555 !important; line-height: 1.65 !important; margin: 0 20px 16px !important; }
+        .block-title { font-weight: 700 !important; color: #3d1a1a !important; margin-right: 6px !important; }
 
-    <link rel="stylesheet"
-          href="~/css/member/RecognitionMemberDashboard.css"
-          asp-append-version="true" />
+        /* ── Extra breathing room for postgraduate details sections ── */
+        .ratios-extra-row { padding: 4px 20px 18px !important; }
+        .color-rules-wrapper > label { display: inline-block; margin-bottom: 10px !important; }
+        .fa-suggestion-banner,
+        .fa-decision-wrap,
+        .fa-justify-label,
+        #pgJustification {
+            margin-left: 20px !important;
+            margin-right: 20px !important;
+        }
+        .fa-suggestion-banner { margin-top: 20px !important; }
+        #pgJustification { padding-right: 28px !important; }
+        .fa-save-row {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: 0 !important;
+        }
 
-    <link rel="stylesheet"
-          href="~/css/member/DetailsStatistics.css"
-          asp-append-version="true" />
+        /* ── Ratio card colors ── */
+        .ratio-field.green  { background: #f0fdf4 !important; border-color: #86efac !important; }
+        .ratio-field.orange { background: #fff7ed !important; border-color: #fdba74 !important; }
+        .ratio-field.red    { background: #fff1f2 !important; border-color: #fca5a5 !important; }
+        .ratio-field.green  label { color: #15803d !important; }
+        .ratio-field.orange label { color: #c2410c !important; }
+        .ratio-field.red    label { color: #b91c1c !important; }
+        .ratio-field.green  input[readonly] { color: #166534 !important; font-weight: 800 !important; }
+        .ratio-field.orange input[readonly] { color: #9a3412 !important; font-weight: 800 !important; }
+        .ratio-field.red    input[readonly] { color: #991b1b !important; font-weight: 800 !important; }
+        .ratio-field.green  small { color: #16a34a !important; }
+        .ratio-field.orange small { color: #ea580c !important; }
+        .ratio-field.red    small { color: #dc2626 !important; }
+
+        /* ── Color-rule dots ── */
+        .rd-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; flex-shrink: 0; }
+        .rd-dot.green  { background: #22c55e; }
+        .rd-dot.orange { background: #f97316; }
+        .rd-dot.red    { background: #ef4444; }
+        .rd-color-rules { background: #faf7f3; border: 1px solid #ede4da; border-radius: 10px; padding: 14px 16px; }
+        .rd-color-section { margin-bottom: 12px; }
+        .rd-color-section:last-child { margin-bottom: 0; }
+        .rd-color-label { font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+        .rd-color-rules ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 5px; }
+        .rd-color-rules li { display: flex; align-items: center; font-size: 12.5px; color: #374151; }
+    </style>
 </head>
 
 <body class="rm-page">
 
-    <!-- HEADER -->
     <header class="rm-header">
-
         <div class="rm-brandbar"></div>
-
         <div class="rm-top">
             <div class="rm-top-inner">
-
                 <div class="rm-brand">
-                    <img class="rm-logo"
-                         src="@Url.Content("~/images/mohelogo.png")"
-                         alt="MOHE Logo" />
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
                 </div>
-
                 <div class="rm-user">
-
-                    <div class="rm-userpill">
-                        <i class="bi bi-person-circle"></i>
-                        <span>
-                            Welcome,
-                            <b>Dr. Khaled Ahmed</b>
-                        </span>
-                    </div>
-
-                    <a class="rm-btn rm-btn-light"
-                       href="@Url.Action("Logout", "Home")">
-
-                        <i class="bi bi-box-arrow-right"></i>
-                        Logout
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@(currentMember?.Length > 0 ? currentMember.Substring(0,1).ToUpper() : "M")</div>
+                        <div class="rm-user-card-text">
+                            <strong>@currentMember</strong>
+                            <span>Recognition Committee Member</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
                     </a>
-
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
                 </div>
-
             </div>
         </div>
-
     </header>
 
-    <!-- SHELL -->
     <div class="rm-shell">
+        @await Html.PartialAsync("_MemberSidebar")
 
-        <!-- SIDEBAR -->
-        <aside class="rm-sidebar">
-            <div class="rm-side-title">
-                Navigation
-            </div>
-            <nav class="rm-nav">
-
-                <a class="rm-navitem"
-                   href="@Url.Action("RecognitionMemberDashboard", "Home")">
-
-                    <i class="bi bi-grid-1x2"></i>
-                    <span>Dashboard</span>
-                </a>
-
-                <a class="rm-navitem active"
-                   href="@Url.Action("ElectronicRequests", "Home")">
-
-                    <i class="bi bi-send-check"></i>
-                    <span>My Assigned Requests</span>
-                </a>
-
-                <a class="rm-navitem"
-                   href="@Url.Action("Archive", "Home")">
-
-                    <i class="bi bi-inboxes"></i>
-                    <span>Requests Archive</span>
-                </a>
-
-                <a class="rm-navitem danger"
-                   href="@Url.Action("Logout", "Home")">
-
-                    <i class="bi bi-power"></i>
-                    <span>Sign Out</span>
-                </a>
-
-            </nav>
-        </aside>
-        <!-- MAIN -->
         <main class="rm-main">
 
-            <!-- TOP REQUEST CARD -->
+            <!-- Page Head -->
             <section class="rm-card rd-head">
                 <div>
                     <h1>Postgraduate Request Details</h1>
-                    <p class="rd-inst">
-                        Institution: <b>@(Model.InstitutionName ?? "N/A")</b>
-                    </p>
-                    <p>Review postgraduate recognition application.</p>
+                    <p class="rd-inst">Institution: <b>@FieldVal(Model.InstitutionName)</b></p>
+                    <p>Submitted postgraduate recognition application — read only.</p>
                 </div>
                 <div class="rd-meta">
                     <div class="meta-pill">
                         <span>Applicant</span>
-                        <b>@(Model.Name ?? "N/A")</b>
+                        <b>@FieldVal(Model.Name)</b>
                     </div>
                     <div class="meta-pill">
                         <span>Request Type</span>
@@ -288,677 +261,484 @@
                     </div>
                 </div>
             </section>
-            <!-- ================= PUBLIC INFORMATION ================= -->
+
+            <!-- Public Information -->
             <section class="rm-card rd-card">
                 <div class="rd-card-hd">
                     <h2>Public Information</h2>
                     <p>General institution and application information.</p>
                 </div>
-                <div class="rd-grid3">
+                <div class="rd-grid4">
                     <div class="rd-field">
                         <label>Institution Name</label>
-                        <input type="text" value="@(Model.InstitutionName ?? "N/A")" readonly />
+                        <input type="text" value="@FieldVal(Model.InstitutionName)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Oversight Rights Entity</label>
+                        <input type="text" value="@FieldVal(Model.OversightRightsEntity)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Foundation Date</label>
+                        <input type="text" value="@FieldVal(Model.FoundationDate)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Date of Establishment</label>
+                        <input type="text" value="@FieldVal(Model.DateOfEstablishment)" readonly />
                     </div>
                     <div class="rd-field">
                         <label>Mode of Study</label>
-                        <input type="text" value="@(Model.ModeOfStudy ?? "N/A")" readonly />
+                        <input type="text" value="@FieldVal(Model.ModeOfStudy)" readonly />
                     </div>
                     <div class="rd-field">
                         <label>Language of Instruction</label>
-                        <input type="text" value="@(Model.LanguageOfInstruction ?? "N/A")" readonly />
+                        <input type="text" value="@FieldVal(Model.LanguageOfInstruction)" readonly />
                     </div>
                     <div class="rd-field">
+                        <label>Start of Teaching</label>
+                        <input type="text" value="@FieldVal(Model.StartOfTeaching)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>President Name</label>
+                        <input type="text" value="@FieldVal(Model.PresidentName)" readonly />
+                    </div>
+                    <div class="rd-field" style="grid-column:span 2;">
+                        <label>Mailing / Full Address</label>
+                        <input type="text" value="@FieldVal(Model.MailingFullAddress)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Direct Phone Number</label>
+                        <input type="text" value="@FieldVal(Model.DirectPhoneNumber)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Email Address</label>
+                        <input type="text" value="@FieldVal(Model.EmailAddress)" readonly />
+                    </div>
+                    <div class="rd-field" style="grid-column:span 2;">
                         <label>Official Website</label>
-                        <input type="text" value="@(Model.InstitutionalWebAddress ?? "N/A")" readonly />
-                    </div>
-                    <div class="rd-field">
-                        <label>Contact Email</label>
-                        <input type="text" value="@(Model.EmailAddress ?? "N/A")" readonly />
-                    </div>
-                    <div class="rd-field">
-                        <label>Contact Phone</label>
-                        <input type="text" value="@(Model.DirectPhoneNumber ?? "N/A")" readonly />
-                    </div>
-                    <div class="rd-field">
-                        <label>Applicant Name</label>
-                        <input type="text" value="@(Model.Name ?? "N/A")" readonly />
-                    </div>
-                    <div class="rd-field">
-                        <label>Work Place</label>
-                        <input type="text" value="@(Model.WorkPlace ?? "N/A")" readonly />
+                        <input type="text" value="@FieldVal(Model.InstitutionalWebAddress)" readonly />
                     </div>
                     <div class="rd-field">
                         <label>Country</label>
-                        <input type="text" value="@(Model.Country ?? "N/A")" readonly />
+                        <input type="text" value="@FieldVal(Model.Country)" readonly />
                     </div>
                     <div class="rd-field">
                         <label>City</label>
-                        <input type="text" value="@(Model.City ?? "N/A")" readonly />
+                        <input type="text" value="@FieldVal(Model.City)" readonly />
                     </div>
                 </div>
             </section>
-            <!-- =========== PROGRAMS ================ -->
-        <!-- MASTER -->
-<div class="rd-field">
-    <label>Master Programs File</label>
-    <input type="text"
-           value="@(Model.MasterFileName ?? "No file uploaded")"
-           readonly />
-</div>
 
-<!-- PHD -->
-<div class="rd-field">
-    <label>PhD Programs File</label>
-    <input type="text"
-           value="@(Model.PhDFileName ?? "No file uploaded")"
-           readonly />
-</div>
-
-<!-- DIPLOMA -->
-<div class="rd-field">
-    <label>Higher Diploma File</label>
-    <input type="text"
-           value="@(Model.DiplomaFileName ?? "No file uploaded")"
-           readonly />
-</div>
-            
-            <!--======================= STUDENTS ======================================-->
+            <!-- Postgraduate Programs -->
             <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>Postgraduate Programs</h2>
+                    <p>@pgPrograms.Count program@(pgPrograms.Count != 1 ? "s" : "") submitted for recognition.</p>
+                </div>
+                @if (!pgPrograms.Any())
+                {
+                    <div style="padding:28px;text-align:center;color:#9ca3af;font-size:13.5px;">
+                        <i class="bi bi-inbox" style="font-size:28px;display:block;margin-bottom:8px;"></i>
+                        No programs entered.
+                    </div>
+                }
+                else
+                {
+                    <div class="rm-tablewrap" style="margin-top:0;border-radius:0;border-left:none;border-right:none;border-bottom:none;">
+                        <table class="rm-table" style="table-layout:auto;">
+                            <thead>
+                                <tr>
+                                    <th style="width:44px;">#</th>
+                                    <th>Degree Level</th>
+                                    <th>Program Name</th>
+                                    <th>College / Faculty</th>
+                                    <th style="text-align:center;width:60px;">Years</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ int pgRowNum = 1; }
+                                @foreach (var p in pgPrograms)
+                                {
+                                    <tr>
+                                        <td style="color:#9ca3af;font-size:12px;font-weight:600;">@pgRowNum</td>
+                                        <td>
+                                            <span class="ol-badge @DegreeBadgeClass(p.DegreeLevel)">@p.DegreeLevel</span>
+                                        </td>
+                                        <td style="font-weight:700;">@p.ProgramName</td>
+                                        <td style="color:#6b7280;">@(string.IsNullOrWhiteSpace(p.CollegeOrFaculty) ? "—" : p.CollegeOrFaculty)</td>
+                                        <td style="text-align:center;font-weight:600;">@(p.NumberOfYears.HasValue ? p.NumberOfYears.Value.ToString() : "—")</td>
+                                    </tr>
+                                    pgRowNum++;
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
 
+            <!-- Students Numbers -->
+            <section class="rm-card rd-card">
                 <div class="rd-card-hd">
                     <h2>Students Numbers</h2>
-                    <p>Submitted students numbers.</p>
+                    <p>Submitted student enrollment counts.</p>
                 </div>
-
                 <div class="rd-grid3">
-
-                    <div class="rd-field">
-                        <label>Master Students</label>
-                        <input type="number"
-                               value="@masterStudents"
-                               readonly />
-                    </div>
-
-                    <div class="rd-field">
-                        <label>PhD Students</label>
-                        <input type="number"
-                               value="@phdStudents"
-                               readonly />
-                    </div>
-
-                    <div class="rd-field">
-                        <label>Higher Diploma Students</label>
-                        <input type="number"
-                               value="@diplomaStudents"
-                               readonly />
-                    </div>
-
+                    @if (hasMaster)
+                    {
+                        <div class="rd-field">
+                            <label>Master Students</label>
+                            <input type="number" value="@masterStudents" readonly />
+                        </div>
+                    }
+                    @if (hasPhD)
+                    {
+                        <div class="rd-field">
+                            <label>PhD Students</label>
+                            <input type="number" value="@phdStudents" readonly />
+                        </div>
+                    }
+                    @if (hasDiploma)
+                    {
+                        <div class="rd-field">
+                            <label>Higher Diploma Students</label>
+                            <input type="number" value="@diplomaStudents" readonly />
+                        </div>
+                    }
+                    @if (!hasMaster && !hasPhD && !hasDiploma)
+                    {
+                        <div style="grid-column:1/-1;padding:18px 0;color:#9ca3af;font-size:13.5px;font-weight:600;">
+                            <i class="bi bi-dash-circle"></i> No student enrollment data submitted.
+                        </div>
+                    }
                 </div>
-
             </section>
 
-            <!-- ============================ FACULTY ============================ -->
+            <!-- Academic Staff -->
             <section class="rm-card rd-card">
-
                 <div class="rd-card-hd">
                     <h2>Academic Staff</h2>
-                    <p>Submitted academic staff information.</p>
+                    <p>Submitted academic staff counts by program level and rank.</p>
                 </div>
-
                 <div class="rank-review-grid">
 
-                    <!-- MASTER -->
-                    <article class="rank-review-card">
-
-                        <header>
-                            <h3>Master Programs</h3>
-
-                            <span class="rank-total-pill">
-                                Total: @masterFaculty
-                            </span>
-                        </header>
-
-                        <div class="rank-review-split">
-
-                            <div class="rank-review-block">
-                                <label>Professor</label>
-
-                                <input type="number"
-                                       value="@masterProfessor"
-                                       readonly />
+                    @if (hasMaster)
+                    {
+                        <article class="rank-review-card">
+                            <header>
+                                <h3>Master Programs</h3>
+                                <span class="rank-total-pill">Total: @masterFaculty</span>
+                            </header>
+                            <div class="rank-review-split">
+                                <div class="rank-review-block">
+                                    <label>Professor</label>
+                                    <input type="number" value="@masterProfessor" readonly />
+                                </div>
+                                <div class="rank-review-block">
+                                    <label>Associate Professor</label>
+                                    <input type="number" value="@masterAssociate" readonly />
+                                </div>
+                                <div class="rank-review-block">
+                                    <label>Assistant Professor</label>
+                                    <input type="number" value="@masterAssistant" readonly />
+                                </div>
                             </div>
+                        </article>
+                    }
 
-                            <div class="rank-review-block">
-                                <label>Associate Professor</label>
-
-                                <input type="number"
-                                       value="@masterAssociate"
-                                       readonly />
+                    @if (hasPhD)
+                    {
+                        <article class="rank-review-card">
+                            <header>
+                                <h3>PhD Programs</h3>
+                                <span class="rank-total-pill">Total: @phdFaculty</span>
+                            </header>
+                            <div class="rank-review-split">
+                                <div class="rank-review-block">
+                                    <label>Professor</label>
+                                    <input type="number" value="@phdProfessor" readonly />
+                                </div>
+                                <div class="rank-review-block">
+                                    <label>Associate Professor</label>
+                                    <input type="number" value="@phdAssociate" readonly />
+                                </div>
+                                <div class="rank-review-block">
+                                    <label>Assistant Professor</label>
+                                    <input type="number" value="@phdAssistant" readonly />
+                                </div>
                             </div>
+                        </article>
+                    }
 
-                            <div class="rank-review-block">
-                                <label>Assistant Professor</label>
-
-                                <input type="number"
-                                       value="@masterAssistant"
-                                       readonly />
+                    @if (hasDiploma)
+                    {
+                        <article class="rank-review-card">
+                            <header>
+                                <h3>Higher Diploma Programs</h3>
+                                <span class="rank-total-pill">Total: @diplomaFaculty</span>
+                            </header>
+                            <div class="rank-review-split">
+                                <div class="rank-review-block">
+                                    <label>Professor</label>
+                                    <input type="number" value="@diplomaProfessor" readonly />
+                                </div>
+                                <div class="rank-review-block">
+                                    <label>Associate Professor</label>
+                                    <input type="number" value="@diplomaAssociate" readonly />
+                                </div>
+                                <div class="rank-review-block">
+                                    <label>Assistant Professor</label>
+                                    <input type="number" value="@diplomaAssistant" readonly />
+                                </div>
                             </div>
+                        </article>
+                    }
 
+                    @if (!hasMaster && !hasPhD && !hasDiploma)
+                    {
+                        <div style="padding:18px 0;color:#9ca3af;font-size:13.5px;font-weight:600;">
+                            <i class="bi bi-dash-circle"></i> No academic staff data submitted.
                         </div>
-
-                    </article>
-
-                    <!-- PHD -->
-                    <article class="rank-review-card">
-
-                        <header>
-                            <h3>PhD Programs</h3>
-
-                            <span class="rank-total-pill">
-                                Total: @phdFaculty
-                            </span>
-                        </header>
-
-                        <div class="rank-review-split">
-
-                            <div class="rank-review-block">
-                                <label>Professor</label>
-
-                                <input type="number"
-                                       value="@phdProfessor"
-                                       readonly />
-                            </div>
-
-                            <div class="rank-review-block">
-                                <label>Associate Professor</label>
-
-                                <input type="number"
-                                       value="@phdAssociate"
-                                       readonly />
-                            </div>
-
-                            <div class="rank-review-block">
-                                <label>Assistant Professor</label>
-
-                                <input type="number"
-                                       value="@phdAssistant"
-                                       readonly />
-                            </div>
-
-                        </div>
-
-                    </article>
-
-                    <!-- DIPLOMA -->
-                    <article class="rank-review-card">
-
-                        <header>
-                            <h3>Higher Diploma Programs</h3>
-
-                            <span class="rank-total-pill">
-                                Total: @diplomaFaculty
-                            </span>
-                        </header>
-
-                        <div class="rank-review-split">
-
-                            <div class="rank-review-block">
-                                <label>Professor</label>
-
-                                <input type="number"
-                                       value="@diplomaProfessor"
-                                       readonly />
-                            </div>
-
-                            <div class="rank-review-block">
-                                <label>Associate Professor</label>
-
-                                <input type="number"
-                                       value="@diplomaAssociate"
-                                       readonly />
-                            </div>
-
-                            <div class="rank-review-block">
-                                <label>Assistant Professor</label>
-
-                                <input type="number"
-                                       value="@diplomaAssistant"
-                                       readonly />
-                            </div>
-
-                        </div>
-
-                    </article>
+                    }
 
                 </div>
-
             </section>
 
-            <!-- ============================ RATIOS ============================ -->
+            <!-- Ratios & Compliance -->
             <section class="rm-card rd-card">
-
                 <div class="rd-card-hd">
-                    <h2>Ratios & Compliance</h2>
+                    <h2>Ratios &amp; Compliance</h2>
                     <p>Calculated postgraduate ratios.</p>
                 </div>
-
-                <!-- RATIO CARDS -->
                 <div class="rd-grid3">
-
-                    <!-- MASTER -->
-                    <div class="rd-field ratio-field @(masterStatus)">
-
-                        <label>Master Ratio</label>
-
-                        <input type="text"
-                               value="1:@masterRatio.ToString("0.0")"
-                               readonly />
-
-                        <small>
-                            Allowed Ratio:
-                            1:@masterAllowed
-                        </small>
-
-                    </div>
-
-                    <!-- PHD -->
-                    <div class="rd-field ratio-field @(phdStatus)">
-
-                        <label>PhD Ratio</label>
-
-                        <input type="text"
-                               value="1:@phdRatio.ToString("0.0")"
-                               readonly />
-
-                        <small>
-                            Allowed Ratio:
-                            1:@phdAllowed
-                        </small>
-
-                    </div>
-
-                    <!-- DIPLOMA -->
-                    <div class="rd-field ratio-field @(diplomaStatus)">
-
-                        <label>Higher Diploma Ratio</label>
-
-                        <input type="text"
-                               value="1:@diplomaRatio.ToString("0.0")"
-                               readonly />
-
-                        <small>
-                            Allowed Ratio:
-                            1:@diplomaAllowed
-                        </small>
-
-                    </div>
-
-                </div>
-
-                <!-- RULES -->
-                <div class="ratios-extra-row">
-
-                    <div class="color-rules-wrapper">
-
-                        <label>Color Rules</label>
-
-                        <div class="rd-color-rules color-rules-card">
-
-                            <!-- COLORS -->
-                            <div class="rd-color-section">
-
-                                <div class="rd-color-label">
-                                    Students to Faculty Ratio
-                                </div>
-
-                                <ul>
-
-                                    <li>
-                                        <span class="rd-dot green"></span>
-
-                                        Green = ratio is within the required limit.
-                                    </li>
-
-                                    <li>
-                                        <span class="rd-dot orange"></span>
-
-                                        Orange = ratio exceeds the required limit
-                                        but is still within the allowed 25% tolerance.
-                                    </li>
-
-                                    <li>
-                                        <span class="rd-dot red"></span>
-
-                                        Red = ratio exceeds the 25% tolerance.
-                                    </li>
-
-                                </ul>
-
-                            </div>
-
-                            <!-- REQUIRED RATIOS -->
-                            <div class="rd-color-section">
-
-                                <div class="rd-color-label">
-                                    Required Ratios
-                                </div>
-
-                                <ul>
-
-                                    <li>
-                                        <span class="rd-dot green"></span>
-                                        PhD Programs = 1:15
-                                    </li>
-
-                                    <li>
-                                        <span class="rd-dot green"></span>
-                                        Master Programs = 1:15
-                                    </li>
-
-                                    <li>
-                                        <span class="rd-dot green"></span>
-                                        Higher Diploma Programs = 1:20
-                                    </li>
-
-                                </ul>
-
-                            </div>
-
+                    @if (hasMaster)
+                    {
+                        <div class="rd-field ratio-field @(masterStatus)">
+                            <label>Master Ratio</label>
+                            <input type="text" value="1:@masterRatio.ToString("0")" readonly />
+                            <small>Allowed Ratio: 1:@masterAllowed</small>
                         </div>
-
-                    </div>
-
+                    }
+                    @if (hasPhD)
+                    {
+                        <div class="rd-field ratio-field @(phdStatus)">
+                            <label>PhD Ratio</label>
+                            <input type="text" value="1:@phdRatio.ToString("0")" readonly />
+                            <small>Allowed Ratio: 1:@phdAllowed</small>
+                        </div>
+                    }
+                    @if (hasDiploma)
+                    {
+                        <div class="rd-field ratio-field @(diplomaStatus)">
+                            <label>Higher Diploma Ratio</label>
+                            <input type="text" value="1:@diplomaRatio.ToString("0")" readonly />
+                            <small>Allowed Ratio: 1:@diplomaAllowed</small>
+                        </div>
+                    }
+                    @if (!hasMaster && !hasPhD && !hasDiploma)
+                    {
+                        <div style="grid-column:1/-1;padding:18px 0;color:#9ca3af;font-size:13.5px;font-weight:600;">
+                            <i class="bi bi-dash-circle"></i> No postgraduate degree data has been submitted yet.
+                        </div>
+                    }
                 </div>
-
+                <div class="ratios-extra-row">
+                    <div class="color-rules-wrapper">
+                        <label>Color Rules</label>
+                        <div class="rd-color-rules color-rules-card">
+                            <div class="rd-color-section">
+                                <div class="rd-color-label">Students to Faculty Ratio</div>
+                                <ul>
+                                    <li><span class="rd-dot green"></span> Green = ratio is within the required limit.</li>
+                                    <li><span class="rd-dot orange"></span> Orange = ratio exceeds the required limit but is still within the allowed 25% tolerance.</li>
+                                    <li><span class="rd-dot red"></span> Red = ratio exceeds the 25% tolerance.</li>
+                                </ul>
+                            </div>
+                            <div class="rd-color-section">
+                                <div class="rd-color-label">Required Ratios</div>
+                                <ul>
+                                    <li><span class="rd-dot green"></span> PhD Programs = 1:15</li>
+                                    <li><span class="rd-dot green"></span> Master Programs = 1:15</li>
+                                    <li><span class="rd-dot green"></span> Higher Diploma Programs = 1:20</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
 
-            <!-- ============== FINAL ASSESSMENT ============== -->
-            <!-- FINAL ASSESSMENT -->
+            <!-- Final Recommendation -->
             <section class="rm-card rd-card fa-final-card">
-
                 <div class="rd-card-hd">
-
                     <div class="rd-card-hd-row">
-
                         <div class="fa-final-head">
-
-                            <h2>
-                                <i class="bi bi-clipboard2-check"></i>
-                                Final Recommendation
-                            </h2>
-
-                            <p>
-                                System-generated recommendation based on postgraduate ratios and compliance results.
-                            </p>
-
+                            <h2><i class="bi bi-clipboard2-check"></i> Final Recommendation</h2>
+                            <p>System-generated recommendation based on postgraduate ratios and compliance results.</p>
                             <div class="fa-final-kpis">
-
                                 <span class="fa-final-kpi ok">
                                     <i class="bi bi-check-circle-fill"></i>
-
-                                    Compliant:
-                                    @(statuses.Count(x => x == "green"))
+                                    Compliant: @(statuses.Count(x => x == "green"))
                                 </span>
-
                                 <span class="fa-final-kpi warn">
                                     <i class="bi bi-exclamation-circle-fill"></i>
-
-                                    Needs Review:
-                                    @(statuses.Count(x => x == "orange"))
+                                    Needs Review: @(statuses.Count(x => x == "orange"))
                                 </span>
-
                                 <span class="fa-final-kpi bad">
                                     <i class="bi bi-x-circle-fill"></i>
-
-                                    Non-Compliant:
-                                    @(statuses.Count(x => x == "red"))
+                                    Non-Compliant: @(statuses.Count(x => x == "red"))
                                 </span>
-
                             </div>
-
                         </div>
-
                     </div>
-
                 </div>
 
-                <!-- SYSTEM SUGGESTION -->
-                <div class="fa-suggestion-banner @(overallStatus)">
-
+                @{ var pgBannerClass = overallStatus == "green" ? "approve" : (overallStatus == "orange" ? "conditional" : "reject"); }
+                <div class="fa-suggestion-banner @pgBannerClass">
                     <div class="fa-banner-icon">
-
-                        @if (overallStatus == "green")
-                        {
-                            <i class="bi bi-check2-circle"></i>
-                        }
-                        else if (overallStatus == "orange")
-                        {
-                            <i class="bi bi-arrow-repeat"></i>
-                        }
-                        else
-                        {
-                            <i class="bi bi-x-octagon-fill"></i>
-                        }
-
+                        @if (overallStatus == "green")      { <i class="bi bi-check2-circle"></i> }
+                        else if (overallStatus == "orange") { <i class="bi bi-arrow-repeat"></i> }
+                        else                                { <i class="bi bi-x-octagon-fill"></i> }
                     </div>
-
                     <div class="fa-banner-body">
-
-                        <div class="fa-banner-eyebrow">
-                            System Suggestion
+                        <div class="fa-banner-eyebrow">System Suggestion</div>
+                        <div class="fa-suggestion-badge">
+                            @if (overallStatus == "green")      { <span>Approve</span> }
+                            else if (overallStatus == "orange") { <span>Conditional Approval</span> }
+                            else                                { <span>Reject / Committee Review</span> }
                         </div>
-
-                        <div class="fa-suggestion-badge @(overallStatus)">
-
-                            @if (overallStatus == "green")
-                            {
-                                <span>Approve</span>
-                            }
-                            else if (overallStatus == "orange")
-                            {
-                                <span>Conditional Approval</span>
-                            }
-                            else
-                            {
-                                <span>Reject / Committee Review</span>
-                            }
-
-                        </div>
-
                         <div class="fa-banner-note">
-
-                            @if (overallStatus == "green")
-                            {
-                                <span>
-                                    All postgraduate ratios are within the acceptable range.
-                                </span>
-                            }
-                            else if (overallStatus == "orange")
-                            {
-                                <span>
-                                    Some postgraduate ratios exceed the standard limits but remain within tolerance.
-                                </span>
-                            }
-                            else
-                            {
-                                <span>
-                                    One or more postgraduate ratios exceed the allowed tolerance.
-                                </span>
-                            }
-
+                            @if (overallStatus == "green")      { <span>All postgraduate ratios are within the acceptable range.</span> }
+                            else if (overallStatus == "orange") { <span>Some postgraduate ratios exceed the standard limits but remain within tolerance.</span> }
+                            else                                { <span>One or more postgraduate ratios exceed the allowed tolerance.</span> }
                         </div>
-
                     </div>
-
                 </div>
 
-                <!-- FINAL DECISION -->
                 <div class="fa-decision-wrap">
-
                     <div class="fa-decision-label">
-
                         <i class="bi bi-person-check-fill"></i>
-
-                        Final Decision
-
-                        <span class="fa-required">*</span>
-
+                        Final Decision <span class="fa-required">*</span>
                     </div>
-
                     <div class="fa-decision-grid">
-
-                        <!-- APPROVE -->
-                        <button type="button"
-                                class="fa-dec-btn approve">
-
-                            <i class="bi bi-check2-circle"></i>
-
-                            <span>Approve</span>
-
-                            <small>
-                                Institution meets all postgraduate requirements
-                            </small>
-
+                        <button type="button" class="fa-dec-btn approve" data-value="Approve">
+                            <div class="fa-dec-icon"><i class="bi bi-check2-circle"></i></div>
+                            <div class="fa-dec-body">
+                                <span>Approve</span>
+                                <small>Institution meets all postgraduate requirements</small>
+                            </div>
                         </button>
-
-                        <!-- CONDITIONAL -->
-                        <button type="button"
-                                class="fa-dec-btn conditional">
-
-                            <i class="bi bi-arrow-repeat"></i>
-
-                            <span>Conditional Approval</span>
-
-                            <small>
-                                Pending corrective measures
-                            </small>
-
+                        <button type="button" class="fa-dec-btn conditional" data-value="Conditional Approval">
+                            <div class="fa-dec-icon"><i class="bi bi-arrow-repeat"></i></div>
+                            <div class="fa-dec-body">
+                                <span>Conditional Approval</span>
+                                <small>Pending corrective measures</small>
+                            </div>
                         </button>
-
-                        <!-- REJECT -->
-                        <button type="button"
-                                class="fa-dec-btn reject">
-
-                            <i class="bi bi-x-octagon-fill"></i>
-
-                            <span>Reject / Committee Review</span>
-
-                            <small>
-                                Requires committee review
-                            </small>
-
+                        <button type="button" class="fa-dec-btn reject" data-value="Reject / Committee Review">
+                            <div class="fa-dec-icon"><i class="bi bi-x-octagon-fill"></i></div>
+                            <div class="fa-dec-body">
+                                <span>Reject / Committee Review</span>
+                                <small>Requires committee review</small>
+                            </div>
                         </button>
-
                     </div>
+                    <input type="hidden" id="pgHiddenDecision" value="" />
                 </div>
-                <!-- JUSTIFICATION -->
+
                 <div class="fa-justify-label">
                     <i class="bi bi-chat-square-text"></i>
-                    Final Justification Note
-                    <span class="fa-required">*</span>
+                    Final Justification Note <span class="fa-required">*</span>
                 </div>
+                <textarea id="pgJustification" class="doc-notes" placeholder="Provide your professional justification for the final recommendation..."></textarea>
 
-                <textarea class="doc-notes"
-                          placeholder="Provide your professional justification for the final recommendation..."></textarea>
-
-                <!-- SAVE -->
                 <div class="fa-save-row">
-
                     <span class="fa-save-hint">
-
                         <i class="bi bi-lock-fill"></i>
-
                         Your decision will be recorded once saved.
-
                     </span>
-
-                    <button class="rm-btn rm-btn-primary"
-                            type="button">
+                    <button id="pgSaveBtn" class="rm-btn rm-btn-primary" type="button">
                         <i class="bi bi-check2-circle"></i>
-                        Save Decision
+                        Save &amp; Submit to Admin
                     </button>
-              </div>
+                </div>
             </section>
 
-            <!-- ACTIONS -->
+            <!-- Actions -->
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
-                   <a class="rm-btn rm-btn-light"
-                       href="@Url.Action("ElectronicRequests", "Home")">
-                        Back
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("ElectronicRequests", "Home")">
+                        <i class="bi bi-arrow-left"></i> Back to Requests
                     </a>
                 </div>
-                <div class="rd-actions-right">
-                    <button class="rm-btn rm-btn-primary"
-                            type="button">
-                        <i class="bi bi-save"></i>
-                        Save
-                    </button>
-                </div>
             </section>
+
         </main>
     </div>
+
     <script>
-        const decisionButtons =
-            document.querySelectorAll(".fa-dec-btn");
-        decisionButtons.forEach(btn => {
-            btn.addEventListener("click", function () {
-                // remove old selection
-                decisionButtons.forEach(b => {
-                    b.classList.remove("selected");
+        (function () {
+            var decBtns       = document.querySelectorAll('.fa-dec-btn');
+            var hiddenDecision = document.getElementById('pgHiddenDecision');
+            var justification  = document.getElementById('pgJustification');
+            var saveBtn        = document.getElementById('pgSaveBtn');
+
+            decBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    decBtns.forEach(function (b) { b.classList.remove('selected'); });
+                    this.classList.add('selected');
+                    if (hiddenDecision) hiddenDecision.value = this.getAttribute('data-value');
                 });
-               // add new selection
-                this.classList.add("selected");
             });
-        });
-    </script>
-    <style>
-        .fa-dec-btn {
-            cursor: pointer;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 20px;
-            background: #fff;
-            text-align: left;
-            transition: all 0.2s;
-            width: 100%;
-        }
 
-            .fa-dec-btn:hover {
-                border-color: #aaa;
-                background: #f9f9f9;
+            function showToast(msg, type) {
+                var old = document.getElementById('_pg-toast');
+                if (old) old.remove();
+                var t = document.createElement('div');
+                t.id = '_pg-toast';
+                t.textContent = msg;
+                Object.assign(t.style, {
+                    position: 'fixed', bottom: '28px', right: '28px', zIndex: '99999',
+                    padding: '13px 20px', borderRadius: '10px', color: '#fff',
+                    fontWeight: '600', fontSize: '14px', boxShadow: '0 4px 18px rgba(0,0,0,.18)',
+                    background: type === 'success' ? '#16a34a' : '#dc2626'
+                });
+                document.body.appendChild(t);
+                setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 320); }, 3500);
             }
 
-            .fa-dec-btn.approve.selected {
-                border-color: #16a34a;
-                background: #f0fdf4;
-                color: #15803d;
+            if (saveBtn) {
+                saveBtn.addEventListener('click', async function () {
+                    var decision = hiddenDecision ? hiddenDecision.value : '';
+                    var note     = justification  ? justification.value.trim() : '';
+                    if (!decision) { showToast('Please select a decision first.', 'error'); return; }
+                    if (!note)     { showToast('Please provide a justification note.', 'error'); return; }
+
+                    saveBtn.disabled = true;
+                    var orig = saveBtn.innerHTML;
+                    saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving…';
+
+                    try {
+                        var form = new FormData();
+                        form.append('id',       '@requestId');
+                        form.append('decision', decision);
+                        form.append('reason',   note);
+
+                        var res  = await fetch('@saveDecisionUrl', { method: 'POST', body: form });
+                        var data = await res.json();
+                        if (data.success) {
+                            showToast('Decision saved and submitted to admin.', 'success');
+                            setTimeout(function () { window.location.href = data.redirect || '@Url.Action("ElectronicRequests", "Home")'; }, 900);
+                        } else {
+                            showToast(data.error || 'Unable to save decision. Please try again.', 'error');
+                            saveBtn.disabled = false;
+                            saveBtn.innerHTML = orig;
+                        }
+                    } catch (_) {
+                        showToast('Network error. Please try again.', 'error');
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = orig;
+                    }
+                });
             }
-
-            .fa-dec-btn.conditional.selected {
-                border-color: #ca8a04;
-                background: #fefce8;
-                color: #a16207;
-            }
-
-            .fa-dec-btn.reject.selected {
-                border-color: #dc2626;
-                background: #fef2f2;
-                color: #b91c1c;
-            }
-    </style>
-
-    <script>
-        const decisionButtons = document.querySelectorAll(".fa-dec-btn");
-
-        decisionButtons.forEach(btn => {
-            btn.addEventListener("click", function () {
-                // remove selected from all
-                decisionButtons.forEach(b => b.classList.remove("selected"));
-                // add selected to clicked
-                this.classList.add("selected");
-            });
-        });
+        })();
     </script>
 </body>
 </html>

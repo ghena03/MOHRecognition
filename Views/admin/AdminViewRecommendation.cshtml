@@ -125,14 +125,18 @@
         .layout { display: flex; padding-top: var(--header-h); min-height: 100vh; }
 
         /* Sidebar */
-        .sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; width: var(--sidebar-w); background: var(--white); border-right: 1px solid var(--border); overflow-y: auto; z-index: 100; }
+        .sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; width: var(--sidebar-w); background: var(--white); border-right: 1px solid var(--border); overflow-y: auto; z-index: 100; transition: width .3s ease; }
+        .sidebar.collapsed { width: 0; overflow: hidden; border-right: none; }
+        .sidebar-toggle { position: fixed; left: calc(var(--sidebar-w) - 26px); top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border: none; border-radius: 50%; background: #981b31; color: #fff; z-index: 999; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,.18); transition: left .3s ease; }
+        .sidebar.collapsed ~ .sidebar-toggle, .layout.sidebar-collapsed .sidebar-toggle { left: -10px; }
+        .layout.sidebar-collapsed .main { margin-left: 0; }
         .sidebar-inner { padding: 16px 0 60px; }
         .sid-group { padding: 10px 16px 4px; font-size: 10px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: .6px; }
         .sid-link { display: flex; align-items: center; gap: 10px; padding: 8px 16px; font-size: 12.5px; font-weight: 500; color: #374151; text-decoration: none; border-left: 3px solid transparent; transition: all .12s; }
         .sid-link:hover { background: var(--brand-light); color: var(--brand); border-left-color: var(--brand); }
         .sid-link.active { background: var(--brand-light); color: var(--brand); border-left-color: var(--brand); font-weight: 700; }
         .sid-num { width: 20px; height: 20px; border-radius: 50%; background: #f0e8e0; color: var(--brand); font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .sid-rec { background: #fef3c7; color: #92400e; }
+        .sid-rec { background: #dbeafe; color: #1e40af; }
 
         /* Main */
         .main { margin-left: var(--sidebar-w); flex: 1; padding: 28px 28px 80px; max-width: 1060px; }
@@ -157,8 +161,8 @@
         .sec-hd p { font-size: 11px; opacity: .75; margin-top: 2px; }
         .sec-bd { padding: 20px; }
 
-        /* Recommendation section header — amber */
-        .sec-hd-rec { background: #92400e; }
+        /* Recommendation section header — blue, matching other admin views */
+        .sec-hd-rec { background: #1e40af; }
 
         /* Sub-headers */
         .sub-hd { font-size: 11.5px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: .5px; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1.5px solid #f0e8de; }
@@ -277,8 +281,7 @@
     </div>
     <div class="hd-right">
         <a class="btn-hd" href="/Home/SubmittedUniversities"><i class="bi bi-arrow-left"></i> Back to List</a>
-        <button class="btn-hd" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
-        @if (!isInMeeting)
+@if (!isInMeeting)
         {
             <a class="btn-hd btn-hd-add" href="/Home/CreateMeeting?preselectRequestId=@Model.Id">
                 <i class="bi bi-calendar-plus"></i> Add to Meeting
@@ -317,8 +320,12 @@
 
             <div class="sid-group">Reviewer</div>
             <a class="sid-link" href="#sec-recommendation"><span class="sid-num sid-rec">R</span> Doctor's Recommendation</a>
+
         </div>
     </nav>
+    <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
 
     <!-- MAIN -->
     <main class="main">
@@ -600,7 +607,7 @@
                                         <td>@V(p.DegreeAwarded)</td>
                                         <td>@(p.NumberOfYears > 0 ? p.NumberOfYears.ToString() : "—")</td>
                                         <td>@V(p.EducationalSystem)</td>
-                                        <td>@(p.AccreditationDate.HasValue ? p.AccreditationDate.Value.ToString("dd MMM yyyy") : "—")</td>
+                                        <td>@(p.AccreditationDate.HasValue ? p.AccreditationDate.Value.ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) : "—")</td>
                                     </tr>
                                     pi++;
                                 }
@@ -1066,7 +1073,7 @@
                     string docComp2 = totalFacFT == 0 ? "Not Assessed" : docPct2 >= 50 ? "Compliant" : "Not Compliant";
 
                     var ratioVal = A2.StudentsToFacultyRatio ?? 0m;
-                    var selCats  = (A2.CollegeCategoriesCsv ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var selCats  = (A2.CollegeCategoriesCsv ?? "").Split(new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                     var catRatio = new Dictionary<string,decimal>(StringComparer.OrdinalIgnoreCase) { ["Scientific"]=20m,["Humanities"]=35m,["Medical"]=25m,["Applied"]=20m };
                     var avgRatio = selCats.Where(k => catRatio.ContainsKey(k)).Select(k => catRatio[k]).DefaultIfEmpty(0m).Average();
                     string ratioComp;
@@ -1200,6 +1207,24 @@
     }
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
+
+    const sidebar = document.querySelector('.sidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const layout = document.querySelector('.layout');
+    const main = document.querySelector('.main');
+    if (sidebar && toggleBtn && layout) {
+        toggleBtn.addEventListener('click', function () {
+            const collapsed = sidebar.classList.toggle('collapsed');
+            layout.classList.toggle('sidebar-collapsed', collapsed);
+            main.style.marginLeft = collapsed ? '0' : '';
+            const icon = toggleBtn.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('bi-chevron-left', !collapsed);
+                icon.classList.toggle('bi-chevron-right', collapsed);
+            }
+            toggleBtn.style.left = collapsed ? '10px' : '';
+        });
+    }
 </script>
 </body>
 </html>

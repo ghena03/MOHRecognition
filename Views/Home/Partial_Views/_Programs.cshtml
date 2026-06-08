@@ -124,8 +124,8 @@
                                 <td>@r.DegreeAwarded</td>
                                 <td>@r.NumberOfYears</td>
                                 <td>@r.EducationalSystem</td>
-                                <td>@(r.AccreditationDate?.ToString("dd/MM/yyyy") ?? "")</td>
-                                <td>@(r.GraduationDateOfLastRegiment?.ToString("dd/MM/yyyy") ?? "")</td>
+                                <td>@(r.AccreditationDate?.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture) ?? "")</td>
+                                <td>@(r.GraduationDateOfLastRegiment?.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture) ?? "")</td>
 
                                 <td style="text-align:center;">
                                     <div class="prg-actions">

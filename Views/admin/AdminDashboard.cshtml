@@ -1,18 +1,59 @@
 @model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
+@using MOHRecognition.Services
+@using MOHRecognition.DTOs
 
 @{
     Layout = null;
     ViewData["Title"] = "Admin Dashboard";
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
+
+    string TypeBadgeClass(string? t) => (t ?? "Bachelor") switch
+    {
+        "Postgraduate" => "type-badge type-postgraduate",
+        "Online"       => "type-badge type-online",
+        _              => "type-badge type-bachelor"
+    };
+    string TypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "اعتراف إلكتروني", _ => "بكالوريوس" }
+        : (t ?? "Bachelor") switch { "Postgraduate" => "Postgraduate", "Online" => "Online Recognition", _ => "Bachelor" };
+    string RowClass(string? t) => (t ?? "Bachelor") switch
+    {
+        "Postgraduate" => "sub-row-postgraduate",
+        "Online"       => "sub-row-online",
+        _              => "sub-row-bachelor"
+    };
+    string StatusClass(string? s) => (s ?? "").ToLower() switch
+    {
+        "pending"                => "status-pill status-pending",
+        "assigned"               => "status-pill status-assigned",
+        "requires admin review"  => "status-pill status-review",
+        _                        => "status-pill status-other"
+    };
+    string StatusLabel(string? s) => isRtl
+        ? (s ?? "").ToLower() switch
+        {
+            "pending"               => "قيد الانتظار",
+            "assigned"              => "معيّن",
+            "requires admin review" => "يتطلب مراجعة",
+            _                       => s ?? ""
+        }
+        : (s ?? "");
 }
 
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "لوحة تحكم المدير" : "Admin Dashboard")</title>
     <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
     <style>
         .nav-grid {
             display: grid;
@@ -67,8 +108,7 @@
             flex-shrink: 0;
             transition: color .15s, transform .15s;
         }
-        .nav-card:hover .nav-arrow { color: #7f1627; transform: translateX(4px); }
-
+        .nav-card:hover .nav-arrow { color: #7f1627; transform: translateX(@(isRtl ? "-4px" : "4px")); }
 
         .decision-mini-counts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
         .decision-mini {
@@ -83,10 +123,181 @@
         .decision-mini.green { background: #e8f5ea; color: #1a7a34; }
         .decision-mini.red   { background: #fef2f2; color: #b91c1c; }
         .decision-mini.amber { background: #fffbeb; color: #d97706; }
+
+        .submissions-section {
+            margin-top: 36px;
+        }
+        .submissions-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .submissions-header h2 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1a1a1a;
+        }
+        .submissions-header a {
+            font-size: 13px;
+            font-weight: 700;
+            color: #7f1627;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .submissions-header a:hover { text-decoration: underline; }
+
+        .legend-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .legend-dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #555;
+        }
+        .legend-dot span {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .sub-table-wrap {
+            background: #fff;
+            border-radius: 16px;
+            border: 1.5px solid #f0ebe4;
+            box-shadow: 0 2px 12px rgba(0,0,0,.05);
+            overflow: hidden;
+        }
+        .sub-table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .sub-table-wrap thead th {
+            background: #faf8f6;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            color: #7f1627;
+            padding: 13px 18px;
+            text-align: @(isRtl ? "right" : "left");
+            border-bottom: 1.5px solid #f0ebe4;
+            white-space: nowrap;
+        }
+        .sub-table-wrap tbody tr {
+            border-bottom: 1px solid #f5f0eb;
+            transition: background .12s;
+        }
+        .sub-table-wrap tbody tr:last-child { border-bottom: none; }
+        .sub-table-wrap tbody tr:hover { background: #fdf9f7; }
+        .sub-table-wrap tbody td {
+            padding: 14px 18px;
+            font-size: 13px;
+            color: #444;
+            vertical-align: middle;
+            text-align: @(isRtl ? "right" : "left");
+        }
+        .uni-name-cell {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        .type-badge {
+            display: inline-block;
+            border-radius: 20px;
+            padding: 3px 11px;
+            font-size: 11.5px;
+            font-weight: 800;
+            letter-spacing: .2px;
+        }
+        .type-bachelor     { background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; }
+        .type-postgraduate { background:#ede9fe; color:#5b21b6; border:1px solid #c4b5fd; }
+        .type-online       { background:#dcfce7; color:#166534; border:1px solid #86efac; }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border-radius: 20px;
+            padding: 4px 11px;
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+        .status-pending  { background:#fff7ed; color:#9a3412; border:1px solid #fdba74; }
+        .status-assigned { background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd; }
+        .status-review   { background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+        .status-other    { background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; }
+
+        .sub-row-bachelor     { border-@(isRtl ? "right" : "left"): 4px solid #3b82f6; }
+        .sub-row-postgraduate { border-@(isRtl ? "right" : "left"): 4px solid #8b5cf6; }
+        .sub-row-online       { border-@(isRtl ? "right" : "left"): 4px solid #10b981; }
+
+        .btn-view {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #7f1627;
+            color: #fff;
+            border: none;
+            border-radius: 7px;
+            padding: 6px 13px;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: background .15s;
+        }
+        .btn-view:hover { background: #5a0e1b; }
+
+        .empty-sub {
+            padding: 60px 24px;
+            text-align: center;
+            color: #aaa;
+        }
+        .empty-sub i { font-size: 42px; display: block; margin-bottom: 12px; }
+        .empty-sub p { font-size: 14px; }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 14px 18px;
+            background: #faf8f6;
+            border-bottom: 1px solid #f0ebe4;
+        }
+        .filter-bar input, .filter-bar select {
+            border: 1px solid #e2d9d3;
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-family: inherit;
+            background: #fff;
+            color: #333;
+        }
+        .filter-bar input { flex: 1; min-width: 180px; }
+        .filter-bar button {
+            background: #fff;
+            border: 1px solid #e2d9d3;
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #7f1627;
+            cursor: pointer;
+        }
+        .filter-bar button:hover { background: #fde8ec; }
     </style>
 </head>
 
-<body class="admin-page">
+<body class="admin-page@(isRtl ? " rtl-body" : "")">
 
     <div class="top-bar"></div>
 
@@ -95,46 +306,27 @@
             <img src="/images/mohelogo.png" class="logo" />
             <div class="divider"></div>
             <div class="title-box">
-                <h1>Admin Dashboard</h1>
-                <p>Recognition Committee — Operations &amp; Management Portal</p>
+                <h1>@(isRtl ? "لوحة تحكم المدير" : "Admin Dashboard")</h1>
+                <p>@(isRtl ? "بوابة عمليات وإدارة لجنة الاعتراف" : "Recognition Committee — Operations & Management Portal")</p>
             </div>
         </div>
         <div class="user-box">
 
-            <a asp-controller="Home"
-               asp-action="AdminProfile"
-               class="profile-link">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
 
+            <a asp-controller="Home" asp-action="AdminProfile" class="profile-btn">
                 <div class="avatar">
-
-                    @(Context.Session.GetString("AdminUsername")
-                                        ?.Substring(0, 1)
-                                        .ToUpper() ?? "A")
-
+                    @(Context.Session.GetString("AdminUsername")?.Substring(0, 1).ToUpper() ?? "A")
                 </div>
-
-                <div>
-
-                    <strong>
-
-                        @(Context.Session.GetString("AdminUsername")
-                                                ?? "Admin User")
-
-                    </strong><br>
-
-                    <span>System Administrator</span>
-
+                <div class="profile-btn-text">
+                    <strong>@(Context.Session.GetString("AdminUsername") ?? (isRtl ? "مدير النظام" : "Admin User"))</strong>
+                    <span>@(isRtl ? "مدير النظام" : "System Administrator")</span>
                 </div>
-
+                <i class="bi bi-gear-fill profile-gear-icon"></i>
             </a>
 
-            <a href="@Url.Action("Logout", "Home")"
-               style="margin-left:16px;display:inline-flex;align-items:center;gap:6px;padding:7px 16px;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;color:#374151;font-size:13px;font-weight:600;text-decoration:none;transition:background .15s;"
-               onmouseover="this.style.background='#f3f4f6'"
-               onmouseout="this.style.background='#fff'">
-
-                <i class="bi bi-box-arrow-right"></i> Logout
-
+            <a href="@Url.Action("Logout", "Home")" class="logout-btn">
+                <i class="bi bi-box-arrow-right"></i> @(isRtl ? "تسجيل الخروج" : "Logout")
             </a>
 
         </div>
@@ -143,22 +335,22 @@
     <div class="main-container">
 
         <section class="overview-section">
-            <h2 class="overview-title">Overview</h2>
+            <h2 class="overview-title">@(isRtl ? "نظرة عامة" : "Overview")</h2>
             <div class="overview-cards">
                 <div class="overview-card">
-                    <p>Total Requests</p>
+                    <p>@(isRtl ? "إجمالي الطلبات" : "Total Requests")</p>
                     <h2>@Model.Count()</h2>
                 </div>
                 <div class="overview-card">
-                    <p>Pending</p>
+                    <p>@(isRtl ? "قيد الانتظار" : "Pending")</p>
                     <h2>@Model.Count(x => x.Status == "Pending")</h2>
                 </div>
                 <div class="overview-card">
-                    <p>Assigned</p>
+                    <p>@(isRtl ? "معيّن" : "Assigned")</p>
                     <h2>@Model.Count(x => x.AssignedMember != "Unassigned")</h2>
                 </div>
                 <div class="overview-card">
-                    <p>Needs Review</p>
+                    <p>@(isRtl ? "يحتاج مراجعة" : "Needs Review")</p>
                     <h2>@Model.Count(x => x.Status == "Requires Admin Review")</h2>
                 </div>
             </div>
@@ -169,79 +361,66 @@
             <a asp-controller="Home" asp-action="Requests" class="nav-card">
                 <div class="nav-icon"><i class="bi bi-inbox-fill"></i></div>
                 <div class="nav-body">
-                    <h3>Requests</h3>
-                    <p>Manage all submitted university recognition requests.</p>
+                    <h3>@(isRtl ? "الطلبات" : "Requests")</h3>
+                    <p>@(isRtl ? "إدارة جميع طلبات الاعتراف المقدّمة من الجامعات." : "Manage all submitted university recognition requests.")</p>
                     <div class="decision-mini-counts">
-                        <span class="decision-mini" style="background:#fde8ec;color:#7f1627;">@Model.Count() total</span>
+                        <span class="decision-mini" style="background:#fde8ec;color:#7f1627;">@Model.Count() @(isRtl ? "إجمالي" : "total")</span>
                     </div>
                 </div>
-                <i class="bi bi-arrow-right nav-arrow"></i>
+                <i class="bi bi-arrow-@(isRtl ? "left" : "right") nav-arrow"></i>
             </a>
 
             <a asp-controller="Home" asp-action="SubmittedUniversities" class="nav-card">
                 <div class="nav-icon"><i class="bi bi-send-check-fill"></i></div>
                 <div class="nav-body">
-                    <h3>Submitted Universities</h3>
-                    <p>Universities submitted by doctors and ready to be added to meetings.</p>
+                    <h3>@(isRtl ? "الجامعات المقدّمة" : "Submitted Universities")</h3>
+                    <p>@(isRtl ? "الجامعات التي أحالها المستشارون وهي جاهزة للإضافة إلى الاجتماعات." : "Universities submitted by doctors and ready to be added to meetings.")</p>
                     <div class="decision-mini-counts">
-                        <span class="decision-mini" style="background:#fde8ec;color:#7f1627;">@(ViewBag.SubmittedUniversitiesCount ?? 0) ready</span>
+                        <span class="decision-mini" style="background:#fde8ec;color:#7f1627;">@(ViewBag.SubmittedUniversitiesCount ?? 0) @(isRtl ? "جاهز" : "ready")</span>
                     </div>
                 </div>
-                <i class="bi bi-arrow-right nav-arrow"></i>
+                <i class="bi bi-arrow-@(isRtl ? "left" : "right") nav-arrow"></i>
             </a>
 
             <a asp-controller="Home" asp-action="Meetings" class="nav-card">
                 <div class="nav-icon"><i class="bi bi-calendar3"></i></div>
                 <div class="nav-body">
-                    <h3>Meetings</h3>
-                    <p>Schedule meetings, set date, time, and location, and pick the universities to be discussed.</p>
+                    <h3>@(isRtl ? "الاجتماعات" : "Meetings")</h3>
+                    <p>@(isRtl ? "جدولة الاجتماعات وتحديد التاريخ والوقت والمكان واختيار الجامعات للمناقشة." : "Schedule meetings, set date, time, and location, and pick the universities to be discussed.")</p>
                 </div>
-                <i class="bi bi-arrow-right nav-arrow"></i>
+                <i class="bi bi-arrow-@(isRtl ? "left" : "right") nav-arrow"></i>
             </a>
 
             <a asp-controller="Home" asp-action="SessionWorkflow" class="nav-card">
                 <div class="nav-icon"><i class="bi bi-grid-1x2-fill"></i></div>
                 <div class="nav-body">
-                    <h3>إدارة الجلسات</h3>
-                    <p>Review doctors' recommendations, enter final committee decisions, and close the meeting.</p>
+                    <h3>@(isRtl ? "سجل اجتماع اللجنة" : "Committee Meeting Record")</h3>
+                    <p>@(isRtl ? "مراجعة توصيات المستشارين وإدخال قرارات اللجنة النهائية وإغلاق الاجتماع." : "Review doctors' recommendations, enter final committee decisions, and close the meeting.")</p>
                 </div>
-                <i class="bi bi-arrow-right nav-arrow"></i>
+                <i class="bi bi-arrow-@(isRtl ? "left" : "right") nav-arrow"></i>
             </a>
 
             <a asp-controller="Home" asp-action="Employees" class="nav-card">
                 <div class="nav-icon"><i class="bi bi-people-fill"></i></div>
                 <div class="nav-body">
-                    <h3>Advisors</h3>
-                    <p>Manage recognition committee member profiles and information.</p>
+                    <h3>@(isRtl ? "المستشارون" : "Advisors")</h3>
+                    <p>@(isRtl ? "إدارة ملفات أعضاء لجنة الاعتراف ومعلوماتهم." : "Manage recognition committee member profiles and information.")</p>
                 </div>
-                <i class="bi bi-arrow-right nav-arrow"></i>
-            </a>
-
-            <a asp-controller="Home" asp-action="CommitteeDecisions" class="nav-card">
-                <div class="nav-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
-                <div class="nav-body">
-                    <h3>Committee Decisions</h3>
-                    <p>View final committee outcomes and recognition statuses.</p>
-                    <div class="decision-mini-counts">
-                        <span class="decision-mini green">@(ViewBag.RecognizedCount ?? 0) Recognized</span>
-                        <span class="decision-mini red">@(ViewBag.NonRecognizedCount ?? 0) Non-Recognized</span>
-                        <span class="decision-mini amber">@(ViewBag.PendingCount ?? 0) Pending</span>
-                    </div>
-                </div>
-                <i class="bi bi-arrow-right nav-arrow"></i>
+                <i class="bi bi-arrow-@(isRtl ? "left" : "right") nav-arrow"></i>
             </a>
 
             <a asp-controller="Home" asp-action="AllUniversities" class="nav-card">
                 <div class="nav-icon"><i class="bi bi-buildings-fill"></i></div>
                 <div class="nav-body">
-                    <h3>All Universities</h3>
-                    <p>View all universities with their final recognition status.</p>
+                    <h3>@(isRtl ? "جميع الجامعات" : "All Universities")</h3>
+                    <p>@(isRtl ? "عرض جميع الجامعات مع حالة الاعتراف النهائية." : "View all universities with their final recognition status.")</p>
                     <div class="decision-mini-counts">
-                        <span class="decision-mini" style="background:#fde8ec;color:#7f1627;">@(ViewBag.AllUniversitiesCount ?? 0) finalized</span>
+                        <span class="decision-mini" style="background:#fde8ec;color:#7f1627;">@(ViewBag.AllUniversitiesCount ?? 0) @(isRtl ? "مُنتهٍ" : "finalized")</span>
                     </div>
                 </div>
-                <i class="bi bi-arrow-right nav-arrow"></i>
+                <i class="bi bi-arrow-@(isRtl ? "left" : "right") nav-arrow"></i>
             </a>
+
             <a asp-controller="Home"
                asp-action="AddEducationalInstitution"
                class="nav-card">
@@ -249,18 +428,16 @@
                     <i class="bi bi-building-add"></i>
                 </div>
                 <div class="nav-body">
-                    <h3>Add Educational Institution</h3>
+                    <h3>@(isRtl ? "إضافة مؤسسة تعليمية" : "Add Educational Institution")</h3>
                     <p>
-                        Create a manual recognition request
-                        and assign it to a recognition member.
+                        @(isRtl ? "إنشاء طلب اعتراف يدوي وتعيينه لعضو لجنة الاعتراف." : "Create a manual recognition request and assign it to a recognition member.")
                     </p>
                 </div>
-                <i class="bi bi-arrow-right nav-arrow"></i>
+                <i class="bi bi-arrow-@(isRtl ? "left" : "right") nav-arrow"></i>
             </a>
 
         </div>
 
     </div>
-
 </body>
 </html>

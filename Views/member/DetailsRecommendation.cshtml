@@ -9,13 +9,11 @@
     var readOnlyMode = adminReadOnly || memberViewOnly;
     ViewData["ActiveNav"] = memberViewOnly ? "archive" : "requests";
 
-    // ── Saved values ─────────────────────────────────────────────────────────
     var savedAccreditationStatus = Model?.AccreditationStatus ?? string.Empty;
     var savedAccreditationNote   = Model?.AccreditationNote   ?? string.Empty;
     var savedFinalJustification  = Model?.BasicInfoAssessmentReason ?? string.Empty;
     var savedDecision            = Model?.BasicInfoAssessmentDecision ?? string.Empty;
 
-    // ── Academic Info calculations ────────────────────────────────────────────
     var A = Model?.AcademicInfo ?? new DTOs.AcademicInfoDto();
     var hasFacultyData = Model?.AcademicInfo != null;
 
@@ -62,7 +60,6 @@
         else                                     ratioColorStatus = "red";
     }
 
-    // ── Compliance helpers ───────────────────────────────────────────────────
     static string RatioCompliance(string s) => s switch {
         "green"  => "Compliant",
         "orange" => "Compliant",
@@ -93,7 +90,6 @@
     var ratioCompliance = hasFacultyData ? RatioCompliance(ratioColorStatus)        : "missing";
     var docCompliance   = hasFacultyData ? DoctorateCompliance(doctorateColorStatus) : "missing";
 
-    // ── Medicine/Dentistry Clinical Capacity ─────────────────────────────────
     var medDen = Model?.MedicineDentistry ?? new DTOs.MedicineDentistryDto();
     static string ClinicalColor(double? r) => r == null ? "" : r <= 16.5 ? "green" : r <= 20.625 ? "orange" : "red";
     var medClinicalColor = ClinicalColor(medDen.Med_StudentFacultyRatio);
@@ -117,15 +113,11 @@
     static string ClinicalBadgeCss(string color) => color switch {
         "green" => "compliant", "orange" => "needs-review", "red" => "not-compliant", _ => "missing"
     };
-    static string ClinicalBadgeLabel(string color) => color switch {
-        "green" => "Acceptable", "orange" => "Warning", "red" => "Exceeds Limit", _ => "Missing Data"
-    };
     static string ClinicalBadgeIcon(string color) => color switch {
         "green" => "bi-check-circle-fill", "orange" => "bi-exclamation-circle-fill",
         "red" => "bi-x-circle-fill", _ => "bi-question-circle"
     };
 
-    // ── Environment assessments ──────────────────────────────────────────────
     static string EnvMap(string? v) => (v ?? "").Trim() switch {
         "Meets Standards"   => "Compliant",
         "Needs Improvement" => "Needs Review",
@@ -144,7 +136,6 @@
     else if (envAll.All(s => s == "Compliant"))     envOverall = "Compliant";
     else                                             envOverall = "Not Assessed";
 
-    // ── Auto-suggested recommendation ────────────────────────────────────────
     var p1 = string.IsNullOrWhiteSpace(savedAccreditationStatus) ? "Not Assessed" : savedAccreditationStatus;
     var allPoints = new[] { p1, ratioCompliance, docCompliance, clinicalCapCompliance, envOverall };
     var compliantPoints = allPoints.Count(p => p == "Compliant");
@@ -157,7 +148,7 @@
                                                          autoSuggestion = "Conditional Approval";
     else                                                 autoSuggestion = "Approve";
 
-    var initialDecision = !string.IsNullOrWhiteSpace(savedDecision) ? savedDecision : autoSuggestion;
+    var initialDecision = savedDecision;
 
     string SuggestionClass(string s) => s switch {
         "Approve"              => "approve",
@@ -171,13 +162,44 @@
     };
 
     var ratioDisplay = ratioValue > 0 ? $"1:{ratioValue:0}" : "—";
-    string RatioExplanation(string c) => c switch {
+
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
+
+    string ArDisplayLabel(string s) => isRtl ? s switch {
+        "Compliant"     => "ممتثل",
+        "Needs Review"  => "يحتاج مراجعة",
+        "Not Compliant" => "غير ممتثل",
+        "Not Assessed"  => "لم يُقيَّم",
+        "Missing Data"  => "بيانات مفقودة",
+        _               => s
+    } : DisplayLabel(s);
+
+    string ClinicalBadgeLabel(string color) => color switch {
+        "green"  => isRtl ? "مقبول"       : "Acceptable",
+        "orange" => isRtl ? "تحذير"       : "Warning",
+        "red"    => isRtl ? "يتجاوز الحد" : "Exceeds Limit",
+        _        => isRtl ? "بيانات مفقودة" : "Missing Data"
+    };
+
+    string RatioExplanation(string c) => isRtl ? c switch {
+        "Compliant"     => $"النسبة {ratioDisplay} ضمن نطاق المعيار المقبول (بما يشمل نطاق التسامح 25%) للفئة الجامعية المختارة.",
+        "Needs Review"  => $"النسبة {ratioDisplay} تتجاوز المعيار لكنها تبقى ضمن نطاق التسامح 25%.",
+        "Not Compliant" => $"النسبة {ratioDisplay} تتجاوز نطاق التسامح المسموح به (25%) — يُشترط مراجعة الطاقة الاستيعابية.",
+        _               => "بيانات غير كافية لحساب نسبة الطلاب إلى أعضاء هيئة التدريس."
+    } : c switch {
         "Compliant"     => $"The ratio of {ratioDisplay} is within the accepted benchmark range (including the 25% tolerance band) for the selected college category.",
         "Needs Review"  => $"The ratio of {ratioDisplay} exceeds the benchmark but remains within the 25% tolerance band.",
         "Not Compliant" => $"The ratio of {ratioDisplay} exceeds the allowed 25% tolerance — capacity review is required.",
         _               => "Insufficient data to calculate the students-to-faculty ratio."
     };
-    string DocExplanation(string c) => c switch {
+
+    string DocExplanation(string c) => isRtl ? c switch {
+        "Compliant"     => $"{doctorateHoldersPercentage:0}% من أعضاء هيئة التدريس بدوام كامل حاملون للدكتوراه — يستوفي الحد الأدنى المطلوب (50%).",
+        "Not Compliant" => $"{doctorateHoldersPercentage:0}% فقط من أعضاء هيئة التدريس بدوام كامل حاملون للدكتوراه — دون الحد الأدنى المطلوب (50%).",
+        _               => "بيانات غير كافية لحساب نسبة حاملي الدكتوراه."
+    } : c switch {
         "Compliant"     => $"{doctorateHoldersPercentage:0}% of full-time faculty hold a doctorate — meets the 50% minimum requirement.",
         "Not Compliant" => $"Only {doctorateHoldersPercentage:0}% of full-time faculty hold a doctorate — below the 50% minimum requirement.",
         _               => "Insufficient data to calculate the doctorate holders percentage."
@@ -187,27 +209,38 @@
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "تفاصيل الطلب — التقييم النهائي" : "Request Details - Final Assessment")</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/DetailsRecommendation.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
 </head>
-<body class="rm-page">
+<body class="rm-page @(isRtl ? "rtl-body" : "")">
     <header class="rm-header">
         <div class="rm-brandbar"></div>
         <div class="rm-top">
             <div class="rm-top-inner">
                 <div class="rm-brand"><img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" /></div>
                 <div class="rm-user">
-                    <div class="rm-userpill"><i class="bi bi-person-circle"></i><span>Welcome, <b>@(ViewBag.CurrentRecognitionMember ?? "Recognition Member")</b></span></div>
-                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@((ViewBag.CurrentRecognitionMember as string)?.Substring(0,1)?.ToUpper() ?? "M")</div>
+                        <div class="rm-user-card-text">
+                            <strong>@(ViewBag.CurrentRecognitionMember ?? (isRtl ? "عضو الاعتراف" : "Recognition Member"))</strong>
+                            <span>@(isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")"><i class="bi bi-box-arrow-right"></i> @(isRtl ? "تسجيل الخروج" : "Logout")</a>
                 </div>
             </div>
         </div>
@@ -220,20 +253,20 @@
 
             <section class="rm-card rd-head">
                 <div>
-                    <h1>Final Assessment</h1>
-                    <p class="rd-inst">Institution: <b>@inst</b></p>
-                    <p>Final Stage — Professional Decision Dashboard.</p>
+                    <h1>@(isRtl ? "التقييم النهائي" : "Final Assessment")</h1>
+                    <p class="rd-inst">@(isRtl ? "المؤسسة: " : "Institution: ")<b>@inst</b></p>
+                    <p>@(isRtl ? "المرحلة النهائية — لوحة القرار المهني." : "Final Stage — Professional Decision Dashboard.")</p>
                 </div>
                 <div class="rd-meta">
-                    <div class="meta-pill"><span>Request ID</span><b>#@requestId</b></div>
-                    <div class="meta-pill"><span>Stage</span><b>Final</b></div>
+                    <div class="meta-pill"><span>@(isRtl ? "رقم الطلب" : "Request ID")</span><b>#@requestId</b></div>
+                    <div class="meta-pill"><span>@(isRtl ? "المرحلة" : "Stage")</span><b>@(isRtl ? "نهائي" : "Final")</b></div>
                 </div>
             </section>
 
             @if (readOnlyMode)
             {
                 <section class="rm-card" style="border:1px solid #fedf89; background:#fffaeb; color:#7a2e0e; font-weight:700;">
-                    <i class="bi bi-eye"></i> Read-only mode: this university is assigned to another member.
+                    <i class="bi bi-eye"></i> @(isRtl ? "وضع العرض فقط: هذه الجامعة معيّنة لعضو آخر." : "Read-only mode: this university is assigned to another member.")
                 </section>
             }
 
@@ -252,50 +285,50 @@
                 <input type="hidden" name="decision" id="hiddenDecision" value="@initialDecision" />
 
                 <div class="fa-scorecard">
-                    <div class="fa-sc-eyebrow"><i class="bi bi-layout-three-columns" style="margin-right:5px;"></i>Assessment Overview</div>
+                    <div class="fa-sc-eyebrow"><i class="bi bi-layout-three-columns" style="@(isRtl ? "margin-left:5px" : "margin-right:5px");"></i>@(isRtl ? "نظرة عامة على التقييم" : "Assessment Overview")</div>
                     <div class="fa-sc-grid">
                         <div class="fa-sc-cell">
                             <div class="fa-sc-step">1</div>
                             <div class="fa-sc-info">
-                                <div class="fa-sc-name">Accreditation</div>
+                                <div class="fa-sc-name">@(isRtl ? "الاعتماد" : "Accreditation")</div>
                                 <span id="p1ScBadge" class="fa-compliance-badge @CssClass(p1)">
-                                    <i class="bi @CssIcon(p1)"></i> @DisplayLabel(p1)
+                                    <i class="bi @CssIcon(p1)"></i> @ArDisplayLabel(p1)
                                 </span>
                             </div>
                         </div>
                         <div class="fa-sc-cell">
                             <div class="fa-sc-step">2</div>
                             <div class="fa-sc-info">
-                                <div class="fa-sc-name">Faculty Ratio</div>
+                                <div class="fa-sc-name">@(isRtl ? "نسبة أعضاء هيئة التدريس" : "Faculty Ratio")</div>
                                 <span class="fa-compliance-badge @CssClass(ratioCompliance)">
-                                    <i class="bi @CssIcon(ratioCompliance)"></i> @DisplayLabel(ratioCompliance)
+                                    <i class="bi @CssIcon(ratioCompliance)"></i> @ArDisplayLabel(ratioCompliance)
                                 </span>
                             </div>
                         </div>
                         <div class="fa-sc-cell">
                             <div class="fa-sc-step">3</div>
                             <div class="fa-sc-info">
-                                <div class="fa-sc-name">Doctorate %</div>
+                                <div class="fa-sc-name">@(isRtl ? "نسبة الدكتوراه" : "Doctorate %")</div>
                                 <span class="fa-compliance-badge @CssClass(docCompliance)">
-                                    <i class="bi @CssIcon(docCompliance)"></i> @DisplayLabel(docCompliance)
+                                    <i class="bi @CssIcon(docCompliance)"></i> @ArDisplayLabel(docCompliance)
                                 </span>
                             </div>
                         </div>
                         <div class="fa-sc-cell">
                             <div class="fa-sc-step">4</div>
                             <div class="fa-sc-info">
-                                <div class="fa-sc-name">Clinical Capacity</div>
+                                <div class="fa-sc-name">@(isRtl ? "الطاقة السريرية" : "Clinical Capacity")</div>
                                 <span class="fa-compliance-badge @CssClass(clinicalCapCompliance)">
-                                    <i class="bi @CssIcon(clinicalCapCompliance)"></i> @DisplayLabel(clinicalCapCompliance)
+                                    <i class="bi @CssIcon(clinicalCapCompliance)"></i> @ArDisplayLabel(clinicalCapCompliance)
                                 </span>
                             </div>
                         </div>
                         <div class="fa-sc-cell">
                             <div class="fa-sc-step">5</div>
                             <div class="fa-sc-info">
-                                <div class="fa-sc-name">Environment</div>
+                                <div class="fa-sc-name">@(isRtl ? "البيئة" : "Environment")</div>
                                 <span class="fa-compliance-badge @CssClass(envOverall)">
-                                    <i class="bi @CssIcon(envOverall)"></i> @DisplayLabel(envOverall)
+                                    <i class="bi @CssIcon(envOverall)"></i> @ArDisplayLabel(envOverall)
                                 </span>
                             </div>
                         </div>
@@ -306,36 +339,36 @@
                     <div class="rd-card-hd">
                         <div class="rd-card-hd-row">
                             <div>
-                                <h2><i class="bi bi-award"></i> 1. Accreditation &amp; Recognition</h2>
-                                <p>Manual evaluation — select the compliance status and provide an assessment note.</p>
+                                <h2><i class="bi bi-award"></i> 1. @(isRtl ? "الاعتماد والاعتراف" : "Accreditation & Recognition")</h2>
+                                <p>@(isRtl ? "تقييم يدوي — حدد حالة الامتثال وأضف ملاحظة التقييم." : "Manual evaluation — select the compliance status and provide an assessment note.")</p>
                             </div>
-                            <span class="fa-mode-badge"><i class="bi bi-pencil-square"></i> Manual</span>
+                            <span class="fa-mode-badge"><i class="bi bi-pencil-square"></i> @(isRtl ? "يدوي" : "Manual")</span>
                         </div>
                     </div>
 
                     <div class="fa-select-row">
                         <div class="fa-select-field">
-                            <label for="accreditationStatus">Compliance Status</label>
+                            <label for="accreditationStatus">@(isRtl ? "حالة الامتثال" : "Compliance Status")</label>
                             <select id="accreditationStatus" name="accreditationStatus" class="fa-select" @(readOnlyMode ? "disabled" : "required")>
-                                <option value="">Select status…</option>
-                                @if (savedAccreditationStatus == "Compliant")     { <option value="Compliant" selected>Compliant</option> }
-                                else                                               { <option value="Compliant">Compliant</option> }
-                                @if (savedAccreditationStatus == "Needs Review")  { <option value="Needs Review" selected>Needs Review</option> }
-                                else                                               { <option value="Needs Review">Needs Review</option> }
-                                @if (savedAccreditationStatus == "Not Compliant") { <option value="Not Compliant" selected>Not Compliant</option> }
-                                else                                               { <option value="Not Compliant">Not Compliant</option> }
+                                <option value="">@(isRtl ? "اختر الحالة..." : "Select status…")</option>
+                                @if (savedAccreditationStatus == "Compliant")     { <option value="Compliant" selected>@(isRtl ? "ممتثل" : "Compliant")</option> }
+                                else                                               { <option value="Compliant">@(isRtl ? "ممتثل" : "Compliant")</option> }
+                                @if (savedAccreditationStatus == "Needs Review")  { <option value="Needs Review" selected>@(isRtl ? "يحتاج مراجعة" : "Needs Review")</option> }
+                                else                                               { <option value="Needs Review">@(isRtl ? "يحتاج مراجعة" : "Needs Review")</option> }
+                                @if (savedAccreditationStatus == "Not Compliant") { <option value="Not Compliant" selected>@(isRtl ? "غير ممتثل" : "Not Compliant")</option> }
+                                else                                               { <option value="Not Compliant">@(isRtl ? "غير ممتثل" : "Not Compliant")</option> }
                             </select>
                         </div>
                         <div class="fa-live-badge-wrap">
                             <span id="p1Badge" class="fa-compliance-badge @CssClass(p1)">
-                                <i class="bi @CssIcon(p1)"></i> @DisplayLabel(p1)
+                                <i class="bi @CssIcon(p1)"></i> @ArDisplayLabel(p1)
                             </span>
                         </div>
                     </div>
 
-                    <label class="fa-note-label" for="accreditationNote">Assessment Note</label>
+                    <label class="fa-note-label" for="accreditationNote">@(isRtl ? "ملاحظة التقييم" : "Assessment Note")</label>
                     <textarea id="accreditationNote" name="accreditationNote" class="doc-notes"
-                              placeholder="Describe your evaluation of the institution's accreditation and recognition status…"
+                              placeholder="@(isRtl ? "صف تقييمك لحالة اعتماد المؤسسة واعترافها..." : "Describe your evaluation of the institution's accreditation and recognition status…")"
                               @(readOnlyMode ? "readonly disabled" : "")>@savedAccreditationNote</textarea>
                 </section>
 
@@ -343,28 +376,28 @@
                     <div class="rd-card-hd">
                         <div class="rd-card-hd-row">
                             <div>
-                                <h2><i class="bi bi-person-lines-fill"></i> 2. Students to Faculty Ratio</h2>
-                                <p>Automatically calculated from submitted Academic Info data.</p>
+                                <h2><i class="bi bi-person-lines-fill"></i> 2. @(isRtl ? "نسبة الطلاب إلى أعضاء هيئة التدريس" : "Students to Faculty Ratio")</h2>
+                                <p>@(isRtl ? "يُحسب تلقائياً من بيانات المعلومات الأكاديمية المُقدَّمة." : "Automatically calculated from submitted Academic Info data.")</p>
                             </div>
-                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> @(isRtl ? "تلقائي" : "Automatic")</span>
                         </div>
                     </div>
 
                     <div class="fa-metrics" style="margin-bottom:16px;">
                         <div class="fa-metric-tile primary">
-                            <div class="fa-metric-lbl">Calculated Ratio</div>
+                            <div class="fa-metric-lbl">@(isRtl ? "النسبة المحسوبة" : "Calculated Ratio")</div>
                             <div class="fa-metric-val @(ratioColorStatus)">@ratioDisplay</div>
                         </div>
                         <div class="fa-metric-tile">
-                            <div class="fa-metric-lbl">Compliance Status</div>
+                            <div class="fa-metric-lbl">@(isRtl ? "حالة الامتثال" : "Compliance Status")</div>
                             <span class="fa-compliance-badge @CssClass(ratioCompliance)" style="margin-top:4px;">
-                                <i class="bi @CssIcon(ratioCompliance)"></i> @DisplayLabel(ratioCompliance)
+                                <i class="bi @CssIcon(ratioCompliance)"></i> @ArDisplayLabel(ratioCompliance)
                             </span>
                         </div>
                         @if (avgRatio > 0)
                         {
                             <div class="fa-metric-tile">
-                                <div class="fa-metric-lbl">Benchmark</div>
+                                <div class="fa-metric-lbl">@(isRtl ? "المعيار" : "Benchmark")</div>
                                 <div class="fa-metric-val neutral">1:@avgRatio.ToString("0")</div>
                             </div>
                         }
@@ -390,22 +423,22 @@
                     <div class="rd-card-hd">
                         <div class="rd-card-hd-row">
                             <div>
-                                <h2><i class="bi bi-mortarboard"></i> 3. Doctorate Holders Percentage</h2>
-                                <p>Automatically calculated from submitted Academic Info data.</p>
+                                <h2><i class="bi bi-mortarboard"></i> 3. @(isRtl ? "نسبة حاملي الدكتوراه" : "Doctorate Holders Percentage")</h2>
+                                <p>@(isRtl ? "يُحسب تلقائياً من بيانات المعلومات الأكاديمية المُقدَّمة." : "Automatically calculated from submitted Academic Info data.")</p>
                             </div>
-                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> @(isRtl ? "تلقائي" : "Automatic")</span>
                         </div>
                     </div>
 
                     <div class="fa-metrics" style="margin-bottom:16px;">
                         <div class="fa-metric-tile primary">
-                            <div class="fa-metric-lbl">Doctorate Holders</div>
+                            <div class="fa-metric-lbl">@(isRtl ? "حاملو الدكتوراه" : "Doctorate Holders")</div>
                             <div class="fa-metric-val @(doctorateColorStatus)">@doctorateHoldersPercentage.ToString("0")%</div>
                             @if (hasFacultyData)
                             {
                                 <div class="fa-progress-wrap">
                                     <div class="fa-progress-labels">
-                                        <span>0%</span><span>Minimum: 50%</span><span>100%</span>
+                                        <span>0%</span><span>@(isRtl ? "الحد الأدنى: 50%" : "Minimum: 50%")</span><span>100%</span>
                                     </div>
                                     <div class="fa-progress-track">
                                         <div class="fa-progress-fill @doctorateColorStatus" style="width:@docProgressWidth%"></div>
@@ -415,13 +448,13 @@
                             }
                         </div>
                         <div class="fa-metric-tile">
-                            <div class="fa-metric-lbl">Compliance Status</div>
+                            <div class="fa-metric-lbl">@(isRtl ? "حالة الامتثال" : "Compliance Status")</div>
                             <span class="fa-compliance-badge @CssClass(docCompliance)" style="margin-top:4px;">
-                                <i class="bi @CssIcon(docCompliance)"></i> @DisplayLabel(docCompliance)
+                                <i class="bi @CssIcon(docCompliance)"></i> @ArDisplayLabel(docCompliance)
                             </span>
                         </div>
                         <div class="fa-metric-tile">
-                            <div class="fa-metric-lbl">Minimum Required</div>
+                            <div class="fa-metric-lbl">@(isRtl ? "الحد الأدنى المطلوب" : "Minimum Required")</div>
                             <div class="fa-metric-val neutral">50%</div>
                         </div>
                     </div>
@@ -435,9 +468,9 @@
                     {
                         <div class="fa-breakdown">
                             <i class="bi bi-people-fill" style="color:#7a2d2a;"></i>
-                            <span><b>@totalPhdHolders</b> PhD holders</span>
-                            <span class="fa-breakdown-sep">out of</span>
-                            <span><b>@fullTimeFacultyDoctorate</b> full-time faculty</span>
+                            <span><b>@totalPhdHolders</b> @(isRtl ? "حامل دكتوراه" : "PhD holders")</span>
+                            <span class="fa-breakdown-sep">@(isRtl ? "من أصل" : "out of")</span>
+                            <span><b>@fullTimeFacultyDoctorate</b> @(isRtl ? "عضو هيئة تدريس بدوام كامل" : "full-time faculty")</span>
                         </div>
                     }
                 </section>
@@ -446,18 +479,18 @@
                     <div class="rd-card-hd">
                         <div class="rd-card-hd-row">
                             <div>
-                                <h2><i class="bi bi-hospital"></i> 4. Medicine &amp; Dentistry Clinical Capacity Assessment</h2>
-                                <p>Automatically calculated from submitted Medicine/Dentistry staff data.</p>
+                                <h2><i class="bi bi-hospital"></i> 4. @(isRtl ? "تقييم الطاقة السريرية للطب وطب الأسنان" : "Medicine & Dentistry Clinical Capacity Assessment")</h2>
+                                <p>@(isRtl ? "يُحسب تلقائياً من بيانات كادر الطب/طب الأسنان المُقدَّمة." : "Automatically calculated from submitted Medicine/Dentistry staff data.")</p>
                             </div>
-                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> @(isRtl ? "تلقائي" : "Automatic")</span>
                         </div>
                     </div>
 
                     <div class="csr-college-grid">
                         <div class="csr-college-card">
-                            <div class="csr-college-head">College of Medicine</div>
+                            <div class="csr-college-head">@(isRtl ? "كلية الطب" : "College of Medicine")</div>
                             <div class="csr-college-body">
-                                <span class="csr-college-lbl">Student to Faculty Ratio</span>
+                                <span class="csr-college-lbl">@(isRtl ? "نسبة الطالب إلى عضو هيئة التدريس" : "Student to Faculty Ratio")</span>
                                 <div class="csr-college-result">
                                     <span class="csr-college-val @medClinicalColor">@ClinicalRatioFmt(medDen.Med_StudentFacultyRatio)</span>
                                     <span class="fa-compliance-badge @ClinicalBadgeCss(medClinicalColor)">
@@ -467,9 +500,9 @@
                             </div>
                         </div>
                         <div class="csr-college-card">
-                            <div class="csr-college-head">College of Dentistry</div>
+                            <div class="csr-college-head">@(isRtl ? "كلية طب الأسنان" : "College of Dentistry")</div>
                             <div class="csr-college-body">
-                                <span class="csr-college-lbl">Student to Faculty Ratio</span>
+                                <span class="csr-college-lbl">@(isRtl ? "نسبة الطالب إلى عضو هيئة التدريس" : "Student to Faculty Ratio")</span>
                                 <div class="csr-college-result">
                                     <span class="csr-college-val @denClinicalColor">@ClinicalRatioFmt(medDen.Den_StudentFacultyRatio)</span>
                                     <span class="fa-compliance-badge @ClinicalBadgeCss(denClinicalColor)">
@@ -485,20 +518,20 @@
                     <div class="rd-card-hd">
                         <div class="rd-card-hd-row">
                             <div>
-                                <h2><i class="bi bi-building-check"></i> 5. Environment Assessment</h2>
-                                <p>Summarised from the Environment Assessment Summary page.</p>
+                                <h2><i class="bi bi-building-check"></i> 5. @(isRtl ? "تقييم البيئة" : "Environment Assessment")</h2>
+                                <p>@(isRtl ? "ملخص من صفحة ملخص تقييم البيئة." : "Summarised from the Environment Assessment Summary page.")</p>
                             </div>
-                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> Automatic</span>
+                            <span class="fa-mode-badge"><i class="bi bi-cpu"></i> @(isRtl ? "تلقائي" : "Automatic")</span>
                         </div>
                     </div>
 
                     @{
                         var envItems = new[]
                         {
-                            (Title: "Colleges Environment", Status: envColleges,  Icon: "bi-building"),
-                            (Title: "Hospitals Assessment", Status: envHospitals, Icon: "bi-hospital"),
-                            (Title: "Laboratories Facilities", Status: envHospEnv,   Icon: "bi-eyedropper"),
-                            (Title: "Library Assessment",   Status: envLibrary,   Icon: "bi-book")
+                            (Title: isRtl ? "بيئة الكليات" : "Colleges Environment",    Status: envColleges,  Icon: "bi-building"),
+                            (Title: isRtl ? "تقييم المستشفيات" : "Hospitals Assessment", Status: envHospitals, Icon: "bi-hospital"),
+                            (Title: isRtl ? "مرافق المختبرات" : "Laboratories Facilities", Status: envHospEnv, Icon: "bi-eyedropper"),
+                            (Title: isRtl ? "تقييم المكتبة" : "Library Assessment",     Status: envLibrary,   Icon: "bi-book")
                         };
                     }
                     <div class="fa-env-grid" style="margin-bottom:12px;">
@@ -510,16 +543,16 @@
                                     <span>@item.Title</span>
                                 </div>
                                 <span class="fa-compliance-badge @CssClass(item.Status)">
-                                    <i class="bi @CssIcon(item.Status)"></i> @item.Status
+                                    <i class="bi @CssIcon(item.Status)"></i> @ArDisplayLabel(item.Status)
                                 </span>
                             </div>
                         }
                     </div>
 
                     <div class="fa-env-overall">
-                        <span class="fa-env-overall-lbl">Overall Environment Status</span>
+                        <span class="fa-env-overall-lbl">@(isRtl ? "الحالة البيئية الإجمالية" : "Overall Environment Status")</span>
                         <span class="fa-compliance-badge fa-compliance-badge-lg @CssClass(envOverall)">
-                            <i class="bi @CssIcon(envOverall)"></i> @envOverall
+                            <i class="bi @CssIcon(envOverall)"></i> @ArDisplayLabel(envOverall)
                         </span>
                     </div>
                 </section>
@@ -528,12 +561,12 @@
                     <div class="rd-card-hd">
                         <div class="rd-card-hd-row">
                             <div class="fa-final-head">
-                                <h2><i class="bi bi-clipboard2-check"></i> Final Recommendation</h2>
-                                <p>System-generated suggestion based on all 5 assessment points. Review and provide your justification.</p>
+                                <h2><i class="bi bi-clipboard2-check"></i> @(isRtl ? "التوصية النهائية" : "Final Recommendation")</h2>
+                                <p>@(isRtl ? "اقتراح يولّده النظام بناءً على نقاط التقييم الخمس. راجعه وقدّم مبرراتك." : "System-generated suggestion based on all 5 assessment points. Review and provide your justification.")</p>
                                 <div class="fa-final-kpis">
-                                    <span class="fa-final-kpi ok"><i class="bi bi-check-circle-fill"></i> Compliant: @compliantPoints</span>
-                                    <span class="fa-final-kpi warn"><i class="bi bi-exclamation-circle-fill"></i> Review Needed: @reviewPoints</span>
-                                    <span class="fa-final-kpi bad"><i class="bi bi-x-circle-fill"></i> Non-Compliant: @nonCompliantPoints</span>
+                                    <span id="kpiCompliant"    class="fa-final-kpi ok"  ><i class="bi bi-check-circle-fill"></i> @(isRtl ? "ممتثل:" : "Compliant:") @compliantPoints</span>
+                                    <span id="kpiReview"       class="fa-final-kpi warn"><i class="bi bi-exclamation-circle-fill"></i> @(isRtl ? "يحتاج مراجعة:" : "Review Needed:") @reviewPoints</span>
+                                    <span id="kpiNonCompliant" class="fa-final-kpi bad" ><i class="bi bi-x-circle-fill"></i> @(isRtl ? "غير ممتثل:" : "Non-Compliant:") @nonCompliantPoints</span>
                                 </div>
                             </div>
                         </div>
@@ -544,22 +577,22 @@
                             <i class="bi @SuggestionIcon(autoSuggestion)" id="suggestionIcon"></i>
                         </div>
                         <div class="fa-banner-body">
-                            <div class="fa-banner-eyebrow">System Suggestion</div>
+                            <div class="fa-banner-eyebrow">@(isRtl ? "اقتراح النظام" : "System Suggestion")</div>
                             <div class="fa-suggestion-badge" id="suggestionBadge">
-                                <span id="suggestionText">@autoSuggestion</span>
+                                <span id="suggestionText">@(isRtl ? autoSuggestion switch { "Approve" => "موافقة", "Conditional Approval" => "موافقة مشروطة", _ => "رفض / مراجعة اللجنة" } : autoSuggestion)</span>
                             </div>
                             <div class="fa-banner-note" id="suggestionNote">
                                 @if (autoSuggestion == "Approve")
                                 {
-                                    <span>All five assessment points meet required standards. The institution qualifies for recognition.</span>
+                                    <span>@(isRtl ? "جميع نقاط التقييم الخمس تستوفي المعايير المطلوبة. تستحق المؤسسة الاعتراف." : "All five assessment points meet required standards. The institution qualifies for recognition.")</span>
                                 }
                                 else if (autoSuggestion == "Conditional Approval")
                                 {
-                                    <span>One or more assessment points require review. Conditional recognition may be granted pending corrective measures.</span>
+                                    <span>@(isRtl ? "نقطة تقييم أو أكثر تتطلب مراجعة. يمكن منح الاعتراف المشروط ريثما تُتخذ إجراءات تصحيحية." : "One or more assessment points require review. Conditional recognition may be granted pending corrective measures.")</span>
                                 }
                                 else
                                 {
-                                    <span>One or more assessment points are non-compliant. The request should be referred to the committee for further review.</span>
+                                    <span>@(isRtl ? "نقطة تقييم أو أكثر غير ممتثلة. ينبغي إحالة الطلب إلى اللجنة لمزيد من المراجعة." : "One or more assessment points are non-compliant. The request should be referred to the committee for further review.")</span>
                                 }
                             </div>
                         </div>
@@ -568,41 +601,41 @@
                     <div class="fa-decision-wrap">
                         <div class="fa-decision-label">
                             <i class="bi bi-person-check-fill"></i>
-                            Your Final Decision <span class="fa-required">*</span>
+                            @(isRtl ? "قرارك النهائي" : "Your Final Decision") <span class="fa-required">*</span>
                         </div>
                         <div class="fa-decision-grid">
                             <button type="button" class="fa-dec-btn approve @(initialDecision == "Approve" ? "selected" : "")" data-value="Approve" @(readOnlyMode ? "disabled" : null)>
                                 <i class="bi bi-check2-circle"></i>
-                                <span>Approve</span>
-                                <small>Institution meets all requirements</small>
+                                <span>@(isRtl ? "موافقة" : "Approve")</span>
+                                <small>@(isRtl ? "المؤسسة تستوفي جميع المتطلبات" : "Institution meets all requirements")</small>
                             </button>
                             <button type="button" class="fa-dec-btn conditional @(initialDecision == "Conditional Approval" ? "selected" : "")" data-value="Conditional Approval" @(readOnlyMode ? "disabled" : null)>
                                 <i class="bi bi-arrow-repeat"></i>
-                                <span>Conditional Approval</span>
-                                <small>Pending corrective measures</small>
+                                <span>@(isRtl ? "موافقة مشروطة" : "Conditional Approval")</span>
+                                <small>@(isRtl ? "بانتظار اتخاذ إجراءات تصحيحية" : "Pending corrective measures")</small>
                             </button>
                             <button type="button" class="fa-dec-btn reject @(initialDecision == "Reject / Committee Review" ? "selected" : "")" data-value="Reject / Committee Review" @(readOnlyMode ? "disabled" : null)>
                                 <i class="bi bi-x-octagon-fill"></i>
-                                <span>Reject / Committee Review</span>
-                                <small>Refer to committee for further review</small>
+                                <span>@(isRtl ? "رفض / مراجعة اللجنة" : "Reject / Committee Review")</span>
+                                <small>@(isRtl ? "إحالة إلى اللجنة لمزيد من المراجعة" : "Refer to committee for further review")</small>
                             </button>
                         </div>
                     </div>
 
                     <div class="fa-justify-label" for="reason">
                         <i class="bi bi-chat-square-text"></i>
-                        Final Justification Note <span class="fa-required">*</span>
+                        @(isRtl ? "ملاحظة المبرر النهائي" : "Final Justification Note") <span class="fa-required">*</span>
                     </div>
                     <textarea id="reason" name="reason" class="doc-notes"
-                              placeholder="Provide your professional justification for the final recommendation…"
+                              placeholder="@(isRtl ? "قدّم مبرراتك المهنية للتوصية النهائية..." : "Provide your professional justification for the final recommendation…")"
                               @(readOnlyMode ? "readonly disabled" : "required")>@savedFinalJustification</textarea>
 
                     @if (!readOnlyMode)
                     {
                         <div class="fa-save-row">
-                            <span class="fa-save-hint"><i class="bi bi-lock-fill"></i> Your decision will be recorded once saved.</span>
+                            <span class="fa-save-hint"><i class="bi bi-lock-fill"></i> @(isRtl ? "سيُسجَّل قرارك بعد الحفظ." : "Your decision will be recorded once saved.")</span>
                             <button class="rm-btn rm-btn-primary" type="submit">
-                                <i class="bi bi-send-check"></i> Save &amp; Submit to Admin
+                                <i class="bi bi-send-check"></i> @(isRtl ? "حفظ وإرسال إلى المدير" : "Save & Submit to Admin")
                             </button>
                         </div>
                     }
@@ -613,12 +646,12 @@
             <section class="rm-card rd-actions">
                 <div class="rd-actions-left">
                     <a class="rm-btn rm-btn-light" href="@Url.Action("DetailsInfrastructure", "Home", new { id = requestId })">
-                        <i class="bi bi-arrow-left"></i> Previous
+                        <i class="bi bi-arrow-@(isRtl ? "right" : "left")"></i> @(isRtl ? "السابق" : "Previous")
                     </a>
                 </div>
                 <div class="rd-actions-right">
                     <a class="rm-btn rm-btn-light" href="@(memberViewOnly ? Url.Action("Archive", "Home") : Url.Action("ElectronicRequests", "Home"))">
-                        <i class="bi bi-x-lg"></i> Exit
+                        <i class="bi bi-x-lg"></i> @(isRtl ? "خروج" : "Exit")
                     </a>
                 </div>
             </section>
@@ -629,16 +662,17 @@
     <script>
         (function () {
             const isReadOnlyMode = "@readOnlyMode".toLowerCase() === "true";
+            const isRtl          = @(isRtl ? "true" : "false");
             const sel            = document.getElementById("accreditationStatus");
             const p1Badge        = document.getElementById("p1Badge");
             const p1ScBadge      = document.getElementById("p1ScBadge");
             const hiddenDecision = document.getElementById("hiddenDecision");
 
             const BADGE_MAP = {
-                "Compliant":     { cls: "compliant",     icon: "bi-check-circle-fill",      text: "Compliant" },
-                "Needs Review":  { cls: "needs-review",  icon: "bi-exclamation-circle-fill", text: "Needs Review" },
-                "Not Compliant": { cls: "not-compliant", icon: "bi-x-circle-fill",           text: "Not Compliant" },
-                "":              { cls: "not-assessed",  icon: "bi-dash-circle",             text: "Not Assessed" }
+                "Compliant":     { cls: "compliant",     icon: "bi-check-circle-fill",      text: isRtl ? "ممتثل"          : "Compliant" },
+                "Needs Review":  { cls: "needs-review",  icon: "bi-exclamation-circle-fill", text: isRtl ? "يحتاج مراجعة"  : "Needs Review" },
+                "Not Compliant": { cls: "not-compliant", icon: "bi-x-circle-fill",           text: isRtl ? "غير ممتثل"     : "Not Compliant" },
+                "":              { cls: "not-assessed",  icon: "bi-dash-circle",             text: isRtl ? "لم يُقيَّم"    : "Not Assessed" }
             };
 
             const p2Class = "@CssClass(ratioCompliance)";
@@ -647,9 +681,9 @@
             const p5Class = "@CssClass(envOverall)";
 
             const SUGGESTION_MAP = {
-                "Approve":                   { cls: "approve",     icon: "bi-check2-circle",  text: "Approve",                   note: "All five assessment points meet the required standards. The institution qualifies for recognition." },
-                "Conditional Approval":      { cls: "conditional", icon: "bi-arrow-repeat",   text: "Conditional Approval",      note: "One or more assessment points require review. Conditional recognition may be granted pending corrective measures." },
-                "Reject / Committee Review": { cls: "reject",      icon: "bi-x-octagon-fill", text: "Reject / Committee Review", note: "One or more assessment points are non-compliant. The request should be referred to the committee for further review." }
+                "Approve":                   { cls: "approve",     icon: "bi-check2-circle",  text: isRtl ? "موافقة"               : "Approve",                   note: isRtl ? "جميع نقاط التقييم الخمس تستوفي المعايير المطلوبة. تستحق المؤسسة الاعتراف." : "All five assessment points meet the required standards. The institution qualifies for recognition." },
+                "Conditional Approval":      { cls: "conditional", icon: "bi-arrow-repeat",   text: isRtl ? "موافقة مشروطة"        : "Conditional Approval",      note: isRtl ? "نقطة تقييم أو أكثر تتطلب مراجعة. يمكن منح الاعتراف المشروط ريثما تُتخذ إجراءات تصحيحية." : "One or more assessment points require review. Conditional recognition may be granted pending corrective measures." },
+                "Reject / Committee Review": { cls: "reject",      icon: "bi-x-octagon-fill", text: isRtl ? "رفض / مراجعة اللجنة" : "Reject / Committee Review", note: isRtl ? "نقطة تقييم أو أكثر غير ممتثلة. ينبغي إحالة الطلب إلى اللجنة لمزيد من المراجعة." : "One or more assessment points are non-compliant. The request should be referred to the committee for further review." }
             };
 
             function computeSuggestion(p1Cls) {
@@ -671,6 +705,19 @@
                 return info.cls;
             }
 
+            function updateKPIs(p1Cls) {
+                const all = [p1Cls, p2Class, p3Class, p4Class, p5Class];
+                const compliant    = all.filter(c => c === "compliant").length;
+                const review       = all.filter(c => c === "needs-review" || c === "not-assessed" || c === "missing").length;
+                const nonCompliant = all.filter(c => c === "not-compliant").length;
+                const kpiC = document.getElementById("kpiCompliant");
+                const kpiR = document.getElementById("kpiReview");
+                const kpiN = document.getElementById("kpiNonCompliant");
+                if (kpiC) kpiC.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${isRtl ? 'ممتثل:' : 'Compliant:'} ${compliant}`;
+                if (kpiR) kpiR.innerHTML = `<i class="bi bi-exclamation-circle-fill"></i> ${isRtl ? 'يحتاج مراجعة:' : 'Review Needed:'} ${review}`;
+                if (kpiN) kpiN.innerHTML = `<i class="bi bi-x-circle-fill"></i> ${isRtl ? 'غير ممتثل:' : 'Non-Compliant:'} ${nonCompliant}`;
+            }
+
             function updateSuggestion(p1Cls) {
                 const key    = computeSuggestion(p1Cls);
                 const s      = SUGGESTION_MAP[key];
@@ -684,10 +731,9 @@
                 if (iconEl) iconEl.className = "bi " + s.icon;
                 noteEl.querySelector("span").textContent           = s.note;
                 if (banner) banner.className = "fa-suggestion-banner " + s.cls;
-                // Does not override the doctor's explicit decision choice
+                updateKPIs(p1Cls);
             }
 
-            // Doctor decision buttons
             const decBtns = document.querySelectorAll(".fa-dec-btn");
             decBtns.forEach(function (btn) {
                 btn.addEventListener("click", function () {
@@ -702,12 +748,13 @@
                 sel.addEventListener("change", function () {
                     updateSuggestion(updateP1(this.value));
                 });
+                updateKPIs(updateP1(sel.value));
             }
         })();
 
-        // ── Save Decision toast ───────────────────────────────────────────────
         (function () {
             const isReadOnlyMode = "@readOnlyMode".toLowerCase() === "true";
+            const isRtl = @(isRtl ? "true" : "false");
             if (isReadOnlyMode) return;
             function showToast(message, type) {
                 var old = document.getElementById('_rec-toast');
@@ -716,7 +763,7 @@
                 t.id = '_rec-toast';
                 t.textContent = message;
                 Object.assign(t.style, {
-                    position: 'fixed', bottom: '28px', right: '28px', zIndex: '99999',
+                    position: 'fixed', bottom: '28px', [isRtl ? 'left' : 'right']: '28px', zIndex: '99999',
                     padding: '13px 20px', borderRadius: '10px', color: '#fff',
                     fontWeight: '600', fontSize: '14px', boxShadow: '0 4px 18px rgba(0,0,0,.18)',
                     background: type === 'success' ? '#16a34a' : '#dc2626',
@@ -732,23 +779,18 @@
                 e.preventDefault();
                 var btn = form.querySelector('[type="submit"]');
                 var orig = btn ? btn.innerHTML : '';
-                if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving…'; }
+                if (btn) { btn.disabled = true; btn.innerHTML = `<i class="bi bi-hourglass-split"></i> ${isRtl ? 'جارٍ الحفظ...' : 'Saving…'}`; }
                 try {
                     var res  = await fetch(form.action, { method: 'POST', body: new FormData(form) });
-                    var html = await res.text();
-                    if (res.url.includes('ElectronicRequests')) {
-                        showToast('Decision saved successfully.', 'success');
-                        setTimeout(function () { window.location.href = res.url; }, 900);
-                    } else if (html.includes('Please select a valid accreditation status'))
-                        showToast('Please select a valid accreditation status for Point 1.', 'error');
-                    else if (html.includes('Please provide a final justification'))
-                        showToast('Please provide a final justification note.', 'error');
-                    else if (html.includes('Unable to save recommendation decision'))
-                        showToast('Unable to save decision. Please try again.', 'error');
-                    else
-                        showToast('Unable to save decision. Please try again.', 'error');
+                    var data = await res.json();
+                    if (data.success) {
+                        showToast(isRtl ? 'تم حفظ القرار بنجاح.' : 'Decision saved successfully.', 'success');
+                        setTimeout(function () { window.location.href = data.redirect || '/Home/ElectronicRequests'; }, 900);
+                    } else {
+                        showToast(data.error || (isRtl ? 'تعذّر حفظ القرار. يرجى المحاولة مرة أخرى.' : 'Unable to save decision. Please try again.'), 'error');
+                    }
                 } catch (_) {
-                    showToast('Network error. Please try again.', 'error');
+                    showToast(isRtl ? 'خطأ في الشبكة. يرجى المحاولة مرة أخرى.' : 'Network error. Please try again.', 'error');
                 } finally {
                     if (btn) { btn.disabled = false; btn.innerHTML = orig; }
                 }

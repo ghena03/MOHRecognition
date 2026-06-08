@@ -1,0 +1,1033 @@
+@model MOHRecognition.Services.RecognitionRequestRecord
+@{
+    Layout = null;
+    ViewData["Title"] = "Online / Blended Learning Request Details";
+    ViewData["ActiveNav"] = "requests";
+    var currentMember  = ViewBag.CurrentRecognitionMember as string ?? "Recognition Member";
+    bool memberViewOnly = ViewBag.MemberViewOnly is true;
+    var olSaveUrl = Url.Action("SaveOnlineDecision", "Home");
+    var ol = Model.OnlineEducationData ?? new MOHRecognition.DTOs.OnlineEducationDto();
+
+    // Parse programs
+    List<MOHRecognition.DTOs.OnlineProgramDto> programs = new();
+    if (!string.IsNullOrWhiteSpace(ol.ProgramsJson) && ol.ProgramsJson != "[]")
+    {
+        try { programs = System.Text.Json.JsonSerializer.Deserialize<List<MOHRecognition.DTOs.OnlineProgramDto>>(ol.ProgramsJson) ?? new(); }
+        catch { }
+    }
+
+    var bachList     = programs.Where(p => p.Source == "Bachelor").ToList();
+    var pgList       = programs.Where(p => p.Source != "Bachelor").ToList();
+    int bachCount    = bachList.Count;
+    int pgCount      = pgList.Count;
+    int bachStudents = bachList.Sum(p => p.OnlineStudents ?? 0);
+    int pgStudents   = pgList.Sum(p  => p.OnlineStudents ?? 0);
+    int totalStudents = bachStudents + pgStudents;
+
+    int bProf  = ol.BachelorOnlineStaffProf;
+    int bAssoc = ol.BachelorOnlineStaffAssoc;
+    int bAsst  = ol.BachelorOnlineStaffAsst;
+    int bTotal = bProf + bAssoc + bAsst;
+    int pProf  = ol.PostgraduateOnlineStaffProf;
+    int pAssoc = ol.PostgraduateOnlineStaffAssoc;
+    int pAsst  = ol.PostgraduateOnlineStaffAsst;
+    int pTotal = pProf + pAssoc + pAsst;
+
+    string FieldVal(string? v) => string.IsNullOrWhiteSpace(v) ? "—" : v;
+    string BoolText(bool v) => v ? "Yes" : "No";
+
+    // ── Duration helpers (data resolved at save time into OnlineProgramDto) ────
+    int? TraditionalDur(MOHRecognition.DTOs.OnlineProgramDto p) =>
+        p.Source == "Manual Entry" ? null : p.TraditionalDurationYears;
+
+    string DurStatusClass(int? trad, int? online)
+    {
+        if (!trad.HasValue || !online.HasValue) return "dur-missing";
+        return online.Value >= trad.Value ? "dur-valid" : "dur-invalid";
+    }
+    string DurStatusText(int? trad, int? online)
+    {
+        if (!trad.HasValue || !online.HasValue) return "Missing duration data";
+        return online.Value >= trad.Value ? "Valid" : "Invalid — online duration is shorter than traditional";
+    }
+
+    // ── Online Compliance Checks ──────────────────────────────────────────────
+    bool hasPrograms   = programs.Count > 0;
+    bool hasBothDocs   = !string.IsNullOrWhiteSpace(ol.ExamPolicyFileName) && !string.IsNullOrWhiteSpace(ol.PlatformGuideFileName);
+    bool hasAtLeastOneDoc = !string.IsNullOrWhiteSpace(ol.ExamPolicyFileName) || !string.IsNullOrWhiteSpace(ol.PlatformGuideFileName);
+
+    // "green" = ok, "orange" = partial/needs review, "red" = failing
+    string examsStatus      = ol.OnlineExamsOfficiallyApproved ? "green" : "red";
+    string platformStatus   = ol.PlatformOfficiallyAdopted     ? "green" : "red";
+    string techStatus       = ol.TechnicalSupportAvailable     ? "green" : "red";
+    string privacyStatus    = ol.HasPrivacyPolicy              ? "green" : "red";
+    string programsStatus   = hasPrograms                      ? "green" : "red";
+    string docsStatus       = hasBothDocs ? "green" : (hasAtLeastOneDoc ? "orange" : "red");
+
+    var olStatuses = new[] { examsStatus, platformStatus, techStatus, privacyStatus, programsStatus, docsStatus };
+    int olGreen  = olStatuses.Count(x => x == "green");
+    int olOrange = olStatuses.Count(x => x == "orange");
+    int olRed    = olStatuses.Count(x => x == "red");
+
+    string olOverallStatus, olOverallNote;
+    if (olRed > 0)
+    {
+        olOverallStatus = "red";
+        olOverallNote   = "One or more required online learning criteria are not met.";
+    }
+    else if (olOrange > 0)
+    {
+        olOverallStatus = "orange";
+        olOverallNote   = "Some criteria are partially met. Supporting documents or approvals may be incomplete.";
+    }
+    else
+    {
+        olOverallStatus = "green";
+        olOverallNote   = "All online learning criteria have been met.";
+    }
+}
+
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/DetailsBasicInfo.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/DetailsStatistics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/DetailsRecommendation.css" asp-append-version="true" />
+    <style>
+        /* ── Badge chips ── */
+        .ol-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+        .ol-badge-bach    { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+        .ol-badge-pg      { background: #fdf4ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+        .ol-badge-online  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .ol-badge-blended { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+        .ol-badge-manual  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .dur-valid   { display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0; }
+        .dur-invalid { display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;background:#fff1f2;color:#9f1239;border:1px solid #fecdd3; }
+        .dur-missing { display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0; }
+
+        /* ── Section card overrides ── */
+        .rm-card.rd-card,
+        .rm-card.fa-final-card {
+            border: 1px solid #ede4da !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,.05) !important;
+            margin-bottom: 20px !important;
+            padding: 0 !important;
+        }
+        /* Allow programs table to scroll horizontally */
+        .rm-card.rd-card.programs-section { overflow-x: auto !important; }
+        #programs-tbl th, #programs-tbl td { width: auto !important; }
+        .rd-card-hd {
+            background: #7f1627 !important;
+            color: #fff !important;
+            padding: 14px 20px !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+        }
+        .rd-card-hd h2 { font-size: 15px !important; font-weight: 700 !important; color: #fff !important; margin: 0 !important; }
+        .rd-card-hd p  { font-size: 11px !important; color: rgba(255,255,255,.75) !important; margin: 2px 0 0 !important; }
+        .rd-card-hd-row { display: flex !important; align-items: center !important; justify-content: space-between !important; }
+        /* ── Final Recommendation card: brand burgundy header ── */
+        .rm-card.fa-final-card .rd-card-hd { background: linear-gradient(135deg, #7f1627 0%, #a01e32 100%) !important; }
+
+        /* ── Grid layouts inside cards ── */
+        .rd-grid4 { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; padding: 16px 20px !important; }
+        .rd-grid3 { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; padding: 16px 20px !important; }
+
+        /* ── Field / label / value card ── */
+        .rd-field {
+            background: #faf7f3 !important;
+            border: 1px solid #eee7de !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+        }
+        .rd-field label {
+            font-size: 10px !important;
+            font-weight: 800 !important;
+            color: #9ca3af !important;
+            text-transform: uppercase !important;
+            letter-spacing: .5px !important;
+            display: block !important;
+            margin-bottom: 5px !important;
+        }
+        .rd-field input[readonly],
+        .rd-field input[type="text"][readonly] {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #111 !important;
+            cursor: default !important;
+            width: 100% !important;
+            outline: none !important;
+            box-shadow: none !important;
+            -webkit-appearance: none !important;
+        }
+        .rd-field textarea[readonly] {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #111 !important;
+            cursor: default !important;
+            width: 100% !important;
+            outline: none !important;
+            resize: none !important;
+        }
+
+        /* ── Page-head strip ── */
+        .rm-card.rd-head {
+            background: #fff !important;
+            border: 1px solid #ede4da !important;
+            border-left: 5px solid #7f1627 !important;
+            border-radius: 12px !important;
+            padding: 20px 22px !important;
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 16px !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,.05) !important;
+            margin-bottom: 20px !important;
+        }
+        .rm-card.rd-head h1 { font-size: 20px !important; font-weight: 800 !important; color: #1a1a1a !important; }
+        .rd-inst { font-size: 13.5px !important; color: #555 !important; margin-top: 4px !important; }
+        .rd-inst b { color: #7f1627 !important; }
+        .rm-card.rd-head > div > p:not(.rd-inst) { font-size: 12px !important; color: #888 !important; margin-top: 3px !important; }
+        .rd-meta { display: flex !important; flex-direction: column !important; gap: 6px !important; align-items: flex-end !important; }
+        .meta-pill {
+            background: #faf7f3 !important;
+            border: 1px solid #ede4da !important;
+            border-radius: 8px !important;
+            padding: 6px 12px !important;
+            font-size: 12px !important;
+            display: flex !important; align-items: center !important; gap: 8px !important;
+            white-space: nowrap !important;
+        }
+        .meta-pill span { color: #888 !important; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: .4px !important; }
+        .meta-pill b { color: #1a1a1a !important; font-size: 13px !important; font-weight: 700 !important; }
+
+        /* ── Info block ── */
+        .info-block {
+            background: #fdf8f3 !important;
+            border: 1px solid #ede4da !important;
+            border-left: 3px solid #7f1627 !important;
+            border-radius: 8px !important;
+            padding: 10px 14px !important;
+            font-size: 12.5px !important;
+            color: #555 !important;
+            line-height: 1.65 !important;
+            margin: 0 20px 16px !important;
+        }
+        .block-title { font-weight: 700 !important; color: #3d1a1a !important; margin-right: 6px !important; }
+
+        /* ── Online details spacing fixes ── */
+        .ol-info-pad {
+            margin: 0 20px !important;
+            padding-top: 16px !important;
+        }
+        .ol-no-bottom { border-bottom: none !important; }
+        .ol-docs-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 14px !important;
+            padding: 8px 20px 16px !important;
+        }
+        /* ── Supporting Documents ── */
+        .docs-body { padding: 16px 20px 20px; }
+        .docs-sub-hd {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #7f1627;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            padding-bottom: 8px;
+            border-bottom: 1.5px solid #f0e8de;
+            margin-bottom: 12px;
+        }
+        .docs-sub-hd:not(:first-child) { margin-top: 22px; }
+        .docs-sub-hd i { font-size: 13px; }
+        .doc-file-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #fdfbf8;
+            border: 1px solid #ede4da;
+            border-radius: 10px;
+            padding: 12px 16px;
+            transition: background .15s, border-color .15s;
+        }
+        .doc-file-row:hover { background: #f9f0ec; border-color: #d6b6b4; }
+        .doc-file-icon {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            background: #7a2d2a;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #fff;
+        }
+        .doc-file-meta { flex: 1; min-width: 0; }
+        .doc-file-label {
+            font-size: 10.5px;
+            font-weight: 800;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 3px;
+        }
+        .doc-file-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2937;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .doc-file-sub {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+        .doc-open-btn {
+            flex-shrink: 0;
+            background: #fff;
+            border: 1.5px solid #d6b6b4;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #7a2d2a;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            transition: background .14s, border-color .14s;
+        }
+        .doc-open-btn:hover { background: #fdf0ef; border-color: #c07d72; color: #5c1e1b; }
+        .doc-empty {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f9fafb;
+            border: 1.5px dashed #d1d5db;
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: #9ca3af;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .doc-empty i { font-size: 20px; }
+        .fa-decision-wrap { padding: 18px 20px 0 !important; }
+        .fa-justify-label { margin: 12px 20px 8px !important; }
+        #olJustification.doc-notes {
+            width: calc(100% - 40px) !important;
+            margin: 0 20px !important;
+        }
+        .fa-save-row { margin: 14px 20px 16px !important; }
+        /* ── Automated suggestion banner ── */
+        .ol-suggestion { display: flex; align-items: flex-start; gap: 12px; border-radius: 10px; padding: 13px 16px; margin: 16px 20px 0; border: 1.5px solid; }
+        .ol-sug-pass { background: #f0fdf4; border-color: #86efac; }
+        .ol-sug-fail { background: #fff1f2; border-color: #fca5a5; }
+        .ol-sug-warn { background: #fffbeb; border-color: #fcd34d; }
+        .ol-sug-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+        .ol-sug-pass .ol-sug-icon { color: #15803d; }
+        .ol-sug-fail .ol-sug-icon { color: #dc2626; }
+        .ol-sug-warn .ol-sug-icon { color: #d97706; }
+        .ol-sug-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: #9ca3af; margin-bottom: 3px; }
+        .ol-sug-title { font-size: 13.5px; font-weight: 700; margin-bottom: 3px; }
+        .ol-sug-pass .ol-sug-title { color: #15803d; }
+        .ol-sug-fail .ol-sug-title { color: #b91c1c; }
+        .ol-sug-warn .ol-sug-title { color: #92400e; }
+        .ol-sug-body { font-size: 12px; color: #6b7280; line-height: 1.5; }
+    </style>
+</head>
+
+<body class="rm-page">
+
+    <header class="rm-header">
+        <div class="rm-brandbar"></div>
+        <div class="rm-top">
+            <div class="rm-top-inner">
+                <div class="rm-brand">
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
+                </div>
+                <div class="rm-user">
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@(currentMember?.Length > 0 ? currentMember.Substring(0,1).ToUpper() : "M")</div>
+                        <div class="rm-user-card-text">
+                            <strong>@currentMember</strong>
+                            <span>Recognition Committee Member</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="rm-shell">
+        @await Html.PartialAsync("_MemberSidebar")
+
+        <main class="rm-main">
+
+            <!-- Page Head -->
+            <section class="rm-card rd-head">
+                <div>
+                    <h1>Online / Blended Learning Request</h1>
+                    <p class="rd-inst">Institution: <b>@Model.UniversityName</b></p>
+                    <p>Submitted online education recognition application — read only.</p>
+                </div>
+                <div class="rd-meta">
+                    <div class="meta-pill">
+                        <span>Reference</span>
+                        <b>@Model.ReferenceNumber</b>
+                    </div>
+                    <div class="meta-pill">
+                        <span>Submitted</span>
+                        <b>@Model.SubmittedAt.ToString("dd MMM yyyy")</b>
+                    </div>
+                    <div class="meta-pill">
+                        <span>Status</span>
+                        <b>@Model.Status</b>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- Public Information -->
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>Public Information</h2>
+                    <p>General institution and contact information.</p>
+                </div>
+                <div class="rd-grid4">
+                    <div class="rd-field">
+                        <label>Institution Name</label>
+                        <input type="text" value="@FieldVal(ol.InstitutionName)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Oversight Entity</label>
+                        <input type="text" value="@FieldVal(ol.OversightRightsEntity)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Founding Date</label>
+                        <input type="text" value="@FieldVal(ol.FoundationDate)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Date of Establishment</label>
+                        <input type="text" value="@FieldVal(ol.DateOfEstablishment)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Mode of Study</label>
+                        <input type="text" value="@FieldVal(ol.ModeOfStudy)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Language of Instruction</label>
+                        <input type="text" value="@FieldVal(ol.LanguageOfInstruction)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Start of Teaching</label>
+                        <input type="text" value="@FieldVal(ol.StartOfTeaching)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>President</label>
+                        <input type="text" value="@FieldVal(ol.PresidentName)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Location</label>
+                        <input type="text" value="@FieldVal(ol.Location)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Phone</label>
+                        <input type="text" value="@FieldVal(ol.DirectPhoneNumber)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Email</label>
+                        <input type="text" value="@FieldVal(ol.EmailAddress)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Website</label>
+                        <input type="text" value="@FieldVal(ol.InstitutionalWebAddress)" readonly />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Programs Table -->
+            <section class="rm-card rd-card programs-section">
+                <div class="rd-card-hd">
+                    <h2>Programs Delivered Online / Blended</h2>
+                    <p>@programs.Count program@(programs.Count != 1 ? "s" : "") identified for online or blended delivery.</p>
+                </div>
+                @if (!programs.Any())
+                {
+                    <div style="padding:28px;text-align:center;color:#9ca3af;font-size:13.5px;">
+                        <i class="bi bi-inbox" style="font-size:28px;display:block;margin-bottom:8px;"></i>
+                        No programs selected.
+                    </div>
+                }
+                else
+                {
+                    <div class="rm-tablewrap" style="margin-top:0;border-radius:0;border-left:none;border-right:none;border-bottom:none;overflow-x:auto;">
+                        <table class="rm-table" id="programs-tbl" style="table-layout:auto;word-break:normal;overflow-wrap:normal;">
+                            <thead>
+                                <tr>
+                                    <th style="white-space:nowrap;">Category</th>
+                                    <th style="min-width:170px;">Program Name</th>
+                                    <th style="white-space:nowrap;">Degree Level</th>
+                                    <th style="min-width:160px;">College / Faculty</th>
+                                    <th style="white-space:nowrap;">Delivery Mode</th>
+                                    <th style="text-align:center;white-space:nowrap;">Online Students</th>
+                                    <th style="text-align:center;white-space:nowrap;">Traditional Duration</th>
+                                    <th style="text-align:center;white-space:nowrap;">Online Duration</th>
+                                    <th style="white-space:nowrap;">Duration Status</th>
+                                    <th style="white-space:nowrap;">Sync Ratio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in programs)
+                                {
+                                    bool isBach   = p.Source == "Bachelor";
+                                    bool isManual = p.Source == "Manual Entry";
+                                    int? tradDur   = TraditionalDur(p);
+                                    int? onlineDur = p.OnlineDurationYears;
+                                    string durClass = DurStatusClass(tradDur, onlineDur);
+                                    string durText  = DurStatusText(tradDur, onlineDur);
+                                    // Sync ratio badge
+                                    string syncClass, syncText;
+                                    if (!p.SynchronousRatioPercent.HasValue)
+                                    { syncClass = "dur-missing"; syncText = "No data"; }
+                                    else if (p.SynchronousRatioPercent.Value >= 33.33m)
+                                    { syncClass = "dur-valid"; syncText = p.SynchronousRatioPercent.Value.ToString("0.##") + "%"; }
+                                    else
+                                    { syncClass = "dur-invalid"; syncText = p.SynchronousRatioPercent.Value.ToString("0.##") + "% — Below 33%"; }
+                                    <tr>
+                                        <td style="white-space:nowrap;">
+                                            @if (isBach) { <span class="ol-badge ol-badge-bach">Bachelor</span> }
+                                            else         { <span class="ol-badge ol-badge-pg">Postgraduate</span> }
+                                        </td>
+                                        <td style="font-weight:700;word-break:normal;overflow-wrap:anywhere;min-width:170px;">@p.ProgramName</td>
+                                        <td style="white-space:nowrap;">@p.DegreeLevel</td>
+                                        <td style="color:#6b7280;word-break:normal;overflow-wrap:anywhere;min-width:160px;">@(string.IsNullOrWhiteSpace(p.CollegeOrFaculty) ? "—" : p.CollegeOrFaculty)</td>
+                                        <td style="white-space:nowrap;">
+                                            <span class="ol-badge @(p.DeliveryMode == "Fully Online" ? "ol-badge-online" : "ol-badge-blended")">
+                                                @p.DeliveryMode
+                                            </span>
+                                        </td>
+                                        <td style="text-align:center;font-weight:700;white-space:nowrap;">@(p.OnlineStudents.HasValue ? p.OnlineStudents.ToString() : "—")</td>
+                                        <td style="text-align:center;color:#6b7280;white-space:nowrap;">@(tradDur.HasValue ? tradDur.Value + " yr" : "—")</td>
+                                        <td style="text-align:center;font-weight:600;white-space:nowrap;">@(onlineDur.HasValue ? onlineDur.Value + " yr" : "—")</td>
+                                        <td style="white-space:nowrap;"><span class="@durClass">@durText</span></td>
+                                        <td style="white-space:nowrap;"><span class="@syncClass">@syncText</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                @{
+                    bool hasSyncEvidence = !string.IsNullOrWhiteSpace(ol.SynchronousEvidenceFileName);
+                }
+                <div style="padding:14px 20px;border-top:1px solid #f0ebe4;display:flex;align-items:center;gap:12px;">
+                    <span style="font-size:12.5px;font-weight:700;color:#374151;">Synchronous Ratio Evidence PDF:</span>
+                    @if (hasSyncEvidence)
+                    {
+                        <a href="/uploads/online/@ol.SynchronousEvidenceFileName" target="_blank"
+                           style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:#7f1627;text-decoration:underline;font-weight:700;">
+                            <i class="bi bi-file-earmark-pdf-fill"></i> View PDF
+                        </a>
+                    }
+                    else
+                    {
+                        <span style="font-size:12.5px;color:#9ca3af;font-style:italic;">Not uploaded</span>
+                    }
+                </div>
+            </section>
+
+            <!-- Academic Level Numbers -->
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>Online Recognition Numbers</h2>
+                    <p>Staff and student breakdown by academic level.</p>
+                </div>
+                <div class="info-section ol-info-pad">
+                    <div class="section-title">Bachelor Online</div>
+                    <div class="rd-grid4">
+                        <div class="rd-field">
+                            <label>Programs</label>
+                            <input type="text" value="@bachCount" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Online Students</label>
+                            <input type="text" value="@bachStudents" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Teaching Staff</label>
+                            <input type="text" value="@bTotal" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Professors</label>
+                            <input type="text" value="@bProf" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Associate Professors</label>
+                            <input type="text" value="@bAssoc" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Assistant Professors</label>
+                            <input type="text" value="@bAsst" readonly />
+                        </div>
+                    </div>
+                </div>
+                <div class="info-section ol-info-pad">
+                    <div class="section-title">Postgraduate Online</div>
+                    <div class="rd-grid4">
+                        <div class="rd-field">
+                            <label>Programs</label>
+                            <input type="text" value="@pgCount" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Online Students</label>
+                            <input type="text" value="@pgStudents" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Teaching Staff</label>
+                            <input type="text" value="@pTotal" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Professors</label>
+                            <input type="text" value="@pProf" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Associate Professors</label>
+                            <input type="text" value="@pAssoc" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Assistant Professors</label>
+                            <input type="text" value="@pAsst" readonly />
+                        </div>
+                    </div>
+                </div>
+                <div class="info-section ol-info-pad ol-no-bottom">
+                    <div class="section-title">Overall Totals</div>
+                    <div class="rd-grid3">
+                        <div class="rd-field">
+                            <label>Total Programs</label>
+                            <input type="text" value="@programs.Count" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Total Online Students</label>
+                            <input type="text" value="@totalStudents" readonly />
+                        </div>
+                        <div class="rd-field">
+                            <label>Total Teaching Staff</label>
+                            <input type="text" value="@(bTotal + pTotal)" readonly />
+                        </div>
+                    </div>
+                </div>
+                <div class="info-block" style="margin-top:4px;">
+                    <i class="bi bi-info-circle" style="color:#7a2d2a;margin-right:6px;"></i>
+                    Staff numbers are academic-level totals from Bachelor/Postgraduate submissions. The system does not collect separate online-only staff numbers.
+                </div>
+            </section>
+
+            <!-- Communication -->
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>Communication</h2>
+                    <p>Communication type and channels used.</p>
+                </div>
+                <div class="rd-grid3" style="margin-bottom:16px;">
+                    <div class="rd-field">
+                        <label>Communication Type</label>
+                        <input type="text" value="@FieldVal(ol.CommunicationType)" readonly />
+                    </div>
+                </div>
+                <div class="info-block" style="margin-bottom:@(!string.IsNullOrWhiteSpace(ol.CommunicationMethodsCsv) ? "16px" : "0");">
+                    <span class="block-title"><i class="bi bi-info-circle" style="color:#7a2d2a;"></i> Communication Types Explained</span>
+                    <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;font-size:13px;color:#374151;line-height:1.6;">
+                        <div><b>Synchronous</b> — Real-time interaction between instructor and students (e.g. live video lectures, live chat sessions).</div>
+                        <div><b>Asynchronous</b> — Delayed interaction with no requirement for simultaneous participation (e.g. recorded lectures, email, discussion forums).</div>
+                        <div><b>Both</b> — A combination of synchronous and asynchronous communication methods.</div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(ol.CommunicationMethodsCsv))
+                {
+                    <div class="info-section ol-info-pad ol-no-bottom" style="padding-top:4px !important;">
+                        <div class="section-title">Communication Methods</div>
+                        <div class="chip-list">
+                            @foreach (var cm in ol.CommunicationMethodsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <span class="chip">@cm.Trim()</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </section>
+
+            <!-- Examination System -->
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>Examination System</h2>
+                    <p>Examination type, locations, and online proctoring methods.</p>
+                </div>
+                <div class="rd-grid3">
+                    <div class="rd-field">
+                        <label>Examination Type</label>
+                        <input type="text" value="@FieldVal(ol.ExamType)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Online Exams Officially Approved</label>
+                        <input type="text" value="@BoolText(ol.OnlineExamsOfficiallyApproved)" readonly />
+                    </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(ol.ExamLocations))
+                {
+                    <div class="info-section ol-info-pad" style="margin-top:16px !important;">
+                        <div class="section-title">Examination Locations / Centres</div>
+                        <div style="font-size:13.5px;color:#374151;font-weight:600;">@ol.ExamLocations</div>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(ol.ProctoringMethodsCsv))
+                {
+                    <div class="info-section ol-info-pad ol-no-bottom">
+                        <div class="section-title">Online Examination Monitoring</div>
+                        <div class="chip-list">
+                            @foreach (var pm in ol.ProctoringMethodsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <span class="chip">@pm.Trim()</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </section>
+
+            <!-- Learning Platform -->
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>Learning Platform</h2>
+                    <p>LMS and e-learning platform details.</p>
+                </div>
+                <div class="rd-grid4">
+                    <div class="rd-field">
+                        <label>Platform Name</label>
+                        <input type="text" value="@FieldVal(ol.PlatformName)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Platform Website</label>
+                        <input type="text" value="@FieldVal(ol.PlatformUrl)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Responsible Unit / Department</label>
+                        <input type="text" value="@FieldVal(ol.ResponsibleUnit)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Technology Governance Level</label>
+                        <input type="text" value="@FieldVal(ol.PlatformType)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Officially Adopted</label>
+                        <input type="text" value="@BoolText(ol.PlatformOfficiallyAdopted)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Technical Support Available</label>
+                        <input type="text" value="@BoolText(ol.TechnicalSupportAvailable)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>Data Protection &amp; Privacy Policy</label>
+                        <input type="text" value="@BoolText(ol.HasPrivacyPolicy)" readonly />
+                    </div>
+                    <div class="rd-field">
+                        <label>University-Owned / Self-Hosted</label>
+                        <input type="text" value="@BoolText(ol.IsUniversityOwned)" readonly />
+                    </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(ol.PlatformUsername) || !string.IsNullOrWhiteSpace(ol.PlatformPassword))
+                {
+                    <div class="info-section ol-info-pad ol-no-bottom" style="margin-top:16px !important;">
+                        <div class="section-title" style="color:#7a2d2a;">LMS Review Access / Test Account</div>
+                        <p style="font-size:12px;color:#6b7280;margin:0 0 12px;">For recognition review use only. Do not share externally.</p>
+                        <div class="rd-grid3">
+                            @if (!string.IsNullOrWhiteSpace(ol.PlatformUsername))
+                            {
+                                <div class="rd-field">
+                                    <label>Username / Email</label>
+                                    <input type="text" value="@ol.PlatformUsername" readonly />
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(ol.PlatformPassword))
+                            {
+                                <div class="rd-field">
+                                    <label>Password</label>
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <input type="text" id="lmsPassInput" value="••••••••" readonly
+                                               style="flex:1;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-weight:700;font-size:13px;background:#fff;" />
+                                        <button type="button" onclick="toggleLmsPass('@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(ol.PlatformPassword ?? ""))')"
+                                                class="rm-btn rm-btn-light" style="padding:8px 14px;font-size:12px;white-space:nowrap;" id="lmsPassBtn">
+                                            Reveal
+                                        </button>
+                                        <button type="button" onclick="copyLmsPass('@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(ol.PlatformPassword ?? ""))')"
+                                                class="rm-btn rm-btn-light" style="padding:8px 14px;font-size:12px;" id="lmsCopyBtn">
+                                            Copy
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(ol.LmsAccessNotes))
+                            {
+                                <div class="rd-field" style="grid-column:1/-1;">
+                                    <label>Access Notes</label>
+                                    <input type="text" value="@ol.LmsAccessNotes" readonly />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </section>
+
+            <!-- Supporting Documents -->
+            <section class="rm-card rd-card">
+                <div class="rd-card-hd">
+                    <h2>Supporting Documents</h2>
+                    <p>Uploaded files — each belongs to its respective application section.</p>
+                </div>
+                <div class="docs-body">
+
+                    @* Section 5 — Examination System *@
+                    <div class="docs-sub-hd">
+                        <i class="bi bi-pencil-square"></i> Section 5 — Examination System
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(ol.ExamPolicyFileName))
+                    {
+                        <div class="doc-file-row">
+                            <div class="doc-file-icon"><i class="bi bi-file-earmark-pdf-fill"></i></div>
+                            <div class="doc-file-meta">
+                                <div class="doc-file-label">Online Examination Policy</div>
+                                <div class="doc-file-name">@ol.ExamPolicyFileName</div>
+                                <div class="doc-file-sub">Policy / Approval Document</div>
+                            </div>
+                            <a class="doc-open-btn" href="/uploads/online/@ol.ExamPolicyFileName" target="_blank">
+                                <i class="bi bi-box-arrow-up-right"></i> Open
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="doc-empty">
+                            <i class="bi bi-file-earmark-x"></i>
+                            No examination policy document was uploaded.
+                        </div>
+                    }
+
+                    @* Section 6 — Learning Platform *@
+                    <div class="docs-sub-hd">
+                        <i class="bi bi-laptop"></i> Section 6 — Learning Platform
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(ol.PlatformGuideFileName))
+                    {
+                        <div class="doc-file-row">
+                            <div class="doc-file-icon"><i class="bi bi-file-earmark-pdf-fill"></i></div>
+                            <div class="doc-file-meta">
+                                <div class="doc-file-label">LMS / Platform Policy</div>
+                                <div class="doc-file-name">@ol.PlatformGuideFileName</div>
+                                <div class="doc-file-sub">Online Learning Platform Policy or Approval Document</div>
+                            </div>
+                            <a class="doc-open-btn" href="/uploads/online/@ol.PlatformGuideFileName" target="_blank">
+                                <i class="bi bi-box-arrow-up-right"></i> Open
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="doc-empty">
+                            <i class="bi bi-file-earmark-x"></i>
+                            No LMS / platform guide was uploaded.
+                        </div>
+                    }
+
+                </div>
+            </section>
+
+            <!-- Final Recommendation -->
+            <section class="rm-card rd-card fa-final-card">
+                <div class="rd-card-hd">
+                    <div class="rd-card-hd-row">
+                        <div class="fa-final-head">
+                            <h2><i class="bi bi-clipboard2-check"></i> Final Recommendation</h2>
+                            <p>Provide your professional decision for this online learning application.</p>
+                        </div>
+                    </div>
+                </div>
+
+                @{
+                    var olProgsWithBoth    = programs.Where(p => p.OnlineDurationYears.HasValue && p.TraditionalDurationYears.HasValue).ToList();
+                    var olProgsWithMissing = programs.Where(p => !p.OnlineDurationYears.HasValue || !p.TraditionalDurationYears.HasValue).ToList();
+                    var olProgsFailed      = olProgsWithBoth.Where(p => p.OnlineDurationYears!.Value < p.TraditionalDurationYears!.Value).ToList();
+                    var olSyncFailed       = programs.Where(p => p.SynchronousRatioPercent.HasValue && p.SynchronousRatioPercent.Value < 33.33m).ToList();
+                    var olSyncMissing      = programs.Where(p => !p.SynchronousRatioPercent.HasValue).ToList();
+                    string olSugCls, olSugIcon, olSugTitle, olSugBody;
+                    if (!programs.Any())
+                    {
+                        olSugCls = "ol-sug-warn"; olSugIcon = "bi-exclamation-triangle-fill";
+                        olSugTitle = "No programs listed";
+                        olSugBody = "No online programs have been entered. Review completeness before submitting.";
+                    }
+                    else if (olProgsFailed.Any() || olSyncFailed.Any())
+                    {
+                        olSugCls = "ol-sug-fail"; olSugIcon = "bi-exclamation-octagon-fill";
+                        olSugTitle = "Suggested decision: Conditional Approval or Reject";
+                        var reasons = new System.Collections.Generic.List<string>();
+                        if (olProgsFailed.Any()) reasons.Add($"{olProgsFailed.Count} program(s) have duration below the traditional equivalent");
+                        if (olSyncFailed.Any())  reasons.Add($"{olSyncFailed.Count} program(s) have synchronous ratio below 33.33%");
+                        olSugBody = "<ul style='margin:5px 0 2px 16px;padding:0;'>" + string.Join("", reasons.Select(r => $"<li>{r}</li>")) + "</ul><span>These do not meet the minimum requirements.</span>";
+                    }
+                    else if (olProgsWithMissing.Any() || olSyncMissing.Any() || string.IsNullOrWhiteSpace(ol.SynchronousEvidenceFileName))
+                    {
+                        olSugCls = "ol-sug-warn"; olSugIcon = "bi-exclamation-triangle-fill";
+                        olSugTitle = "Suggested decision: Conditional Approval";
+                        var reasons = new System.Collections.Generic.List<string>();
+                        if (olProgsWithMissing.Any()) reasons.Add($"Duration data missing for {olProgsWithMissing.Count} program(s)");
+                        if (olSyncMissing.Any())      reasons.Add($"Synchronous ratio missing for {olSyncMissing.Count} program(s)");
+                        if (string.IsNullOrWhiteSpace(ol.SynchronousEvidenceFileName)) reasons.Add("Synchronous ratio evidence PDF not uploaded");
+                        olSugBody = "<ul style='margin:5px 0 2px 16px;padding:0;'>" + string.Join("", reasons.Select(r => $"<li>{r}</li>")) + "</ul><span>Must be completed before full approval.</span>";
+                    }
+                    else
+                    {
+                        olSugCls = "ol-sug-pass"; olSugIcon = "bi-check-circle-fill";
+                        olSugTitle = "Suggested decision: Approve";
+                        olSugBody = "All duration and synchronous ratio checks pass. No issues detected.";
+                    }
+                }
+                <div class="ol-suggestion @olSugCls">
+                    <i class="bi @olSugIcon ol-sug-icon"></i>
+                    <div>
+                        <div class="ol-sug-label">Automated Suggestion</div>
+                        <div class="ol-sug-title">@olSugTitle</div>
+                        <div class="ol-sug-body">@Html.Raw(olSugBody)</div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Actions -->
+            <section class="rm-card rd-actions">
+                <div class="rd-actions-left">
+                    <a class="rm-btn rm-btn-light" href="@(memberViewOnly ? Url.Action("Archive", "Home") : Url.Action("ElectronicRequests", "Home"))">
+                        <i class="bi bi-arrow-left"></i> Back to Requests
+                    </a>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        (function () {
+            var decBtns        = document.querySelectorAll('.fa-dec-btn');
+            var hiddenDecision = document.getElementById('olHiddenDecision');
+            var justification  = document.getElementById('olJustification');
+            var submitBtn      = document.getElementById('olSubmitBtn');
+
+            decBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    decBtns.forEach(function (b) { b.classList.remove('selected'); });
+                    this.classList.add('selected');
+                    if (hiddenDecision) hiddenDecision.value = this.getAttribute('data-value');
+                });
+            });
+
+            function showToast(msg, type) {
+                var old = document.getElementById('_ol-toast');
+                if (old) old.remove();
+                var t = document.createElement('div');
+                t.id = '_ol-toast';
+                t.textContent = msg;
+                Object.assign(t.style, {
+                    position: 'fixed', bottom: '28px', right: '28px', zIndex: '99999',
+                    padding: '13px 20px', borderRadius: '10px', color: '#fff',
+                    fontWeight: '600', fontSize: '14px', boxShadow: '0 4px 18px rgba(0,0,0,.18)',
+                    background: type === 'success' ? '#16a34a' : '#dc2626'
+                });
+                document.body.appendChild(t);
+                setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 320); }, 3500);
+            }
+
+            if (submitBtn) {
+                submitBtn.addEventListener('click', async function () {
+                    var decision = hiddenDecision ? hiddenDecision.value : '';
+                    var note     = justification  ? justification.value.trim() : '';
+                    if (!decision) { showToast('Please select a decision first.', 'error'); return; }
+                    if (!note)     { showToast('Please provide a justification note.', 'error'); return; }
+
+                    submitBtn.disabled = true;
+                    var orig = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Submitting…';
+
+                    try {
+                        var form = new FormData();
+                        form.append('id',       '@Model.Id');
+                        form.append('decision', decision);
+                        form.append('reason',   note);
+
+                        var res  = await fetch('@olSaveUrl', { method: 'POST', body: form });
+                        var data = await res.json();
+                        if (data.success) {
+                            showToast('Decision submitted to admin.', 'success');
+                            setTimeout(function () { window.location.href = data.redirect || '@Url.Action("ElectronicRequests", "Home")'; }, 900);
+                        } else {
+                            showToast(data.error || 'Unable to submit. Please try again.', 'error');
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = orig;
+                        }
+                    } catch (_) {
+                        showToast('Network error. Please try again.', 'error');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = orig;
+                    }
+                });
+            }
+        })();
+
+        function toggleLmsPass(pwd) {
+            var el = document.getElementById('lmsPassInput');
+            var btn = document.getElementById('lmsPassBtn');
+            if (el.dataset.revealed === '1') {
+                el.value = '••••••••';
+                el.dataset.revealed = '0';
+                btn.textContent = 'Reveal';
+            } else {
+                el.value = pwd;
+                el.dataset.revealed = '1';
+                btn.textContent = 'Hide';
+            }
+        }
+        function copyLmsPass(pwd) {
+            navigator.clipboard.writeText(pwd).then(function () {
+                var btn = document.getElementById('lmsCopyBtn');
+                var orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(function () { btn.textContent = orig; }, 1800);
+            });
+        }
+    </script>
+</body>
+</html>

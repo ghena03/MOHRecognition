@@ -1,4 +1,4 @@
-﻿@model DTOs.StaffLogInDto
+@model DTOs.StaffLogInDto
 @if (TempData["Error"] != null)
 {
     <div class="error">
@@ -8,14 +8,24 @@
 @{
     Layout = null;
 
-    var role = (ViewBag.Role as string ?? "admin").ToLower();
+    var role    = (ViewBag.Role as string ?? "admin").ToLower();
     var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-    var isRtl = culture == "ar";
-    var dir = isRtl ? "rtl" : "ltr";
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
 
-    var title = role == "recognition" ? S["Login_MemberTitle"].Value : S["Login_AdminTitle"].Value;
-    var desc = role == "recognition" ? S["Login_MemberDesc"].Value : S["Login_AdminDesc"].Value;
-    var emailPlaceholder = role == "recognition" ? S["Login_MemberEmail"].Value : S["Login_AdminEmail"].Value;
+    var isRecognition = role == "recognition";
+
+    var title = isRecognition
+        ? (isRtl ? "تسجيل دخول عضو لجنة الاعتراف" : "Recognition Member Login")
+        : (isRtl ? "تسجيل دخول المسؤول"            : "Administrator Login");
+
+    var desc = isRecognition
+        ? (isRtl ? "نظام اعتراف وزارة التعليم العالي — بوابة الأعضاء"  : "Ministry of Higher Education Recognition System — Member Portal")
+        : (isRtl ? "نظام اعتراف وزارة التعليم العالي — بوابة المسؤول" : "Ministry of Higher Education Recognition System — Admin Portal");
+
+    var emailPlaceholder = isRecognition
+        ? (isRtl ? "البريد الإلكتروني للعضو"    : "Member Email Address")
+        : (isRtl ? "البريد الإلكتروني للمسؤول" : "Admin Email Address");
 }
 
 <!doctype html>
@@ -32,70 +42,29 @@
         <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
     }
     <style>
-        /* ── RTL fixes specific to this page ── */
+        [dir="rtl"] .card          { flex-direction: row-reverse; }
+        [dir="rtl"] .sign          { border-left: none; border-right: 1px solid rgba(0,0,0,0.08); }
+        [dir="rtl"] .panel         { text-align: right; }
+        [dir="rtl"] .row           { flex-direction: row-reverse; }
+        [dir="rtl"] .pass-toggle   { right: unset; left: 10px; }
+        [dir="rtl"] .admin-header  { text-align: right; }
+        [dir="rtl"] .remember-row  { flex-direction: row-reverse; }
+        [dir="rtl"] .links         { text-align: right; }
 
-        /* Card: image is on left in LTR, flip to right in RTL */
-        [dir="rtl"] .card {
-            flex-direction: row-reverse;
-        }
-
-        /* Sign image keeps its natural size — no flip needed */
-        [dir="rtl"] .sign {
-            border-left: none;
-            border-right: 1px solid rgba(0,0,0,0.08);
-        }
-
-        /* Panel text aligns right */
-        [dir="rtl"] .panel {
-            text-align: right;
-        }
-
-        /* Input rows: icon on right, input fills left */
-        [dir="rtl"] .row {
-            flex-direction: row-reverse;
-        }
-
-        /* Password toggle button stays on the correct side */
-        [dir="rtl"] .pass-toggle {
-            right: unset;
-            left: 10px;
-        }
-
-        /* Admin header */
-        [dir="rtl"] .admin-header {
-            text-align: right;
-        }
-
-        /* Remember me row */
-        [dir="rtl"] .remember-row {
-            flex-direction: row-reverse;
-        }
-
-        /* Links */
-        [dir="rtl"] .links {
-            text-align: right;
-        }
-
-        /* Language switcher position */
         .lang-switcher-wrap {
             position: absolute;
             top: 12px;
             right: 16px;
         }
-
         [dir="rtl"] .lang-switcher-wrap {
             right: unset;
             left: 16px;
         }
-
         .lang-switcher {
             background: rgba(255,255,255,0.15);
             border-color: rgba(255,255,255,0.3);
         }
-
-        .lang-btn {
-            color: #fff;
-        }
+        .lang-btn { color: #fff; }
     </style>
 </head>
 
@@ -118,7 +87,7 @@
             </div>
 
             <div class="panel">
-                <h1>@S["Login_SignIn"]</h1>
+                <h1>@(isRtl ? "تسجيل الدخول" : "Sign In")</h1>
 
                 @if (!ViewData.ModelState.IsValid)
                 {
@@ -141,14 +110,13 @@
                     <!-- PASSWORD -->
                     <div class="row pass-row">
                         <span class="icon"><i class="fa-solid fa-lock"></i></span>
-                        <input asp-for="Password" type="password" id="loginPassword" placeholder="@S["Login_Password"]" />
+                        <input asp-for="Password" type="password" id="loginPassword"
+                               placeholder="@(isRtl ? "كلمة المرور" : "Password")" />
                         <button type="button" class="pass-toggle" id="toggleLoginPassword">
                             <i class="fa-regular fa-eye"></i>
                         </button>
                     </div>
                     <span class="field-error" asp-validation-for="Password"></span>
-
-                
 
                     <!-- CAPTCHA -->
                     <div class="captcha">
@@ -158,10 +126,13 @@
                         </button>
                     </div>
 
-                    <div class="hint">@S["Login_CaptchaHint"]</div>
+                    <div class="hint">
+                        @(isRtl ? "أدخل الأحرف الظاهرة في الصورة أعلاه" : "Enter the characters shown in the image above")
+                    </div>
 
                     <div class="row">
-                        <input asp-for="Captcha" id="captchaInput" type="text" placeholder="@S["Login_CaptchaPlaceholder"]" />
+                        <input asp-for="Captcha" id="captchaInput" type="text"
+                               placeholder="@(isRtl ? "أدخل رمز التحقق" : "Enter CAPTCHA")" />
                     </div>
                     <span class="field-error" asp-validation-for="Captcha"></span>
 
@@ -169,20 +140,16 @@
                     <div class="remember-row">
                         <label class="remember">
                             <input asp-for="RememberMe" type="checkbox" />
-                            <span>@S["Login_RememberMe"]</span>
+                            <span>@(isRtl ? "تذكرني" : "Remember me")</span>
                         </label>
                     </div>
 
-                    <button class="login" type="submit">@S["Login_Submit"]</button>
+                    <button class="login" type="submit">@(isRtl ? "دخول" : "Login")</button>
 
                     <div class="links">
                         <a asp-controller="Home" asp-action="ForgetPassword" asp-route-role="@role">
-                            @S["Login_ForgotPassword"]
+                            @(isRtl ? "نسيت كلمة المرور؟" : "Forgot your password?")
                         </a>
-                    </div>
-
-                    <div class="links">
-                        <a href="#">@S["Login_CreateAccount"]</a>
                     </div>
                 </form>
             </div>
@@ -193,7 +160,7 @@
     <!-- PASSWORD TOGGLE -->
     <script>
         const passwordInput = document.getElementById("loginPassword");
-        const toggleButton = document.getElementById("toggleLoginPassword");
+        const toggleButton  = document.getElementById("toggleLoginPassword");
 
         toggleButton.addEventListener("click", function () {
             const isHidden = passwordInput.type === "password";
@@ -204,7 +171,7 @@
         });
     </script>
 
-    <!-- CAPTCHA SCRIPT -->
+    <!-- CAPTCHA -->
     <script>
         let generatedCaptcha = "";
 
@@ -219,18 +186,18 @@
 
         function drawCaptcha() {
             const canvas = document.getElementById("captchaCanvas");
-            const ctx = canvas.getContext("2d");
+            const ctx    = canvas.getContext("2d");
 
             generatedCaptcha = randomText(6);
             document.getElementById("generatedCaptcha").value = generatedCaptcha;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = "28px Arial";
+            ctx.font      = "28px Arial";
             ctx.fillStyle = "#7a2d2a";
 
             for (let i = 0; i < generatedCaptcha.length; i++) {
-                const x = 20 + i * 25;
-                const y = 30 + Math.random() * 5;
+                const x     = 20 + i * 25;
+                const y     = 30 + Math.random() * 5;
                 const angle = (Math.random() - 0.5) * 0.5;
                 ctx.save();
                 ctx.translate(x, y);

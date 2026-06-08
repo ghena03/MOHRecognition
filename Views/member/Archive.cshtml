@@ -1,4 +1,4 @@
-﻿@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
+@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
 @using System
 
 @{
@@ -11,11 +11,14 @@
     var errorMessage   = TempData["ArchiveError"] as string;
     var nameMap = ViewBag.MemberNameMap as Dictionary<string, string>
                   ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
 
     string MemberName(string? email)
     {
         if (string.IsNullOrWhiteSpace(email) || email.Equals("Unassigned", StringComparison.OrdinalIgnoreCase))
-            return "Unassigned";
+            return isRtl ? "غير معيّن" : "Unassigned";
         var key = email.Trim().ToLowerInvariant();
         return nameMap.TryGetValue(key, out var n) ? n : email;
     }
@@ -32,14 +35,17 @@
         "Online"       => "app-row-online",
         _              => "app-row-bachelor"
     };
+    string TypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "أرشيف الطلبات" : "Requests Archive")</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,9 +54,13 @@
 
     <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/Archive.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
 </head>
 
-<body class="rm-page">
+<body class="rm-page@(isRtl ? " rtl-body" : "")">
 
     <header class="rm-header">
         <div class="rm-brandbar"></div>
@@ -61,13 +71,17 @@
                 </div>
 
                 <div class="rm-user">
-                    <div class="rm-userpill">
-                        <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>@currentMember</b></span>
-                    </div>
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@(currentMember?.Length > 0 ? currentMember.Substring(0,1).ToUpper() : "M")</div>
+                        <div class="rm-user-card-text">
+                            <strong>@currentMember</strong>
+                            <span>@(isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
 
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                        <i class="bi bi-box-arrow-right"></i> @(isRtl ? "تسجيل الخروج" : "Logout")
                     </a>
                 </div>
             </div>
@@ -83,21 +97,21 @@
             <section class="rm-card arc-head">
                 <div class="arc-top">
                     <div>
-                        <h1>Requests Archive</h1>
-                        <p>Browse all submitted requests currently stored in the system.</p>
+                        <h1>@(isRtl ? "أرشيف الطلبات" : "Requests Archive")</h1>
+                        <p>@(isRtl ? "استعرض جميع الطلبات المقدّمة المخزّنة في النظام." : "Browse all submitted requests currently stored in the system.")</p>
                     </div>
 
                     <div class="arc-chips">
                         <div class="arc-chip">
-                            <span>Total</span>
+                            <span>@(isRtl ? "الإجمالي" : "Total")</span>
                             <b>@Model.Count</b>
                         </div>
                         <div class="arc-chip">
-                            <span>Approved</span>
+                            <span>@(isRtl ? "مقبول" : "Approved")</span>
                             <b>@Model.Count(x => x.Status == "Approved")</b>
                         </div>
                         <div class="arc-chip">
-                            <span>Pending</span>
+                            <span>@(isRtl ? "قيد الانتظار" : "Pending")</span>
                             <b>@Model.Count(x => x.Status == "Pending")</b>
                         </div>
                     </div>
@@ -122,8 +136,8 @@
             <section class="rm-card">
                 <div class="rm-card-hd row">
                     <div>
-                        <h2>All Requests</h2>
-                        <p>Only the assigned member can send a request to admin review.</p>
+                        <h2>@(isRtl ? "جميع الطلبات" : "All Requests")</h2>
+                        <p>@(isRtl ? "يمكن للعضو المعيّن فقط إرسال الطلب إلى المدير للمراجعة." : "Only the assigned member can send a request to admin review.")</p>
                     </div>
                 </div>
 
@@ -131,15 +145,15 @@
                     <table class="rm-table arc-table">
                         <thead>
                             <tr>
-                                <th>Reference</th>
-                                <th>Type</th>
-                                <th>University</th>
-                                <th>Country</th>
-                                <th>Email</th>
-                                <th>Assigned Member</th>
-                                <th>Status</th>
-                                <th>Submitted</th>
-                                <th class="right">Action</th>
+                                <th>@(isRtl ? "الرقم المرجعي" : "Reference")</th>
+                                <th>@(isRtl ? "النوع" : "Type")</th>
+                                <th>@(isRtl ? "الجامعة" : "University")</th>
+                                <th>@(isRtl ? "الدولة" : "Country")</th>
+                                <th>@(isRtl ? "البريد الإلكتروني" : "Email")</th>
+                                <th>@(isRtl ? "العضو المعيّن" : "Assigned Member")</th>
+                                <th>@(isRtl ? "الحالة" : "Status")</th>
+                                <th>@(isRtl ? "تاريخ التقديم" : "Submitted")</th>
+                                <th class="right">@(isRtl ? "إجراء" : "Action")</th>
                             </tr>
                         </thead>
 
@@ -152,22 +166,24 @@
 
                                     <tr class="@RowClass(item.ApplicationType)">
                                         <td><b>@item.ReferenceNumber</b></td>
-                                        <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
+                                        <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@TypeLabel(item.ApplicationType)</span></td>
                                         <td>@item.UniversityName</td>
                                         <td>@item.Country</td>
                                         <td>@item.UniversityEmail</td>
                                         <td>@MemberName(item.AssignedMember)</td>
                                         <td><span class="badge badge-pending">@item.Status</span></td>
                                         <td>@item.SubmittedAt.ToString("yyyy-MM-dd")</td>
-                                        <td class="right" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                                        <td class="right">
+                                            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
                                             @if (isMine)
                                             {
-                                                <a class="rm-mini" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">Open</a>
+                                                <a class="rm-mini" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">@(isRtl ? "فتح" : "Open")</a>
                                             }
                                             else
                                             {
-                                                <a class="rm-mini rm-mini--view" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">View</a>
+                                                <a class="rm-mini rm-mini--view" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">@(isRtl ? "عرض" : "View")</a>
                                             }
+                                            </div>
                                         </td>
                                     </tr>
                                 }
@@ -176,7 +192,7 @@
                             {
                                 <tr>
                                     <td colspan="9" style="text-align:center; padding:24px;">
-                                        No submitted requests yet.
+                                        @(isRtl ? "لا توجد طلبات مقدّمة بعد." : "No submitted requests yet.")
                                     </td>
                                 </tr>
                             }

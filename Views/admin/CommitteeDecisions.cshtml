@@ -483,10 +483,13 @@
 
         </div>
 
-        <a href="/Home/AdminDashboard" class="btn-back">
+                <div style="display:flex;align-items:center;gap:10px;">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+            <a href="/Home/AdminDashboard" class="btn-back">
             <i class="bi bi-grid-1x2-fill"></i>
             Dashboard
         </a>
+        </div>
 
     </div>
 

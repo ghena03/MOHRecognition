@@ -4,19 +4,26 @@
 @{
     ViewData["Title"] = "Advisors";
     Layout = null;
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
 
     var recognitionMembers = Model.Where(a => a.Type == AdvisorType.RecognitionMember).ToList();
     var ministryAdvisors = Model.Where(a => a.Type == AdvisorType.MinistryAdvisor).ToList();
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "المستشارون" : "Advisors")</title>
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -596,7 +603,7 @@
     </style>
 </head>
 
-<body>
+<body class="@(isRtl ? "rtl-body" : "")">
 
     <div class="top-bar"></div>
 
@@ -611,22 +618,25 @@
             <div class="divider"></div>
 
             <div class="title-box">
-                <h1>Advisors</h1>
-                <p>Ministry of Higher Education</p>
+                <h1>@(isRtl ? "المستشارون" : "Advisors")</h1>
+                <p>@(isRtl ? "وزارة التعليم العالي" : "Ministry of Higher Education")</p>
             </div>
 
         </div>
 
         <div class="header-right">
 
-            <a class="btn-back"
+            <div style="display:flex;align-items:center;gap:10px;">
+                @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+                <a class="btn-back"
                href="/Home/AdminDashboard">
 
-                <i class="bi bi-arrow-left"></i>
+                <i class="bi bi-arrow-@(isRtl ? "right" : "left")"></i>
 
-                Back to Dashboard
+                @(isRtl ? "العودة إلى لوحة التحكم" : "Back to Dashboard")
 
             </a>
+            </div>
 
         </div>
 
@@ -636,12 +646,18 @@
 
     <div class="page-intro">
 
-        <h1>Advisors Management</h1>
+        <h1>@(isRtl ? "إدارة المستشارين" : "Advisors Management")</h1>
 
         <p>
-            Recognition Members and Ministry Advisors —
-            manage assignments, expertise, and contact details.
+            @(isRtl ? "أعضاء لجنة الاعتراف ومستشارو الوزارة — إدارة التعيينات والتخصصات وبيانات الاتصال." : "Recognition Members and Ministry Advisors — manage assignments, expertise, and contact details.")
         </p>
+
+        @if (TempData["ReseedSuccess"] != null)
+        {
+            <div style="margin-top:16px;padding:14px 20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;color:#166534;font-size:14px;font-weight:700;display:flex;align-items:center;gap:10px;">
+                <i class="bi bi-check-circle-fill"></i> @TempData["ReseedSuccess"]
+            </div>
+        }
 
     </div>
 
@@ -658,7 +674,7 @@
                 <div class="section-left">
 
                     <span class="section-label">
-                        Ministry Advisors / Presidents
+                        @(isRtl ? "مستشارو الوزارة / الرؤساء" : "Ministry Advisors / Presidents")
                     </span>
 
                     <span class="section-count" id="countMA">
@@ -673,7 +689,7 @@
 
                     <i class="bi bi-plus-lg"></i>
 
-                    Add Advisor
+                    @(isRtl ? "إضافة مستشار" : "Add Advisor")
 
                 </button>
 
@@ -687,9 +703,9 @@
 
                         <tr>
                             <th>#</th>
-                            <th>Name / Position</th>
-                            <th>Workplace</th>
-                            <th>Contact</th>
+                            <th>@(isRtl ? "الاسم / المنصب" : "Name / Position")</th>
+                            <th>@(isRtl ? "جهة العمل" : "Workplace")</th>
+                            <th>@(isRtl ? "التواصل" : "Contact")</th>
                             <th></th>
                         </tr>
 
@@ -719,7 +735,14 @@
 
                                             <div class="p-name">@a.FullName</div>
 
-                                            <div class="tag">@a.Specialization</div>
+                                            @if (!string.IsNullOrWhiteSpace(a.Position))
+                                            {
+                                                <div class="tag" style="background:#fde8ec;color:#7f1627;border:1px solid #f5c6cf;">@a.Position</div>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(a.Specialization))
+                                            {
+                                                <div class="tag" style="margin-top:4px;">@a.Specialization</div>
+                                            }
 
                                         </div>
 
@@ -730,8 +753,8 @@
                                 <td><div class="c-main">@a.Workplace</div></td>
 
                                 <td>
-                                    <div class="c-main">@a.Email</div>
-                                    <div class="c-sub">@a.Phone</div>
+                                    <div class="c-main">@(string.IsNullOrWhiteSpace(a.Email) ? "—" : a.Email)</div>
+                                    <div class="c-sub">@(string.IsNullOrWhiteSpace(a.Phone) ? (isRtl ? "غير محدد" : "Not provided") : a.Phone)</div>
                                 </td>
 
                                 <td>
@@ -739,13 +762,13 @@
                                     <div class="actions">
 
                                         <button class="btn-edit" type="button"
-                                                onclick="openEdit(@a.Id,'@Html.Raw(a.FullName.Replace("'","\\\'"))','@a.Email','@a.Phone','@Html.Raw(a.Specialization.Replace("'","\\\'"))','@Html.Raw(a.Workplace.Replace("'","\\\'"))','MinistryAdvisor')">
-                                            <i class="bi bi-pencil"></i> Edit
+                                                onclick="openEdit(@a.Id,'@Html.Raw(a.FullName.Replace("'","\\\'"))','@Html.Raw(a.Position.Replace("'","\\\'"))','@(a.Email ?? "")','@a.Phone','@Html.Raw(a.Specialization.Replace("'","\\\'"))','@Html.Raw(a.Workplace.Replace("'","\\\'"))','MinistryAdvisor')">
+                                            <i class="bi bi-pencil"></i> @(isRtl ? "تعديل" : "Edit")
                                         </button>
 
                                         <button class="btn-del" type="button"
                                                 onclick="openDelete(@a.Id,'@Html.Raw(a.FullName.Replace("'","\\\'"))')">
-                                            <i class="bi bi-trash3"></i> Delete
+                                            <i class="bi bi-trash3"></i> @(isRtl ? "حذف" : "Delete")
                                         </button>
 
                                     </div>
@@ -761,7 +784,7 @@
                                 <td colspan="5">
                                     <div class="empty">
                                         <i class="bi bi-building-x"></i>
-                                        No ministry advisors yet.
+                                        @(isRtl ? "لا يوجد مستشارو وزارة بعد." : "No ministry advisors yet.")
                                     </div>
                                 </td>
                             </tr>
@@ -784,7 +807,7 @@
                 <div class="section-left">
 
                     <span class="section-label">
-                        Recognition Members
+                        @(isRtl ? "أعضاء لجنة الاعتراف" : "Recognition Members")
                     </span>
 
                     <span class="section-count" id="countRM">
@@ -799,7 +822,7 @@
 
                     <i class="bi bi-plus-lg"></i>
 
-                    Add Member
+                    @(isRtl ? "إضافة عضو" : "Add Member")
 
                 </button>
 
@@ -813,9 +836,9 @@
 
                         <tr>
                             <th>#</th>
-                            <th>Name</th>
-                            <th>Workplace</th>
-                            <th>Contact</th>
+                            <th>@(isRtl ? "الاسم" : "Name")</th>
+                            <th>@(isRtl ? "جهة العمل" : "Workplace")</th>
+                            <th>@(isRtl ? "التواصل" : "Contact")</th>
                             <th></th>
                         </tr>
 
@@ -845,7 +868,14 @@
 
                                             <div class="p-name">@a.FullName</div>
 
-                                            <div class="tag">@a.Specialization</div>
+                                            @if (!string.IsNullOrWhiteSpace(a.Position))
+                                            {
+                                                <div class="tag" style="background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;">@a.Position</div>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(a.Specialization))
+                                            {
+                                                <div class="tag" style="margin-top:4px;">@a.Specialization</div>
+                                            }
 
                                         </div>
 
@@ -856,8 +886,8 @@
                                 <td><div class="c-main">@a.Workplace</div></td>
 
                                 <td>
-                                    <div class="c-main">@a.Email</div>
-                                    <div class="c-sub">@a.Phone</div>
+                                    <div class="c-main">@(string.IsNullOrWhiteSpace(a.Email) ? "—" : a.Email)</div>
+                                    <div class="c-sub">@(string.IsNullOrWhiteSpace(a.Phone) ? (isRtl ? "غير محدد" : "Not provided") : a.Phone)</div>
                                 </td>
 
                                 <td>
@@ -865,13 +895,13 @@
                                     <div class="actions">
 
                                         <button class="btn-edit" type="button"
-                                                onclick="openEdit(@a.Id,'@Html.Raw(a.FullName.Replace("'","\\\'"))','@a.Email','@a.Phone','@Html.Raw(a.Specialization.Replace("'","\\\'"))','@Html.Raw(a.Workplace.Replace("'","\\\'"))','RecognitionMember')">
-                                            <i class="bi bi-pencil"></i> Edit
+                                                onclick="openEdit(@a.Id,'@Html.Raw(a.FullName.Replace("'","\\\'"))','@Html.Raw(a.Position.Replace("'","\\\'"))','@(a.Email ?? "")','@a.Phone','@Html.Raw(a.Specialization.Replace("'","\\\'"))','@Html.Raw(a.Workplace.Replace("'","\\\'"))','RecognitionMember')">
+                                            <i class="bi bi-pencil"></i> @(isRtl ? "تعديل" : "Edit")
                                         </button>
 
                                         <button class="btn-del" type="button"
                                                 onclick="openDelete(@a.Id,'@Html.Raw(a.FullName.Replace("'","\\\'"))')">
-                                            <i class="bi bi-trash3"></i> Delete
+                                            <i class="bi bi-trash3"></i> @(isRtl ? "حذف" : "Delete")
                                         </button>
 
                                     </div>
@@ -887,7 +917,7 @@
                                 <td colspan="5">
                                     <div class="empty">
                                         <i class="bi bi-person-x"></i>
-                                        No recognition members yet.
+                                        @(isRtl ? "لا يوجد أعضاء اعتراف بعد." : "No recognition members yet.")
                                     </div>
                                 </td>
                             </tr>
@@ -913,7 +943,7 @@
             <div class="modal-hd">
 
                 <div class="modal-title">
-                    Edit Advisor
+                    @(isRtl ? "تعديل المستشار" : "Edit Advisor")
                 </div>
 
                 <button class="modal-x"
@@ -942,69 +972,33 @@
                 <div class="form-grid">
 
                     <div class="fld ff">
-
-                        <label class="flabel">
-                            Full Name
-                        </label>
-
-                        <input class="finput"
-                               type="text"
-                               name="fullName"
-                               id="editName"
-                               required />
-
-                    </div>
-
-                    <div class="fld">
-
-                        <label class="flabel">
-                            Email
-                        </label>
-
-                        <input class="finput"
-                               type="email"
-                               name="email"
-                               id="editEmail" />
-
-                    </div>
-
-                    <div class="fld">
-
-                        <label class="flabel">
-                            Phone
-                        </label>
-
-                        <input class="finput"
-                               type="text"
-                               name="phone"
-                               id="editPhone" />
-
+                        <label class="flabel">@(isRtl ? "الاسم الكامل" : "Full Name")</label>
+                        <input class="finput" type="text" name="fullName" id="editName" required />
                     </div>
 
                     <div class="fld ff">
+                        <label class="flabel">@(isRtl ? "المنصب / اللقب" : "Position / Title")</label>
+                        <input class="finput" type="text" name="position" id="editPosition" />
+                    </div>
 
-                        <label class="flabel">
-                            Specialization
-                        </label>
+                    <div class="fld">
+                        <label class="flabel">@(isRtl ? "البريد الإلكتروني" : "Email")</label>
+                        <input class="finput" type="email" name="email" id="editEmail" />
+                    </div>
 
-                        <input class="finput"
-                               type="text"
-                               name="specialization"
-                               id="editSpec" />
-
+                    <div class="fld">
+                        <label class="flabel">@(isRtl ? "الهاتف" : "Phone")</label>
+                        <input class="finput" type="text" name="phone" id="editPhone" />
                     </div>
 
                     <div class="fld ff">
+                        <label class="flabel">@(isRtl ? "التخصص الأكاديمي" : "Academic Specialization")</label>
+                        <input class="finput" type="text" name="specialization" id="editSpec" />
+                    </div>
 
-                        <label class="flabel">
-                            Workplace
-                        </label>
-
-                        <input class="finput"
-                               type="text"
-                               name="workplace"
-                               id="editWork" />
-
+                    <div class="fld ff">
+                        <label class="flabel">@(isRtl ? "جهة العمل" : "Workplace")</label>
+                        <input class="finput" type="text" name="workplace" id="editWork" />
                     </div>
 
                 </div>
@@ -1015,7 +1009,7 @@
                             class="btn-cancel"
                             onclick="closeEdit()">
 
-                        Cancel
+                        @(isRtl ? "إلغاء" : "Cancel")
 
                     </button>
 
@@ -1024,7 +1018,7 @@
 
                         <i class="bi bi-check-lg"></i>
 
-                        Save Changes
+                        @(isRtl ? "حفظ التغييرات" : "Save Changes")
 
                     </button>
 
@@ -1048,14 +1042,18 @@
             </div>
 
             <div class="delete-title">
-                Delete Advisor
+                @(isRtl ? "حذف المستشار" : "Delete Advisor")
             </div>
 
             <div class="delete-text">
-
-                Are you sure you want to delete
-                <strong id="delName"></strong> ?
-
+                @if (isRtl)
+                {
+                    <text>هل أنت متأكد من حذف <strong id="delName"></strong> ؟</text>
+                }
+                else
+                {
+                    <text>Are you sure you want to delete <strong id="delName"></strong> ?</text>
+                }
             </div>
 
             <form id="delForm" method="post"
@@ -1074,7 +1072,7 @@
                             class="btn-cancel"
                             onclick="closeDelete()">
 
-                        Cancel
+                        @(isRtl ? "إلغاء" : "Cancel")
 
                     </button>
 
@@ -1083,7 +1081,7 @@
 
                         <i class="bi bi-trash3"></i>
 
-                        Delete
+                        @(isRtl ? "حذف" : "Delete")
 
                     </button>
 
@@ -1105,7 +1103,7 @@
                 <div class="modal-title"
                      id="addTitle">
 
-                    Add Advisor
+                    @(isRtl ? "إضافة مستشار" : "Add Advisor")
 
                 </div>
 
@@ -1132,64 +1130,33 @@
                 <div class="form-grid">
 
                     <div class="fld ff">
-
-                        <label class="flabel">
-                            Full Name / Position
-                        </label>
-
-                        <input class="finput"
-                               type="text"
-                               name="fullName"
-                               required />
-
-                    </div>
-
-                    <div class="fld">
-
-                        <label class="flabel">
-                            Email
-                        </label>
-
-                        <input class="finput"
-                               type="email"
-                               name="email" />
-
-                    </div>
-
-                    <div class="fld">
-
-                        <label class="flabel">
-                            Phone
-                        </label>
-
-                        <input class="finput"
-                               type="text"
-                               name="phone" />
-
+                        <label class="flabel">@(isRtl ? "الاسم الكامل" : "Full Name")</label>
+                        <input class="finput" type="text" name="fullName" required />
                     </div>
 
                     <div class="fld ff">
+                        <label class="flabel">@(isRtl ? "المنصب / اللقب" : "Position / Title")</label>
+                        <input class="finput" type="text" name="position" />
+                    </div>
 
-                        <label class="flabel">
-                            Specialization
-                        </label>
+                    <div class="fld">
+                        <label class="flabel">@(isRtl ? "البريد الإلكتروني" : "Email")</label>
+                        <input class="finput" type="email" name="email" />
+                    </div>
 
-                        <input class="finput"
-                               type="text"
-                               name="specialization" />
-
+                    <div class="fld">
+                        <label class="flabel">@(isRtl ? "الهاتف" : "Phone")</label>
+                        <input class="finput" type="text" name="phone" />
                     </div>
 
                     <div class="fld ff">
+                        <label class="flabel">@(isRtl ? "التخصص الأكاديمي" : "Academic Specialization")</label>
+                        <input class="finput" type="text" name="specialization" />
+                    </div>
 
-                        <label class="flabel">
-                            Workplace
-                        </label>
-
-                        <input class="finput"
-                               type="text"
-                               name="workplace" />
-
+                    <div class="fld ff">
+                        <label class="flabel">@(isRtl ? "جهة العمل" : "Workplace")</label>
+                        <input class="finput" type="text" name="workplace" />
                     </div>
 
                 </div>
@@ -1200,7 +1167,7 @@
                             class="btn-cancel"
                             onclick="closeAdd()">
 
-                        Cancel
+                        @(isRtl ? "إلغاء" : "Cancel")
 
                     </button>
 
@@ -1209,7 +1176,7 @@
 
                         <i class="bi bi-plus-lg"></i>
 
-                        Add Advisor
+                        @(isRtl ? "إضافة مستشار" : "Add Advisor")
 
                     </button>
 
@@ -1222,6 +1189,8 @@
     </div>
 
     <script>
+        var _isRtl = @(isRtl ? "true" : "false");
+
         /* ── helpers ── */
         function esc(s) {
             return String(s || '')
@@ -1249,26 +1218,30 @@
         }
         function buildRow(a, n, isMA) {
             var av = esc(a.fullName[0] || '?');
-            var editArgs = [a.id, esc(a.fullName), esc(a.email), esc(a.phone),
+            var editArgs = [a.id, esc(a.fullName), esc(a.position || ''), esc(a.email || ''), esc(a.phone),
                             esc(a.specialization), esc(a.workplace), a.type].join("','");
+            var posTag = a.position ? '<div class="tag" style="' + (isMA ? 'background:#fde8ec;color:#7f1627;border:1px solid #f5c6cf;' : 'background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;') + '">' + esc(a.position) + '</div>' : '';
+            var specTag = a.specialization ? '<div class="tag" style="margin-top:4px;">' + esc(a.specialization) + '</div>' : '';
+            var emailDisp = a.email ? esc(a.email) : '—';
+            var phoneDisp = a.phone ? esc(a.phone) : (_isRtl ? 'غير محدد' : 'Not provided');
             return '<tr data-id="' + a.id + '">' +
                 '<td>' + n + '</td>' +
                 '<td><div class="person">' +
                     '<div class="av">' + av + '</div>' +
                     '<div>' +
                         '<div class="p-name">' + esc(a.fullName) + '</div>' +
-                        '<div class="tag">' + esc(a.specialization) + '</div>' +
+                        posTag + specTag +
                     '</div></div></td>' +
                 '<td><div class="c-main">' + esc(a.workplace) + '</div></td>' +
-                '<td><div class="c-main">' + esc(a.email) + '</div>' +
-                    '<div class="c-sub">' + esc(a.phone) + '</div></td>' +
+                '<td><div class="c-main">' + emailDisp + '</div>' +
+                    '<div class="c-sub">' + phoneDisp + '</div></td>' +
                 '<td><div class="actions">' +
                     '<button class="btn-edit" type="button" ' +
                         'onclick="openEdit(\'' + editArgs + '\')">' +
-                        '<i class="bi bi-pencil"></i> Edit</button>' +
+                        '<i class="bi bi-pencil"></i> ' + (_isRtl ? 'تعديل' : 'Edit') + '</button>' +
                     '<button class="btn-del" type="button" ' +
                         'onclick="openDelete(' + a.id + ',\'' + esc(a.fullName) + '\')">' +
-                        '<i class="bi bi-trash3"></i> Delete</button>' +
+                        '<i class="bi bi-trash3"></i> ' + (_isRtl ? 'حذف' : 'Delete') + '</button>' +
                 '</div></td></tr>';
         }
         function reNumber(tbody) {
@@ -1281,7 +1254,9 @@
         function openAdd(type) {
             document.getElementById('addType').value = type;
             document.getElementById('addTitle').innerText =
-                type === 'MinistryAdvisor' ? 'Add Ministry Advisor / President' : 'Add Recognition Member';
+                type === 'MinistryAdvisor'
+                    ? (_isRtl ? 'إضافة مستشار وزارة / رئيس' : 'Add Ministry Advisor / President')
+                    : (_isRtl ? 'إضافة عضو لجنة اعتراف' : 'Add Recognition Member');
             document.getElementById('addForm').reset();
             document.getElementById('addType').value = type;
             document.getElementById('addModal').classList.add('open');
@@ -1308,16 +1283,15 @@
         });
 
         /* ── EDIT ── */
-        function openEdit(id, name, email, phone, spec, work, type) {
-            document.getElementById('editId').value   = id;
-            document.getElementById('editName').value  = name;
-            document.getElementById('editEmail').value = email;
-            document.getElementById('editPhone').value = phone;
-            document.getElementById('editSpec').value  = spec;
-            document.getElementById('editWork').value  = work;
-            document.getElementById('editType').value  = type;
-            var sel = document.getElementById('editTypeSel');
-            if (sel) sel.value = type;
+        function openEdit(id, name, position, email, phone, spec, work, type) {
+            document.getElementById('editId').value       = id;
+            document.getElementById('editName').value     = name;
+            document.getElementById('editPosition').value = position || '';
+            document.getElementById('editEmail').value    = email || '';
+            document.getElementById('editPhone').value    = phone;
+            document.getElementById('editSpec').value     = spec;
+            document.getElementById('editWork').value     = work;
+            document.getElementById('editType').value     = type;
             document.getElementById('editModal').classList.add('open');
         }
         function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
@@ -1333,19 +1307,22 @@
                 if (!row) { location.reload(); return; }
                 var isMA = res.type === 'MinistryAdvisor';
                 var av = esc(res.fullName[0] || '?');
-                var editArgs = [res.id, esc(res.fullName), esc(res.email), esc(res.phone),
+                var editArgs = [res.id, esc(res.fullName), esc(res.position || ''), esc(res.email || ''), esc(res.phone),
                                 esc(res.specialization), esc(res.workplace), res.type].join("','");
+                var posTag = res.position ? '<div class="tag" style="' + (isMA ? 'background:#fde8ec;color:#7f1627;border:1px solid #f5c6cf;' : 'background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;') + '">' + esc(res.position) + '</div>' : '';
+                var specTag = res.specialization ? '<div class="tag" style="margin-top:4px;">' + esc(res.specialization) + '</div>' : '';
+                var emailDisp = res.email ? esc(res.email) : '—';
+                var phoneDisp = res.phone ? esc(res.phone) : 'Not provided';
                 row.cells[1].innerHTML =
                     '<div class="person">' +
                         '<div class="av">' + av + '</div>' +
-                        '<div>' +
-                            '<div class="p-name">' + esc(res.fullName) + '</div>' +
-                            '<div class="tag">' + esc(res.specialization) + '</div>' +
+                        '<div><div class="p-name">' + esc(res.fullName) + '</div>' +
+                            posTag + specTag +
                         '</div></div>';
                 row.cells[2].innerHTML = '<div class="c-main">' + esc(res.workplace) + '</div>';
                 row.cells[3].innerHTML =
-                    '<div class="c-main">' + esc(res.email) + '</div>' +
-                    '<div class="c-sub">' + esc(res.phone) + '</div>';
+                    '<div class="c-main">' + emailDisp + '</div>' +
+                    '<div class="c-sub">' + phoneDisp + '</div>';
                 row.cells[4].innerHTML =
                     '<div class="actions">' +
                         '<button class="btn-edit" type="button" ' +

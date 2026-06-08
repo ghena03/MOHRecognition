@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System.Text.Json.Serialization;
 namespace MOHRecognition.DTOs
 {
     public class PostgraduateApplicationDto
     {
         // ================= PROGRAM FILES =================
-        public IFormFile? MasterFile { get; set; }
-        public IFormFile? PhDFile { get; set; }
-        public IFormFile? DiplomaFile { get; set; }
+        // IFormFile is not JSON-serializable — must be ignored when stored in DB
+        [JsonIgnore] public IFormFile? MasterFile { get; set; }
+        [JsonIgnore] public IFormFile? PhDFile { get; set; }
+        [JsonIgnore] public IFormFile? DiplomaFile { get; set; }
 
         // ← ADD THESE 3 LINES
         public string? MasterFileName { get; set; }
@@ -37,6 +39,7 @@ namespace MOHRecognition.DTOs
         public string? City { get; set; }
         // "yes" → redirect to Online Education after save; anything else → normal flow
         public string? ApplyOnline { get; set; }
+        public string? PostgraduateProgramsJson { get; set; }
         // ================= PUBLIC INFO =================
         public string? InstitutionName { get; set; }
         public string? OversightRightsEntity { get; set; }
@@ -50,5 +53,15 @@ namespace MOHRecognition.DTOs
         public string? DirectPhoneNumber { get; set; }
         public string? EmailAddress { get; set; }
         public string? InstitutionalWebAddress { get; set; }
+    }
+
+    // One manually-entered postgraduate program.
+    public class PostgraduateProgramEntry
+    {
+        public string  ProgramName      { get; set; } = "";
+        public string  DegreeLevel      { get; set; } = ""; // Master | PhD | Higher Diploma
+        public string  CollegeOrFaculty { get; set; } = "";
+        public string? Specialization   { get; set; }
+        public int?    NumberOfYears    { get; set; }
     }
 }

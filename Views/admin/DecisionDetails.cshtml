@@ -1,56 +1,74 @@
-﻿@using MOHRecognition.Services
+@using MOHRecognition.Services
 @model RecognitionRequestRecord
 
 @{
     Layout = null;
+
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
+
+    string DecisionLabel(string? d) => isRtl ? (d ?? "") switch {
+        "Approve"                    => "موافقة",
+        "Conditional Approval"       => "موافقة مشروطة",
+        "Reject / Committee Review"  => "رفض / مراجعة اللجنة",
+        _                            => d ?? ""
+    } : (d ?? "");
 }
 
-<link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<!doctype html>
+<html lang="@culture" dir="@dir">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(isRtl ? "تفاصيل القرار" : "Decision Details")</title>
+    <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
+</head>
+<body class="admin-page @(isRtl ? "rtl-body" : "")">
 
 <div class="main-container">
 
-    <!-- 🔴 RED TOP LINE -->
     <div class="top-bar"></div>
 
-    <!-- HEADER -->
     <div class="header">
         <div class="header-left">
             <img src="/images/mohelogo.png" class="logo" />
-
             <div class="divider"></div>
-
             <div class="title-box">
-                <h1>Decision Details</h1>
-                <p>Recognition request full information</p>
+                <h1>@(isRtl ? "تفاصيل القرار" : "Decision Details")</h1>
+                <p>@(isRtl ? "المعلومات الكاملة لطلب الاعتراف" : "Recognition request full information")</p>
             </div>
         </div>
     </div>
 
-    <!-- CARD -->
     <div class="details-card">
 
-        <h2 class="section-title">Basic Information</h2>
+        <h2 class="section-title">@(isRtl ? "المعلومات الأساسية" : "Basic Information")</h2>
 
         <div class="info-grid">
 
             <div class="info-box">
-                <label>University</label>
+                <label>@(isRtl ? "الجامعة" : "University")</label>
                 <p>@Model.UniversityName</p>
             </div>
 
             <div class="info-box">
-                <label>Request ID</label>
+                <label>@(isRtl ? "رقم الطلب" : "Request ID")</label>
                 <p>#@Model.Id</p>
             </div>
 
             <div class="info-box">
-                <label>Final Decision</label>
-                <p>@Model.BasicInfoAssessmentDecision</p>
+                <label>@(isRtl ? "القرار النهائي" : "Final Decision")</label>
+                <p>@DecisionLabel(Model.BasicInfoAssessmentDecision)</p>
             </div>
 
             <div class="info-box">
-                <label>Decision Notes</label>
+                <label>@(isRtl ? "ملاحظات القرار" : "Decision Notes")</label>
                 <p>@(string.IsNullOrEmpty(Model.BasicInfoAssessmentReason) ? "-" : Model.BasicInfoAssessmentReason)</p>
             </div>
 
@@ -59,3 +77,6 @@
     </div>
 
 </div>
+
+</body>
+</html>

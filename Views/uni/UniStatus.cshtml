@@ -1,13 +1,50 @@
-﻿@{
+@{
     Layout = null;
 
-    bool hasRequest = ViewBag.HasRequest != null && (bool)ViewBag.HasRequest;
-    string requestNumber = ViewBag.RequestNumber ?? "";
-    string submittedOn = ViewBag.SubmittedOn ?? "";
-    string statusText = ViewBag.StatusText ?? "No Request";
-    string universityName = ViewBag.UniversityName ?? "University Account";
+    bool hasRequest = ViewBag.HasRequest is bool hr && hr;
+    bool bachelorSubmitted = ViewBag.BachelorSubmitted is bool bs && bs;
+    bool postgraduateSubmitted = ViewBag.PostgraduateSubmitted is bool ps && ps;
+    bool onlineSubmitted = ViewBag.OnlineSubmitted is bool os && os;
+    bool hasBachelor = bachelorSubmitted;
+    bool hasPostgraduate = postgraduateSubmitted;
+    bool hasOnline = onlineSubmitted;
+    int sectionsCount = (bachelorSubmitted ? 1 : 0) + (postgraduateSubmitted ? 1 : 0) + (onlineSubmitted ? 1 : 0);
+
+    string universityName  = ViewBag.UniversityName  ?? "University Account";
     string universityEmail = ViewBag.UniversityEmail ?? "";
-    string institutionType = Context.Session.GetString("InstitutionType") ?? "";
+    string summaryStatus   = ViewBag.StatusText      ?? (hasRequest ? "Pending" : "No Active Request");
+
+    // Per-section data
+    string bachelorNumber  = ViewBag.BachelorNumber  ?? "";
+    string bachelorDate    = ViewBag.BachelorDate    ?? "";
+    string bachelorTrackStatus = ViewBag.BachelorTrackStatus ?? (bachelorSubmitted ? "Under Review" : "Not Started");
+
+    string pgNumber  = ViewBag.PostgraduateNumber ?? "";
+    string pgDate    = ViewBag.PostgraduateDate   ?? "";
+    string pgTrackStatus = ViewBag.PostgraduateTrackStatus ?? (postgraduateSubmitted ? "Under Review" : "Not Started");
+
+    string olNumber  = ViewBag.OnlineNumber ?? "";
+    string olDate    = ViewBag.OnlineDate   ?? "";
+    string olTrackStatus = ViewBag.OnlineTrackStatus ?? (onlineSubmitted ? "Under Review" : "Not Started");
+
+    static string ShowOrDash(string value) => string.IsNullOrWhiteSpace(value) ? "—" : value;
+
+    static string StatusPillClass(string status) => status switch {
+        "Approved / Recognized" => "status-pill status-pill--approved",
+        "Rejected / Non-recognized" => "status-pill status-pill--rejected",
+        "Pending Decision" => "status-pill status-pill--pending",
+        _ => "status-pill status-pill--pending"
+    };
+
+    // Tracker label
+    string trackerLabel = sectionsCount == 0
+        ? "Recognition Tracks — 0 / 3 Started"
+        : $"Recognition Tracks — {sectionsCount} / 3 Submitted";
+
+    // Action logic
+    bool canApplyPostgraduate = bachelorSubmitted && !postgraduateSubmitted;
+    bool canApplyOnline = postgraduateSubmitted && !onlineSubmitted;
+    bool allSubmitted = bachelorSubmitted && postgraduateSubmitted && onlineSubmitted;
 }
 
 <!doctype html>
@@ -18,6 +55,70 @@
     <title>Account Dashboard</title>
 
     <link rel="stylesheet" href="~/css/uni/unistatus.css" asp-append-version="true" />
+    <style>
+        /* ── Section label above each status card ── */
+        .app-label {
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin: 1.4rem 0 .5rem;
+        }
+        .app-label:first-child { margin-top: 0; }
+        .app-label span {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+        }
+
+        /* ── Start-application cards (no-request state) ── */
+        .start-options {
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+            margin-top: 1.2rem;
+        }
+        .start-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            text-decoration: none;
+            color: #fff;
+            border: 1.5px solid rgba(255,255,255,.1);
+            background: rgba(255,255,255,.04);
+            transition: border-color .2s, background .2s;
+        }
+        .start-card--primary:hover   { border-color: #e53e3e; background: rgba(229,62,62,.08); }
+        .start-card--secondary:hover { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.08); }
+        .start-card__icon   { font-size: 1.6rem; flex-shrink: 0; }
+        .start-card__body   { flex: 1; }
+        .start-card__body strong { display: block; font-size: .95rem; font-weight: 600; margin-bottom: .25rem; }
+        .start-card__body span   { font-size: .8rem; color: #9ca3af; line-height: 1.4; }
+        .start-card__arrow  { font-size: 1.1rem; color: #9ca3af; flex-shrink: 0; }
+
+        /* ── Sections progress mini-tiles ── */
+        .sections-tracker       { margin: 1.4rem 0 1rem; }
+        .sections-tracker__title{ font-size: .78rem; font-weight: 700; color: #9ca3af; letter-spacing: .5px; text-transform: uppercase; margin-bottom: .75rem; }
+        .sections-tracker__grid { display: flex; gap: .75rem; flex-wrap: wrap; }
+        .sec-tile {
+            flex: 1; min-width: 120px;
+            display: flex; flex-direction: column; align-items: center; gap: .3rem;
+            padding: .75rem .6rem; border-radius: 12px;
+            border: 1.5px solid rgba(255,255,255,.08);
+            background: rgba(255,255,255,.04);
+            text-align: center;
+        }
+        .sec-tile--done    { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.06); }
+        .sec-tile--pending { border-color: rgba(255,255,255,.1);  background: rgba(255,255,255,.03); }
+        .sec-tile__icon  { font-size: 1.3rem; }
+        .sec-tile__name  { font-size: .78rem; font-weight: 600; color: #e2e8f0; }
+        .sec-tile__badge { font-size: .68rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+        .sec-tile--done    .sec-tile__badge { background: rgba(34,197,94,.15); color: #4ade80; }
+        .sec-tile--pending .sec-tile__badge { background: rgba(255,255,255,.07); color: #9ca3af; }
+    </style>
 </head>
 
 <body class="afterlogin-page ltr">
@@ -28,54 +129,24 @@
                 allowfullscreen>
             <div class="video-overlay"></div>
         </iframe>
-
     </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const video = document.getElementById("bgVideo");
-            if (!video) return;
-
-            video.muted = true;
-
-            const tryPlay = () => {
-                video.play().catch(() => { });
-            };
-
-            tryPlay();
-
-            video.addEventListener("ended", function () {
-                video.currentTime = 0;
-                tryPlay();
-            });
-
-            video.addEventListener("canplay", tryPlay);
-        });
-    </script>
 
     <header class="top-header">
         <div class="hdr-grid">
             <div class="hdr-left"></div>
-
             <nav class="hdr-nav">
                 <a class="hdr-link" href="https://www.mohe.gov.jo/" target="_blank" rel="noopener">
                     Ministry Website
                 </a>
-                <a class="hdr-link" href="#portalSection">
-                    Status
-                </a>
-                <a class="hdr-link" href="#faqs">
-                    FAQs
-                </a>
+                <a class="hdr-link" href="#portalSection">Status</a>
+                <a class="hdr-link" href="#faqs">FAQs</a>
             </nav>
-
             <div class="hdr-logo">
                 <a href="https://www.mohe.gov.jo/" target="_blank" rel="noopener">
                     <img class="mohe-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
                 </a>
             </div>
         </div>
-
         <div class="brand-bar"></div>
     </header>
 
@@ -83,26 +154,35 @@
 
         <!-- Hero -->
         <section class="hero-section">
-            <div class="hero-chip">Ministry of Higher Education & Scientific Research</div>
-
+            <div class="hero-chip">Ministry of Higher Education &amp; Scientific Research</div>
             <h1 class="hero-title">Recognition Request Portal</h1>
-
             <p class="hero-text">
                 Submit your recognition request, review the required steps,
                 and track the progress of your application through your account.
             </p>
 
-            <div class="hero-actions">
-                <a class="btn-primary" href="#application-section" onclick="event.preventDefault();document.getElementById('application-section').scrollIntoView({behavior:'smooth',block:'start'});">
-                    Start Application
-                </a>
-                <a class="btn-secondary" href="#portalSection">
-                    Track Status
-                </a>
-            </div>
+            @if (!hasRequest)
+            {
+                <div class="hero-actions">
+                    <a class="btn-primary" href="#application-section">
+                        Start Application
+                    </a>
+                    <a class="btn-secondary" href="#portalSection">
+                        Track Status
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="hero-actions">
+                    <a class="btn-secondary" href="#portalSection">
+                        Track Status
+                    </a>
+                </div>
+            }
         </section>
 
-        <!-- Main Professional Panel -->
+        <!-- Main Panel -->
         <section id="portalSection" class="content-panel">
 
             <!-- Summary Row -->
@@ -112,73 +192,26 @@
                     <strong>@universityName</strong>
                     <small>@universityEmail</small>
                 </div>
-
                 <div class="summary-box">
                     <span class="summary-label">Account Type</span>
                     <strong>Applicant</strong>
                 </div>
-
                 <div class="summary-box">
                     <span class="summary-label">Current Status</span>
-                    <strong>@(hasRequest? statusText : "No Active Request")</strong>
+                    <strong>@summaryStatus</strong>
                 </div>
             </div>
 
             <!-- Main Area -->
             <div class="portal-grid">
 
-                <!-- Status -->
                 <section class="main-status" id="application-section">
-                    @if (hasRequest)
+
+                    @if (!hasRequest)
                     {
-                        <div class="section-head">
-                            <span class="section-kicker">Request Status</span>
-                            <h2>You Have an Active Request</h2>
-                            <p>You can review your request details and latest updates below.</p>
-                        </div>
-
-                        <div class="status-card">
-                            <div class="status-item">
-                                <span>Request Number</span>
-                                <strong>@requestNumber</strong>
-                            </div>
-
-                            <div class="status-item">
-                                <span>Submitted On</span>
-                                <strong>@submittedOn</strong>
-                            </div>
-
-                            <div class="status-item">
-                                <span>Status</span>
-                                <span class="status-pill">@statusText</span>
-                            </div>
-                        </div>
-
-                        <div class="actions-row">
-
-                            <!-- Existing Bachelor Application -->
-                            @if (institutionType == "Bachelor")
-                            {
-                                <a class="btn-primary"
-                                   href="@Url.Action("UniDashboardDoctors", "Home")">
-                                    Open Bachelor Application
-                                </a>
-                            }
-
-                            <!-- New Postgraduate Application -->
-                            <a class="btn-secondary"
-                               href="@Url.Action("UniPostgraduateInstructions", "Home")">
-                                Start New Postgraduate Application
-                            </a>
-
-                        </div>
-
-                        <div class="info-note">
-                            Status will be updated automatically whenever there is a new change in your request.
-                        </div>
-                    }
-                    else
-                    {
+                        <!-- ═══════════════════════════════════════════════
+                             NO REQUEST — show start options
+                        ════════════════════════════════════════════════ -->
                         <div class="section-head">
                             <span class="section-kicker">Request Status</span>
                             <h2>No Active Requests at the Moment</h2>
@@ -190,13 +223,11 @@
 
                         <div class="empty-card">
                             <div class="empty-icon">📝</div>
-
                             <div class="empty-details">
                                 <div class="empty-row">
                                     <span>Current Status</span>
                                     <strong>No Request Submitted</strong>
                                 </div>
-
                                 <div class="empty-row">
                                     <span>Next Step</span>
                                     <strong>Start a new application</strong>
@@ -205,7 +236,6 @@
                         </div>
 
                         <div class="start-options">
-
                             <a class="start-card start-card--primary"
                                href="@Url.Action("UniDashboard", "Home")#sec-instructions">
                                 <div class="start-card__icon">🎓</div>
@@ -215,51 +245,141 @@
                                 </div>
                                 <div class="start-card__arrow">→</div>
                             </a>
-
                             <a class="start-card start-card--secondary"
                                href="@Url.Action("UniPostgraduateInstructions", "Home")">
                                 <div class="start-card__icon">📚</div>
                                 <div class="start-card__body">
                                     <strong>Start Postgraduate Application</strong>
-                                    <span>Only for institutions that <em>do not</em> offer a bachelor's program. If your institution has a bachelor's program, it must be recognized first before applying for postgraduate recognition.</span>
+                                    <span>Only for institutions that <em>do not</em> offer a bachelor's program.</span>
                                 </div>
                                 <div class="start-card__arrow">→</div>
                             </a>
-
                         </div>
 
                         <div class="info-note">
                             After submitting the request, you can track its status and review the final decision through your account.
                         </div>
-
-                        <style>
-                            .start-options {
-                                display: flex;
-                                flex-direction: column;
-                                gap: .75rem;
-                                margin-top: 1.2rem;
-                            }
-                            .start-card {
-                                display: flex;
-                                align-items: center;
-                                gap: 1rem;
-                                border-radius: 12px;
-                                padding: 1rem 1.2rem;
-                                text-decoration: none;
-                                color: #fff;
-                                border: 1.5px solid rgba(255,255,255,.1);
-                                background: rgba(255,255,255,.04);
-                                transition: border-color .2s, background .2s;
-                            }
-                            .start-card--primary:hover  { border-color: #e53e3e; background: rgba(229,62,62,.08); }
-                            .start-card--secondary:hover { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.08); }
-                            .start-card__icon { font-size: 1.6rem; flex-shrink: 0; }
-                            .start-card__body { flex: 1; }
-                            .start-card__body strong { display: block; font-size: .95rem; font-weight: 600; margin-bottom: .25rem; }
-                            .start-card__body span   { font-size: .8rem; color: #9ca3af; line-height: 1.4; }
-                            .start-card__arrow { font-size: 1.1rem; color: #9ca3af; flex-shrink: 0; }
-                        </style>
                     }
+                    else
+                    {
+                        <!-- ═══════════════════════════════════════════════
+                             HAS REQUEST — show per-section status cards
+                        ════════════════════════════════════════════════ -->
+                        <div class="section-head">
+                            <span class="section-kicker">Request Status</span>
+                            <h2>Active Recognition Request</h2>
+                            <p>Below you can review the status of each recognition track.</p>
+                        </div>
+
+                        @* ── Recognition Tracks overview tiles ── *@
+                        <div class="sections-tracker">
+                            <div class="sections-tracker__title">@trackerLabel</div>
+                            <div class="sections-tracker__grid">
+                                @{
+                                    string tileBach = hasBachelor     ? "sec-tile sec-tile--done" : "sec-tile sec-tile--pending";
+                                    string tilePg   = hasPostgraduate ? "sec-tile sec-tile--done" : "sec-tile sec-tile--pending";
+                                    string tileOl   = hasOnline       ? "sec-tile sec-tile--done" : "sec-tile sec-tile--pending";
+                                }
+                                <div class="@tileBach">
+                                    <span class="sec-tile__icon">@(hasBachelor     ? "✅" : "○")</span>
+                                    <span class="sec-tile__name">Bachelor</span>
+                                    <span class="sec-tile__badge">@bachelorTrackStatus</span>
+                                </div>
+                                <div class="@tilePg">
+                                    <span class="sec-tile__icon">@(hasPostgraduate ? "✅" : "○")</span>
+                                    <span class="sec-tile__name">Postgraduate</span>
+                                    <span class="sec-tile__badge">@pgTrackStatus</span>
+                                </div>
+                                <div class="@tileOl">
+                                    <span class="sec-tile__icon">@(hasOnline       ? "✅" : "○")</span>
+                                    <span class="sec-tile__name">Online / Blended</span>
+                                    <span class="sec-tile__badge">@olTrackStatus</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* ── Bachelor status card ── *@
+                        <div class="app-label"><span>🎓 Main Recognition Application</span></div>
+                        <div class="status-card">
+                            <div class="status-item">
+                                <span>Request Number</span>
+                                <strong>@ShowOrDash(bachelorNumber)</strong>
+                            </div>
+                            <div class="status-item">
+                                <span>Submitted On</span>
+                                <strong>@ShowOrDash(bachelorDate)</strong>
+                            </div>
+                            <div class="status-item">
+                                <span>Status</span>
+                                <span class="@StatusPillClass(bachelorTrackStatus)">@bachelorTrackStatus</span>
+                            </div>
+                        </div>
+
+                        @* ── Postgraduate status card ── *@
+                        <div class="app-label"><span>📚 Postgraduate Recognition Application</span></div>
+                        <div class="status-card">
+                            <div class="status-item">
+                                <span>Request Number</span>
+                                <strong>@ShowOrDash(pgNumber)</strong>
+                            </div>
+                            <div class="status-item">
+                                <span>Submitted On</span>
+                                <strong>@ShowOrDash(pgDate)</strong>
+                            </div>
+                            <div class="status-item">
+                                <span>Status</span>
+                                <span class="@StatusPillClass(pgTrackStatus)">@pgTrackStatus</span>
+                            </div>
+                        </div>
+
+                        @* ── Online status card ── *@
+                        <div class="app-label"><span>💻 Online / Blended Recognition Application</span></div>
+                        <div class="status-card">
+                            <div class="status-item">
+                                <span>Request Number</span>
+                                <strong>@ShowOrDash(olNumber)</strong>
+                            </div>
+                            <div class="status-item">
+                                <span>Submitted On</span>
+                                <strong>@ShowOrDash(olDate)</strong>
+                            </div>
+                            <div class="status-item">
+                                <span>Status</span>
+                                <span class="@StatusPillClass(olTrackStatus)">@olTrackStatus</span>
+                            </div>
+                        </div>
+
+                        @* ── Next action ── *@
+                        @if (canApplyPostgraduate)
+                        {
+                            <div class="actions-row">
+                                <a class="btn-primary"
+                                   href="@Url.Action("UniPostgraduateInstructions", "Home")">
+                                    Continue to Postgraduate Recognition →
+                                </a>
+                            </div>
+                        }
+                        else if (canApplyOnline)
+                        {
+                            <div class="actions-row">
+                                <a class="btn-primary"
+                                   href="@Url.Action("UniOnlineInstructions", "Home")">
+                                    Continue to Online / Blended Recognition →
+                                </a>
+                            </div>
+                        }
+                        else if (allSubmitted)
+                        {
+                            <div class="info-note" style="margin-top:.8rem;">
+                                All three recognition tracks have been submitted. Your full application is under review.
+                            </div>
+                        }
+
+                        <div class="info-note">
+                            Your submitted recognition tracks will be updated automatically whenever there is a new change in the review process.
+                        </div>
+                    }
+
                 </section>
 
                 <!-- Steps -->
@@ -278,7 +398,6 @@
                                 <span>Read the submission requirements before starting.</span>
                             </div>
                         </div>
-
                         <div class="clean-step">
                             <div class="step-num">2</div>
                             <div>
@@ -286,7 +405,6 @@
                                 <span>Collect all required files and information.</span>
                             </div>
                         </div>
-
                         <div class="clean-step">
                             <div class="step-num">3</div>
                             <div>
@@ -294,7 +412,6 @@
                                 <span>Complete the application and upload the documents.</span>
                             </div>
                         </div>
-
                         <div class="clean-step">
                             <div class="step-num">4</div>
                             <div>
@@ -302,7 +419,6 @@
                                 <span>Monitor the request and review any updates.</span>
                             </div>
                         </div>
-
                         <div class="clean-step">
                             <div class="step-num">5</div>
                             <div>

@@ -10,12 +10,19 @@
     var meetingMap         = ViewBag.RequestMeetingMap as Dictionary<int, MeetingDto> ?? new();
     var memberNameMap      = ViewBag.MemberNameMap as Dictionary<string, string> ?? new();
     var availableSessions  = ViewBag.AvailableSessions as List<int> ?? new();
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
+
     string AppTypeStyle(string? t) => (t ?? "Bachelor") switch
     {
         "Postgraduate" => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
         "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
         _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
     };
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
     string RowClass(string? t) => (t ?? "Bachelor") switch
     {
         "Postgraduate" => "app-row-postgraduate",
@@ -40,9 +47,12 @@
 
     string DecisionLabel(string? dec) {
         if (string.IsNullOrWhiteSpace(dec)) return "—";
-        if (dec.Contains("Approve", StringComparison.OrdinalIgnoreCase) && !dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase)) return "Approved";
-        if (dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase)) return "Conditional";
-        if (dec.Contains("Reject", StringComparison.OrdinalIgnoreCase)) return "Rejected";
+        if (dec.Contains("Approve", StringComparison.OrdinalIgnoreCase) && !dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase))
+            return isRtl ? "مقبول" : "Approved";
+        if (dec.Contains("Conditional", StringComparison.OrdinalIgnoreCase))
+            return isRtl ? "قبول مشروط" : "Conditional";
+        if (dec.Contains("Reject", StringComparison.OrdinalIgnoreCase))
+            return isRtl ? "مرفوض" : "Rejected";
         return dec;
     }
     string DecisionClass(string? dec) {
@@ -55,17 +65,21 @@
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "أرشيف الجلسات المغلقة" : "Closed Sessions Archive")</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/ElectronicRequests.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
     <style>
         .csa-hero { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap; margin-bottom:0; }
         .csa-title-block h1 { font-size:28px; font-weight:800; color:#111827; margin-bottom:6px; }
@@ -108,7 +122,7 @@
     </style>
 </head>
 
-<body class="rm-page">
+<body class="rm-page@(isRtl ? " rtl-body" : "")">
 
     <header class="rm-header">
         <div class="rm-brandbar"></div>
@@ -118,12 +132,16 @@
                     <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
                 </div>
                 <div class="rm-user">
-                    <div class="rm-userpill">
-                        <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>@currentMember</b></span>
-                    </div>
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@(currentMember?.Length > 0 ? currentMember.Substring(0,1).ToUpper() : "M")</div>
+                        <div class="rm-user-card-text">
+                            <strong>@currentMember</strong>
+                            <span>@(isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                        <i class="bi bi-box-arrow-right"></i> @(isRtl ? "تسجيل الخروج" : "Logout")
                     </a>
                 </div>
             </div>
@@ -140,20 +158,20 @@
             <section class="rm-card" style="margin-bottom:16px;">
                 <div class="csa-hero">
                     <div class="csa-title-block">
-                        <h1><i class="bi bi-archive-fill" style="color:#7f1627;font-size:26px;vertical-align:middle;margin-right:10px;"></i>Closed Sessions Archive</h1>
-                        <p>Requests from closed/completed meeting sessions. Data is read-only and preserved for reference.</p>
+                        <h1><i class="bi bi-archive-fill" style="color:#7f1627;font-size:26px;vertical-align:middle;margin-@(isRtl ? "left" : "right"):10px;"></i>@(isRtl ? "أرشيف الجلسات المغلقة" : "Closed Sessions Archive")</h1>
+                        <p>@(isRtl ? "الطلبات من جلسات الاجتماعات المغلقة/المكتملة. البيانات للقراءة فقط ومحفوظة للرجوع إليها." : "Requests from closed/completed meeting sessions. Data is read-only and preserved for reference.")</p>
                     </div>
                     <div class="csa-chips">
                         <div class="csa-chip accent">
-                            <span>Total Closed</span>
+                            <span>@(isRtl ? "إجمالي المغلقة" : "Total Closed")</span>
                             <b>@totalClosed</b>
                         </div>
                         <div class="csa-chip">
-                            <span>Showing</span>
+                            <span>@(isRtl ? "معروض" : "Showing")</span>
                             <b>@Model.Count</b>
                         </div>
                         <div class="csa-chip">
-                            <span>Sessions</span>
+                            <span>@(isRtl ? "الجلسات" : "Sessions")</span>
                             <b>@availableSessions.Count</b>
                         </div>
                     </div>
@@ -162,60 +180,60 @@
 
             <!-- FILTERS -->
             <div class="csa-filter-card">
-                <h3><i class="bi bi-funnel-fill" style="color:#7f1627;"></i> Filter Closed Records</h3>
+                <h3><i class="bi bi-funnel-fill" style="color:#7f1627;"></i> @(isRtl ? "تصفية السجلات المغلقة" : "Filter Closed Records")</h3>
                 <form method="get" asp-action="ClosedSessionsArchive" asp-controller="Home">
                     <div class="csa-grid">
 
                         <div class="csa-field">
-                            <label>Session No.</label>
+                            <label>@(isRtl ? "رقم الجلسة" : "Session No.")</label>
                             <select name="sessionNo">
                                 @if (fSession == null)
                                 {
-                                    <option value="" selected>All Sessions</option>
+                                    <option value="" selected>@(isRtl ? "جميع الجلسات" : "All Sessions")</option>
                                 }
                                 else
                                 {
-                                    <option value="">All Sessions</option>
+                                    <option value="">@(isRtl ? "جميع الجلسات" : "All Sessions")</option>
                                 }
                                 @foreach (var s in availableSessions)
                                 {
                                     if (fSession == s)
                                     {
-                                        <option value="@s" selected>Session @s</option>
+                                        <option value="@s" selected>@(isRtl ? "جلسة " : "Session ")@s</option>
                                     }
                                     else
                                     {
-                                        <option value="@s">Session @s</option>
+                                        <option value="@s">@(isRtl ? "جلسة " : "Session ")@s</option>
                                     }
                                 }
                             </select>
                         </div>
 
                         <div class="csa-field">
-                            <label>University Name</label>
-                            <input type="text" name="university" value="@fUni" placeholder="Search university..." />
+                            <label>@(isRtl ? "اسم الجامعة" : "University Name")</label>
+                            <input type="text" name="university" value="@fUni" placeholder="@(isRtl ? "ابحث عن جامعة..." : "Search university...")" />
                         </div>
 
                         <div class="csa-field">
-                            <label>Reference No.</label>
-                            <input type="text" name="reference" value="@fRef" placeholder="e.g. REQ-001" />
+                            <label>@(isRtl ? "الرقم المرجعي" : "Reference No.")</label>
+                            <input type="text" name="reference" value="@fRef" placeholder="@(isRtl ? "مثال: REQ-001" : "e.g. REQ-001")" />
                         </div>
 
                         <div class="csa-field">
-                            <label>Country</label>
-                            <input type="text" name="country" value="@fCountry" placeholder="e.g. Jordan" />
+                            <label>@(isRtl ? "الدولة" : "Country")</label>
+                            <input type="text" name="country" value="@fCountry" placeholder="@(isRtl ? "مثال: الأردن" : "e.g. Jordan")" />
                         </div>
 
                         <div class="csa-field">
-                            <label>Final Decision</label>
+                            <label>@(isRtl ? "القرار النهائي" : "Final Decision")</label>
                             <select name="decision">
                                 @if (string.IsNullOrWhiteSpace(fDecision))
                                 {
-                                    <option value="" selected>All Decisions</option>
+                                    <option value="" selected>@(isRtl ? "جميع القرارات" : "All Decisions")</option>
                                 }
                                 else
                                 {
-                                    <option value="">All Decisions</option>
+                                    <option value="">@(isRtl ? "جميع القرارات" : "All Decisions")</option>
                                 }
                                 @foreach (var d in availableDecisions)
                                 {
@@ -232,21 +250,21 @@
                         </div>
 
                         <div class="csa-field">
-                            <label>Closed From</label>
+                            <label>@(isRtl ? "مغلق من" : "Closed From")</label>
                             <input type="date" name="closedFrom" value="@fFrom" />
                         </div>
 
                         <div class="csa-field">
-                            <label>Closed To</label>
+                            <label>@(isRtl ? "مغلق إلى" : "Closed To")</label>
                             <input type="date" name="closedTo" value="@fTo" />
                         </div>
 
                         <div class="csa-filter-actions">
                             <button type="submit" class="csa-btn-search">
-                                <i class="bi bi-search"></i> Search
+                                <i class="bi bi-search"></i> @(isRtl ? "بحث" : "Search")
                             </button>
                             <a href="/Home/ClosedSessionsArchive" class="csa-btn-clear">
-                                <i class="bi bi-x-circle"></i> Clear
+                                <i class="bi bi-x-circle"></i> @(isRtl ? "مسح" : "Clear")
                             </a>
                         </div>
 
@@ -261,15 +279,15 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Type</th>
-                                <th>Reference</th>
-                                <th>University</th>
-                                <th>Country</th>
-                                <th>Assigned Member</th>
-                                <th>Final Decision</th>
-                                <th>Session</th>
-                                <th>Closed Date</th>
-                                <th style="text-align:center;">Action</th>
+                                <th>@(isRtl ? "النوع" : "Type")</th>
+                                <th>@(isRtl ? "الرقم المرجعي" : "Reference")</th>
+                                <th>@(isRtl ? "الجامعة" : "University")</th>
+                                <th>@(isRtl ? "الدولة" : "Country")</th>
+                                <th>@(isRtl ? "العضو المعيّن" : "Assigned Member")</th>
+                                <th>@(isRtl ? "القرار النهائي" : "Final Decision")</th>
+                                <th>@(isRtl ? "الجلسة" : "Session")</th>
+                                <th>@(isRtl ? "تاريخ الإغلاق" : "Closed Date")</th>
+                                <th style="text-align:center;">@(isRtl ? "إجراء" : "Action")</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -281,7 +299,7 @@
                                     meetingMap.TryGetValue(item.Id, out var mtg);
                                     <tr class="@RowClass(item.ApplicationType)">
                                         <td style="color:#9ca3af;font-weight:700;">@(n++)</td>
-                                        <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
+                                        <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@AppTypeLabel(item.ApplicationType)</span></td>
                                         <td class="ref-cell">@(item.ReferenceNumber ?? $"REQ-{item.Id}")</td>
                                         <td class="uni-cell">@item.UniversityName</td>
                                         <td>@item.Country</td>
@@ -295,7 +313,7 @@
                                             @if (mtg != null)
                                             {
                                                 <span class="session-tag">
-                                                    <i class="bi bi-layers-fill"></i> Session @mtg.SessionNumber
+                                                    <i class="bi bi-layers-fill"></i> @(isRtl ? "جلسة " : "Session ")@mtg.SessionNumber
                                                 </span>
                                             }
                                             else
@@ -308,7 +326,7 @@
                                         </td>
                                         <td style="text-align:center;">
                                             <a class="rm-mini-view" href="@Url.Action("DetailsBasicInfo", "Home", new { id = item.Id })">
-                                                <i class="bi bi-eye"></i> View
+                                                <i class="bi bi-eye"></i> @(isRtl ? "عرض" : "View")
                                             </a>
                                         </td>
                                     </tr>
@@ -317,16 +335,16 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="9">
+                                    <td colspan="10">
                                         <div class="empty-state">
                                             <i class="bi bi-archive"></i>
                                             @if (totalClosed == 0)
                                             {
-                                                <span>No closed sessions yet. Sessions appear here once an admin closes a meeting.</span>
+                                                <span>@(isRtl ? "لا توجد جلسات مغلقة بعد. تظهر الجلسات هنا بعد إغلاق الاجتماع من قِبَل المدير." : "No closed sessions yet. Sessions appear here once an admin closes a meeting.")</span>
                                             }
                                             else
                                             {
-                                                <span>No records match the current filters.</span>
+                                                <span>@(isRtl ? "لا توجد سجلات تطابق المرشّحات الحالية." : "No records match the current filters.")</span>
                                             }
                                         </div>
                                     </td>

@@ -1,31 +1,33 @@
 @{
     var active = ViewData["ActiveNav"] as string ?? "";
     var scheduledCount = (int)(ViewBag.ScheduledMeetingsCount ?? 0);
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
 }
 <aside class="rm-sidebar">
-    <div class="rm-side-label">Workspace</div>
+    <div class="rm-side-label">@(isRtl ? "مساحة العمل" : "Workspace")</div>
     <nav class="rm-nav">
         <a class="rm-navitem@(active == "dashboard" ? " active" : "")" href="@Url.Action("RecognitionMemberDashboard", "Home")">
-            <i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span>
+            <i class="bi bi-grid-1x2-fill"></i><span>@(isRtl ? "لوحة التحكم" : "Dashboard")</span>
         </a>
         <a class="rm-navitem@(active == "requests" ? " active" : "")" href="@Url.Action("ElectronicRequests", "Home")">
-            <i class="bi bi-journal-check"></i><span>My Assigned Requests</span>
+            <i class="bi bi-journal-check"></i><span>@(isRtl ? "طلباتي المعيّنة" : "My Assigned Requests")</span>
         </a>
         <a class="rm-navitem@(active == "manualrequests" ? " active" : "")"
            href="@Url.Action("ManualInstitutionRequests", "Home")">
             <i class="bi bi-building-add"></i>
-            <span>Manual Institution Requests</span>
+            <span>@(isRtl ? "طلبات المؤسسات اليدوية" : "Manual Institution Requests")</span>
         </a>
         <a class="rm-navitem@(active == "archive" ? " active" : "")" href="@Url.Action("Archive", "Home")">
-            <i class="bi bi-inboxes"></i><span>Requests Archive</span>
+            <i class="bi bi-inboxes"></i><span>@(isRtl ? "أرشيف الطلبات" : "Requests Archive")</span>
         </a>
-        <a class="rm-navitem@(active == "closedarchive" ? " active" : "")" href="@Url.Action("ClosedSessionsArchive", "Home")">
-            <i class="bi bi-archive-fill"></i><span>Closed Sessions</span>
+        <a class="rm-navitem@(active == "history" ? " active" : "")" href="@Url.Action("MemberReviewHistory", "Home")">
+            <i class="bi bi-clock-history"></i><span>@(isRtl ? "سجل مراجعاتي" : "My Review History")</span>
         </a>
         <a class="rm-navitem@(active == "meetings" ? " active" : "")" href="@Url.Action("RecognitionMemberMeetings", "Home")"
            style="position:relative;">
             <i class="bi bi-calendar2-week"></i>
-            <span>Meetings</span>
+            <span>@(isRtl ? "الاجتماعات" : "Meetings")</span>
             @if (scheduledCount > 0)
             {
                 <span style="
@@ -37,8 +39,11 @@
             }
         </a>
         <div class="rm-nav-divider"></div>
+        <div style="padding:8px 14px 4px;">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+        </div>
         <a class="rm-navitem rm-navitem-danger" href="@Url.Action("Logout", "Home")">
-            <i class="bi bi-power"></i><span>Sign Out</span>
+            <i class="bi bi-power"></i><span>@(isRtl ? "تسجيل الخروج" : "Sign Out")</span>
         </a>
     </nav>
 </aside>

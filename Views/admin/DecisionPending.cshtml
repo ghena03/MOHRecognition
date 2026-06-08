@@ -3,6 +3,15 @@
     ViewData["Title"] = "Pending Decisions";
     Layout = null;
     var items = ViewBag.Items as List<DecisionItemDto> ?? new List<DecisionItemDto>();
+
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
+
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
+
     string AppTypeStyle(string? t) => (t ?? "Bachelor") switch
     {
         "Postgraduate" => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
@@ -18,12 +27,16 @@
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pending Decisions</title>
+    <title>@(isRtl ? "القرارات المعلّقة" : "Pending Decisions")</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f0eb; color: #1a1a1a; min-height: 100vh; }
@@ -39,20 +52,14 @@
         .btn-back { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.35); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; text-decoration: none; transition: background .15s; }
         .btn-back:hover { background: rgba(255,255,255,.25); }
 
-        /* ── Amber accent banner ── */
-        .accent-banner {
-            background: #fff;
-            border-bottom: 3px solid #d97706;
-            padding: 24px 48px;
-            display: flex; align-items: center; gap: 20px;
-        }
+        .accent-banner { background: #fff; border-bottom: 3px solid #d97706; padding: 24px 48px; display: flex; align-items: center; gap: 20px; }
         .accent-icon { width: 56px; height: 56px; border-radius: 16px; background: #fffbeb; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
         .accent-text h2 { font-size: 20px; font-weight: 900; color: #d97706; }
         .accent-text p  { font-size: 13px; color: #888; margin-top: 3px; }
         .accent-count { margin-left: auto; background: #fffbeb; color: #d97706; border-radius: 12px; padding: 10px 22px; font-size: 28px; font-weight: 900; border: 2px solid #fde68a; }
         .accent-count span { font-size: 12px; font-weight: 600; display: block; text-align: center; margin-top: 2px; }
+        html[dir="rtl"] .accent-count { margin-left: 0; margin-right: auto; }
 
-        /* ── Body ── */
         .pg-body { max-width: 1100px; margin: 0 auto; padding: 36px 24px 72px; }
 
         .tbl-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 24px rgba(0,0,0,.07); overflow: hidden; }
@@ -62,6 +69,7 @@
 
         table { width: 100%; border-collapse: collapse; }
         thead th { background: #fffdf0; color: #d97706; font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; padding: 13px 24px; text-align: left; border-bottom: 2px solid #fde68a; white-space: nowrap; }
+        html[dir="rtl"] thead th { text-align: right; }
         tbody tr { border-bottom: 1px solid #f5f0eb; transition: background .1s; }
         tbody tr:last-child { border-bottom: none; }
         tbody tr:hover { background: #fffdf0; }
@@ -76,6 +84,7 @@
         .btn-review:hover { background: #b45309; border-color: #b45309; }
 
         .btn-view { display: inline-flex; align-items: center; gap: 6px; background: #fffbeb; color: #d97706; border: 1.5px solid #fde68a; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; text-decoration: none; transition: background .12s; white-space: nowrap; margin-right: 6px; }
+        html[dir="rtl"] .btn-view { margin-right: 0; margin-left: 6px; }
         .btn-view:hover { background: #fef3c7; }
 
         .empty-state { padding: 72px 32px; text-align: center; }
@@ -83,20 +92,25 @@
         .empty-state h3 { font-size: 17px; font-weight: 700; color: #555; margin-bottom: 8px; }
         .empty-state p  { font-size: 13.5px; color: #aaa; max-width: 380px; margin: 0 auto; line-height: 1.7; }
 
-        /* Application type — colored left border indicator */
         tr.app-row-bachelor td:first-child    { border-left: 5px solid #3b82f6 !important; padding-left: 11px !important; }
         tr.app-row-postgraduate td:first-child { border-left: 5px solid #8b5cf6 !important; padding-left: 11px !important; }
         tr.app-row-online td:first-child       { border-left: 5px solid #10b981 !important; padding-left: 11px !important; }
-        .app-row-bachelor    { border-left: 5px solid #3b82f6 !important; }
-        .app-row-postgraduate { border-left: 5px solid #8b5cf6 !important; }
-        .app-row-online       { border-left: 5px solid #10b981 !important; }
+        html[dir="rtl"] tr.app-row-bachelor td:last-child    { border-right: 5px solid #3b82f6 !important; padding-right: 11px !important; }
+        html[dir="rtl"] tr.app-row-postgraduate td:last-child { border-right: 5px solid #8b5cf6 !important; padding-right: 11px !important; }
+        html[dir="rtl"] tr.app-row-online td:last-child       { border-right: 5px solid #10b981 !important; padding-right: 11px !important; }
+        html[dir="rtl"] tr.app-row-bachelor td:first-child    { border-left: none !important; }
+        html[dir="rtl"] tr.app-row-postgraduate td:first-child { border-left: none !important; }
+        html[dir="rtl"] tr.app-row-online td:first-child       { border-left: none !important; }
+
+        .actions-col { text-align: right; }
+        html[dir="rtl"] .actions-col { text-align: left; }
     </style>
 </head>
-<body>
+<body class="@(isRtl ? "rtl-body" : "")">
 
     <div class="ministry-bar">
         <i class="bi bi-bank2"></i>
-        Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan
+        @(isRtl ? "وزارة التعليم العالي والبحث العلمي — المملكة الأردنية الهاشمية" : "Ministry of Higher Education and Scientific Research — Hashemite Kingdom of Jordan")
     </div>
 
     <div class="pg-header">
@@ -104,24 +118,27 @@
             <img src="/images/mohelogo.png" alt="Logo" />
             <div class="hd-sep"></div>
             <div class="hd-text">
-                <h1>Pending Decisions</h1>
-                <p>Needs more information — awaiting further review</p>
+                <h1>@(isRtl ? "القرارات المعلّقة" : "Pending Decisions")</h1>
+                <p>@(isRtl ? "يحتاج مزيداً من المعلومات — في انتظار مراجعة إضافية" : "Needs more information — awaiting further review")</p>
             </div>
         </div>
-        <a href="/Home/AdminDashboard" class="btn-back">
-            <i class="bi bi-arrow-left"></i> Dashboard
+                <div style="display:flex;align-items:center;gap:10px;">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+            <a href="/Home/AdminDashboard" class="btn-back">
+            <i class="bi bi-arrow-@(isRtl ? "right" : "left")"></i> @(isRtl ? "لوحة التحكم" : "Dashboard")
         </a>
+        </div>
     </div>
 
     <div class="accent-banner">
         <div class="accent-icon"><i class="bi bi-hourglass-split"></i></div>
         <div class="accent-text">
-            <h2>Needs More Information</h2>
-            <p>Universities flagged by the committee as requiring additional review before a final decision</p>
+            <h2>@(isRtl ? "يحتاج مزيداً من المعلومات" : "Needs More Information")</h2>
+            <p>@(isRtl ? "جامعات أشارت اللجنة إلى ضرورة مراجعتها قبل إصدار قرار نهائي" : "Universities flagged by the committee as requiring additional review before a final decision")</p>
         </div>
         <div class="accent-count">
             @items.Count
-            <span>universities</span>
+            <span>@(isRtl ? "جامعة" : "universities")</span>
         </div>
     </div>
 
@@ -129,22 +146,22 @@
         <div class="tbl-card">
             <div class="tbl-card-top">
                 <div>
-                    <h3>Pending / Needs More Information</h3>
-                    <p>Automatically populated when committee decision = Needs More Information</p>
+                    <h3>@(isRtl ? "معلّق / يحتاج مزيداً من المعلومات" : "Pending / Needs More Information")</h3>
+                    <p>@(isRtl ? "تُعبَّأ تلقائياً عند تسجيل قرار «يحتاج مزيداً من المعلومات» من اللجنة" : "Automatically populated when committee decision = Needs More Information")</p>
                 </div>
             </div>
             <table>
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Type</th>
-                        <th>University Name</th>
-                        <th>Country</th>
-                        <th>Request ID</th>
-                        <th>Session</th>
-                        <th>Flagged Date</th>
-                        <th>Status</th>
-                        <th style="text-align:right;padding-right:28px;">Actions</th>
+                        <th>@(isRtl ? "النوع" : "Type")</th>
+                        <th>@(isRtl ? "اسم الجامعة" : "University Name")</th>
+                        <th>@(isRtl ? "الدولة" : "Country")</th>
+                        <th>@(isRtl ? "رقم الطلب" : "Request ID")</th>
+                        <th>@(isRtl ? "الجلسة" : "Session")</th>
+                        <th>@(isRtl ? "تاريخ الإشارة" : "Flagged Date")</th>
+                        <th>@(isRtl ? "الحالة" : "Status")</th>
+                        <th class="actions-col" style="padding-@(isRtl ? "left" : "right"):28px;">@(isRtl ? "الإجراءات" : "Actions")</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -155,7 +172,7 @@
                         {
                             <tr class="@RowClass(item.ApplicationType)">
                                 <td style="font-size:14px;font-weight:700;color:#bbb;">@i</td>
-                                <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
+                                <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@AppTypeLabel(item.ApplicationType)</span></td>
                                 <td>
                                     <div class="uni-name">@(string.IsNullOrWhiteSpace(item.UniversityName) ? "—" : item.UniversityName)</div>
                                     @if (!string.IsNullOrWhiteSpace(item.ReferenceNumber))
@@ -166,19 +183,19 @@
                                 <td style="font-size:13px;color:#555;">@(string.IsNullOrWhiteSpace(item.Country) ? "—" : item.Country)</td>
                                 <td style="font-size:13px;font-weight:600;color:#555;">#@item.RequestId</td>
                                 <td>
-                                    <span style="font-size:13px;font-weight:700;color:#1a1a1a;">Meeting #@item.SessionNumber</span>
+                                    <span style="font-size:13px;font-weight:700;color:#1a1a1a;">@(isRtl ? "اجتماع #" : "Meeting #")@item.SessionNumber</span>
                                     <div style="font-size:11px;color:#bbb;margin-top:2px;">@item.MeetingDate.ToString("dd MMM yyyy")</div>
                                 </td>
                                 <td style="font-size:13px;color:#555;">
                                     @(item.DecisionDate.HasValue ? item.DecisionDate.Value.ToString("dd MMM yyyy") : "—")
                                 </td>
-                                <td><span class="badge-amber"><i class="bi bi-hourglass-split"></i> Needs More Info</span></td>
-                                <td style="text-align:right;">
+                                <td><span class="badge-amber"><i class="bi bi-hourglass-split"></i> @(isRtl ? "يحتاج مزيداً من المعلومات" : "Needs More Info")</span></td>
+                                <td class="actions-col">
                                     <a class="btn-view" href="/Home/MeetingDecision?meetingId=@item.MeetingId&requestId=@item.RequestId">
-                                        <i class="bi bi-eye"></i> View
+                                        <i class="bi bi-eye"></i> @(isRtl ? "عرض" : "View")
                                     </a>
                                     <a class="btn-review" href="/Home/MeetingDecision?meetingId=@item.MeetingId&requestId=@item.RequestId">
-                                        <i class="bi bi-pencil-square"></i> Continue Review
+                                        <i class="bi bi-pencil-square"></i> @(isRtl ? "متابعة المراجعة" : "Continue Review")
                                     </a>
                                 </td>
                             </tr>
@@ -188,11 +205,11 @@
                     else
                     {
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 <div class="empty-state">
                                     <i class="bi bi-hourglass"></i>
-                                    <h3>No pending decisions</h3>
-                                    <p>Universities will appear here automatically once the committee marks a case as "Needs More Information" inside إدارة الجلسات.</p>
+                                    <h3>@(isRtl ? "لا توجد قرارات معلّقة" : "No pending decisions")</h3>
+                                    <p>@(isRtl ? "ستظهر الجامعات هنا تلقائياً بمجرد تسجيل قرار «يحتاج مزيداً من المعلومات» من اللجنة في إدارة الجلسات." : "Universities will appear here automatically once the committee marks a case as \"Needs More Information\" inside إدارة الجلسات.")</p>
                                 </div>
                             </td>
                         </tr>

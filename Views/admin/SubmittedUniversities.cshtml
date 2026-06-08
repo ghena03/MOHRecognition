@@ -2,6 +2,9 @@
 @{
     ViewData["Title"] = "Submitted Universities";
     Layout = null;
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
     var items = ViewBag.Items as List<RecognitionRequestRecord> ?? new List<RecognitionRequestRecord>();
     var memberNameMap = ViewBag.MemberNameMap as Dictionary<string, string> ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -11,6 +14,9 @@
         "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
         _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
     };
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
     string RowClass(string? t) => (t ?? "Bachelor") switch
     {
         "Postgraduate" => "app-row-postgraduate",
@@ -20,13 +26,18 @@
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Submitted Universities</title>
+    <title>@(isRtl ? "الجامعات المقدّمة" : "Submitted Universities")</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
     <style>
+
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f0eb; color: #1a1a1a; min-height: 100vh; }
         .ministry-bar { background: #5a0e1b; color: rgba(255,255,255,.68); font-size: 11.5px; font-weight: 500; letter-spacing: .4px; padding: 6px 48px; display: flex; align-items: center; gap: 6px; }
@@ -54,64 +65,63 @@
         tbody tr:hover { background: #fcfdff; }
         tbody td { padding: 15px 18px; font-size: 13px; color: #444; vertical-align: middle; }
         .uni-name { font-size: 14px; font-weight: 800; color: #1a1a1a; }
-        .rec-badge { display: inline-flex; align-items: center; gap: 8px; border-radius: 12px; padding: 9px 18px; font-size: 14px; font-weight: 700; letter-spacing: .2px; }
-        .rec-badge.green  { background: #dcfce7; color: #166534; border: 1.5px solid #86efac; }
-        .rec-badge.orange { background: #fff7ed; color: #9a3412; border: 1.5px solid #fdba74; }
-        .rec-badge.red    { background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
-        .rec-badge.grey   { background: #f1f5f9; color: #64748b; border: 1.5px solid #cbd5e1; }
+        .rec-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 11px; font-size: 11.5px; font-weight: 800; background: #f5e8ea; color: #7f1627; }
         .btn-add { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; border-radius: 7px; padding: 8px 12px; font-size: 12px; font-weight: 800; background: #1d4ed8; color: #fff; border: 1px solid #1d4ed8; }
         .btn-add:hover { background: #1e40af; border-color: #1e40af; }
         .empty-state { padding: 70px 32px; text-align: center; }
         .empty-state i { font-size: 50px; color: #bfdbfe; display: block; margin-bottom: 14px; }
         .empty-state h3 { font-size: 18px; color: #555; margin-bottom: 8px; }
         .empty-state p { color: #888; font-size: 13.5px; max-width: 430px; margin: 0 auto; line-height: 1.7; }
-
-        /* Application type — colored left border indicator */
-        tr.app-row-bachelor td:first-child    { border-left: 5px solid #3b82f6 !important; padding-left: 11px !important; }
-        tr.app-row-postgraduate td:first-child { border-left: 5px solid #8b5cf6 !important; padding-left: 11px !important; }
-        tr.app-row-online td:first-child       { border-left: 5px solid #10b981 !important; padding-left: 11px !important; }
-        .app-row-bachelor    { border-left: 5px solid #3b82f6 !important; }
-        .app-row-postgraduate { border-left: 5px solid #8b5cf6 !important; }
-        .app-row-online       { border-left: 5px solid #10b981 !important; }
     </style>
 </head>
-<body>
-    <div class="ministry-bar"><i class="bi bi-bank2"></i> Ministry of Higher Education and Scientific Research - Hashemite Kingdom of Jordan</div>
+<body class="@(isRtl ? "rtl-body" : "")">
+    <!-- TOP BAR -->
+    <div class="ministry-bar">@(isRtl ? "وزارة التعليم العالي والبحث العلمي" : "Ministry of Higher Education and Scientific Research")</div>
+
+    <!-- HEADER -->
     <div class="pg-header">
         <div class="hd-left">
-            <img src="/images/mohelogo.png" alt="Logo" />
+            <img src="/images/mohelogo.png" alt="MOHE Logo" />
             <div class="hd-sep"></div>
             <div class="hd-text">
-                <h1>Submitted Universities</h1>
-                <p>Ready universities from doctor submissions</p>
+                <h1>@(isRtl ? "الجامعات المقدّمة" : "Submitted Universities")</h1>
+                <p>@(isRtl ? "الجامعات الجاهزة من تقديمات الأعضاء" : "Ready universities from doctor submissions")</p>
             </div>
         </div>
-        <a href="/Home/AdminDashboard" class="btn-back"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        <div style="display:flex;align-items:center;gap:10px;">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+            <a class="btn-back" href="@Url.Action("AdminDashboard", "Home")">
+            @(isRtl ? "→ العودة إلى لوحة التحكم" : "← Back to Dashboard")
+        </a>
+        </div>
     </div>
 
     <main class="pg-body">
         <section class="top-card">
-            <h2>Submitted Universities</h2>
-            <p>Universities submitted by doctors and ready to be added to meetings.</p>
+            <h2>@(isRtl ? "الجامعات المقدّمة" : "Submitted Universities")</h2>
+            <p>@(isRtl ? "الجامعات التي قدّمها الأعضاء وهي جاهزة للإضافة إلى الاجتماعات." : "Universities submitted by doctors and ready to be added to meetings.")</p>
         </section>
 
         <section class="tbl-card">
             <div class="tbl-top">
-                <h3>Ready for Meeting Scheduling</h3>
-                <span class="count-pill"><i class="bi bi-send-check-fill"></i> @items.Count submitted</span>
+                <h3>@(isRtl ? "جاهزة لجدولة الاجتماع" : "Ready for Meeting Scheduling")</h3>
+                <span class="count-pill">
+                    <i class="bi bi-send-check-fill"></i>
+                    @items.Count @(isRtl ? "مقدّمة" : "submitted")
+                </span>
             </div>
             <div class="table-wrap">
                 <table>
                     <thead>
                         <tr>
-                            <th>University Name</th>
-                            <th>Type</th>
-                            <th>Country</th>
-                            <th>Request ID</th>
-                            <th>Doctor Name</th>
-                            <th>Doctor Recommendation Status</th>
-                            <th>Submitted Date</th>
-                            <th style="text-align:right;padding-right:24px;">View</th>
+                            <th>@(isRtl ? "اسم الجامعة" : "University Name")</th>
+                            <th>@(isRtl ? "النوع" : "Type")</th>
+                            <th>@(isRtl ? "الدولة" : "Country")</th>
+                            <th>@(isRtl ? "رقم الطلب" : "Request ID")</th>
+                            <th>@(isRtl ? "اسم العضو" : "Doctor Name")</th>
+                            <th>@(isRtl ? "حالة التوصية" : "Doctor Recommendation Status")</th>
+                            <th>@(isRtl ? "تاريخ التقديم" : "Submitted Date")</th>
+                            <th style="text-align:@(isRtl ? "left" : "right");padding-@(isRtl ? "left" : "right"):24px;">@(isRtl ? "عرض" : "View")</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -119,7 +129,9 @@
                         {
                             foreach (var item in items)
                             {
-                                var recommendation = string.IsNullOrWhiteSpace(item.BasicInfoAssessmentDecision) ? "Not Submitted Yet" : item.BasicInfoAssessmentDecision;
+                                var recommendation = string.IsNullOrWhiteSpace(item.BasicInfoAssessmentDecision)
+                                    ? (isRtl ? "لم يُقدَّم بعد" : "Not Submitted Yet")
+                                    : item.BasicInfoAssessmentDecision;
                                 var recLower = recommendation.ToLowerInvariant();
                                 var recColor = recLower.Contains("approve") ? "green"
                                              : recLower.Contains("conditional") ? "orange"
@@ -131,7 +143,7 @@
                                              : "bi-clock";
                                 <tr class="@RowClass(item.ApplicationType)">
                                     <td><span class="uni-name">@(string.IsNullOrWhiteSpace(item.UniversityName) ? "-" : item.UniversityName)</span></td>
-                                    <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
+                                    <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@AppTypeLabel(item.ApplicationType)</span></td>
                                     <td>@(string.IsNullOrWhiteSpace(item.Country) ? "-" : item.Country)</td>
                                     <td><strong>#@item.Id</strong></td>
                                     <td>
@@ -141,14 +153,14 @@
                                         }
                                         else
                                         {
-                                            <span>Recognition Member</span>
+                                            <span>@(isRtl ? "عضو لجنة الاعتراف" : "Recognition Member")</span>
                                         }
                                     </td>
                                     <td><span class="rec-badge @recColor"><i class="bi @recIcon"></i> @recommendation</span></td>
                                     <td>@((item.SubmittedToAdminAt ?? item.SubmittedAt).ToString("dd MMM yyyy"))</td>
-                                    <td style="text-align:right;">
+                                    <td style="text-align:@(isRtl ? "left" : "right");">
                                         <a class="btn-add" href="/Home/AdminViewRecommendation?id=@item.Id">
-                                            <i class="bi bi-eye"></i> View Details
+                                            <i class="bi bi-eye"></i> @(isRtl ? "عرض التفاصيل" : "View Details")
                                         </a>
                                     </td>
                                 </tr>
@@ -159,9 +171,8 @@
                             <tr>
                                 <td colspan="8">
                                     <div class="empty-state">
-                                        <i class="bi bi-inbox"></i>
-                                        <h3>No submitted universities yet</h3>
-                                        <p>Universities will appear here after doctors finish recommendation and click Submit to Admin.</p>
+                                        <h3>@(isRtl ? "لا توجد جامعات مقدّمة بعد" : "No submitted universities yet")</h3>
+                                        <p>@(isRtl ? "ستظهر الجامعات هنا بعد أن ينتهي الأعضاء من التوصية ويضغطوا على تقديم للمدير." : "Universities will appear here after doctors finish recommendation and click Submit to Admin.")</p>
                                     </div>
                                 </td>
                             </tr>

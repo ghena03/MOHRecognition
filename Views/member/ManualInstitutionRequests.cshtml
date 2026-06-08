@@ -1,9 +1,12 @@
-﻿@model List<MOHRecognition.Services.RecognitionRequestRecord>
+@model List<MOHRecognition.Services.RecognitionRequestRecord>
 @{
     Layout = null;
     ViewData["Title"] = "Manual Institution Requests";
     ViewData["ActiveNav"] = "manualrequests";
     var currentMember = ViewBag.CurrentRecognitionMember as string ?? "Recognition Member";
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
 
     string AppTypeStyle(string? t) => (t ?? "Bachelor") switch
     {
@@ -11,6 +14,9 @@
         "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
         _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
     };
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor");
     string RowClass(string? t) => (t ?? "Bachelor") switch
     {
         "Postgraduate" => "app-row-postgraduate",
@@ -20,70 +26,51 @@
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "طلبات المؤسسات اليدوية" : "Manual Institution Requests")</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet">
-
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <link rel="stylesheet"
-          href="~/css/member/RecognitionMemberDashboard.css"
-          asp-append-version="true" />
-
-    <link rel="stylesheet"
-          href="~/css/member/ElectronicRequests.css"
-          asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/member/ElectronicRequests.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
 </head>
 
-<body class="rm-page">
+<body class="rm-page@(isRtl ? " rtl-body" : "")">
 
     <header class="rm-header">
-
         <div class="rm-brandbar"></div>
-
         <div class="rm-top">
-
             <div class="rm-top-inner">
-
                 <div class="rm-brand">
-                    <img class="rm-logo"
-                         src="@Url.Content("~/images/mohelogo.png")"
-                         alt="MOHE Logo" />
+                    <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
                 </div>
 
                 <div class="rm-user">
-
-                    <div class="rm-userpill">
-                        <i class="bi bi-person-circle"></i>
-
-                        <span>
-                            Welcome,
-                            <b>@currentMember</b>
-                        </span>
-                    </div>
-
-                    <a class="rm-btn rm-btn-light"
-                       href="@Url.Action("Logout", "Home")">
-
-                        <i class="bi bi-box-arrow-right"></i>
-                        Logout
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@(currentMember?.Length > 0 ? currentMember.Substring(0,1).ToUpper() : "M")</div>
+                        <div class="rm-user-card-text">
+                            <strong>@currentMember</strong>
+                            <span>@(isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
                     </a>
 
+                    <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
+                        <i class="bi bi-box-arrow-right"></i>
+                        @(isRtl ? "تسجيل الخروج" : "Logout")
+                    </a>
                 </div>
-
             </div>
-
         </div>
-
     </header>
 
     <div class="rm-shell">
@@ -93,224 +80,142 @@
         <main class="rm-main">
 
             <section class="rm-card er-hero">
-
                 <div class="er-hero-top">
-
                     <div class="er-hero-left">
-
-                        <h1>Manual Institution Requests</h1>
-
+                        <h1>@(isRtl ? "طلبات المؤسسات اليدوية" : "Manual Institution Requests")</h1>
                         <p>
-                            Only manual institution requests assigned to
-                            <b>@currentMember</b>
-                            appear here.
+                            @if (isRtl)
+                            {
+                                <text>تظهر هنا فقط طلبات المؤسسات اليدوية المعيّنة إلى <b>@currentMember</b>.</text>
+                            }
+                            else
+                            {
+                                <text>Only manual institution requests assigned to <b>@currentMember</b> appear here.</text>
+                            }
                         </p>
-
                     </div>
 
                     <div class="er-stats">
-
                         <div class="er-stat">
-                            <span>Assigned</span>
+                            <span>@(isRtl ? "معيّن" : "Assigned")</span>
                             <b>@Model.Count</b>
                         </div>
-
                         <div class="er-stat">
-                            <span>Pending</span>
+                            <span>@(isRtl ? "قيد الانتظار" : "Pending")</span>
                             <b>@Model.Count(x => x.Status == "Pending" || x.Status == "Assigned")</b>
                         </div>
-
                         <div class="er-stat">
-                            <span>Completed</span>
+                            <span>@(isRtl ? "مكتمل" : "Completed")</span>
                             <b>@Model.Count(x => x.Status == "Completed")</b>
                         </div>
-
                     </div>
-
                 </div>
 
                 <div class="er-filters">
-
                     <div class="er-field grow">
-
-                        <label for="q">Search</label>
-
+                        <label for="q">@(isRtl ? "بحث" : "Search")</label>
                         <div class="er-input">
-
                             <i class="bi bi-search"></i>
-
-                            <input id="q"
-                                   type="text"
-                                   placeholder="Reference, university..." />
-
+                            <input id="q" type="text" placeholder="@(isRtl ? "الرقم المرجعي، الجامعة..." : "Reference, university...")" />
                         </div>
-
                     </div>
 
                     <div class="er-field">
-
-                        <label for="status">Status</label>
-
+                        <label for="status">@(isRtl ? "الحالة" : "Status")</label>
                         <select id="status">
-                            <option value="">All</option>
+                            <option value="">@(isRtl ? "الكل" : "All")</option>
                             <option>Assigned</option>
                             <option>Pending</option>
                             <option>Completed</option>
                         </select>
-
                     </div>
 
                     <div class="er-actions">
-
-                        <button class="rm-btn rm-btn-light"
-                                type="button">
-
+                        <button class="rm-btn rm-btn-light" type="button">
                             <i class="bi bi-funnel"></i>
-                            Filter
+                            @(isRtl ? "تصفية" : "Filter")
                         </button>
-
-                        <button class="rm-btn rm-btn-light"
-                                type="button">
-
+                        <button class="rm-btn rm-btn-light" type="button">
                             <i class="bi bi-x-circle"></i>
-                            Clear
+                            @(isRtl ? "مسح" : "Clear")
                         </button>
-
                     </div>
-
                 </div>
-
             </section>
 
             <section class="rm-card">
-
                 <div class="rm-card-hd row">
-
                     <div>
-
-                        <h2>Manual Institution Requests</h2>
-
-                        <p>
-                            These are educational institutions manually assigned by admin.
-                        </p>
-
+                        <h2>@(isRtl ? "طلبات المؤسسات اليدوية" : "Manual Institution Requests")</h2>
+                        <p>@(isRtl ? "هذه مؤسسات تعليمية معيّنة يدويًا من قِبَل المدير." : "These are educational institutions manually assigned by admin.")</p>
                     </div>
-
                 </div>
 
                 <div class="rm-tablewrap">
-
                     <table class="rm-table">
-
                         <thead>
-
                             <tr>
-                                <th>Reference</th>
-                                <th>Type</th>
-                                <th>University</th>
-                                <th>Country</th>
-                                <th>Status</th>
-                                <th>Submitted</th>
-                                <th class="right">Action</th>
+                                <th>@(isRtl ? "الرقم المرجعي" : "Reference")</th>
+                                <th>@(isRtl ? "النوع" : "Type")</th>
+                                <th>@(isRtl ? "الجامعة" : "University")</th>
+                                <th>@(isRtl ? "الدولة" : "Country")</th>
+                                <th>@(isRtl ? "الحالة" : "Status")</th>
+                                <th>@(isRtl ? "تاريخ التقديم" : "Submitted")</th>
+                                <th class="right">@(isRtl ? "إجراء" : "Action")</th>
                             </tr>
-
                         </thead>
 
                         <tbody>
-
                             @if (Model.Any())
                             {
                                 @foreach (var item in Model)
                                 {
                                     <tr class="@RowClass(item.ApplicationType)">
-
-                                        <td>
-                                            <b>@item.ReferenceNumber</b>
-                                        </td>
-                                        <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
+                                        <td><b>@item.ReferenceNumber</b></td>
+                                        <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@AppTypeLabel(item.ApplicationType)</span></td>
                                         <td>@item.UniversityName</td>
-
                                         <td>@item.Country</td>
-
-                                        <td>
-                                            <span class="badge badge-pending">
-                                                @item.Status
-                                            </span>
-                                        </td>
-
-                                        <td>
-                                            @item.SubmittedAt.ToString("yyyy-MM-dd")
-                                        </td>
-
+                                        <td><span class="badge badge-pending">@item.Status</span></td>
+                                        <td>@item.SubmittedAt.ToString("yyyy-MM-dd")</td>
                                         <td class="right">
-
                                             <a class="rm-mini"
                                                href="@Url.Action("ManualInstitutionDetails", "Home", new { referenceNumber = item.ReferenceNumber })">
-
-                                                Open
+                                                @(isRtl ? "فتح" : "Open")
                                             </a>
-
                                         </td>
-
                                     </tr>
                                 }
                             }
                             else
                             {
                                 <tr>
-
-                                    <td colspan="7"
-                                        style="text-align:center; padding:24px;">
-
-                                        No manual institution requests assigned yet.
-
+                                    <td colspan="7" style="text-align:center; padding:24px;">
+                                        @(isRtl ? "لا توجد طلبات مؤسسات يدوية معيّنة بعد." : "No manual institution requests assigned yet.")
                                     </td>
-
                                 </tr>
                             }
-
                         </tbody>
-
                     </table>
-
                 </div>
 
                 <div class="er-footer">
-
-                    <button class="rm-btn rm-btn-light"
-                            type="button"
-                            disabled>
-
-                        <i class="bi bi-chevron-left"></i>
-                        Prev
-
+                    <button class="rm-btn rm-btn-light" type="button" disabled>
+                        <i class="bi bi-chevron-@(isRtl ? "right" : "left")"></i>
+                        @(isRtl ? "السابق" : "Prev")
                     </button>
-
                     <div class="er-pages">
-
-                        Page <b>1</b> of <b>1</b>
-
+                        @(isRtl ? "الصفحة" : "Page") <b>1</b> @(isRtl ? "من" : "of") <b>1</b>
                     </div>
-
-                    <button class="rm-btn rm-btn-light"
-                            type="button"
-                            disabled>
-
-                        Next
-                        <i class="bi bi-chevron-right"></i>
-
+                    <button class="rm-btn rm-btn-light" type="button" disabled>
+                        @(isRtl ? "التالي" : "Next")
+                        <i class="bi bi-chevron-@(isRtl ? "left" : "right")"></i>
                     </button>
-
                 </div>
-
             </section>
 
         </main>
-
     </div>
 
-    <script src="~/js/member/ElectronicRequests.js"
-            asp-append-version="true"></script>
-
+    <script src="~/js/member/ElectronicRequests.js" asp-append-version="true"></script>
 </body>
 </html>

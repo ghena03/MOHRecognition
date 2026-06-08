@@ -1,50 +1,50 @@
-﻿@model MOHRecognition.Models.UniversityFilterViewModel
+@model MOHRecognition.Models.UniversityFilterViewModel
+@{
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+}
 
 <link rel="stylesheet" href="~/css/university-filters.css" />
 
 <section class="mohe-filter-card">
 
-    <form method="get" class="mohe-filter-form">
+    <form class="mohe-filter-form" onsubmit="return false;">
 
         <!-- Row 1 -->
         <div class="filter-row">
 
             <div class="filter-item">
-                <label>Year:</label>
-
-                <select class="filter-select">
-                    <option>All</option>
+                <label>@(isRtl ? "السنة:" : "Year:")</label>
+                <select id="au-year" class="filter-select">
+                    <option value="">@(isRtl ? "الكل" : "All")</option>
+                    @if (ViewBag.Years != null)
+                    {
+                        foreach (var y in ViewBag.Years)
+                        {
+                            <option value="@y">@y</option>
+                        }
+                    }
                 </select>
             </div>
 
-            <div class="filter-group">
-
-                <label class="filter-label">Session:</label>
-
-                <select name="sessionNo" class="filter-select">
-
-                    <option value="">All</option>
-
+            <div class="filter-item">
+                <label>@(isRtl ? "الجلسة:" : "Session:")</label>
+                <select id="au-session" class="filter-select">
+                    <option value="">@(isRtl ? "الكل" : "All")</option>
                     @if (ViewBag.Sessions != null)
                     {
                         foreach (var s in ViewBag.Sessions)
                         {
-                            <option value="@s">
-                                Meeting #@s
-                            </option>
+                            <option value="@s">@(isRtl ? "اجتماع #" : "Meeting #")@s</option>
                         }
                     }
-
                 </select>
-
             </div>
 
             <div class="filter-item">
-                <label>Country:</label>
-
-                <select name="SelectedCountry" class="filter-select">
-                    <option value="">All Countries</option>
-
+                <label>@(isRtl ? "الدولة:" : "Country:")</label>
+                <select id="au-country" class="filter-select">
+                    <option value="">@(isRtl ? "جميع الدول" : "All Countries")</option>
                     <option value="Jordan">Jordan</option>
                     <option value="Saudi Arabia">Saudi Arabia</option>
                     <option value="United Arab Emirates">United Arab Emirates</option>
@@ -52,19 +52,16 @@
                     <option value="Kuwait">Kuwait</option>
                     <option value="Bahrain">Bahrain</option>
                     <option value="Oman">Oman</option>
-
                     <option value="Egypt">Egypt</option>
                     <option value="Iraq">Iraq</option>
                     <option value="Syria">Syria</option>
                     <option value="Lebanon">Lebanon</option>
                     <option value="Palestine">Palestine</option>
-
                     <option value="Turkey">Turkey</option>
                     <option value="Malaysia">Malaysia</option>
                     <option value="India">India</option>
                     <option value="Pakistan">Pakistan</option>
                     <option value="China">China</option>
-
                     <option value="United Kingdom">United Kingdom</option>
                     <option value="United States">United States</option>
                     <option value="Canada">Canada</option>
@@ -72,31 +69,16 @@
                     <option value="France">France</option>
                     <option value="Italy">Italy</option>
                     <option value="Spain">Spain</option>
-
                     <option value="Russia">Russia</option>
                     <option value="Ukraine">Ukraine</option>
                     <option value="Azerbaijan">Azerbaijan</option>
                     <option value="Georgia">Georgia</option>
-
                     <option value="Australia">Australia</option>
                     <option value="New Zealand">New Zealand</option>
-
                     <option value="Sudan">Sudan</option>
                     <option value="Algeria">Algeria</option>
                     <option value="Morocco">Morocco</option>
                     <option value="Tunisia">Tunisia</option>
-                </select>
-            </div>
-
-            <div class="filter-item">
-                <label>University Type:</label>
-
-                <select class="filter-select">
-                    <option value="">All</option>
-                    <option value="Governmental">Governmental</option>
-                    <option value="PrivateProfit">Private Profit</option>
-                    <option value="PrivateNonProfit">Private Nonprofit</option>
-                    <option value="Other">Other</option>
                 </select>
             </div>
 
@@ -106,67 +88,122 @@
         <div class="filter-row">
 
             <div class="filter-item">
-                <label>Traditional Education:</label>
-
-                <select class="filter-select">
-                    <option value="">All</option>
-                    <option value="Recognized">Recognition</option>
-                    <option value="NotRecognized">No Recognition</option>
-                    <option value="Delayed">Recognition Delay</option>
-                    <option value="Confirmed">Decision Confirmation</option>
-                    <option value="Withdrawn">Recognition Withdrawal</option>
+                <label>@(isRtl ? "التعليم التقليدي:" : "Traditional Education:")</label>
+                <select id="au-trad" class="filter-select">
+                    <option value="">@(isRtl ? "الكل" : "All")</option>
+                    <option value="Recognized">@(isRtl ? "معترف به" : "Recognized")</option>
+                    <option value="Not Recognized">@(isRtl ? "غير معترف به" : "Not Recognized")</option>
+                    <option value="Needs More Information">@(isRtl ? "قيد الانتظار" : "Pending")</option>
                 </select>
             </div>
 
             <div class="filter-item">
-                <label>Distance Education:</label>
-
-                <select class="filter-select">
-                    <option value="">All</option>
-                    <option value="Recognized">Recognition</option>
-                    <option value="NotRecognized">No Recognition</option>
-                    <option value="Delayed">Recognition Delay</option>
-                    <option value="Confirmed">Decision Confirmation</option>
-                    <option value="Withdrawn">Recognition Withdrawal</option>
+                <label>@(isRtl ? "التعليم عن بُعد:" : "Distance Education:")</label>
+                <select id="au-dist" class="filter-select">
+                    <option value="">@(isRtl ? "الكل" : "All")</option>
+                    <option value="Recognized">@(isRtl ? "معترف به" : "Recognized")</option>
+                    <option value="Not Recognized">@(isRtl ? "غير معترف به" : "Not Recognized")</option>
+                    <option value="Needs More Information">@(isRtl ? "قيد الانتظار" : "Pending")</option>
                 </select>
             </div>
 
             <div class="filter-item">
-                <label>Medical Colleges:</label>
-
-                <select class="filter-select">
-                    <option value="">All</option>
-                    <option value="FullMedical">Full Medical Recognition</option>
-                    <option value="HumanMedicine">Human Medicine</option>
-                    <option value="Dentistry">Dentistry</option>
+                <label>@(isRtl ? "نوع الاعتراف:" : "Recognition Type:")</label>
+                <select id="au-status" class="filter-select">
+                    <option value="">@(isRtl ? "الكل" : "All")</option>
+                    <option value="Recognized">@(isRtl ? "معترف به" : "Recognized")</option>
+                    <option value="Not Recognized">@(isRtl ? "غير معترف به" : "Not Recognized")</option>
+                    <option value="Needs More Information">@(isRtl ? "قيد الانتظار" : "Pending")</option>
                 </select>
             </div>
 
             <div class="filter-item">
-                <label>University Name:</label>
-
-                <input type="text"
-                       name="SearchTerm"
-                       value="@Model?.SearchTerm"
-                       class="filter-input"
-                       placeholder="Search..." />
+                <label>@(isRtl ? "اسم الجامعة:" : "University Name:")</label>
+                <select id="au-uni" class="filter-select">
+                    <option value="">@(isRtl ? "جميع الجامعات" : "All Universities")</option>
+                </select>
             </div>
 
         </div>
 
         <!-- Buttons -->
         <div class="filters-actions">
-
-            <button type="submit" class="btn-search">
-                Search
-            </button>
-
-            <button type="reset" class="btn-reset">
-                Reset
-            </button>
-
+            <button type="button" class="btn-search" onclick="auSearch()">@(isRtl ? "بحث" : "Search")</button>
+            <button type="button" class="btn-reset"  onclick="auReset()">@(isRtl ? "إعادة تعيين" : "Reset")</button>
         </div>
 
     </form>
 
 </section>
+
+<script>
+    var _allUniversitiesLabel = '@(isRtl ? "جميع الجامعات" : "All Universities")';
+
+    function auSearch() {
+        var year    = (document.getElementById('au-year')?.value    || '');
+        var session = (document.getElementById('au-session')?.value || '');
+        var country = (document.getElementById('au-country')?.value || '').toLowerCase();
+        var trad    = (document.getElementById('au-trad')?.value    || '').toLowerCase();
+        var dist    = (document.getElementById('au-dist')?.value    || '').toLowerCase();
+        var status  = (document.getElementById('au-status')?.value  || '').toLowerCase();
+        var uni     = (document.getElementById('au-uni')?.value     || '').toLowerCase();
+
+        var matchedNames = new Set();
+
+        document.querySelectorAll('#au-tbody .au-row').forEach(function(row) {
+            var ry  = (row.dataset.year    || '');
+            var rse = (row.dataset.session || '');
+            var rc  = (row.dataset.country || '').toLowerCase();
+            var rs  = (row.dataset.status  || '').toLowerCase();
+            var rt  = (row.dataset.type    || '').toLowerCase();
+            var ru  = (row.dataset.uni     || '').toLowerCase();
+
+            var isTraditional = (rt === 'bachelor' || rt === 'postgraduate');
+            var isDistance    = (rt === 'online');
+
+            var passEducationType = (isTraditional && (!trad || rs === trad))
+                                 || (isDistance    && (!dist || rs === dist));
+
+            var educationFilterActive = trad || dist;
+
+            var show = (!year    || ry  === year)
+                    && (!session || rse === session)
+                    && (!country || rc  === country)
+                    && (!status  || rs  === status)
+                    && (!uni     || ru  === uni)
+                    && (!educationFilterActive || passEducationType);
+
+            row.style.display = show ? '' : 'none';
+            if (show && row.dataset.uni) matchedNames.add(row.dataset.uni);
+        });
+
+        var uniSelect = document.getElementById('au-uni');
+        var prev = uniSelect.value;
+        uniSelect.innerHTML = '<option value="">' + _allUniversitiesLabel + '</option>';
+        Array.from(matchedNames).sort().forEach(function(name) {
+            var opt = document.createElement('option');
+            opt.value = name; opt.textContent = name;
+            if (name === prev) opt.selected = true;
+            uniSelect.appendChild(opt);
+        });
+    }
+
+    function auReset() {
+        ['au-year','au-session','au-country','au-trad','au-dist','au-status'].forEach(function(id) {
+            var el = document.getElementById(id); if (el) el.value = '';
+        });
+        document.querySelectorAll('#au-tbody .au-row').forEach(function(r) { r.style.display = ''; });
+
+        var names = new Set();
+        document.querySelectorAll('#au-tbody .au-row').forEach(function(r) { if (r.dataset.uni) names.add(r.dataset.uni); });
+        var uniSelect = document.getElementById('au-uni');
+        uniSelect.innerHTML = '<option value="">' + _allUniversitiesLabel + '</option>';
+        Array.from(names).sort().forEach(function(name) {
+            var opt = document.createElement('option');
+            opt.value = name; opt.textContent = name;
+            uniSelect.appendChild(opt);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', auReset);
+</script>

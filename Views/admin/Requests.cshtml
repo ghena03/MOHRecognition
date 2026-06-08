@@ -1,26 +1,31 @@
-﻿@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
+@model IReadOnlyList<MOHRecognition.Services.RecognitionRequestRecord>
 @using System
 
 @{
     Layout = null;
     ViewData["Title"] = "Requests";
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = culture == "ar";
+    var dir = isRtl ? "rtl" : "ltr";
 
     var nameMap = ViewBag.MemberNameMap as Dictionary<string, string>
                   ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
     string MemberName(string? email)
     {
-        if (string.IsNullOrWhiteSpace(email) || email == "Unassigned") return "Unassigned";
+        if (string.IsNullOrWhiteSpace(email) || email == "Unassigned")
+            return isRtl ? "غير معيّن" : "Unassigned";
         var key = email.Trim().ToLowerInvariant();
         return nameMap.TryGetValue(key, out var n) ? n : email;
     }
 
-    string AppTypeStyle(string? t) => (t ?? "Bachelor") switch
+    string AppTypeClass(string? t) => (t ?? "Bachelor") switch
     {
-        "Postgraduate" => "background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd",
-        "Online"       => "background:#dcfce7;color:#166534;border:1px solid #86efac",
-        _              => "background:#dbeafe;color:#1e40af;border:1px solid #93c5fd"
+        "Postgraduate" => "badge-type badge-pg",
+        "Online"       => "badge-type badge-ol",
+        _              => "badge-type badge-ba"
     };
+
     string RowClass(string? t) => (t ?? "Bachelor") switch
     {
         "Postgraduate" => "app-row-postgraduate",
@@ -28,133 +33,215 @@
         _              => "app-row-bachelor"
     };
 
+    string AppTypeLabel(string? t) => isRtl
+        ? (t ?? "Bachelor") switch { "Postgraduate" => "دراسات عليا", "Online" => "عبر الإنترنت", _ => "بكالوريوس" }
+        : (t ?? "Bachelor") switch { "Postgraduate" => "Postgraduate", "Online" => "Online", _ => "Bachelor" };
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "الطلبات" : "Requests")</title>
     <link rel="stylesheet" href="~/css/admin/AdminDashboard.css" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
+    <style>
+        /* ── Type badges ─────────────────────────────────────────────────── */
+        .badge-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border-radius: 999px;
+            padding: 4px 11px;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: .2px;
+            white-space: nowrap;
+            border-width: 1.5px;
+            border-style: solid;
+        }
+        .badge-type .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .badge-ba  { background: #e8f1fd; color: #1a4e8a; border-color: #a8c8f8; }
+        .badge-ba  .dot { background: #2563eb; }
+        .badge-pg  { background: #ede9fe; color: #4a1d96; border-color: #c4b5fd; }
+        .badge-pg  .dot { background: #7c3aed; }
+        .badge-ol  { background: #d8f5e8; color: #065f46; border-color: #6ee7b7; }
+        .badge-ol  .dot { background: #10b981; }
+
+        /* ── Row tinting */
+        #req-tbody tr.app-row-bachelor td  { background: #f6f9ff; border-left: none; }
+        #req-tbody tr.app-row-postgraduate td { background: #f7f4ff; border-left: none; }
+        #req-tbody tr.app-row-online td    { background: #f3fbf6; border-left: none; }
+        #req-tbody tr:hover.app-row-bachelor td   { background: #edf4ff; }
+        #req-tbody tr:hover.app-row-postgraduate td { background: #ede8ff; }
+        #req-tbody tr:hover.app-row-online td    { background: #e6f7ee; }
+
+        /* ── View Details button ─────────────────────────────────────────── */
+        .btn-view-details {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 14px;
+            border-radius: 7px;
+            font-size: 12.5px;
+            font-weight: 700;
+            text-decoration: none;
+            background: #7f1627;
+            color: #fff;
+            border: 1.5px solid #6b1120;
+            white-space: nowrap;
+            transition: background .12s;
+        }
+        .btn-view-details:hover { background: #5a0e1b; }
+
+        /* ── Type tabs ───────────────────────────────────────────────────── */
+        .type-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 18px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            border: 1.5px solid #d1d5db;
+            background: #fff;
+            color: #6b7280;
+            transition: background .12s, color .12s, border-color .12s;
+        }
+        .type-tab .dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+        .type-tab.active, .type-tab:hover { border-color: #7f1627; background: #f9f0f2; color: #7f1627; }
+
+        .tab-ba .dot  { background:#2563eb; }
+        .tab-ba.active, .tab-ba:hover  { background:#edf4ff; color:#1a4e8a; border-color:#a8c8f8; }
+
+        .tab-pg .dot  { background:#7c3aed; }
+        .tab-pg.active, .tab-pg:hover  { background:#ede8ff; color:#4a1d96; border-color:#c4b5fd; }
+
+        .tab-ol .dot  { background:#10b981; }
+        .tab-ol.active, .tab-ol:hover  { background:#e6f7ee; color:#065f46; border-color:#6ee7b7; }
+    </style>
 </head>
 
-<body>
+<body class="@(isRtl ? "rtl-body" : "")">
 
-    <!-- 🔴 TOP BAR -->
     <div class="top-bar"></div>
 
-    <!-- HEADER -->
     <div class="header">
         <div class="header-left">
             <img src="/images/mohelogo.png" class="logo" />
             <div class="divider"></div>
-
             <div class="title-box">
-                <h1>Requests</h1>
-                <p>Manage all submitted requests</p>
+                <h1>@(isRtl ? "الطلبات" : "Requests")</h1>
+                <p>@(isRtl ? "إدارة جميع الطلبات المقدّمة" : "Manage all submitted requests")</p>
             </div>
         </div>
-
-        <a class="back-btn" href="@Url.Action("AdminDashboard", "Home")">← Back to Dashboard</a>
+        <div style="display:flex;align-items:center;gap:10px;">
+            @await Html.PartialAsync("~/Views/Shared/_LanguageSwitcher.cshtml")
+            <a class="back-btn" href="@Url.Action("AdminDashboard", "Home")">
+            @(isRtl ? "→ العودة إلى لوحة التحكم" : "← Back to Dashboard")
+        </a>
+        </div>
     </div>
 
-    <!-- MAIN -->
     <div class="main-container">
 
-        <!-- TITLE ROW -->
         <div class="page-head">
-            <h2>All Requests</h2>
+            <h2>@(isRtl ? "جميع الطلبات" : "All Requests")</h2>
         </div>
 
-        <!-- FILTERS -->
-        <div class="table-box" style="padding:16px 20px;margin-bottom:0;border-bottom:none;border-radius:12px 12px 0 0;">
-            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
-                <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px;">
-                    <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;">Search</label>
-                    <input id="req-search" type="text" placeholder="University, reference, country…"
-                           style="border:1px solid #ddd;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;" oninput="filterRequests()" />
-                </div>
-                <div style="display:flex;flex-direction:column;gap:4px;min-width:140px;">
-                    <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;">Status</label>
-                    <select id="req-status" style="border:1px solid #ddd;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;" onchange="filterRequests()">
-                        <option value="">All Statuses</option>
-                        <option>Pending</option>
-                        <option>Assigned</option>
-                        <option>Requires Admin Review</option>
-                        <option>Under Review</option>
-                        <option>Approved</option>
-                        <option>Rejected</option>
-                    </select>
-                </div>
-                <button type="button" onclick="document.getElementById('req-search').value='';document.getElementById('req-status').value='';filterRequests();"
-                        class="action-btn" style="height:36px;">Clear</button>
-            </div>
+        <!-- TYPE TABS -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <button class="type-tab active" data-type="" onclick="setTypeFilter(this, '')">@(isRtl ? "الكل" : "All")</button>
+            <button class="type-tab tab-ba"  data-type="bachelor"       onclick="setTypeFilter(this, 'bachelor')">
+                <span class="dot"></span> @(isRtl ? "بكالوريوس" : "Bachelor")
+            </button>
+            <button class="type-tab tab-pg"  data-type="postgraduate"   onclick="setTypeFilter(this, 'postgraduate')">
+                <span class="dot"></span> @(isRtl ? "دراسات عليا" : "Postgraduate")
+            </button>
+            <button class="type-tab tab-ol"  data-type="online"         onclick="setTypeFilter(this, 'online')">
+                <span class="dot"></span> @(isRtl ? "اعتراف عبر الإنترنت" : "Online Recognition")
+            </button>
         </div>
 
         <!-- TABLE -->
         <div class="table-box">
-
             <table>
                 <thead>
                     <tr>
-                        <th>Reference</th>
-                        <th>Type</th>
-                        <th>Applicant</th>
-                        <th>University</th>
-                        <th>Country</th>
-                        <th>Status</th>
-                        <th>Assigned To</th>
-                        <th>Action</th>
+                        <th>@(isRtl ? "الرقم المرجعي" : "Reference")</th>
+                        <th>@(isRtl ? "النوع" : "Type")</th>
+                        <th>@(isRtl ? "الجامعة" : "University")</th>
+                        <th>@(isRtl ? "الدولة" : "Country")</th>
+                        <th>@(isRtl ? "الحالة" : "Status")</th>
+                        <th>@(isRtl ? "معيّن إلى" : "Assigned To")</th>
+                        <th>@(isRtl ? "إجراء" : "Action")</th>
                     </tr>
                 </thead>
-
                 <tbody id="req-tbody">
                     @foreach (var item in Model)
                     {
-                        <tr data-search="@((item.ReferenceNumber + " " + item.UniversityName + " " + item.Country + " " + item.ApplicantName + " " + item.ApplicationType).ToLower())"
-                            data-status="@item.Status.ToLower()"
+                        var typeRaw = (item.ApplicationType ?? "Bachelor").ToLower();
+                        <tr data-type="@typeRaw"
                             class="@RowClass(item.ApplicationType)">
                             <td>@item.ReferenceNumber</td>
-                            <td><span style="display:inline-block;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:700;@AppTypeStyle(item.ApplicationType)">@(item.ApplicationType ?? "Bachelor")</span></td>
-                            <td>@item.ApplicantName</td>
+                            <td>
+                                <span class="@AppTypeClass(item.ApplicationType)">
+                                    <span class="dot"></span>
+                                    @AppTypeLabel(item.ApplicationType)
+                                </span>
+                            </td>
                             <td>@item.UniversityName</td>
-                            <td>@item.Country</td>
+                            <td>@(string.IsNullOrWhiteSpace(item.PublicInfo?.Country) ? (string.IsNullOrWhiteSpace(item.Country) || item.Country == "Unknown" ? "—" : item.Country) : item.PublicInfo.Country)</td>
                             <td>@item.Status</td>
                             <td>@MemberName(item.AssignedMember)</td>
-
-                            <td style="display:flex;gap:6px;align-items:center">
+                            <td style="display:flex;gap:6px;align-items:center;">
                                 <a asp-controller="Home"
                                    asp-action="AdminRequestDetails"
                                    asp-route-id="@item.Id"
                                    class="action-btn">
-                                    View
+                                    @(isRtl ? "تعيين" : "Assign")
                                 </a>
                                 <a asp-controller="Home"
                                    asp-action="AdminFullApplicationView"
                                    asp-route-id="@item.Id"
-                                   class="action-btn"
-                                   style="background:#7f1627;color:#fff;border-color:#7f1627">
-                                    Full Application
+                                   asp-route-source="requests"
+                                   class="btn-view-details">
+                                    @(isRtl ? "عرض التفاصيل" : "View Details")
                                 </a>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
-
         </div>
 
     </div>
 
 <script>
-    function filterRequests() {
-        var q = (document.getElementById('req-search').value || '').toLowerCase();
-        var s = (document.getElementById('req-status').value || '').toLowerCase();
+    var activeType = '';
+
+    function setTypeFilter(btn, type) {
+        activeType = type;
+        document.querySelectorAll('.type-tab').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        filterRows();
+    }
+
+    function filterRows() {
         document.querySelectorAll('#req-tbody tr').forEach(function (row) {
-            var search = (row.dataset.search || '').toLowerCase();
-            var status = (row.dataset.status || '').toLowerCase();
-            var show = (!q || search.includes(q)) && (!s || status === s);
+            var type = (row.dataset.type || '').toLowerCase();
+            var show = !activeType || type === activeType;
             row.style.display = show ? '' : 'none';
         });
     }

@@ -3,14 +3,25 @@
     Layout = null;
     ViewData["Title"] = "Assigned Committee Meetings";
     ViewData["ActiveNav"] = "meetings";
+
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl   = culture == "ar";
+    var dir     = isRtl ? "rtl" : "ltr";
+
+    string MeetingStatusLabel(string s) => isRtl ? s switch {
+        "Closed"    => "مغلق",
+        "Open"      => "مفتوح",
+        "Scheduled" => "مجدول",
+        _           => s
+    } : s;
 }
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="@culture" dir="@dir">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"]</title>
+    <title>@(isRtl ? "اجتماعات اللجنة المعيّنة" : "Assigned Committee Meetings")</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,8 +29,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/member/RecognitionMemberDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/member/RecognitionMemberMeetings.css" asp-append-version="true" />
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/css/rtl.css" asp-append-version="true" />
+    }
 </head>
-<body class="rm-page">
+<body class="rm-page @(isRtl ? "rtl-body" : "")">
     <header class="rm-header">
         <div class="rm-brandbar"></div>
         <div class="rm-top">
@@ -28,12 +43,16 @@
                     <img class="rm-logo" src="@Url.Content("~/images/mohelogo.png")" alt="MOHE Logo" />
                 </div>
                 <div class="rm-user">
-                    <div class="rm-userpill">
-                        <i class="bi bi-person-circle"></i>
-                        <span>Welcome, <b>@Model.CurrentRecognitionMember</b></span>
-                    </div>
+                    <a class="rm-user-card" href="/Home/Profile">
+                        <div class="rm-user-avatar">@(Model.CurrentRecognitionMember?.Length > 0 ? Model.CurrentRecognitionMember.Substring(0,1).ToUpper() : "M")</div>
+                        <div class="rm-user-card-text">
+                            <strong>@Model.CurrentRecognitionMember</strong>
+                            <span>@(isRtl ? "عضو لجنة الاعتراف" : "Recognition Committee Member")</span>
+                        </div>
+                        <i class="bi bi-gear-fill rm-gear-icon"></i>
+                    </a>
                     <a class="rm-btn rm-btn-light" href="@Url.Action("Logout", "Home")">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                        <i class="bi bi-box-arrow-right"></i> @(isRtl ? "تسجيل الخروج" : "Logout")
                     </a>
                 </div>
             </div>
@@ -46,8 +65,8 @@
         <main class="rm-main">
             <section class="rm-pagehead">
                 <div class="rm-pagehead-left">
-                    <h1>Assigned Committee Meetings</h1>
-                    <p>View committee meetings submitted by the admin for your assigned recognition applications.</p>
+                    <h1>@(isRtl ? "اجتماعات اللجنة المعيّنة" : "Assigned Committee Meetings")</h1>
+                    <p>@(isRtl ? "عرض اجتماعات اللجنة المُقدَّمة من المدير لطلبات الاعتراف المعيّنة إليك." : "View committee meetings submitted by the admin for your assigned recognition applications.")</p>
                 </div>
             </section>
 
@@ -56,12 +75,12 @@
                     <table class="meeting-theme-table">
                         <thead>
                             <tr>
-                                <th>Session #</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Location / Platform</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th>@(isRtl ? "الجلسة #" : "Session #")</th>
+                                <th>@(isRtl ? "التاريخ" : "Date")</th>
+                                <th>@(isRtl ? "الوقت" : "Time")</th>
+                                <th>@(isRtl ? "الموقع / المنصة" : "Location / Platform")</th>
+                                <th>@(isRtl ? "الحالة" : "Status")</th>
+                                <th>@(isRtl ? "الإجراءات" : "Actions")</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -91,12 +110,12 @@
                                                 {
                                                     <span style="width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;"></span>
                                                 }
-                                                @item.Status
+                                                @MeetingStatusLabel(item.Status)
                                             </span>
                                         </td>
                                         <td>
                                             <a href="/Home/MeetingDetails?id=@item.Id&from=member" class="action-btn">
-                                                View
+                                                @(isRtl ? "عرض" : "View")
                                             </a>
                                         </td>
                                     </tr>
@@ -105,7 +124,7 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="6" class="meeting-empty">No meetings yet</td>
+                                    <td colspan="6" class="meeting-empty">@(isRtl ? "لا توجد اجتماعات بعد" : "No meetings yet")</td>
                                 </tr>
                             }
                         </tbody>
