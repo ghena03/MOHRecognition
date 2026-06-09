@@ -87,8 +87,80 @@
         .badge-sync-fail { background:#fff1f2; color:#b91c1c; border:1px solid #fca5a5; }
         .badge-sync-warn { background:#fffbeb; color:#92400e; border:1px solid #fcd34d; }
 
+        /* ── File upload success indicator ── */
+        .file-input-wrap { position: relative; display: block; }
+        .file-success {
+            display: none;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #16a34a;
+            font-size: 15px;
+            font-weight: 700;
+            pointer-events: none;
+        }
+
+        /* ── Inline field hint ── */
+        .field-hint {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 5px;
+            margin-top: 5px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #7a6248;
+            background: #fdf8f0;
+            border-radius: 5px;
+            padding: 3px 7px;
+        }
+
         /* ── Checkbox / radio items ── */
-        .check-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .check-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+
+        /* ── Circle choice (multi-select) ── */
+        .circle-opt {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 4px;
+            border: none;
+            background: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4b4540;
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+            transition: color .15s;
+        }
+        .circle-opt:hover { color: #9e1b32; }
+        .circle-opt:hover .circle-ring { border-color: #9e1b32; }
+        .circle-ring {
+            width: 15px; height: 15px;
+            border-radius: 50%;
+            border: 2px solid #c5b8af;
+            background: #fff;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
+        }
+        .circle-opt.selected .circle-ring {
+            background: #9e1b32;
+            border-color: #9e1b32;
+        }
+        .circle-opt.selected .circle-ring::after {
+            content: '';
+            display: block;
+            width: 3px; height: 6px;
+            border: 2px solid #fff;
+            border-top: none;
+            border-left: none;
+            transform: rotate(45deg) translate(-1px, -1px);
+        }
+        .circle-opt.selected { color: #9e1b32; }
         .chk-item {
             display: flex;
             flex-direction: row;
@@ -281,7 +353,6 @@
             <a class="side-item" href="#sec-communication" data-section="sec-communication">Communication</a>
             <a class="side-item" href="#sec-exam"          data-section="sec-exam">Examination System</a>
             <a class="side-item" href="#sec-platform"      data-section="sec-platform">Learning Platform</a>
-            <a class="side-item" href="#sec-documents"     data-section="sec-documents">Supporting Documents</a>
             <a class="side-item" href="#sec-applicant"     data-section="sec-applicant">Applicant Info</a>
             <div class="side-footer">
                 <a class="logout" href="@Url.Action("Logout","Home")">Logout</a>
@@ -475,6 +546,7 @@
                                         <th>Delivery Mode</th>
                                         <th class="col-students">Online Students</th>
                                         <th style="text-align:center;">Years</th>
+                                        <th style="text-align:center;white-space:nowrap;">Sync Ratio</th>
                                         <th class="col-act"></th>
                                     </tr>
                                 </thead>
@@ -569,15 +641,10 @@
 
                                     <hr class="form-sep" style="margin:14px 0;" />
                                     <div class="step-lbl" style="margin-bottom:10px;">Synchronous Learning Ratio</div>
-                                    <div class="grid-2">
-                                        <div class="field">
-                                            <label>Total Contact Hours</label>
-                                            <input type="number" id="addTotalHours" min="1" placeholder="e.g. 120" oninput="recalcSyncRatio()" />
-                                        </div>
-                                        <div class="field">
-                                            <label>Synchronous Live Hours</label>
-                                            <input type="number" id="addSyncHours" min="0" placeholder="e.g. 45" oninput="recalcSyncRatio()" />
-                                        </div>
+                                    <div class="field">
+                                        <label>Synchronous Learning Ratio (%) <span class="req">*</span></label>
+                                        <input type="number" id="addSyncRatio" min="0" max="100" step="0.01" placeholder="e.g. 40" style="max-width:180px;" />
+                                        <span class="field-hint">ⓘ Enter the percentage of synchronous/live learning hours compared to the total contact hours.</span>
                                     </div>
                                     <div class="actions" style="margin-top:16px;">
                                         <button type="button" class="btn-primary" onclick="confirmAdd()">Add Program</button>
@@ -597,7 +664,7 @@
                             </p>
                             <div style="display:flex;align-items:center;gap:10px;">
                                 <input type="file" id="syncEvidenceFile" accept=".pdf" style="flex:1;" onchange="uploadSharedSyncEvidence(this)" />
-                                <span id="syncEvidenceStatus" style="font-size:12px;color:#6b7280;white-space:nowrap;"></span>
+                                <span id="syncEvidenceStatus" style="font-size:12.5px;font-weight:600;white-space:nowrap;"></span>
                             </div>
                         </div>
 
@@ -719,16 +786,32 @@
                             </div>
                             <div class="field" style="margin-top:18px;">
                                 <label>Online Examination Monitoring</label>
-                                <div class="check-grid">
-                                    @foreach (var pm in new[]{"Live Remote Proctoring","AI Monitoring","Camera Monitoring","Screen Monitoring","Browser Lockdown"})
+                                <div class="check-grid" id="proctorChipGroup">
+                                    @foreach (var pm in new[]{"Live Remote Proctoring","Camera Monitoring"})
                                     {
-                                        <label class="chk-item">
-                                            <input type="checkbox" class="proctor-chk" value="@pm" onchange="updateCsv('proctor-chk','proctorCsv')" />
-                                            @pm
-                                        </label>
+                                        <button type="button" class="circle-opt" data-value="@pm"
+                                                onclick="toggleChip(this,'proctorCsv')">
+                                            <span class="circle-ring"></span>@pm
+                                        </button>
                                     }
+                                    <button type="button" class="circle-opt" id="proctorOtherChip" data-value="Other"
+                                            onclick="toggleChip(this,'proctorCsv');toggleProctoringOther()">
+                                        <span class="circle-ring"></span>Other
+                                    </button>
                                 </div>
                                 <input type="hidden" asp-for="ProctoringMethodsCsv" id="proctorCsv" />
+                                <div id="proctorOtherBox" style="display:none;margin-top:14px;">
+                                    <label>Please specify the monitoring/proctoring method used. <span class="req">*</span></label>
+                                    <input asp-for="ProctoringOtherText" id="proctorOtherText" placeholder="Describe the monitoring/proctoring method..." />
+                                </div>
+                            </div>
+                            <div class="field" style="margin-top:18px;">
+                                <label>Exam Monitoring Evidence</label>
+                                <div class="file-input-wrap">
+                                    <input asp-for="ExamPolicyFile" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="showFileSuccess(this)" />
+                                    <span class="file-success"></span>
+                                </div>
+                                <span class="field-hint">ⓘ Upload an official document or screenshot proving the selected exam monitoring/proctoring method. Accepted: PDF, Word, JPG, PNG.</span>
                             </div>
                         </div>
                         <div class="actions" style="justify-content:center;margin-top:22px;">
@@ -771,6 +854,14 @@
                                 <label><input type="radio" name="PlatformOfficiallyAdopted" value="true" /> Yes</label>
                                 <label><input type="radio" name="PlatformOfficiallyAdopted" value="false" checked /> No</label>
                             </div>
+                        </div>
+                        <div class="field" style="margin-top:14px;">
+                            <label>LMS / Platform Evidence <span class="req">*</span></label>
+                            <div class="file-input-wrap">
+                                <input asp-for="PlatformAdoptionEvidenceFile" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" id="platformAdoptionEvidenceFile" required onchange="showFileSuccess(this)" />
+                                <span class="file-success"></span>
+                            </div>
+                            <span class="field-hint">ⓘ Upload proof of the LMS/platform used for online learning: screenshot, access page, certification/approval, or usage evidence. Accepted: PDF, Word, JPG, PNG.</span>
                         </div>
                         <div class="field" style="margin-top:18px;">
                             <label>Additional Details</label>
@@ -821,37 +912,12 @@
                         </div>
 
                         <div class="actions" style="justify-content:center;margin-top:22px;">
-                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-documents')">Save Platform →</button>
+                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-applicant')">Save Platform →</button>
                         </div>
                     </div>
                 </section>
 
-                <!-- ── 7. SUPPORTING DOCUMENTS ──────────────────────────── -->
-                <section class="card" id="sec-documents">
-                    <div class="card-hd">
-                        <h2>Supporting Documents</h2>
-                        <p>Optional — maximum 2 documents.</p>
-                    </div>
-                    <div class="card-bd">
-                        <div class="grid-2">
-                            <div class="field">
-                                <label>Online Examination Policy / Approval Document</label>
-                                <input asp-for="ExamPolicyFile" type="file" accept=".pdf,.doc,.docx" />
-                                <span class="file-note">PDF or Word document</span>
-                            </div>
-                            <div class="field">
-                                <label>LMS / Online Learning Platform Policy or Approval Document</label>
-                                <input asp-for="PlatformGuideFile" type="file" accept=".pdf,.doc,.docx" />
-                                <span class="file-note">PDF or Word document</span>
-                            </div>
-                        </div>
-                        <div class="actions" style="justify-content:center;margin-top:22px;">
-                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-applicant')">Save Documents →</button>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ── 8. APPLICANT INFO ─────────────────────────────────── -->
+                <!-- ── 7. APPLICANT INFO ─────────────────────────────────── -->
                 <section class="card" id="sec-applicant">
                     <div class="card-hd modern-applicant-hd">
                         <div class="applicant-title-wrap">
@@ -917,7 +983,7 @@
         (function () {
             var OFFSET = 150; // px from top of viewport a section must reach before becoming active
             var ids    = ['sec-intro','sec-pubinfo','sec-programs','sec-numbers',
-                          'sec-communication','sec-exam','sec-platform','sec-documents','sec-applicant'];
+                          'sec-communication','sec-exam','sec-platform','sec-applicant'];
             var links  = document.querySelectorAll('.sidebar .side-item[data-section]');
             var locked = false; // suppresses scroll-spy briefly after a click
 
@@ -1085,11 +1151,20 @@
                 ok = false;
             } else {
                 var value = examType.value || '';
-                if ((value === 'Online Exams' || value === 'Hybrid Exams') && !document.querySelector('.proctor-chk:checked')) {
-                    var proctorAnchor = document.querySelector('#onlineExamFields .check-grid');
-                    appendGroupError(proctorAnchor, 'This field is required.');
-                    firstInvalidRef.value = firstInvalidRef.value || document.querySelector('.proctor-chk');
+                if ((value === 'Online Exams' || value === 'Hybrid Exams') && !document.querySelector('#proctorChipGroup .circle-opt.selected')) {
+                    var proctorAnchor = document.querySelector('#proctorChipGroup');
+                    appendGroupError(proctorAnchor, 'Please select at least one monitoring method.');
+                    firstInvalidRef.value = firstInvalidRef.value || proctorAnchor;
                     ok = false;
+                }
+                var otherChip = document.getElementById('proctorOtherChip');
+                if (otherChip && otherChip.classList.contains('selected')) {
+                    var otherTxt = document.getElementById('proctorOtherText');
+                    if (!otherTxt.value.trim()) {
+                        appendGroupError(document.getElementById('proctorOtherBox'), 'Please specify the monitoring/proctoring method used.');
+                        firstInvalidRef.value = firstInvalidRef.value || otherTxt;
+                        ok = false;
+                    }
                 }
             }
 
@@ -1141,8 +1216,7 @@
                 'sec-programs': validatePublicInfoSection,
                 'sec-numbers': validateProgramsSection,
                 'sec-exam': validateCommunicationSection,
-                'sec-platform': validateExamSection,
-                'sec-documents': validatePlatformSection
+                'sec-platform': validateExamSection
             };
 
             if (mapping[sectionId]) {
@@ -1226,9 +1300,8 @@
             document.getElementById('addCollege').value  = '';
             document.getElementById('addStudents').value = '';
             document.getElementById('addDuration').value = '';
-            document.getElementById('addTotalHours').value = '';
-            document.getElementById('addSyncHours').value  = '';
-            document.getElementById('addSyncRatioVal').style.color = '#6b7280';
+            document.getElementById('addSyncRatio').value = '';
+            document.getElementById('addSyncRatio').value = '';
             pgTraditionalYears = null;
             var fo = document.querySelector('[name=addDelivery][value="Fully Online"]');
             if (fo) fo.checked = true;
@@ -1391,15 +1464,21 @@
             }
             clearFieldError(durationInput);
 
-            // Synchronous ratio fields (optional — reviewed on admin/member side)
-            var totalHoursRaw = document.getElementById('addTotalHours').value.trim();
-            var syncHoursRaw  = document.getElementById('addSyncHours').value.trim();
-            var totalHours    = parseInt(totalHoursRaw, 10);
-            var syncHours     = parseInt(syncHoursRaw, 10);
-            var syncRatio     = null;
-            if (!isNaN(totalHours) && totalHours > 0 && !isNaN(syncHours) && syncHours >= 0 && syncHours <= totalHours) {
-                syncRatio = Math.round((syncHours / totalHours) * 10000) / 100;
+            // Synchronous ratio (required, 0–100)
+            var syncRatioInput = document.getElementById('addSyncRatio');
+            var syncRatioRaw   = syncRatioInput.value.trim();
+            var syncRatio      = parseFloat(syncRatioRaw);
+            if (syncRatioRaw === '' || isNaN(syncRatio)) {
+                setFieldError(syncRatioInput, 'Synchronous learning ratio is required.');
+                focusFirstInvalid(syncRatioInput);
+                return;
             }
+            if (syncRatio < 0 || syncRatio > 100) {
+                setFieldError(syncRatioInput, 'Ratio must be between 0 and 100.');
+                focusFirstInvalid(syncRatioInput);
+                return;
+            }
+            clearFieldError(syncRatioInput);
 
             var delivery = (document.querySelector('[name=addDelivery]:checked') || {}).value || 'Fully Online';
             var src      = isManual ? 'Manual Entry'
@@ -1414,8 +1493,6 @@
                 OnlineStudents:          students,
                 OnlineDurationYears:     duration,
                 TraditionalDurationYears: pgTraditionalYears || null,
-                TotalContactHours:       (!isNaN(totalHours) && totalHours > 0) ? totalHours : null,
-                SynchronousHours:        (!isNaN(syncHours) && syncHours >= 0) ? syncHours : null,
                 SynchronousRatioPercent: syncRatio,
                 category:                addCategory,
                 isManual:                isManual
@@ -1454,6 +1531,16 @@
                     ? '<span class="badge badge-online">Fully Online</span>'
                     : '<span class="badge badge-blended">Blended</span>';
 
+                var ratio = p.SynchronousRatioPercent;
+                var syncBadge;
+                if (ratio === null || ratio === undefined) {
+                    syncBadge = '<span class="badge badge-sync-warn">—</span>';
+                } else if (ratio >= 33.33) {
+                    syncBadge = '<span class="badge badge-sync-pass">' + ratio + '%</span>';
+                } else {
+                    syncBadge = '<span class="badge badge-sync-fail">' + ratio + '%</span>';
+                }
+
                 return '<tr>' +
                     '<td>' + catBadge + '</td>' +
                     '<td style="font-weight:700;">' + esc(p.ProgramName) + '</td>' +
@@ -1462,6 +1549,7 @@
                     '<td>' + modeBadge + '</td>' +
                     '<td style="text-align:center;font-weight:700;">' + (p.OnlineStudents || 0) + '</td>' +
                     '<td style="text-align:center;font-weight:600;">' + (p.OnlineDurationYears || '—') + '</td>' +
+                    '<td style="text-align:center;">' + syncBadge + '</td>' +
                     '<td class="col-act"><button type="button" class="del-btn" onclick="removeProgram(' + i + ')">Delete</button></td>' +
                     '</tr>';
             }).join('');
@@ -1500,6 +1588,38 @@
             document.getElementById(targetId).value =
                 Array.from(document.querySelectorAll('.' + cls + ':checked'))
                      .map(function(c){ return c.value; }).join(',');
+        }
+
+        function showFileSuccess(input) {
+            var wrap = input.closest('.file-input-wrap');
+            if (!wrap) return;
+            var el = wrap.querySelector('.file-success');
+            if (!el) return;
+            if (input.files && input.files.length > 0) {
+                el.textContent = '✓';
+                el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+                el.textContent = '';
+            }
+        }
+
+        function toggleChip(el, csvId) {
+            el.classList.toggle('selected');
+            var group = el.closest('.check-grid');
+            var vals = Array.from(group.querySelectorAll('.circle-opt.selected'))
+                            .map(function(c){ return c.dataset.value; });
+            document.getElementById(csvId).value = vals.join(',');
+        }
+
+        function toggleProctoringOther() {
+            var chip = document.getElementById('proctorOtherChip');
+            var selected = chip.classList.contains('selected');
+            var box = document.getElementById('proctorOtherBox');
+            var txt = document.getElementById('proctorOtherText');
+            box.style.display = selected ? '' : 'none';
+            txt.required = selected;
+            if (!selected) txt.value = '';
         }
 
         // ── Pre-submit: populate hidden inputs ─────────────────────────────
@@ -1545,9 +1665,7 @@
                         OnlineStudents:          p.OnlineStudents,
                         OnlineDurationYears:     p.OnlineDurationYears || null,
                         TraditionalDurationYears: p.TraditionalDurationYears || null,
-                        TotalContactHours:       p.TotalContactHours || null,
-                        SynchronousHours:        p.SynchronousHours || null,
-                        SynchronousRatioPercent: p.SynchronousRatioPercent || null,
+                        SynchronousRatioPercent: p.SynchronousRatioPercent != null ? p.SynchronousRatioPercent : null,
                         Professor:               null,
                         AssociateProfessor:      null,
                         AssistantProfessor:      null,
@@ -1558,25 +1676,23 @@
             );
         }
 
-        // ── Synchronous ratio helpers ─────────────────────────────────────
-        function recalcSyncRatio() {
-            // Ratio is computed silently and stored when the program is added.
-            // No display shown on the university side — visible only to admin/member reviewers.
-        }
 
         function uploadSharedSyncEvidence(input) {
             var statusEl = document.getElementById('syncEvidenceStatus');
             var hiddenEl = document.getElementById('syncEvidenceFileNameHidden');
+            function setStatus(text, type) {
+                var colors = { success: '#16a34a', error: '#b91c1c', info: '#6b7280' };
+                statusEl.setAttribute('style', 'font-size:14px;font-weight:600;white-space:nowrap;color:' + (colors[type] || colors.info));
+                statusEl.textContent = text;
+            }
             if (!input.files || !input.files[0]) { hiddenEl.value = ''; statusEl.textContent = ''; return; }
             var file = input.files[0];
             if (!file.name.toLowerCase().endsWith('.pdf')) {
-                statusEl.textContent = '✗ Only PDF files accepted';
-                statusEl.style.color = '#b91c1c';
+                setStatus('✗ Only PDF files accepted', 'error');
                 hiddenEl.value = '';
                 return;
             }
-            statusEl.textContent = 'Uploading…';
-            statusEl.style.color = '#6b7280';
+            setStatus('Uploading…', 'info');
             var fd = new FormData();
             fd.append('file', file);
             fetch('/Home/UploadSynchronousEvidence', { method: 'POST', body: fd })
@@ -1584,18 +1700,15 @@
                 .then(function(data) {
                     if (data.success) {
                         hiddenEl.value = data.fileName;
-                        statusEl.textContent = '✓ Uploaded';
-                        statusEl.style.color = '#15803d';
+                        setStatus('✔', 'success');
                     } else {
                         hiddenEl.value = '';
-                        statusEl.textContent = '✗ ' + (data.message || 'Upload failed');
-                        statusEl.style.color = '#b91c1c';
+                        setStatus('✗ ' + (data.message || 'Upload failed'), 'error');
                     }
                 })
                 .catch(function() {
                     hiddenEl.value = '';
-                    statusEl.textContent = '✗ Upload error';
-                    statusEl.style.color = '#b91c1c';
+                    setStatus('✗ Upload error', 'error');
                 });
         }
 

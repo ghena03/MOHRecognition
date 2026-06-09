@@ -17,6 +17,15 @@
 
     string YN(bool v)      => v ? "Yes" : "No";
     string YNClass(bool v) => v ? "yn-yes" : "yn-no";
+    bool IsImage(string? fn) => fn != null && (fn.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || fn.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) || fn.EndsWith(".png", StringComparison.OrdinalIgnoreCase));
+    string DocIcon(string? fn) => IsImage(fn) ? "bi-file-image-fill" : fn?.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) == true ? "bi-file-earmark-pdf-fill" : "bi-file-earmark-word-fill";
+    // Strip the 32-char GUID prefix added by SaveFile (e.g. "a1b2c3...d4_original.pdf" → "original.pdf")
+    string DisplayName(string? fn)
+    {
+        if (string.IsNullOrEmpty(fn)) return "";
+        var idx = fn.IndexOf('_');
+        return idx == 32 ? fn[(idx + 1)..] : fn;
+    }
 
     // ── Duration helpers (data resolved at save time into OnlineProgramDto) ────
     int? TraditionalDur(OnlineProgramDto p) =>
@@ -311,9 +320,6 @@
                 <a class="rm-navitem" href="#sec-platform">
                     <span class="rm-step"><i class="bi bi-display"></i></span><span>Learning Platform</span>
                 </a>
-                <a class="rm-navitem" href="#sec-documents">
-                    <span class="rm-step"><i class="bi bi-folder2-open"></i></span><span>Supporting Documents</span>
-                </a>
                 <a class="rm-navitem" href="#sec-applicant">
                     <span class="rm-step"><i class="bi bi-person-badge"></i></span><span>Applicant Info</span>
                 </a>
@@ -594,7 +600,7 @@
                 <div class="fg">
                     @if (!string.IsNullOrWhiteSpace(ol.ExamType))
                     { <div class="field"><div class="lbl">Examination Type</div><div class="val" style="font-weight:800;">@ol.ExamType</div></div> }
-                    @if (ol.ExamType == "Online Exams" || ol.ExamType == "Hybrid Exams (Online + On-Campus)")
+                    @if (ol.ExamType == "Online Exams" || ol.ExamType == "Hybrid Exams")
                     {
                         <div class="field"><div class="lbl">Online Exams Officially Approved</div><div class="val"><span class="@YNClass(ol.OnlineExamsOfficiallyApproved)">@YN(ol.OnlineExamsOfficiallyApproved)</span></div></div>
                     }
@@ -610,6 +616,26 @@
                     <div class="tag-row">
                         @foreach (var m in ol.ProctoringMethodsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries))
                         { <span class="tag active">@m.Trim()</span> }
+                    </div>
+                    @if (ol.ProctoringMethodsCsv.Split(',').Any(m => m.Trim() == "Other") && !string.IsNullOrWhiteSpace(ol.ProctoringOtherText))
+                    {
+                        <div class="field" style="margin-top:10px;max-width:600px;">
+                            <div class="lbl">Other method specified</div>
+                            <div class="val">@ol.ProctoringOtherText</div>
+                        </div>
+                    }
+                }
+                @if (!string.IsNullOrWhiteSpace(ol.ExamPolicyFileName))
+                {
+                    <div class="sub-hd" style="margin-top:20px;"><i class="bi bi-file-earmark-check" style="margin-right:5px;"></i>Examination Monitoring Evidence</div>
+                    <div class="file-grid">
+                        <div class="file-row">
+                            <div class="file-info">
+                                <div class="fn"><i class="bi @DocIcon(ol.ExamPolicyFileName)" style="color:#e02020;margin-right:6px;"></i>@DisplayName(ol.ExamPolicyFileName)</div>
+                                <div class="fs">Exam Monitoring Evidence</div>
+                            </div>
+                            <a class="btn-view-file" href="/uploads/online/@ol.ExamPolicyFileName" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Open</a>
+                        </div>
                     </div>
                 }
             </div>
@@ -637,6 +663,21 @@
                     @if (!string.IsNullOrWhiteSpace(ol.PlatformType))
                     { <div class="field"><div class="lbl">Technology Governance Level</div><div class="val">@ol.PlatformType</div></div> }
                     <div class="field"><div class="lbl">Officially Adopted by University</div><div class="val"><span class="@YNClass(ol.PlatformOfficiallyAdopted)">@YN(ol.PlatformOfficiallyAdopted)</span></div></div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(ol.PlatformAdoptionEvidenceFileName))
+                {
+                    <div class="sub-hd" style="margin-top:16px;"><i class="bi bi-file-earmark-check" style="margin-right:5px;"></i>LMS / Platform Evidence</div>
+                    <div class="file-grid">
+                        <div class="file-row">
+                            <div class="file-info">
+                                <div class="fn"><i class="bi @DocIcon(ol.PlatformAdoptionEvidenceFileName)" style="color:#e02020;margin-right:6px;"></i>@DisplayName(ol.PlatformAdoptionEvidenceFileName)</div>
+                                <div class="fs">LMS / Platform Evidence — platform details, access page, ownership, certification, approval, or usage evidence</div>
+                            </div>
+                            <a class="btn-view-file" href="/uploads/online/@ol.PlatformAdoptionEvidenceFileName" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Open</a>
+                        </div>
+                    </div>
+                }
+                <div class="fg" style="margin-top:10px;">
                     <div class="field"><div class="lbl">Technical Support Available</div><div class="val"><span class="@YNClass(ol.TechnicalSupportAvailable)">@YN(ol.TechnicalSupportAvailable)</span></div></div>
                     <div class="field"><div class="lbl">Data Protection &amp; Privacy Policy</div><div class="val"><span class="@YNClass(ol.HasPrivacyPolicy)">@YN(ol.HasPrivacyPolicy)</span></div></div>
                     <div class="field"><div class="lbl">University-Owned / Self-Hosted</div><div class="val"><span class="@YNClass(ol.IsUniversityOwned)">@YN(ol.IsUniversityOwned)</span></div></div>
@@ -683,57 +724,10 @@
             </div>
         </div>
 
-        <!-- 7: Documents -->
-        <div id="sec-documents" class="section-card">
-            <div class="sec-hd">
-                <span class="sec-num">7</span>
-                <div><h2>Supporting Documents</h2><p>Uploaded files — each belongs to its respective application section</p></div>
-            </div>
-            <div class="sec-bd">
-                @{
-                    bool hasExamDoc     = !string.IsNullOrWhiteSpace(ol.ExamPolicyFileName);
-                    bool hasPlatformDoc = !string.IsNullOrWhiteSpace(ol.PlatformGuideFileName);
-                }
-                @if (!hasExamDoc && !hasPlatformDoc)
-                {
-                    <div class="empty-state"><i class="bi bi-file-earmark-x"></i>No files were uploaded with this submission.</div>
-                }
-                else
-                {
-                    @if (hasExamDoc)
-                    {
-                        <div class="sub-hd"><i class="bi bi-pencil-square" style="margin-right:5px;"></i>Section 5 — Examination System</div>
-                        <div class="file-grid" style="margin-bottom:18px;">
-                            <div class="file-row">
-                                <div class="file-info">
-                                    <div class="fn"><i class="bi bi-file-earmark-pdf" style="color:#e02020;margin-right:6px;"></i>@ol.ExamPolicyFileName</div>
-                                    <div class="fs">Online Examination Policy / Approval Document</div>
-                                </div>
-                                <a class="btn-view-file" href="/uploads/online/@ol.ExamPolicyFileName" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Open</a>
-                            </div>
-                        </div>
-                    }
-                    @if (hasPlatformDoc)
-                    {
-                        <div class="sub-hd"><i class="bi bi-laptop" style="margin-right:5px;"></i>Section 6 — Learning Platform</div>
-                        <div class="file-grid">
-                            <div class="file-row">
-                                <div class="file-info">
-                                    <div class="fn"><i class="bi bi-file-earmark-pdf" style="color:#e02020;margin-right:6px;"></i>@ol.PlatformGuideFileName</div>
-                                    <div class="fs">LMS / Online Learning Platform Policy or Approval Document</div>
-                                </div>
-                                <a class="btn-view-file" href="/uploads/online/@ol.PlatformGuideFileName" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Open</a>
-                            </div>
-                        </div>
-                    }
-                }
-            </div>
-        </div>
-
-        <!-- 8: Applicant Info -->
+        <!-- 7: Applicant Info -->
         <div id="sec-applicant" class="section-card">
             <div class="sec-hd">
-                <span class="sec-num">8</span>
+                <span class="sec-num">7</span>
                 <div><h2>Applicant Information</h2><p>Contact person details for this submission</p></div>
             </div>
             <div class="sec-bd">

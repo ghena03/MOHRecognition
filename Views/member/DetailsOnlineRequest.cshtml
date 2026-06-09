@@ -35,6 +35,9 @@
 
     string FieldVal(string? v) => string.IsNullOrWhiteSpace(v) ? "—" : v;
     string BoolText(bool v) => v ? "Yes" : "No";
+    string DisplayName(string? fn) { if (string.IsNullOrEmpty(fn)) return ""; var idx = fn.IndexOf('_'); return idx == 32 ? fn[(idx + 1)..] : fn; }
+    bool IsImage(string? fn) => fn != null && (fn.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || fn.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) || fn.EndsWith(".png", StringComparison.OrdinalIgnoreCase));
+    string DocIcon(string? fn) => IsImage(fn) ? "bi-file-image-fill" : fn?.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) == true ? "bi-file-earmark-pdf-fill" : "bi-file-earmark-word-fill";
 
     // ── Duration helpers (data resolved at save time into OnlineProgramDto) ────
     int? TraditionalDur(MOHRecognition.DTOs.OnlineProgramDto p) =>
@@ -47,14 +50,14 @@
     }
     string DurStatusText(int? trad, int? online)
     {
-        if (!trad.HasValue || !online.HasValue) return "Missing duration data";
-        return online.Value >= trad.Value ? "Valid" : "Invalid — online duration is shorter than traditional";
+        if (!trad.HasValue || !online.HasValue) return "No data";
+        return online.Value >= trad.Value ? "Valid" : "Invalid";
     }
 
     // ── Online Compliance Checks ──────────────────────────────────────────────
     bool hasPrograms   = programs.Count > 0;
-    bool hasBothDocs   = !string.IsNullOrWhiteSpace(ol.ExamPolicyFileName) && !string.IsNullOrWhiteSpace(ol.PlatformGuideFileName);
-    bool hasAtLeastOneDoc = !string.IsNullOrWhiteSpace(ol.ExamPolicyFileName) || !string.IsNullOrWhiteSpace(ol.PlatformGuideFileName);
+    bool hasBothDocs      = !string.IsNullOrWhiteSpace(ol.ExamPolicyFileName);
+    bool hasAtLeastOneDoc = !string.IsNullOrWhiteSpace(ol.ExamPolicyFileName);
 
     // "green" = ok, "orange" = partial/needs review, "red" = failing
     string examsStatus      = ol.OnlineExamsOfficiallyApproved ? "green" : "red";
@@ -499,8 +502,14 @@
                                     <th style="text-align:center;white-space:nowrap;">Online Students</th>
                                     <th style="text-align:center;white-space:nowrap;">Traditional Duration</th>
                                     <th style="text-align:center;white-space:nowrap;">Online Duration</th>
-                                    <th style="white-space:nowrap;">Duration Status</th>
-                                    <th style="white-space:nowrap;">Sync Ratio</th>
+                                    <th style="white-space:nowrap;">
+                                        Duration Status
+                                        <div style="font-size:10.5px;font-weight:600;color:#7c3aed;margin-top:2px;">online ≥ traditional</div>
+                                    </th>
+                                    <th style="white-space:nowrap;">
+                                        Sync Ratio
+                                        <div style="font-size:10.5px;font-weight:600;color:#7c3aed;margin-top:2px;">min: 33.33%</div>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -519,7 +528,7 @@
                                     else if (p.SynchronousRatioPercent.Value >= 33.33m)
                                     { syncClass = "dur-valid"; syncText = p.SynchronousRatioPercent.Value.ToString("0.##") + "%"; }
                                     else
-                                    { syncClass = "dur-invalid"; syncText = p.SynchronousRatioPercent.Value.ToString("0.##") + "% — Below 33%"; }
+                                    { syncClass = "dur-invalid"; syncText = p.SynchronousRatioPercent.Value.ToString("0.##") + "%"; }
                                     <tr>
                                         <td style="white-space:nowrap;">
                                             @if (isBach) { <span class="ol-badge ol-badge-bach">Bachelor</span> }
@@ -536,8 +545,15 @@
                                         <td style="text-align:center;font-weight:700;white-space:nowrap;">@(p.OnlineStudents.HasValue ? p.OnlineStudents.ToString() : "—")</td>
                                         <td style="text-align:center;color:#6b7280;white-space:nowrap;">@(tradDur.HasValue ? tradDur.Value + " yr" : "—")</td>
                                         <td style="text-align:center;font-weight:600;white-space:nowrap;">@(onlineDur.HasValue ? onlineDur.Value + " yr" : "—")</td>
-                                        <td style="white-space:nowrap;"><span class="@durClass">@durText</span></td>
-                                        <td style="white-space:nowrap;"><span class="@syncClass">@syncText</span></td>
+                                        <td style="white-space:nowrap;">
+                                            <span class="@durClass"
+                                                  @(durClass == "dur-invalid" ? "title=\"Online duration is shorter than traditional duration\"" : "")>
+                                                @durText
+                                            </span>
+                                        </td>
+                                        <td style="white-space:nowrap;">
+                                            <span class="@syncClass">@syncText</span>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -702,9 +718,11 @@
                 </div>
                 @if (!string.IsNullOrWhiteSpace(ol.ExamLocations))
                 {
-                    <div class="info-section ol-info-pad" style="margin-top:16px !important;">
-                        <div class="section-title">Examination Locations / Centres</div>
-                        <div style="font-size:13.5px;color:#374151;font-weight:600;">@ol.ExamLocations</div>
+                    <div class="ol-info-pad" style="margin-top:16px !important;">
+                        <div class="rd-field">
+                            <label>Examination Locations / Centres</label>
+                            <span style="font-size:13.5px;font-weight:600;color:#111;">@ol.ExamLocations</span>
+                        </div>
                     </div>
                 }
                 @if (!string.IsNullOrWhiteSpace(ol.ProctoringMethodsCsv))
@@ -716,6 +734,29 @@
                             {
                                 <span class="chip">@pm.Trim()</span>
                             }
+                        </div>
+                        @if (ol.ProctoringMethodsCsv.Split(',').Any(m => m.Trim() == "Other") && !string.IsNullOrWhiteSpace(ol.ProctoringOtherText))
+                        {
+                            <div class="rd-field" style="margin-top:12px;">
+                                <label>Other method specified</label>
+                                <span style="font-size:13.5px;font-weight:600;color:#111;">@ol.ProctoringOtherText</span>
+                            </div>
+                        }
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(ol.ExamPolicyFileName))
+                {
+                    <div class="ol-info-pad" style="margin-top:16px !important; padding-bottom:16px;">
+                        <div class="doc-file-row">
+                            <div class="doc-file-icon"><i class="bi @DocIcon(ol.ExamPolicyFileName)"></i></div>
+                            <div class="doc-file-meta">
+                                <div class="doc-file-label">Exam Monitoring Evidence</div>
+                                <div class="doc-file-name">@DisplayName(ol.ExamPolicyFileName)</div>
+                                <div class="doc-file-sub">Proves the selected exam monitoring/proctoring method</div>
+                            </div>
+                            <a class="doc-open-btn" href="/uploads/online/@ol.ExamPolicyFileName" target="_blank">
+                                <i class="bi bi-box-arrow-up-right"></i> Open
+                            </a>
                         </div>
                     </div>
                 }
@@ -748,6 +789,24 @@
                         <label>Officially Adopted</label>
                         <input type="text" value="@BoolText(ol.PlatformOfficiallyAdopted)" readonly />
                     </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(ol.PlatformAdoptionEvidenceFileName))
+                {
+                    <div class="ol-info-pad" style="margin-top:14px;padding-bottom:16px;">
+                        <div class="doc-file-row">
+                            <div class="doc-file-icon"><i class="bi @DocIcon(ol.PlatformAdoptionEvidenceFileName)"></i></div>
+                            <div class="doc-file-meta">
+                                <div class="doc-file-label">LMS / Platform Evidence</div>
+                                <div class="doc-file-name">@DisplayName(ol.PlatformAdoptionEvidenceFileName)</div>
+                                <div class="doc-file-sub">Platform details, access page, ownership, certification, approval, or usage evidence</div>
+                            </div>
+                            <a class="doc-open-btn" href="/uploads/online/@ol.PlatformAdoptionEvidenceFileName" target="_blank">
+                                <i class="bi bi-box-arrow-up-right"></i> Open
+                            </a>
+                        </div>
+                    </div>
+                }
+                <div class="rd-grid4" style="margin-top:0;">
                     <div class="rd-field">
                         <label>Technical Support Available</label>
                         <input type="text" value="@BoolText(ol.TechnicalSupportAvailable)" readonly />
@@ -804,69 +863,6 @@
                 }
             </section>
 
-            <!-- Supporting Documents -->
-            <section class="rm-card rd-card">
-                <div class="rd-card-hd">
-                    <h2>Supporting Documents</h2>
-                    <p>Uploaded files — each belongs to its respective application section.</p>
-                </div>
-                <div class="docs-body">
-
-                    @* Section 5 — Examination System *@
-                    <div class="docs-sub-hd">
-                        <i class="bi bi-pencil-square"></i> Section 5 — Examination System
-                    </div>
-                    @if (!string.IsNullOrWhiteSpace(ol.ExamPolicyFileName))
-                    {
-                        <div class="doc-file-row">
-                            <div class="doc-file-icon"><i class="bi bi-file-earmark-pdf-fill"></i></div>
-                            <div class="doc-file-meta">
-                                <div class="doc-file-label">Online Examination Policy</div>
-                                <div class="doc-file-name">@ol.ExamPolicyFileName</div>
-                                <div class="doc-file-sub">Policy / Approval Document</div>
-                            </div>
-                            <a class="doc-open-btn" href="/uploads/online/@ol.ExamPolicyFileName" target="_blank">
-                                <i class="bi bi-box-arrow-up-right"></i> Open
-                            </a>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="doc-empty">
-                            <i class="bi bi-file-earmark-x"></i>
-                            No examination policy document was uploaded.
-                        </div>
-                    }
-
-                    @* Section 6 — Learning Platform *@
-                    <div class="docs-sub-hd">
-                        <i class="bi bi-laptop"></i> Section 6 — Learning Platform
-                    </div>
-                    @if (!string.IsNullOrWhiteSpace(ol.PlatformGuideFileName))
-                    {
-                        <div class="doc-file-row">
-                            <div class="doc-file-icon"><i class="bi bi-file-earmark-pdf-fill"></i></div>
-                            <div class="doc-file-meta">
-                                <div class="doc-file-label">LMS / Platform Policy</div>
-                                <div class="doc-file-name">@ol.PlatformGuideFileName</div>
-                                <div class="doc-file-sub">Online Learning Platform Policy or Approval Document</div>
-                            </div>
-                            <a class="doc-open-btn" href="/uploads/online/@ol.PlatformGuideFileName" target="_blank">
-                                <i class="bi bi-box-arrow-up-right"></i> Open
-                            </a>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="doc-empty">
-                            <i class="bi bi-file-earmark-x"></i>
-                            No LMS / platform guide was uploaded.
-                        </div>
-                    }
-
-                </div>
-            </section>
-
             <!-- Final Recommendation -->
             <section class="rm-card rd-card fa-final-card">
                 <div class="rd-card-hd">
@@ -879,11 +875,12 @@
                 </div>
 
                 @{
-                    var olProgsWithBoth    = programs.Where(p => p.OnlineDurationYears.HasValue && p.TraditionalDurationYears.HasValue).ToList();
-                    var olProgsWithMissing = programs.Where(p => !p.OnlineDurationYears.HasValue || !p.TraditionalDurationYears.HasValue).ToList();
-                    var olProgsFailed      = olProgsWithBoth.Where(p => p.OnlineDurationYears!.Value < p.TraditionalDurationYears!.Value).ToList();
-                    var olSyncFailed       = programs.Where(p => p.SynchronousRatioPercent.HasValue && p.SynchronousRatioPercent.Value < 33.33m).ToList();
-                    var olSyncMissing      = programs.Where(p => !p.SynchronousRatioPercent.HasValue).ToList();
+                    // Checkpoint 1: Sync ratio >= 33.33% (hard fail if below)
+                    var olSyncFailed  = programs.Where(p => p.SynchronousRatioPercent.HasValue && p.SynchronousRatioPercent.Value < 33.33m).ToList();
+                    // Checkpoint 2: Data completeness (warning if missing)
+                    var olSyncMissing = programs.Where(p => !p.SynchronousRatioPercent.HasValue).ToList();
+                    var olDurMissing  = programs.Where(p => !p.OnlineDurationYears.HasValue).ToList();
+
                     string olSugCls, olSugIcon, olSugTitle, olSugBody;
                     if (!programs.Any())
                     {
@@ -891,30 +888,32 @@
                         olSugTitle = "No programs listed";
                         olSugBody = "No online programs have been entered. Review completeness before submitting.";
                     }
-                    else if (olProgsFailed.Any() || olSyncFailed.Any())
+                    else if (olSyncFailed.Any())
                     {
                         olSugCls = "ol-sug-fail"; olSugIcon = "bi-exclamation-octagon-fill";
-                        olSugTitle = "Suggested decision: Conditional Approval or Reject";
+                        olSugTitle = "Suggested decision: Reject / Conditional Approval";
                         var reasons = new System.Collections.Generic.List<string>();
-                        if (olProgsFailed.Any()) reasons.Add($"{olProgsFailed.Count} program(s) have duration below the traditional equivalent");
-                        if (olSyncFailed.Any())  reasons.Add($"{olSyncFailed.Count} program(s) have synchronous ratio below 33.33%");
-                        olSugBody = "<ul style='margin:5px 0 2px 16px;padding:0;'>" + string.Join("", reasons.Select(r => $"<li>{r}</li>")) + "</ul><span>These do not meet the minimum requirements.</span>";
+                        foreach (var p in olSyncFailed)
+                            reasons.Add($"{p.ProgramName} — sync ratio {p.SynchronousRatioPercent:0.##}% (below 33.33%)");
+                        olSugBody = "<ul style='margin:5px 0 2px 16px;padding:0;'>" + string.Join("", reasons.Select(r => $"<li>{r}</li>")) + "</ul><span>Synchronous ratio must be at least 33.33% for all programs.</span>";
                     }
-                    else if (olProgsWithMissing.Any() || olSyncMissing.Any() || string.IsNullOrWhiteSpace(ol.SynchronousEvidenceFileName))
+                    else if (olSyncMissing.Any() || olDurMissing.Any())
                     {
                         olSugCls = "ol-sug-warn"; olSugIcon = "bi-exclamation-triangle-fill";
                         olSugTitle = "Suggested decision: Conditional Approval";
                         var reasons = new System.Collections.Generic.List<string>();
-                        if (olProgsWithMissing.Any()) reasons.Add($"Duration data missing for {olProgsWithMissing.Count} program(s)");
-                        if (olSyncMissing.Any())      reasons.Add($"Synchronous ratio missing for {olSyncMissing.Count} program(s)");
-                        if (string.IsNullOrWhiteSpace(ol.SynchronousEvidenceFileName)) reasons.Add("Synchronous ratio evidence PDF not uploaded");
-                        olSugBody = "<ul style='margin:5px 0 2px 16px;padding:0;'>" + string.Join("", reasons.Select(r => $"<li>{r}</li>")) + "</ul><span>Must be completed before full approval.</span>";
+                        if (olSyncMissing.Any()) reasons.Add($"Synchronous ratio not entered for {olSyncMissing.Count} program(s)");
+                        if (olDurMissing.Any())  reasons.Add($"Online duration missing for {olDurMissing.Count} program(s)");
+                        olSugBody = "<ul style='margin:5px 0 2px 16px;padding:0;'>" + string.Join("", reasons.Select(r => $"<li>{r}</li>")) + "</ul><span>Missing data must be provided before full approval.</span>";
                     }
                     else
                     {
                         olSugCls = "ol-sug-pass"; olSugIcon = "bi-check-circle-fill";
                         olSugTitle = "Suggested decision: Approve";
-                        olSugBody = "All duration and synchronous ratio checks pass. No issues detected.";
+                        olSugBody = "<ul style='margin:5px 0 2px 0;padding:0;list-style:none;'>" +
+                            "<li style='margin-bottom:4px;'>&#10003; Online duration entered for all programs</li>" +
+                            "<li>&#10003; Synchronous ratio &ge; 33.33% for all programs</li>" +
+                            "</ul>";
                     }
                 }
                 <div class="ol-suggestion @olSugCls">
@@ -925,6 +924,56 @@
                         <div class="ol-sug-body">@Html.Raw(olSugBody)</div>
                     </div>
                 </div>
+
+                @{
+                    var olInitialDecision = Model?.BasicInfoAssessmentDecision ?? "";
+                    var olInitialReason   = Model?.BasicInfoAssessmentReason   ?? "";
+                }
+                <div class="fa-decision-wrap">
+                    <div class="fa-decision-label">
+                        <i class="bi bi-person-check-fill"></i>
+                        Your Final Decision <span class="fa-required">*</span>
+                    </div>
+                    <div class="fa-decision-grid">
+                        <button type="button" class="fa-dec-btn approve @(olInitialDecision == "Approve" ? "selected" : "")"
+                                data-value="Approve" @(memberViewOnly ? "disabled" : null)>
+                            <i class="bi bi-check2-circle"></i>
+                            <span>Approve</span>
+                            <small>Institution meets all requirements</small>
+                        </button>
+                        <button type="button" class="fa-dec-btn conditional @(olInitialDecision == "Conditional Approval" ? "selected" : "")"
+                                data-value="Conditional Approval" @(memberViewOnly ? "disabled" : null)>
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span>Conditional Approval</span>
+                            <small>Pending corrective measures</small>
+                        </button>
+                        <button type="button" class="fa-dec-btn reject @(olInitialDecision == "Reject / Committee Review" ? "selected" : "")"
+                                data-value="Reject / Committee Review" @(memberViewOnly ? "disabled" : null)>
+                            <i class="bi bi-x-octagon-fill"></i>
+                            <span>Reject / Committee Review</span>
+                            <small>Refer to committee for further review</small>
+                        </button>
+                    </div>
+                    <input type="hidden" id="olHiddenDecision" value="@olInitialDecision" />
+                </div>
+
+                <div class="fa-justify-label">
+                    <i class="bi bi-chat-square-text"></i>
+                    Final Justification Note <span class="fa-required">*</span>
+                </div>
+                <textarea id="olJustification" class="doc-notes"
+                          placeholder="Provide your professional justification for the final recommendation…"
+                          @(memberViewOnly ? "readonly disabled" : "required")>@olInitialReason</textarea>
+
+                @if (!memberViewOnly)
+                {
+                    <div class="fa-save-row">
+                        <span class="fa-save-hint"><i class="bi bi-lock-fill"></i> Your decision will be recorded once saved.</span>
+                        <button class="rm-btn rm-btn-primary" id="olSubmitBtn" type="button">
+                            <i class="bi bi-send-check"></i> Save &amp; Submit to Admin
+                        </button>
+                    </div>
+                }
 
             </section>
 

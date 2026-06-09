@@ -7698,7 +7698,8 @@ public async Task<IActionResult> AdminViewRecommendation(int? id)
 
             dto.ProgramFileName               = await SaveFile(dto.ProgramFile)             ?? dto.ProgramFileName;
             dto.TrainingEvidenceFileName       = await SaveFile(dto.TrainingEvidenceFile)    ?? dto.TrainingEvidenceFileName;
-            dto.PlatformGuideFileName          = await SaveFile(dto.PlatformGuideFile)       ?? dto.PlatformGuideFileName;
+            dto.PlatformGuideFileName               = await SaveFile(dto.PlatformGuideFile)                ?? dto.PlatformGuideFileName;
+            dto.PlatformAdoptionEvidenceFileName    = await SaveFile(dto.PlatformAdoptionEvidenceFile)     ?? dto.PlatformAdoptionEvidenceFileName;
             dto.SampleCourseEvidenceFileName   = await SaveFile(dto.SampleCourseEvidenceFile) ?? dto.SampleCourseEvidenceFileName;
             dto.ExamPolicyFileName             = await SaveFile(dto.ExamPolicyFile)           ?? dto.ExamPolicyFileName;
             dto.AssessmentPolicyFileName       = await SaveFile(dto.AssessmentPolicyFile)     ?? dto.AssessmentPolicyFileName;

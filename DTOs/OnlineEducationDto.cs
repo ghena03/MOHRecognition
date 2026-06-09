@@ -63,7 +63,8 @@ namespace MOHRecognition.DTOs
         public string? PlatformEmail           { get; set; }
         public string? PlatformPassword        { get; set; }
         public string? LmsAccessNotes          { get; set; }
-        public string? PlatformGuideFileName   { get; set; }
+        public string? PlatformGuideFileName            { get; set; }
+        public string? PlatformAdoptionEvidenceFileName { get; set; }
 
         // == TEACHING AND LEARNING DELIVERY ==
         public int?    SynchronousPercentage       { get; set; }
@@ -83,6 +84,7 @@ namespace MOHRecognition.DTOs
         public string? ExamLocations               { get; set; }
         public bool    IsProctored                 { get; set; }
         public string? ProctoringMethodsCsv        { get; set; }
+        public string? ProctoringOtherText         { get; set; }
         public string? IdentityVerificationMethod  { get; set; }
         public string? CheatingPreventionMethod    { get; set; }
         public string? ExamPolicyFileName          { get; set; }
@@ -146,7 +148,8 @@ namespace MOHRecognition.DTOs
         public string? ProgramFileName                         { get; set; }
 
         [JsonIgnore] public IFormFile? TrainingEvidenceFile    { get; set; }
-        [JsonIgnore] public IFormFile? PlatformGuideFile       { get; set; }
+        [JsonIgnore] public IFormFile? PlatformGuideFile                { get; set; }
+        [JsonIgnore] public IFormFile? PlatformAdoptionEvidenceFile     { get; set; }
         [JsonIgnore] public IFormFile? SampleCourseEvidenceFile { get; set; }
         [JsonIgnore] public IFormFile? ExamPolicyFile          { get; set; }
         [JsonIgnore] public IFormFile? AssessmentPolicyFile    { get; set; }
@@ -174,9 +177,7 @@ namespace MOHRecognition.DTOs
         public int?    AssistantProfessor      { get; set; }
         public string? StudyPlanFileName       { get; set; }
         public string? AccreditationEvidenceFileName { get; set; }
-        /* Synchronous learning ratio (per-program) */
-        public int?     TotalContactHours            { get; set; }
-        public int?     SynchronousHours             { get; set; }
+        /* Synchronous learning ratio (per-program, entered directly as %) */
         public decimal? SynchronousRatioPercent      { get; set; }
     }
 }
