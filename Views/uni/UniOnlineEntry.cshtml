@@ -319,6 +319,25 @@
             border-color: #e5e7eb !important;
         }
         .section-readonly .req { display: none; }
+        .ns-input {
+    width: 100%;
+    border: 1.5px solid #e2d9d0;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 20px;
+    font-weight: 900;
+    color: #9e1b32;
+    text-align: center;
+    background: #fff;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color .15s;
+}
+.ns-input:focus {
+    border-color: #9e1b32;
+    background: #fdf5f6;
+}
+.ns-input::placeholder { color: #ccc; font-weight: 400; font-size: 16px; }
     </style>
 </head>
 
@@ -684,46 +703,79 @@
                         <div class="num-grid">
 
                             <!-- Bachelor -->
-                            <div class="num-box">
-                                <div class="num-box-hd">Bachelor Online Numbers</div>
-                                <div class="num-stats-grid">
-                                    <div class="ns"><div class="ns-lbl">Programs</div><div class="ns-val" id="bn-count">0</div></div>
-                                    <div class="ns"><div class="ns-lbl">Online Students</div><div class="ns-val" id="bn-students">0</div></div>
-                                    <div class="ns"><div class="ns-lbl">Teaching Staff</div><div class="ns-val" id="bn-staff">0</div></div>
-                                    <div class="ns"><div class="ns-lbl">Professors</div><div class="ns-val" id="bn-prof">0</div></div>
-                                    <div class="ns"><div class="ns-lbl">Assoc. Professors</div><div class="ns-val" id="bn-assoc">0</div></div>
-                                    <div class="ns"><div class="ns-lbl">Asst. Professors</div><div class="ns-val" id="bn-asst">0</div></div>
-                                </div>
-                            </div>
+<div class="num-box">
+    <div class="num-box-hd">Bachelor Online Numbers</div>
+    <div class="num-stats-grid">
+        <div class="ns">
+            <div class="ns-lbl">Programs</div>
+            <input class="ns-input" type="number" min="0" id="bn-count" name="BachelorPrograms" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+        <div class="ns">
+            <div class="ns-lbl">Online Students</div>
+            <input class="ns-input" type="number" min="0" id="bn-students" name="BachelorOnlineStudents" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+        <div class="ns">
+            <div class="ns-lbl">Teaching Staff</div>
+            <input class="ns-input" type="number" min="0" id="bn-staff" name="BachelorTeachingStaff" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+        <div class="ns">
+            <div class="ns-lbl">Professors</div>
+            <input class="ns-input" type="number" min="0" id="bn-prof" name="BachelorOnlineStaffProf" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+        <div class="ns">
+            <div class="ns-lbl">Assoc. Professors</div>
+            <input class="ns-input" type="number" min="0" id="bn-assoc" name="BachelorOnlineStaffAssoc" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+        <div class="ns">
+            <div class="ns-lbl">Asst. Professors</div>
+            <input class="ns-input" type="number" min="0" id="bn-asst" name="BachelorOnlineStaffAsst" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+    </div>
+</div>
 
-                            <!-- Postgraduate -->
-                            <div class="num-box">
-                                <div class="num-box-hd">Postgraduate Online Numbers</div>
-                                <div class="num-stats-grid">
-                                    <div class="ns"><div class="ns-lbl">Programs</div><div class="ns-val" id="pg-count">0</div></div>
-                                    <div class="ns"><div class="ns-lbl">Online Students</div><div class="ns-val" id="pg-students">0</div></div>
-                                    <div class="ns"><div class="ns-lbl">Teaching Staff</div><div class="ns-val" id="pg-staff">0</div></div>
-                                    <div class="ns"><div class="ns-lbl">Professors</div><div class="ns-val" id="pg-prof">0</div></div>
-                                    <div class="ns"><div class="ns-lbl">Assoc. Professors</div><div class="ns-val" id="pg-assoc">0</div></div>
-                                    <div class="ns"><div class="ns-lbl">Asst. Professors</div><div class="ns-val" id="pg-asst">0</div></div>
-                                </div>
-                            </div>
+<!-- Postgraduate -->
+<div class="num-box">
+    <div class="num-box-hd">Postgraduate Online Numbers</div>
+    <div class="num-stats-grid">
+        <div class="ns">
+            <div class="ns-lbl">Programs</div>
+            <input class="ns-input" type="number" min="0" id="pg-count" name="PostgraduatePrograms" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+        <div class="ns">
+            <div class="ns-lbl">Online Students</div>
+            <input class="ns-input" type="number" min="0" id="pg-students" name="PostgraduateOnlineStudents" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+        <div class="ns">
+            <div class="ns-lbl">Teaching Staff</div>
+            <input class="ns-input" type="number" min="0" id="pg-staff" name="PostgraduateTeachingStaff" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+        <div class="ns">
+            <div class="ns-lbl">Professors</div>
+            <input class="ns-input" type="number" min="0" id="pg-prof" name="PostgraduateOnlineStaffProf" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+        <div class="ns">
+            <div class="ns-lbl">Assoc. Professors</div>
+            <input class="ns-input" type="number" min="0" id="pg-assoc" name="PostgraduateOnlineStaffAssoc" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+        <div class="ns">
+            <div class="ns-lbl">Asst. Professors</div>
+            <input class="ns-input" type="number" min="0" id="pg-asst" name="PostgraduateOnlineStaffAsst" placeholder="0" oninput="updateOverallTotals()" />
+        </div>
+    </div>
+</div>
+                      <!-- Overall -->
+<div class="overall-box">
+    <div class="overall-box-hd">Overall Totals</div>
+    <div class="num-stats-grid">
+        <div class="ns"><div class="ns-lbl">Total Programs</div><div class="ns-val" id="ov-count">0</div></div>
+        <div class="ns"><div class="ns-lbl">Total Online Students</div><div class="ns-val" id="ov-students">0</div></div>
+        <div class="ns"><div class="ns-lbl">Total Teaching Staff</div><div class="ns-val" id="ov-staff">0</div></div>
+    </div>
+</div>
 
-                        </div>
-
-                        <!-- Overall -->
-                        <div class="overall-box">
-                            <div class="overall-box-hd">Overall Totals</div>
-                            <div class="num-stats-grid">
-                                <div class="ns"><div class="ns-lbl">Total Programs</div><div class="ns-val" id="ov-count">0</div></div>
-                                <div class="ns"><div class="ns-lbl">Total Online Students</div><div class="ns-val" id="ov-students">0</div></div>
-                                <div class="ns"><div class="ns-lbl">Total Teaching Staff</div><div class="ns-val" id="ov-staff">0</div></div>
-                            </div>
-                        </div>
-
-                        <div class="actions" style="justify-content:center;margin-top:22px;">
-                            <button type="button" class="btn-primary" onclick="scrollToNext('sec-communication')">Save Numbers →</button>
-                        </div>
+                       <div class="actions" style="justify-content:flex-end;margin-top:16px;">
+    <button type="button" class="btn-primary" style="padding:8px 24px;font-size:13px;" onclick="scrollToNext('sec-communication')">Save Numbers →</button>
+</div>
                     </div>
                 </section>
 
@@ -837,16 +889,8 @@
                                 <label>Responsible Unit / Department <span class="req">*</span></label>
                                 <input asp-for="ResponsibleUnit" placeholder="e.g. Centre for Online Learning" />
                             </div>
-                            <div class="field">
-                                <label>Technology Governance Level</label>
-                                <select asp-for="PlatformType">
-                                    <option value="">-- Choose --</option>
-                                    <option value="Not documented">Not documented</option>
-                                    <option value="Basic policy exists">Basic policy exists</option>
-                                    <option value="Formal governance framework">Formal governance framework</option>
-                                    <option value="Dedicated e-learning / IT unit">Dedicated e-learning / IT unit</option>
-                                </select>
-                            </div>
+                           
+                            
                         </div>
                         <div class="field" style="margin-top:6px;">
                             <label>Is the platform officially adopted by the university?</label>
@@ -858,7 +902,7 @@
                         <div class="field" style="margin-top:14px;">
                             <label>LMS / Platform Evidence <span class="req">*</span></label>
                             <div class="file-input-wrap">
-                                <input asp-for="PlatformAdoptionEvidenceFile" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" id="platformAdoptionEvidenceFile" required onchange="showFileSuccess(this)" />
+                                <input asp-for="PlatformAdoptionEvidenceFile" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" id="platformAdoptionEvidenceFile" onchange="showFileSuccess(this)" />
                                 <span class="file-success"></span>
                             </div>
                             <span class="field-hint">ⓘ Upload proof of the LMS/platform used for online learning: screenshot, access page, certification/approval, or usage evidence. Accepted: PDF, Word, JPG, PNG.</span>
@@ -1262,19 +1306,22 @@
             };
         }
 
-        function updateAll() {
-            var n = computeNumbers();
-            setTxt('bn-count',    n.bachCount);   setTxt('bn-students', n.bachStudents);
-            setTxt('bn-staff',    n.bTotal);       setTxt('bn-prof',     n.bProf);
-            setTxt('bn-assoc',    n.bAssoc);       setTxt('bn-asst',     n.bAsst);
-            setTxt('pg-count',    n.pgCount);      setTxt('pg-students', n.pgStudents);
-            setTxt('pg-staff',    n.pTotal);       setTxt('pg-prof',     n.pProf);
-            setTxt('pg-assoc',    n.pAssoc);       setTxt('pg-asst',     n.pAsst);
-            setTxt('ov-count',    n.totalProgs);
-            setTxt('ov-students', n.totalStudents);
-            setTxt('ov-staff',    n.totalStaff);
-        }
-        function setTxt(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+function updateOverallTotals() {
+    var bnCount    = parseInt(document.getElementById('bn-count')?.value)    || 0;
+    var bnStudents = parseInt(document.getElementById('bn-students')?.value) || 0;
+    var bnStaff    = parseInt(document.getElementById('bn-staff')?.value)    || 0;
+    var pgCount    = parseInt(document.getElementById('pg-count')?.value)    || 0;
+    var pgStudents = parseInt(document.getElementById('pg-students')?.value) || 0;
+    var pgStaff    = parseInt(document.getElementById('pg-staff')?.value)    || 0;
+
+    document.getElementById('ov-count').textContent    = bnCount    + pgCount;
+    document.getElementById('ov-students').textContent = bnStudents + pgStudents;
+    document.getElementById('ov-staff').textContent    = bnStaff    + pgStaff;
+}
+
+
+function updateAll() { updateOverallTotals(); }
+
 
         // ── Add form ───────────────────────────────────────────────────────
         function showAddForm() {
@@ -1500,13 +1547,13 @@
 
             hideAddForm();
             renderTable();
-            updateAll();
+updateOverallTotals();
         }
 
         function removeProgram(idx) {
             programs.splice(idx, 1);
-            renderTable();
-            updateAll();
+           renderTable();
+updateOverallTotals();
         }
 
         function renderTable() {
@@ -1623,58 +1670,68 @@
         }
 
         // ── Pre-submit: populate hidden inputs ─────────────────────────────
-        function buildSubmitData() {
-            // Copy Public Info fields (outside the form) into hidden inputs inside the form
-            ['InstitutionName', 'OversightRightsEntity', 'FoundationDate', 'DateOfEstablishment',
-             'ModeOfStudy', 'LanguageOfInstruction', 'StartOfTeaching', 'PresidentName',
-             'MailingFullAddress', 'DirectPhoneNumber', 'EmailAddress', 'InstitutionalWebAddress',
-             'Country', 'Location'].forEach(function(fieldName) {
-                var src = document.querySelector('#sec-pubinfo [name="' + fieldName + '"]');
-                if (!src) return;
-                var form = document.getElementById('mainForm');
-                var hidden = form.querySelector('input[type="hidden"][name="' + fieldName + '"]');
-                if (!hidden) {
-                    hidden = document.createElement('input');
-                    hidden.type = 'hidden';
-                    hidden.name = fieldName;
-                    form.appendChild(hidden);
-                }
-                hidden.value = src.value;
-            });
-
-            var n = computeNumbers();
-            document.getElementById('hBachProf').value      = n.bProf;
-            document.getElementById('hBachAssoc').value     = n.bAssoc;
-            document.getElementById('hBachAsst').value      = n.bAsst;
-            document.getElementById('hPgProf').value        = n.pProf;
-            document.getElementById('hPgAssoc').value       = n.pAssoc;
-            document.getElementById('hPgAsst').value        = n.pAsst;
-            document.getElementById('hTotalProf').value     = n.bProf  + n.pProf;
-            document.getElementById('hTotalAssoc').value    = n.bAssoc + n.pAssoc;
-            document.getElementById('hTotalAsst').value     = n.bAsst  + n.pAsst;
-            document.getElementById('hTotalStudents').value = n.totalStudents;
-
-            document.getElementById('programsJsonInput').value = JSON.stringify(
-                programs.map(function(p) {
-                    return {
-                        ProgramName:             p.ProgramName,
-                        DegreeLevel:             p.DegreeLevel,
-                        Source:                  p.Source,
-                        CollegeOrFaculty:        p.CollegeOrFaculty,
-                        DeliveryMode:            p.DeliveryMode,
-                        OnlineStudents:          p.OnlineStudents,
-                        OnlineDurationYears:     p.OnlineDurationYears || null,
-                        TraditionalDurationYears: p.TraditionalDurationYears || null,
-                        SynchronousRatioPercent: p.SynchronousRatioPercent != null ? p.SynchronousRatioPercent : null,
-                        Professor:               null,
-                        AssociateProfessor:      null,
-                        AssistantProfessor:      null,
-                        StudyPlanFileName:       null,
-                        AccreditationEvidenceFileName: null
-                    };
-                })
-            );
+       function buildSubmitData() {
+    // Copy Public Info fields (outside the form) into hidden inputs inside the form
+    ['InstitutionName', 'OversightRightsEntity', 'FoundationDate', 'DateOfEstablishment',
+     'ModeOfStudy', 'LanguageOfInstruction', 'StartOfTeaching', 'PresidentName',
+     'MailingFullAddress', 'DirectPhoneNumber', 'EmailAddress', 'InstitutionalWebAddress',
+     'Country', 'Location'].forEach(function(fieldName) {
+        var src = document.querySelector('#sec-pubinfo [name="' + fieldName + '"]');
+        if (!src) return;
+        var form = document.getElementById('mainForm');
+        var hidden = form.querySelector('input[type="hidden"][name="' + fieldName + '"]');
+        if (!hidden) {
+            hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = fieldName;
+            form.appendChild(hidden);
         }
+        hidden.value = src.value;
+    });
+
+    // Read manually entered values from the number inputs
+    var bnProf  = parseInt(document.getElementById('bn-prof')?.value)  || 0;
+    var bnAssoc = parseInt(document.getElementById('bn-assoc')?.value) || 0;
+    var bnAsst  = parseInt(document.getElementById('bn-asst')?.value)  || 0;
+    var pgProf  = parseInt(document.getElementById('pg-prof')?.value)  || 0;
+    var pgAssoc = parseInt(document.getElementById('pg-assoc')?.value) || 0;
+    var pgAsst  = parseInt(document.getElementById('pg-asst')?.value)  || 0;
+
+    var bnStudents = parseInt(document.getElementById('bn-students')?.value) || 0;
+    var pgStudents = parseInt(document.getElementById('pg-students')?.value) || 0;
+
+    document.getElementById('hBachProf').value      = bnProf;
+    document.getElementById('hBachAssoc').value     = bnAssoc;
+    document.getElementById('hBachAsst').value      = bnAsst;
+    document.getElementById('hPgProf').value        = pgProf;
+    document.getElementById('hPgAssoc').value       = pgAssoc;
+    document.getElementById('hPgAsst').value        = pgAsst;
+    document.getElementById('hTotalProf').value     = bnProf  + pgProf;
+    document.getElementById('hTotalAssoc').value    = bnAssoc + pgAssoc;
+    document.getElementById('hTotalAsst').value     = bnAsst  + pgAsst;
+    document.getElementById('hTotalStudents').value = bnStudents + pgStudents;
+
+    document.getElementById('programsJsonInput').value = JSON.stringify(
+        programs.map(function(p) {
+            return {
+                ProgramName:             p.ProgramName,
+                DegreeLevel:             p.DegreeLevel,
+                Source:                  p.Source,
+                CollegeOrFaculty:        p.CollegeOrFaculty,
+                DeliveryMode:            p.DeliveryMode,
+                OnlineStudents:          p.OnlineStudents,
+                OnlineDurationYears:     p.OnlineDurationYears || null,
+                TraditionalDurationYears: p.TraditionalDurationYears || null,
+                SynchronousRatioPercent: p.SynchronousRatioPercent != null ? p.SynchronousRatioPercent : null,
+                Professor:               null,
+                AssociateProfessor:      null,
+                AssistantProfessor:      null,
+                StudyPlanFileName:       null,
+                AccreditationEvidenceFileName: null
+            };
+        })
+    );
+}
 
 
         function uploadSharedSyncEvidence(input) {

@@ -7447,11 +7447,7 @@ public async Task<IActionResult> AdminViewRecommendation(int? id)
                 }
             }
 
-            if (programs.Count == 0)
-            {
-                errors.Add("Please add at least one online/blended program.");
-            }
-            else
+            if (programs.Count > 0)
             {
                 bool hasInvalidProgram = programs.Any(p =>
                     string.IsNullOrWhiteSpace(p.ProgramName) ||
