@@ -5771,6 +5771,98 @@ namespace MOHRecognition.Controllers
             return View("~/Views/admin/AdminFinalDecision.cshtml", request);
         }
 
+        public async Task<IActionResult> FinalDecisionPrintPreview()
+        {
+            var vm = new FinalDecisionPrintViewModel
+            {
+                RequestId                    = 0,
+                UniversityName               = "جامعة النموذج للتعليم العالي",
+                Country                      = "المملكة الأردنية الهاشمية",
+                CommitteeFinalDecision       = "الاعتراف - بكالوريوس فقط",
+                CommitteeFinalRecommendation = "أرجو معاليكم التكرم بالعلم بأن لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية قررت في جلستها رقم (12) تاريخ (15/06/2026) الاعتراف بالمؤسسة التعليمية (جامعة النموذج للتعليم العالي) في (المملكة الأردنية الهاشمية) لدرجة البكالوريوس فقط ولجميع التخصصات الأكاديمية على نظام التعليم التقليدي فقط.",
+                ReferenceNumber              = "٢٠٢٦/١٢٣٤",
+                SessionNumber               = "12",
+                SessionDate                 = "15/06/2026",
+            };
+            return View("~/Views/admin/FinalDecisionPrint.cshtml", vm);
+        }
+
+        public async Task<IActionResult> FinalDecisionPrint(int id, int? meetingId)
+        {
+            var request = await _recognitionRequestService.GetById(id);
+            if (request == null) return NotFound();
+
+            var vm = new FinalDecisionPrintViewModel
+            {
+                RequestId                    = id,
+                UniversityName               = request.UniversityName,
+                Country                      = request.Country,
+                CommitteeFinalDecision       = request.CommitteeFinalDecision,
+                CommitteeFinalRecommendation = request.CommitteeFinalRecommendation,
+                ReferenceNumber              = request.ReferenceNumber,
+                MeetingId                    = meetingId,
+            };
+
+            if (meetingId.HasValue && meetingId.Value > 0)
+            {
+                var meeting = await _meetingService.GetById(meetingId.Value);
+                vm.SessionNumber = meeting?.SessionNumber.ToString() ?? "";
+                vm.SessionDate   = meeting?.MeetingDate.ToString("dd/MM/yyyy") ?? "";
+            }
+
+            return View("~/Views/admin/FinalDecisionPrint.cshtml", vm);
+        }
+
+        public async Task<IActionResult> SessionReport(int id)
+        {
+            var meeting = await _meetingService.GetById(id);
+            if (meeting == null) return NotFound();
+
+            var advisors = await _advisorService.GetAll();
+            var ordered  = advisors
+                .OrderBy(GetAdvisorHierarchyRank)
+                .ThenBy(a => a.SortOrder > 0 ? a.SortOrder : int.MaxValue)
+                .ThenBy(a => a.FullName)
+                .ToList();
+            var attendance = await _meetingService.GetAttendance(id);
+
+            var attendees = ordered.Select(a => new MOHRecognition.Models.SessionReportAttendee
+            {
+                Name      = a.FullName,
+                NameAr    = a.FullNameAr,
+                IsPresent = attendance.TryGetValue(a.Id, out var p) && p
+            }).ToList();
+
+            var allRequests = await _recognitionRequestService.GetAll();
+            var linked = meeting.RequestIds
+                .Select(rid => allRequests.FirstOrDefault(r => r.Id == rid))
+                .Where(r => r != null)
+                .ToList();
+
+            var rows = new List<MOHRecognition.Models.SessionReportRow>();
+            for (int i = 0; i < linked.Count; i++)
+            {
+                var req = linked[i]!;
+                var dec = await _meetingService.GetDecision(id, req.Id);
+                rows.Add(new MOHRecognition.Models.SessionReportRow
+                {
+                    SequenceNumber    = i + 1,
+                    UniversityName    = req.UniversityName,
+                    Country           = req.Country,
+                    CommitteeDecision = dec?.Decision ?? req.CommitteeFinalDecision,
+                    Recommendation    = req.CommitteeFinalRecommendation
+                });
+            }
+
+            var vm = new MOHRecognition.Models.SessionReportViewModel
+            {
+                Meeting   = meeting,
+                Attendees = attendees,
+                Rows      = rows
+            };
+            return View("~/Views/admin/SessionReport.cshtml", vm);
+        }
+
         [HttpPost]
         public async Task<IActionResult> SaveAdminFinalDecision(int id, string decision, string recommendation, int? meetingId)
         {

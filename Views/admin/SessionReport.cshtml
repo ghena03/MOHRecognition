@@ -1,0 +1,308 @@
+@model MOHRecognition.Models.SessionReportViewModel
+@{
+    Layout = null;
+    var meeting      = Model.Meeting;
+    var year         = meeting.MeetingDate.Year;
+    var dateStr      = meeting.MeetingDate.ToString("yyyy/MM/dd");
+    var sessionLabel = $"{meeting.SessionNumber}/{year}";
+
+    var arCulture = new System.Globalization.CultureInfo("ar-JO");
+    var dayName   = meeting.MeetingDate.ToString("dddd", arCulture);
+
+    var present = Model.Attendees.Where(a => a.IsPresent).ToList();
+    var absent  = Model.Attendees.Where(a => !a.IsPresent).ToList();
+
+    string ArabicName(MOHRecognition.Models.SessionReportAttendee a)
+        => !string.IsNullOrWhiteSpace(a.NameAr) ? a.NameAr : a.Name;
+}
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<title>تقرير الجلسة @sessionLabel</title>
+<style>
+@@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Amiri', 'Traditional Arabic', serif;
+    direction: rtl;
+    background: #5a5a5a;
+    color: #111;
+}
+
+/* ── Toolbar ── */
+#toolbar {
+    background: #7f1627; color: #fff;
+    padding: 8px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: 'Segoe UI', sans-serif; font-size: 13px; font-weight: 600;
+    position: sticky; top: 0; z-index: 100;
+}
+.tb-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 16px; border-radius: 6px; font-size: 12.5px; font-weight: 600;
+    cursor: pointer; border: none; font-family: 'Segoe UI', sans-serif;
+    background: #fff; color: #7f1627; text-decoration: none;
+}
+.tb-btn:hover { opacity: .85; }
+.tb-ghost {
+    background: rgba(255,255,255,.14); color: #fff;
+    border: 1.5px solid rgba(255,255,255,.3);
+}
+
+/* ── Page wrapper ── */
+.page-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 28px; padding: 28px 0 60px;
+}
+
+/* ── Portrait page (attendance) ── */
+.page-portrait {
+    width: 210mm;
+    min-height: 297mm;
+    background: #fff;
+    padding: 14mm 18mm 18mm 18mm;
+    box-shadow: 0 4px 20px rgba(0,0,0,.35);
+    position: relative;
+}
+
+/* ── Landscape page (university decisions) ── */
+.page-landscape {
+    width: 297mm;
+    min-height: 210mm;
+    background: #fff;
+    padding: 12mm 16mm 16mm 16mm;
+    box-shadow: 0 4px 20px rgba(0,0,0,.35);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Shared header ── */
+.page-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    border-bottom: 2.5px solid #7f1627;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+}
+.page-header img {
+    height: 58px;
+    object-fit: contain;
+    object-position: center;
+}
+.page-header .title-main {
+    font-size: 13pt; font-weight: 700; color: #7f1627; text-align: center;
+}
+.page-header .session-meta {
+    font-size: 10pt; color: #444; text-align: center;
+}
+
+/* ── Attendance (portrait) ── */
+.intro-para {
+    font-size: 12pt; line-height: 2.1; text-align: justify;
+    margin-bottom: 16px;
+}
+.attendee-section { margin-bottom: 18px; }
+.attendee-section h3 {
+    font-size: 11pt; font-weight: 700; color: #7f1627;
+    border-bottom: 1px solid #e5c0c0; padding-bottom: 4px; margin-bottom: 10px;
+}
+.attendee-list { list-style: none; padding: 0; }
+.attendee-list li {
+    font-size: 11.5pt; line-height: 2;
+    padding-right: 6px;
+}
+.attendee-list li::before { content: "- "; }
+
+/* ── University 2-column layout ── */
+.uni-header-row {
+    text-align: center;
+    font-size: 13pt; font-weight: 700; color: #7f1627;
+    margin-bottom: 12px;
+}
+.uni-columns {
+    display: flex;
+    flex: 1;
+    gap: 0;
+    border: 1.5px solid #7f1627;
+    border-radius: 4px;
+    overflow: hidden;
+}
+/* right column = committee recommendation */
+.col-right {
+    flex: 1;
+    border-left: 1.5px solid #7f1627;
+    display: flex;
+    flex-direction: column;
+}
+/* left column = final meeting decision */
+.col-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.col-title {
+    background: #7f1627;
+    color: #fff;
+    font-size: 11.5pt; font-weight: 700;
+    text-align: center;
+    padding: 8px 10px;
+}
+.col-body {
+    flex: 1;
+    padding: 14px 16px;
+    font-size: 11pt;
+    line-height: 1.9;
+    text-align: right;
+    vertical-align: top;
+}
+
+/* ── Footer ── */
+.page-footer {
+    border-top: 1px solid #ccc;
+    margin-top: 10px;
+    padding-top: 5px;
+    font-size: 8pt; color: #666;
+    text-align: center;
+}
+
+/* ── Print media ── */
+@@media print {
+    body { background: none !important; }
+    #toolbar { display: none !important; }
+    .page-wrap { background: none !important; padding: 0 !important; gap: 0 !important; }
+
+    .page-portrait {
+        box-shadow: none !important;
+        page-break-after: always;
+        width: 210mm !important; min-height: 297mm !important;
+        page: portrait-page;
+    }
+    .page-landscape {
+        box-shadow: none !important;
+        page-break-after: always;
+        width: 297mm !important; min-height: 210mm !important;
+        page: landscape-page;
+    }
+    .page-portrait:last-child,
+    .page-landscape:last-child { page-break-after: auto; }
+
+    @@page portrait-page  { size: A4 portrait;  margin: 0; }
+    @@page landscape-page { size: A4 landscape; margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Toolbar ── -->
+<div id="toolbar">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <a class="tb-btn tb-ghost" href="/Home/SessionDashboard?id=@meeting.Id">&#8594; Back</a>
+        <span style="opacity:.8;">Session Report — #@sessionLabel</span>
+    </div>
+    <button class="tb-btn" onclick="window.print()">&#128438; Print</button>
+</div>
+
+<div class="page-wrap">
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE 1 — ATTENDANCE (PORTRAIT)
+══════════════════════════════════════════════════════ -->
+<div class="page-portrait">
+    <div class="page-header">
+        <img src="/images/official-letterhead.png" alt=""
+             onerror="this.style.display='none'"/>
+        <div class="title-main">لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية</div>
+        <div class="session-meta">الجلسة رقم: @sessionLabel &nbsp;&nbsp;|&nbsp;&nbsp; @dateStr</div>
+    </div>
+
+    <p class="intro-para">
+        عقدت لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية جلستها رقم
+        (<strong>@sessionLabel</strong>) في مقر وزارة التعليم العالي والبحث العلمي يوم
+        <strong>@dayName</strong> الموافق (<strong>@dateStr</strong>)
+        برئاسة معالي وزير التعليم العالي والبحث العلمي
+        الأستاذ الدكتور عزمي محافظة وبحضور كل من:
+    </p>
+
+    @if (present.Any())
+    {
+        <div class="attendee-section">
+            <ul class="attendee-list">
+                @foreach (var a in present)
+                {
+                    <li>@ArabicName(a)</li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (absent.Any())
+    {
+        <div class="attendee-section">
+            <h3>اعتذر عن عدم الحضور</h3>
+            <ul class="attendee-list">
+                @foreach (var a in absent)
+                {
+                    <li>@ArabicName(a)</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="page-footer">
+        لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية &nbsp;—&nbsp; الجلسة رقم @sessionLabel &nbsp;—&nbsp; @dateStr
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGES 2+ — ONE LANDSCAPE PAGE PER UNIVERSITY
+══════════════════════════════════════════════════════ -->
+@foreach (var row in Model.Rows)
+{
+    <div class="page-landscape">
+        <div class="page-header">
+            <img src="/images/official-letterhead.png" alt=""
+                 onerror="this.style.display='none'"/>
+            <div class="title-main">لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية</div>
+            <div class="session-meta">الجلسة رقم: @sessionLabel &nbsp;&nbsp;|&nbsp;&nbsp; @dateStr</div>
+        </div>
+
+        <div class="uni-header-row">
+            @row.UniversityName
+            @if (!string.IsNullOrWhiteSpace(row.Country))
+            {
+                <span style="font-weight:400;color:#555;font-size:11pt;"> — @row.Country</span>
+            }
+        </div>
+
+        <div class="uni-columns">
+            <!-- RIGHT: قرار اللجنة (committee written recommendation) -->
+            <div class="col-right">
+                <div class="col-title">قرار اللجنة</div>
+                <div class="col-body">
+                    @(string.IsNullOrWhiteSpace(row.Recommendation) ? "—" : row.Recommendation)
+                </div>
+            </div>
+            <!-- LEFT: القرار النهائي (decision taken in meeting) -->
+            <div class="col-left">
+                <div class="col-title">القرار النهائي</div>
+                <div class="col-body">
+                    @(string.IsNullOrWhiteSpace(row.CommitteeDecision) ? "—" : row.CommitteeDecision)
+                </div>
+            </div>
+        </div>
+
+        <div class="page-footer">
+            لجنة الاعتراف بمؤسسات التعليم العالي غير الأردنية &nbsp;—&nbsp; الجلسة رقم @sessionLabel &nbsp;—&nbsp; @dateStr
+        </div>
+    </div>
+}
+
+</div><!-- /page-wrap -->
+</body>
+</html>

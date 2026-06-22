@@ -222,6 +222,7 @@ public sealed class AppDbContext : DbContext
             e.Property(x => x.Id).ValueGeneratedOnAdd();
             e.Property(x => x.Email).HasMaxLength(500).IsRequired(false);
             e.Property(x => x.FullName).HasMaxLength(300);
+            e.Property(x => x.FullNameAr).HasMaxLength(300).HasDefaultValue("");
             e.Property(x => x.Position).HasMaxLength(500).IsRequired(false).HasDefaultValue("");
             e.Property(x => x.SortOrder).HasDefaultValue(0);
             e.Property(x => x.Type).HasConversion<string>().HasMaxLength(50);

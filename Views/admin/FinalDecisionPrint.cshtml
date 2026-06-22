@@ -1,0 +1,423 @@
+@model MOHRecognition.Models.FinalDecisionPrintViewModel
+@{
+    Layout    = null;
+    var body      = Model.CommitteeFinalRecommendation ?? "";
+    var refNum    = Model.ReferenceNumber ?? "";
+    var rawDate   = !string.IsNullOrWhiteSpace(Model.SessionDate)
+                    ? Model.SessionDate
+                    : DateTime.Now.ToString("yyyy/MM/dd");
+    // Parse to a known date then format as YYYY/MM/DD
+    string dateVal = rawDate;
+    if (DateTime.TryParseExact(rawDate, new[]{"dd/MM/yyyy","yyyy/MM/dd","yyyy-MM-dd","MM/dd/yyyy"},
+            null, System.Globalization.DateTimeStyles.None, out var _dt))
+        dateVal = _dt.ToString("yyyy/MM/dd");
+    // Convert to Arabic-Indic numerals
+    var arabicDate = dateVal
+        .Replace("0","٠").Replace("1","١").Replace("2","٢")
+        .Replace("3","٣").Replace("4","٤").Replace("5","٥")
+        .Replace("6","٦").Replace("7","٧").Replace("8","٨")
+        .Replace("9","٩");
+    var backUrl   = Model.MeetingId.HasValue && Model.MeetingId.Value > 0
+        ? $"/Home/AdminFinalDecision?id={Model.RequestId}&meetingId={Model.MeetingId.Value}"
+        : $"/Home/AdminFinalDecision?id={Model.RequestId}";
+    var draftKey  = $"fdletter_{Model.RequestId}";
+}
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>قرار لجنة الاعتراف — @Model.UniversityName</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+<style>
+@@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@@0,400;0,700;1,400&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+/* ─── Screen ────────────────────────────────────────────── */
+body{
+    font-family:'Amiri','Traditional Arabic','Times New Roman',serif;
+    background:#5a5a5a;
+    direction:rtl;
+    min-height:100vh;
+}
+
+/* ─── Toolbar ───────────────────────────────────────────── */
+#toolbar{
+    background:#7f1627;color:#fff;
+    padding:7px 24px;
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:300;
+    box-shadow:0 2px 10px rgba(0,0,0,.3);
+    font-family:'Segoe UI',sans-serif;
+}
+.tb-l{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;}
+.tb-r{display:flex;align-items:center;gap:7px;}
+.tb-btn{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:6px 14px;border-radius:6px;font-size:12.5px;font-weight:600;
+    cursor:pointer;border:none;font-family:'Segoe UI',sans-serif;
+    transition:opacity .15s;text-decoration:none;white-space:nowrap;
+}
+.tb-btn:hover{opacity:.85;}
+.tb-ghost{background:rgba(255,255,255,.14);color:#fff;border:1.5px solid rgba(255,255,255,.28);}
+.tb-white{background:#fff;color:#7f1627;}
+.tb-green{background:#15803d;color:#fff;}
+.tb-blue {background:#1d4ed8;color:#fff;}
+.tb-sep  {width:1px;height:18px;background:rgba(255,255,255,.22);margin:0 2px;}
+
+/* ─── A4 wrapper ─────────────────────────────────────────── */
+.outer{display:flex;justify-content:center;padding:22px 0 54px;}
+
+/* The A4 sheet — official blank letterhead as exact background */
+.a4{
+    position:relative;
+    width:210mm;
+    height:297mm;
+    background:#fff url('/images/official-letterhead.png') no-repeat top left / 100% 100%;
+    overflow:hidden;
+    box-shadow:0 4px 24px rgba(0,0,0,.38);
+}
+
+/* ─── Shared field base ──────────────────────────────────── */
+.f{
+    position:absolute;
+    font-family:'Amiri','Traditional Arabic','Times New Roman',serif;
+    color:#111;
+    direction:rtl;
+    background:transparent;
+    border:none;
+    outline:none;
+    resize:none;
+    padding:0;
+    line-height:1.4;
+}
+
+/* ════════════════════════════════════════════════════════════
+   REFERENCE FIELDS  (pixel-exact from 300dpi PNG analysis)
+
+   Fill lines span x = 152mm → 187mm from left edge.
+   Labels (الرقم/التاريخ/الموافق) start at x ≈ 190mm from left.
+   Gap between fill-line right-edge and label: ~3mm.
+
+   Container: right=22mm (right edge at 188mm — 2mm before labels)
+              width=38mm  (left edge at 150mm — covers the fill line)
+   Row centres (scaled to 210×297mm display):
+     الرقم   → 57.8mm  ⟹  container top = 55.3mm, row-1 offset = 0
+     التاريخ → 64.0mm  ⟹  row-2 offset = 6.2mm
+     الموافق → 70.1mm  ⟹  row-3 offset = 12.3mm
+   ════════════════════════════════════════════════════════════ */
+
+/* Container for the three reference rows */
+.ref-meta{
+    position:absolute;
+    top:55.3mm;
+    right:14mm;
+    width:44mm;
+}
+/* Each row is absolutely stacked inside the container */
+.ref-row{
+    position:absolute;
+    left:0; right:0;
+    height:5mm;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.ref-row-1{ top:0;      }
+.ref-row-2{ top:6.2mm;  }
+.ref-row-3{ top:12.3mm; }
+
+/* Shared value style */
+.ref-val{
+    width:100%;
+    font-family:'Amiri','Traditional Arabic','Times New Roman',serif;
+    font-size:9pt;
+    color:#111;
+    direction:rtl;
+    text-align:center;
+    background:transparent;
+    border:none;
+    outline:none;
+    padding:0 3mm;
+    line-height:1;
+    transform:translateY(-1.5mm);
+}
+/* Date: LTR isolation preserves ٢١/٠٦/٢٠٢٦ digit order */
+#f-date{
+    direction:ltr;
+    unicode-bidi:isolate;
+}
+
+body.edit-mode .ref-val:focus{ background:rgba(255,250,250,.6); }
+body.edit-mode .ref-val::placeholder{ color:#ccc; font-size:8pt; }
+
+/* ════════════════════════════════════════════════════════════
+   LETTER BODY
+   Positions scaled from "نموذج نصي قابل للتعديل" PDF
+   (215.90 × 279.40 mm  →  208.84 × 295.98 mm blank letterhead)
+   Scale Y: 295.98/279.40 = 1.0593
+   Scale X: 208.84/215.90 = 0.9673
+
+   Recipient   y=75.3 → 79.8 mm   (bold, centered)
+   Salutation  y=92.8 → 98.3 mm   (static)
+   Body area   ~111 – 164 mm      (textarea)
+   Closing     y=159.3→ 168.8 mm  (static, centered)
+   Sig title   y=181.8→ 192.6 mm  left side
+   Sig name    y=210.3→ 222.8 mm  left side
+   نسخة إلى   y=230.7→ 244.4 mm  right side
+   ════════════════════════════════════════════════════════════ */
+
+/* Recipient — bold, centered */
+#f-recipient{
+    top:80mm; right:20mm; left:20mm;
+    font-size:13pt; font-weight:700; text-align:center;
+    white-space:nowrap; overflow:hidden;
+}
+
+/* Salutation — static, right-aligned (right margin 20mm) */
+.salutation{
+    position:absolute;
+    top:98mm; right:20mm;
+    font-family:'Amiri','Traditional Arabic',serif;
+    font-size:12pt;color:#111;direction:rtl;
+}
+
+/* Decision body textarea */
+#f-body{
+    top:111mm; right:20mm; left:29mm;
+    height:55mm;
+    font-size:12pt; line-height:1.95;
+    text-align:justify;
+    overflow:hidden;
+}
+
+/* Closing — static, centered */
+.closing{
+    position:absolute;
+    top:169mm; right:20mm; left:20mm;
+    text-align:center;
+    font-family:'Amiri','Traditional Arabic',serif;
+    font-size:12pt;color:#111;direction:rtl;
+}
+
+/* Minister title — left side */
+#f-sig-title{
+    top:192mm; left:29mm; width:58mm;
+    font-size:12pt; font-weight:700; text-align:right;
+}
+
+/* Minister name — left side */
+#f-sig-name{
+    top:222mm; left:29mm; width:58mm;
+    font-size:12pt; text-align:right;
+}
+
+/* Copy section — right side, small text */
+#f-copy{
+    top:244mm; right:20mm;
+    width:95mm; height:36mm;
+    font-size:9pt; line-height:1.6;
+    text-align:right;
+    overflow:hidden;
+}
+
+/* ─── Edit mode — subtle focus indicators only ───────────── */
+body.edit-mode .f:focus{
+    background:rgba(255,250,250,.5);
+    outline:none;
+}
+body.edit-mode #f-body,
+body.edit-mode #f-copy{
+    border:1px dashed rgba(0,0,0,.15);
+    border-radius:2px;
+    overflow:auto;
+}
+/* Other single-line inputs in edit mode */
+body.edit-mode #f-recipient::placeholder,
+body.edit-mode #f-sig-title::placeholder,
+body.edit-mode #f-sig-name::placeholder{
+    color:#bbb;font-size:9pt;
+}
+
+/* ─── Preview / Print ─────────────────────────────────────── */
+body.preview-mode .f,
+body.preview-mode #f-body,
+body.preview-mode #f-copy{
+    border:none !important;
+    background:transparent !important;
+    overflow:hidden;
+}
+body.preview-mode .f::placeholder{ color:transparent !important; }
+
+@@media print{
+    @@page{ size:A4 portrait; margin:0; }
+    body{ background:none !important; }
+    #toolbar{ display:none !important; }
+    .outer{ padding:0; display:block; }
+    .a4{
+        width:210mm !important; height:297mm !important;
+        box-shadow:none !important; overflow:hidden;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+    }
+    .f,#f-body,#f-copy{
+        border:none !important;
+        background:transparent !important;
+        overflow:hidden;
+        resize:none;
+    }
+    .f::placeholder{ color:transparent !important; }
+}
+</style>
+</head>
+<body class="edit-mode">
+
+<!-- ══ TOOLBAR ════════════════════════════════════════════ -->
+<div id="toolbar">
+    <div class="tb-l">
+        <a class="tb-btn tb-ghost" href="@backUrl">
+            <i class="bi bi-arrow-right"></i> Back
+        </a>
+        <div class="tb-sep"></div>
+        <i class="bi bi-file-earmark-text"></i>
+        Official Decision Letter &mdash;
+        <span style="opacity:.8;font-weight:400;">@Model.UniversityName</span>
+    </div>
+    <div class="tb-r">
+        <button class="tb-btn tb-ghost" onclick="toggleMode()">
+            <i class="bi bi-eye" id="modeIcon"></i>
+            <span id="modeLbl">Preview</span>
+        </button>
+        <button class="tb-btn tb-green" onclick="doPrint()">
+            <i class="bi bi-printer-fill"></i> Print
+        </button>
+    </div>
+</div>
+
+<!-- ══ A4 LETTER ══════════════════════════════════════════ -->
+<div class="outer">
+<div class="a4">
+
+    <!-- Reference field VALUES — labels are in the background image -->
+    <div class="ref-meta">
+        <div class="ref-row ref-row-1">
+            <input id="f-ref"   class="f ref-val"         type="text" value=""          placeholder=""/>
+        </div>
+        <div class="ref-row ref-row-2">
+            <input id="f-date"  class="f ref-val"         type="text" value="@arabicDate" placeholder=""/>
+        </div>
+        <div class="ref-row ref-row-3">
+            <input id="f-hijri" class="f ref-val" type="text" value="" placeholder=""/>
+        </div>
+    </div>
+
+    <!-- Recipient -->
+    <input id="f-recipient" class="f" type="text"
+           value="معالي نائب رئيس الوزراء ووزير الخارجية وشؤون المغتربين"/>
+
+    <!-- Salutation (static) -->
+    <span class="salutation">تحية طيبة، وبعد،</span>
+
+    <!-- Official decision text (loaded from saved decision) -->
+    <textarea id="f-body" class="f"
+              placeholder="نص القرار…">@body</textarea>
+
+    <!-- Closing (static) -->
+    <span class="closing">وتفضلوا معاليكم بقبول فائق الاحترام.</span>
+
+    <!-- Signature block -->
+    <input id="f-sig-title" class="f" type="text"
+           value="وزير التعليم العالي والبحث العلمي"/>
+    <input id="f-sig-name" class="f" type="text"
+           value="الأستاذ الدكتور عزمي محافظة"/>
+
+    <!-- Copy recipients -->
+    <textarea id="f-copy" class="f">مكتب معالي الوزير
+عطوفة الأمين العام
+الملحق الثقافي الأردني /
+مدير مديرية الاعتراف بالجامعات ومعادلة الشهادات غير الأردنية
+ر.ق. الاعتراف بمؤسسات التعليم العالي غير الأردنية</textarea>
+
+</div>
+</div>
+
+<script>
+(function(){
+    var KEY   = '@draftKey';
+    var inEdit= true;
+
+    /* ── Restore saved draft ─────────────────── */
+    (function(){
+        try{
+            var d=JSON.parse(localStorage.getItem(KEY)||'{}');
+            set('f-ref',   d.ref);
+            set('f-date',  d.date);
+            set('f-hijri', d.hijri);
+            set('f-recipient', d.recipient);
+            set('f-body',  d.body);
+            set('f-sig-title', d.sigTitle);
+            set('f-sig-name',  d.sigName);
+            set('f-copy',  d.copy);
+        }catch(_){}
+    })();
+    function set(id,v){ if(v!=null && v!==undefined){ var el=document.getElementById(id); if(el&&v!=='') el.value=v; } }
+
+    /* ── Save draft ──────────────────────────── */
+    window.saveDraft=function(){
+        localStorage.setItem(KEY, JSON.stringify({
+            ref:      val('f-ref'),
+            date:     val('f-date'),
+            hijri:    val('f-hijri'),
+            recipient:val('f-recipient'),
+            body:     val('f-body'),
+            sigTitle: val('f-sig-title'),
+            sigName:  val('f-sig-name'),
+            copy:     val('f-copy'),
+        }));
+        toast('تم الحفظ','success');
+    };
+    function val(id){ var el=document.getElementById(id); return el?el.value:''; }
+
+    /* ── Toggle edit / preview ───────────────── */
+    window.toggleMode=function(){
+        inEdit=!inEdit;
+        document.body.classList.toggle('edit-mode',   inEdit);
+        document.body.classList.toggle('preview-mode',!inEdit);
+        document.getElementById('modeIcon').className=inEdit?'bi bi-eye':'bi bi-pencil';
+        document.getElementById('modeLbl').textContent=inEdit?'Preview':'Edit';
+    };
+
+    /* ── Print ───────────────────────────────── */
+    window.doPrint=function(){
+        document.body.classList.remove('edit-mode');
+        document.body.classList.add('preview-mode');
+        setTimeout(function(){
+            window.print();
+            setTimeout(function(){
+                if(inEdit){
+                    document.body.classList.add('edit-mode');
+                    document.body.classList.remove('preview-mode');
+                }
+            },700);
+        },120);
+    };
+
+    /* ── Toast ───────────────────────────────── */
+    function toast(msg,type){
+        var o=document.getElementById('_t');if(o)o.remove();
+        var t=document.createElement('div');t.id='_t';t.textContent=msg;
+        Object.assign(t.style,{
+            position:'fixed',bottom:'22px',left:'50%',
+            transform:'translateX(-50%)',zIndex:'9999',
+            padding:'9px 20px',borderRadius:'7px',color:'#fff',
+            fontWeight:'700',fontSize:'13px',fontFamily:"'Segoe UI',sans-serif",
+            background:type==='success'?'#15803d':'#dc2626',
+            boxShadow:'0 3px 14px rgba(0,0,0,.2)'
+        });
+        document.body.appendChild(t);
+        setTimeout(function(){t.remove();},2800);
+    }
+})();
+</script>
+</body>
+</html>

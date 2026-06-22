@@ -194,9 +194,9 @@
                 </div>
                 <div class="fd-save-row">
                     <span class="fd-save-hint"><i class="bi bi-eye"></i> View only — no changes can be made.</span>
-                    <button type="button" class="btn-print" onclick="printDecision()">
-                        <i class="bi bi-printer-fill"></i> Print
-                    </button>
+                    <a class="btn-print" href="/Home/FinalDecisionPrint?id=@reqId@(meetingId > 0 ? $"&meetingId={meetingId}" : "")" target="_blank">
+                        <i class="bi bi-printer-fill"></i> Print Official Letter
+                    </a>
                 </div>
             }
             else
@@ -283,8 +283,8 @@
                 <div class="fd-save-row">
                     <span class="fd-save-hint"><i class="bi bi-lock-fill"></i> The final decision will be officially recorded upon saving.</span>
                     <div style="display:flex;gap:10px;">
-                        <button type="button" class="btn-print" onclick="printDecision()">
-                            <i class="bi bi-printer-fill"></i> Print
+                        <button type="button" class="btn-print" onclick="saveAndPrint()">
+                            <i class="bi bi-printer-fill"></i> Print Official Letter
                         </button>
                         <button type="submit" class="btn-save">
                             <i class="bi bi-shield-fill-check"></i> Save Final Decision
@@ -407,6 +407,23 @@
 
     // On load: restore conditional sections state
     toggleSections(sel.value);
+
+    function saveAndPrint() {
+        const text = recTA ? recTA.value.trim() : '';
+        if (!text) { alert('Please generate or enter the decision text first.'); return; }
+
+        const fd = new FormData();
+        fd.append('id',             '@reqId');
+        fd.append('meetingId',      '@meetingId');
+        fd.append('decision',       sel ? sel.value : '');
+        fd.append('recommendation', text);
+
+        const printUrl = '/Home/FinalDecisionPrint?id=@reqId@(meetingId > 0 ? $"&meetingId={meetingId}" : "")';
+
+        fetch('/Home/SaveAdminFinalDecision', { method: 'POST', body: fd })
+            .then(() => { window.open(printUrl, '_blank'); })
+            .catch(() => { window.open(printUrl, '_blank'); });
+    }
 
     function printDecision() {
         const text = recTA.value.trim();

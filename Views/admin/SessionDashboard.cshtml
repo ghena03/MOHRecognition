@@ -610,9 +610,15 @@
                 var allDecided = total > 0 && decidedCount == total;
                 if (allDecided)
                 {
-                    <button class="btn-close-meeting" onclick="document.getElementById('closeModal').classList.add('open')">
-                        <i class="bi bi-lock-fill"></i> @(isRtl ? "إغلاق الاجتماع" : "Close Meeting")
-                    </button>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <a href="/Home/SessionReport/@Model.Id" target="_blank"
+                           style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:7px;background:#1d4ed8;color:#fff;font-weight:700;font-size:13px;text-decoration:none;font-family:'Segoe UI',sans-serif;">
+                            <i class="bi bi-printer-fill"></i> @(isRtl ? "طباعة التقرير" : "Print Report")
+                        </a>
+                        <button class="btn-close-meeting" onclick="document.getElementById('closeModal').classList.add('open')">
+                            <i class="bi bi-lock-fill"></i> @(isRtl ? "إغلاق الاجتماع" : "Close Meeting")
+                        </button>
+                    </div>
                 }
                 else
                 {
@@ -662,6 +668,10 @@
             </div>
             <div class="modal-actions">
                 <button class="btn-mc" onclick="document.getElementById('closeModal').classList.remove('open')">@(isRtl ? "إلغاء" : "Cancel")</button>
+                <a class="btn-mc" href="/Home/SessionReport/@Model.Id" target="_blank"
+                   style="background:#1d4ed8;color:#fff;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
+                    <i class="bi bi-printer-fill"></i> @(isRtl ? "طباعة التقرير" : "Print Report")
+                </a>
                 <button class="btn-mconf" onclick="document.getElementById('closeForm').submit()">@(isRtl ? "إغلاق الاجتماع" : "Close Meeting")</button>
             </div>
         </div>
