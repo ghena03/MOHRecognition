@@ -123,8 +123,8 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            border-radius: 24px;
-            border: 4px solid #22262f;
+            border-radius: 999px;
+            border: 3px solid #232833;
             background: #f8fafc;
             color: #475569;
             font-size: 13px;
@@ -166,15 +166,21 @@
         .rm-navitem.rm-navitem-rec.active i,
         .rm-navitem.rm-navitem-rec.active .rm-step { color: #3730a3 !important; }
         .rm-navitem .rm-step {
-            width: 20px;
-            flex-shrink: 0;
-            text-align: center;
-            font-size: 12px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #e7e2db;
+            color: #7f1627;
+            font-size: 10.5px;
             font-weight: 800;
-            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
+        .rm-navitem .rm-step i { font-size: 12px; color: inherit; width: auto; }
         .rm-navitem.active .rm-step { color: #8a2f28; }
-        .rm-navitem.rm-navitem-rec .rm-step { color: #4f46e5; }
+        .rm-navitem.rm-navitem-rec .rm-step { color: #4f46e5; background: #e0e7ff; }
         .rm-review-divider {
             display: flex;
             align-items: center;
@@ -224,13 +230,14 @@
         }
         .final-decision-nav.active { box-shadow: inset 6px 0 0 #d97706, 0 2px 8px rgba(245,158,11,.2) !important; }
         .layout.sidebar-collapsed .sidebar { width: 108px; min-width: 108px; padding-left: 16px; }
+        .rm-sidebar.collapsed { display: flex; flex-direction: column; gap: 10px; }
         .rm-sidebar.collapsed .rm-side-label,
         .rm-sidebar.collapsed .rm-review-divider,
-        .rm-sidebar.collapsed .fd-divider,
-        .rm-sidebar.collapsed .rm-navitem span,
-        .rm-sidebar.collapsed .rm-navitem .rm-step { display: none; }
-        .rm-sidebar.collapsed .rm-navitem { justify-content: center; padding: 10px; min-height: 52px; }
-        .rm-sidebar.collapsed .rm-navitem i { width: auto; margin: 0; font-size: 18px; }
+        .rm-sidebar.collapsed .fd-divider { display: none; }
+        .rm-sidebar.collapsed .rm-navitem > span:not(.rm-step) { display: none; }
+        .rm-sidebar.collapsed .rm-navitem { justify-content: center; padding: 10px; min-height: 52px; border-radius: 999px; }
+        .rm-sidebar.collapsed .rm-navitem .rm-step { width: 34px; height: 34px; border-radius: 50%; background: #e7e2db; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .rm-sidebar.collapsed .rm-navitem .rm-step i { font-size: 15px !important; width: auto !important; color: #7f1627 !important; }
         .sidebar-toggle {
             position: fixed;
             left: 286px;
@@ -252,7 +259,7 @@
             transition: left .3s ease;
         }
         .layout.sidebar-collapsed .sidebar-toggle { left: 112px; }
-        .pg-legacy-sidebar .layout { gap: 18px; }
+        .pg-legacy-sidebar .layout { display: block; gap: 0; }
         .pg-legacy-sidebar .sidebar {
             position: fixed;
             top: var(--header-h);
@@ -260,8 +267,7 @@
             bottom: 0;
             width: 312px;
             min-width: 312px;
-            padding: 20px 0 0 20px;
-            padding-bottom: 96px;
+            padding: 20px 0 96px 20px;
             background: transparent;
             border-right: 0;
             overflow-y: auto;
@@ -288,7 +294,7 @@
         .pg-legacy-sidebar .rm-navitem {
             margin: 0 8px;
             border: 3px solid #232833;
-            border-radius: 24px;
+            border-radius: 999px;
             background: #f8fafc;
             color: #475569;
             font-size: 13px;
@@ -314,20 +320,20 @@
         .pg-legacy-sidebar .rm-navitem i { width: 16px; font-size: 14px; color: #94a3b8; }
         .pg-legacy-sidebar .rm-navitem.active i { color: #8a2f28; }
         .pg-legacy-sidebar .rm-navitem .rm-step {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: #e7e2db;
-            color: #7f1627;
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 50% !important;
+            background: #e7e2db !important;
+            color: #7f1627 !important;
             font-size: 10.5px;
             font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
         }
-        .pg-legacy-sidebar .rm-navitem.active .rm-step { color: #8a2f28; }
-        .pg-legacy-sidebar .rm-navitem .rm-step i { font-size: 10px; color: inherit; width: auto; }
+        .pg-legacy-sidebar .rm-navitem.active .rm-step { color: #8a2f28 !important; }
+        .pg-legacy-sidebar .rm-navitem .rm-step i { font-size: 13px !important; color: inherit !important; width: auto !important; }
         .pg-legacy-sidebar .rm-navitem.rm-navitem-rec {
             background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%) !important;
             border: 3px solid #4f46e5 !important;
@@ -344,15 +350,15 @@
         }
         .pg-legacy-sidebar .rm-navitem.rm-navitem-rec i { color: #4f46e5 !important; }
         .pg-legacy-sidebar .rm-navitem.rm-navitem-rec .rm-step {
-            background: #e0e7ff;
-            color: #312e81;
+            background: #e0e7ff !important;
+            color: #312e81 !important;
         }
         .pg-legacy-sidebar .final-decision-nav {
             margin: 0 8px !important;
             background: #f8fafc !important;
             border: 3px solid #232833 !important;
             color: #475569 !important;
-            border-radius: 24px !important;
+            border-radius: 999px !important;
             box-shadow: none !important;
             font-weight: 700 !important;
         }
@@ -364,8 +370,19 @@
             color: #8a2f28 !important;
             box-shadow: none !important;
         }
-        .pg-legacy-sidebar .main { margin-left: 312px; }
-        .pg-legacy-sidebar .sidebar-toggle { display: none; }
+        .pg-legacy-sidebar .main { margin-left: 312px; padding: 28px 28px 100px; width: auto; flex: none; box-sizing: border-box; }
+        .pg-legacy-sidebar .sidebar-toggle { left: 316px; display: flex; }
+        .pg-legacy-sidebar .layout.sidebar-collapsed .sidebar { width: 108px; min-width: 108px; padding-left: 8px; padding-right: 8px; }
+        .pg-legacy-sidebar .layout.sidebar-collapsed .sidebar-toggle { left: 112px; }
+        .pg-legacy-sidebar .layout.sidebar-collapsed .main { margin-left: 108px; }
+        /* ── Collapsed state overrides (must come after pg-legacy-sidebar rules) ── */
+        .pg-legacy-sidebar .rm-sidebar.collapsed .rm-side-label,
+        .pg-legacy-sidebar .rm-sidebar.collapsed .rm-review-divider,
+        .pg-legacy-sidebar .rm-sidebar.collapsed .fd-divider { display: none; }
+        .pg-legacy-sidebar .rm-sidebar.collapsed .rm-navitem > span:not(.rm-step) { display: none; }
+        .pg-legacy-sidebar .rm-sidebar.collapsed .rm-navitem { justify-content: center; padding: 10px; min-height: 52px; border-radius: 999px; }
+        .pg-legacy-sidebar .rm-sidebar.collapsed .rm-navitem .rm-step { width: 34px !important; height: 34px !important; background: #e7e2db !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; }
+        .pg-legacy-sidebar .rm-sidebar.collapsed .rm-navitem .rm-step i { font-size: 15px !important; width: auto !important; color: #7f1627 !important; }
         .main { flex: 1; min-width: 0; padding: 28px 28px 100px 0; max-width: none; }
         /* Summary strip */
         .summary-strip { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: start; }
@@ -529,24 +546,24 @@
                 <div class="rm-side-label">Sections</div>
                 <div class="rm-nav">
                     <a class="rm-navitem" href="#sec-institution">
-                        <span class="rm-step">1</span><span>Institution Information</span>
+                        <span class="rm-step"><i class="bi bi-building"></i></span><span>Institution Information</span>
                     </a>
                     <a class="rm-navitem" href="#sec-programs">
-                        <span class="rm-step">2</span><span>Programs</span>
+                        <span class="rm-step"><i class="bi bi-journal-bookmark"></i></span><span>Programs</span>
                     </a>
                     <a class="rm-navitem" href="#sec-students">
-                        <span class="rm-step">3</span><span>Students</span>
+                        <span class="rm-step"><i class="bi bi-bar-chart"></i></span><span>Students</span>
                     </a>
                     <a class="rm-navitem" href="#sec-staff">
-                        <span class="rm-step">4</span><span>Academic Staff</span>
+                        <span class="rm-step"><i class="bi bi-people"></i></span><span>Academic Staff</span>
                     </a>
                     <a class="rm-navitem" href="#sec-applicant">
-                        <span class="rm-step">5</span><span>Applicant Info</span>
+                        <span class="rm-step"><i class="bi bi-person-badge"></i></span><span>Applicant Info</span>
                     </a>
                     @if (!hideDoctorRecommendation)
                     {
                         <a class="rm-navitem rm-navitem-rec" href="#sec-recommendation">
-                            <span class="rm-step">R</span><span>Doctor's Recommendation</span>
+                            <span class="rm-step"><i class="bi bi-clipboard2-check"></i></span><span>Doctor's Recommendation</span>
                         </a>
                     }
                     @if (meetingId > 0)
@@ -562,19 +579,19 @@
                 <div class="rm-side-label">Application Review</div>
                 <div class="rm-nav">
                     <a class="rm-navitem active" href="#sec-institution">
-                        <i class="bi bi-building"></i><span>Institution Information</span>
+                        <span class="rm-step"><i class="bi bi-building"></i></span><span>Institution Information</span>
                     </a>
                     <a class="rm-navitem" href="#sec-programs">
-                        <i class="bi bi-journal-bookmark"></i><span>Programs</span>
+                        <span class="rm-step"><i class="bi bi-journal-bookmark"></i></span><span>Programs</span>
                     </a>
                     <a class="rm-navitem" href="#sec-students">
-                        <i class="bi bi-bar-chart"></i><span>Students</span>
+                        <span class="rm-step"><i class="bi bi-bar-chart"></i></span><span>Students</span>
                     </a>
                     <a class="rm-navitem" href="#sec-staff">
-                        <i class="bi bi-people"></i><span>Academic Staff</span>
+                        <span class="rm-step"><i class="bi bi-people"></i></span><span>Academic Staff</span>
                     </a>
                     <a class="rm-navitem" href="#sec-applicant">
-                        <i class="bi bi-person-badge"></i><span>Applicant Info</span>
+                        <span class="rm-step"><i class="bi bi-person-badge"></i></span><span>Applicant Info</span>
                     </a>
                     @if (!hideDoctorRecommendation)
                     {
@@ -584,13 +601,13 @@
                             <div class="rm-review-divider-line"></div>
                         </div>
                         <a class="rm-navitem rm-navitem-rec" href="#sec-recommendation">
-                            <i class="bi bi-clipboard2-check"></i><span>Doctor's Recommendation</span>
+                            <span class="rm-step"><i class="bi bi-clipboard2-check"></i></span><span>Doctor's Recommendation</span>
                         </a>
                     }
                     @if (meetingId > 0)
                     {
                         <a class="rm-navitem rm-navitem-final-dec" href="/Home/AdminFinalDecision?id=@Model.Id&meetingId=@meetingId&viewOnly=@fdViewOnly">
-                            <i class="bi bi-shield-fill-check"></i><span>Final Decision</span>
+                            <span class="rm-step"><i class="bi bi-shield-fill-check"></i></span><span>Final Decision</span>
                         </a>
                     }
                 </div>

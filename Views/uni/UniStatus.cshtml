@@ -45,6 +45,9 @@
     bool canApplyPostgraduate = bachelorSubmitted && !postgraduateSubmitted;
     bool canApplyOnline = postgraduateSubmitted && !onlineSubmitted;
     bool allSubmitted = bachelorSubmitted && postgraduateSubmitted && onlineSubmitted;
+
+    string institutionType = ViewBag.InstitutionType ?? "";
+    bool isPostgraduateOnly = institutionType.Equals("Postgraduate", StringComparison.OrdinalIgnoreCase);
 }
 
 <!doctype html>
@@ -87,17 +90,16 @@
             padding: 1rem 1.2rem;
             text-decoration: none;
             color: #fff;
-            border: 1.5px solid rgba(255,255,255,.1);
-            background: rgba(255,255,255,.04);
-            transition: border-color .2s, background .2s;
+            transition: filter .2s, transform .15s;
         }
-        .start-card--primary:hover   { border-color: #e53e3e; background: rgba(229,62,62,.08); }
-        .start-card--secondary:hover { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.08); }
+        .start-card:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .start-card--primary   { background: linear-gradient(135deg, #7b1212 0%, #c0392b 100%); border: 1.5px solid #e53e3e; }
+        .start-card--secondary { background: linear-gradient(135deg, #7b1212 0%, #c0392b 100%); border: 1.5px solid #e53e3e; }
         .start-card__icon   { font-size: 1.6rem; flex-shrink: 0; }
         .start-card__body   { flex: 1; }
         .start-card__body strong { display: block; font-size: .95rem; font-weight: 600; margin-bottom: .25rem; }
-        .start-card__body span   { font-size: .8rem; color: #9ca3af; line-height: 1.4; }
-        .start-card__arrow  { font-size: 1.1rem; color: #9ca3af; flex-shrink: 0; }
+        .start-card__body span   { font-size: .8rem; color: rgba(255,255,255,.75); line-height: 1.4; }
+        .start-card__arrow  { font-size: 1.1rem; color: rgba(255,255,255,.7); flex-shrink: 0; }
 
         /* ── Sections progress mini-tiles ── */
         .sections-tracker       { margin: 1.4rem 0 1rem; }
@@ -236,24 +238,30 @@
                         </div>
 
                         <div class="start-options">
-                            <a class="start-card start-card--primary"
-                               href="@Url.Action("UniDashboard", "Home")#sec-instructions">
-                                <div class="start-card__icon">🎓</div>
-                                <div class="start-card__body">
-                                    <strong>Start Bachelor Application</strong>
-                                    <span>Begin with a bachelor's degree program. You can add postgraduate and online programs afterwards.</span>
-                                </div>
-                                <div class="start-card__arrow">→</div>
-                            </a>
-                            <a class="start-card start-card--secondary"
-                               href="@Url.Action("UniPostgraduateInstructions", "Home")">
-                                <div class="start-card__icon">📚</div>
-                                <div class="start-card__body">
-                                    <strong>Start Postgraduate Application</strong>
-                                    <span>Only for institutions that <em>do not</em> offer a bachelor's program.</span>
-                                </div>
-                                <div class="start-card__arrow">→</div>
-                            </a>
+                            @if (!isPostgraduateOnly)
+                            {
+                                <a class="start-card start-card--primary"
+                                   href="@Url.Action("UniDashboard", "Home")#sec-instructions">
+                                    <div class="start-card__icon">🎓</div>
+                                    <div class="start-card__body">
+                                        <strong>Start Bachelor Application</strong>
+                                        <span>Begin with a bachelor's degree program. You can add postgraduate and online programs afterwards.</span>
+                                    </div>
+                                    <div class="start-card__arrow">→</div>
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="start-card start-card--primary"
+                                   href="@Url.Action("UniPostgraduateInstructions", "Home")">
+                                    <div class="start-card__icon">📚</div>
+                                    <div class="start-card__body">
+                                        <strong>Start Postgraduate Application</strong>
+                                        <span>Only for institutions that <em>do not</em> offer a bachelor's program.</span>
+                                    </div>
+                                    <div class="start-card__arrow">→</div>
+                                </a>
+                            }
                         </div>
 
                         <div class="info-note">
