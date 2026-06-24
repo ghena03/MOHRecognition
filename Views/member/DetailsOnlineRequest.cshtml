@@ -18,20 +18,21 @@
 
     var bachList     = programs.Where(p => p.Source == "Bachelor").ToList();
     var pgList       = programs.Where(p => p.Source != "Bachelor").ToList();
-    int bachCount    = bachList.Count;
-    int pgCount      = pgList.Count;
-    int bachStudents = bachList.Sum(p => p.OnlineStudents ?? 0);
-    int pgStudents   = pgList.Sum(p  => p.OnlineStudents ?? 0);
+    // Prefer the manually entered numbers from sec-numbers; fall back to ProgramsJson for old records
+    int bachCount    = ol.BachelorPrograms > 0        ? ol.BachelorPrograms        : bachList.Count;
+    int pgCount      = ol.PostgraduatePrograms > 0    ? ol.PostgraduatePrograms    : pgList.Count;
+    int bachStudents = ol.BachelorOnlineStudents > 0  ? ol.BachelorOnlineStudents  : bachList.Sum(p => p.OnlineStudents ?? 0);
+    int pgStudents   = ol.PostgraduateOnlineStudents > 0 ? ol.PostgraduateOnlineStudents : pgList.Sum(p => p.OnlineStudents ?? 0);
     int totalStudents = bachStudents + pgStudents;
 
     int bProf  = ol.BachelorOnlineStaffProf;
     int bAssoc = ol.BachelorOnlineStaffAssoc;
     int bAsst  = ol.BachelorOnlineStaffAsst;
-    int bTotal = bProf + bAssoc + bAsst;
+    int bTotal = ol.BachelorTeachingStaff > 0     ? ol.BachelorTeachingStaff     : bProf + bAssoc + bAsst;
     int pProf  = ol.PostgraduateOnlineStaffProf;
     int pAssoc = ol.PostgraduateOnlineStaffAssoc;
     int pAsst  = ol.PostgraduateOnlineStaffAsst;
-    int pTotal = pProf + pAssoc + pAsst;
+    int pTotal = ol.PostgraduateTeachingStaff > 0 ? ol.PostgraduateTeachingStaff : pProf + pAssoc + pAsst;
 
     string FieldVal(string? v) => string.IsNullOrWhiteSpace(v) ? "—" : v;
     string BoolText(bool v) => v ? "Yes" : "No";
@@ -648,7 +649,7 @@
                     <div class="rd-grid3">
                         <div class="rd-field">
                             <label>Total Programs</label>
-                            <input type="text" value="@programs.Count" readonly />
+                            <input type="text" value="@(bachCount + pgCount)" readonly />
                         </div>
                         <div class="rd-field">
                             <label>Total Online Students</label>

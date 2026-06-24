@@ -523,7 +523,7 @@
                     <div class="sub-hd">Overall Submitted Numbers</div>
                     <div class="fg">
                         @if (programs.Count > 0)              { <div class="field"><div class="lbl">Total Programs</div><div class="val">@programs.Count</div></div> }
-                        @if (ol.TotalOnlineStudents.HasValue) { <div class="field"><div class="lbl">Total Online Students</div><div class="val">@ol.TotalOnlineStudents</div></div> }
+                        @if (bachStudents + pgStudents > 0 || programs.Count > 0) { <div class="field"><div class="lbl">Total Online Students</div><div class="val">@(bachStudents + pgStudents)</div></div> }
                         @if (ol.Professor.HasValue)           { <div class="field"><div class="lbl">Professors</div><div class="val">@ol.Professor</div></div> }
                         @if (ol.AssociateProfessor.HasValue)  { <div class="field"><div class="lbl">Associate Professors</div><div class="val">@ol.AssociateProfessor</div></div> }
                         @if (ol.AssistantProfessor.HasValue)  { <div class="field"><div class="lbl">Assistant Professors</div><div class="val">@ol.AssistantProfessor</div></div> }

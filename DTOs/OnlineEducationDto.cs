@@ -132,6 +132,14 @@ namespace MOHRecognition.DTOs
         // == LEARNING PLATFORM: responsible unit ==
         public string? ResponsibleUnit { get; set; }
 
+        // == ACADEMIC LEVEL NUMBERS (manually entered in sec-numbers by the university) ==
+        public int BachelorPrograms           { get; set; }
+        public int BachelorOnlineStudents     { get; set; }
+        public int BachelorTeachingStaff      { get; set; }
+        public int PostgraduatePrograms       { get; set; }
+        public int PostgraduateOnlineStudents { get; set; }
+        public int PostgraduateTeachingStaff  { get; set; }
+
         // == ACADEMIC LEVEL STAFF (stored once per level at submission; not repeated per program) ==
         public int BachelorOnlineStaffProf   { get; set; }
         public int BachelorOnlineStaffAssoc  { get; set; }

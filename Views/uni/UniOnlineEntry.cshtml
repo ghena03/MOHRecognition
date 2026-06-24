@@ -1709,7 +1709,7 @@ updateOverallTotals();
     document.getElementById('hTotalProf').value     = bnProf  + pgProf;
     document.getElementById('hTotalAssoc').value    = bnAssoc + pgAssoc;
     document.getElementById('hTotalAsst').value     = bnAsst  + pgAsst;
-    document.getElementById('hTotalStudents').value = bnStudents + pgStudents;
+    document.getElementById('hTotalStudents').value = programs.reduce(function(s,p){ return s + (p.OnlineStudents||0); }, 0);
 
     document.getElementById('programsJsonInput').value = JSON.stringify(
         programs.map(function(p) {
