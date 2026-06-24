@@ -1158,6 +1158,42 @@
             return { ok: false, firstInvalid: target };
         }
 
+        function validateNumbersSection() {
+            clearSectionValidation('sec-numbers');
+            var firstInvalidRef = { value: null };
+            var ok = true;
+
+            var fieldIds = ['bn-count','bn-students','bn-staff','bn-prof','bn-assoc','bn-asst',
+                            'pg-count','pg-students','pg-staff','pg-prof','pg-assoc','pg-asst'];
+
+            fieldIds.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                var val = parseInt(el.value, 10);
+                if (!el.value.trim() || isNaN(val) || val <= 0) {
+                    el.classList.add('input-invalid');
+                    if (!firstInvalidRef.value) firstInvalidRef.value = el;
+                    ok = false;
+                }
+            });
+
+            if (!ok) {
+                var numGrid = document.querySelector('#sec-numbers .num-grid');
+                if (numGrid) {
+                    var existing = numGrid.parentElement.querySelector('.group-required-error');
+                    if (!existing) {
+                        var errDiv = document.createElement('div');
+                        errDiv.className = 'group-required-error';
+                        errDiv.style.marginBottom = '10px';
+                        errDiv.textContent = 'All fields must be greater than 0 before saving.';
+                        numGrid.insertAdjacentElement('beforebegin', errDiv);
+                    }
+                }
+            }
+
+            return { ok: ok, firstInvalid: firstInvalidRef.value };
+        }
+
         function validateCommunicationSection() {
             clearSectionValidation('sec-communication');
             var firstInvalidRef = { value: null };
@@ -1212,6 +1248,16 @@
                 }
             }
 
+            var onlineExamPanel = document.getElementById('onlineExamFields');
+            if (onlineExamPanel && onlineExamPanel.style.display !== 'none') {
+                var examFileInput = document.getElementById('ExamPolicyFile');
+                if (examFileInput && (!examFileInput.files || !examFileInput.files.length)) {
+                    setFieldError(examFileInput, 'Please upload an Exam Monitoring Evidence file.');
+                    firstInvalidRef.value = firstInvalidRef.value || examFileInput;
+                    ok = false;
+                }
+            }
+
             return { ok: ok, firstInvalid: firstInvalidRef.value };
         }
 
@@ -1223,6 +1269,13 @@
             ['PlatformName', 'PlatformUrl', 'ResponsibleUnit'].forEach(function(name) {
                 if (!validateRequiredFieldByName('sec-platform', name, firstInvalidRef)) ok = false;
             });
+
+            var platformFileInput = document.getElementById('platformAdoptionEvidenceFile');
+            if (platformFileInput && (!platformFileInput.files || !platformFileInput.files.length)) {
+                setFieldError(platformFileInput, 'Please upload the LMS / Platform Evidence file.');
+                firstInvalidRef.value = firstInvalidRef.value || platformFileInput;
+                ok = false;
+            }
 
             return { ok: ok, firstInvalid: firstInvalidRef.value };
         }
@@ -1243,6 +1296,7 @@
             var checks = [
                 validatePublicInfoSection(),
                 validateProgramsSection(),
+                validateNumbersSection(),
                 validateCommunicationSection(),
                 validateExamSection(),
                 validatePlatformSection(),
@@ -1259,8 +1313,10 @@
             var mapping = {
                 'sec-programs': validatePublicInfoSection,
                 'sec-numbers': validateProgramsSection,
+                'sec-communication': validateNumbersSection,
                 'sec-exam': validateCommunicationSection,
-                'sec-platform': validateExamSection
+                'sec-platform': validateExamSection,
+                'sec-applicant': validatePlatformSection
             };
 
             if (mapping[sectionId]) {
