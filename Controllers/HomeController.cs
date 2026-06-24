@@ -4957,6 +4957,8 @@ namespace MOHRecognition.Controllers
             // Main summary status remains Pending until a final admin/meeting decision exists.
             ViewBag.StatusText = BuildSummaryStatus(anySubmitted, submittedTrackStatuses);
 
+            ViewBag.InstitutionType = HttpContext.Session.GetString("InstitutionType") ?? "";
+
             return View("~/Views/uni/UniStatus.cshtml");
         }
 

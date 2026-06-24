@@ -202,83 +202,29 @@
 
         /* ── Layout ── */
         .layout { display: flex; padding-top: var(--header-h); min-height: 100vh; }
-
-        /* ── Sidebar ── */
-        .sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; width: 260px; background: var(--white); border-right: 1px solid var(--border); overflow-y: auto; z-index: 100; }
-        .sidebar-inner { min-height: 100%; padding: 16px 0 70px; background: var(--white); }
-        .sid-group { padding: 10px 16px 4px; font-size: 10px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: .6px; }
-        .sid-link { display: flex; align-items: center; gap: 10px; padding: 8px 16px; font-size: 12.5px; font-weight: 500; color: #374151; text-decoration: none; border-left: 3px solid transparent; transition: all .12s; }
-        .sid-link:hover { background: var(--brand-light); color: var(--brand); border-left-color: var(--brand); }
-        .sid-link.active { background: var(--brand-light); color: var(--brand); border-left-color: var(--brand); font-weight: 700; }
-        .sid-num { width: 20px; height: 20px; border-radius: 50%; background: #f0e8e0; color: var(--brand); font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        /* Bachelor Doctor Recommendation: blue tone */
-        .sid-rec   { background: #dbeafe; color: #1e3a8a; }
-        .sid-link-rec:hover,
-        .sid-link-rec.active { background: #eff6ff; color: #1d4ed8; border-left-color: #2563eb; }
-        .sid-link-rec i { color: #2563eb; }
-        .sid-final { background: #fef3c7; color: #92400e; }
-        .requests-themed-sidebar .sidebar {
-            width: 312px;
-            background: transparent;
-            border-right: 0;
-            padding: 20px 0 0 20px;
-            padding-bottom: 96px;
-        }
-        .requests-themed-sidebar .sidebar-inner {
-            min-height: calc(100vh - var(--header-h) - 20px);
-            background: #f9fafb;
-            border: 1px solid #cbd5e1;
-            border-radius: 30px;
-            box-shadow: 0 6px 24px rgba(15, 23, 42, .06);
-            padding: 16px 10px 14px;
-        }
-        .requests-themed-sidebar .sid-group {
-            padding: 0 16px 12px;
-            font-size: 11px;
-            font-weight: 800;
-            color: #94a3b8;
-            letter-spacing: .05em;
-        }
-        .requests-themed-sidebar .sid-group:not(:first-child) { margin-top: 10px; }
-        .requests-themed-sidebar .sid-link {
-            margin: 0 8px 10px;
-            border: 3px solid #232833;
-            border-radius: 24px;
-            background: #f8fafc;
-            color: #475569;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 10px 14px;
-            min-height: 52px;
-            transition: background .12s, color .12s, box-shadow .12s;
-        }
-        .requests-themed-sidebar .sid-link:hover { background: #f3f4f6; color: #334155; }
-        .requests-themed-sidebar .sid-link.active {
-            background: linear-gradient(90deg, #9a1f33 0 8px, #f9f2f2 8px);
-            background-clip: padding-box;
-            color: #8a2f28;
-            box-shadow: none;
-        }
-        .requests-themed-sidebar .sid-num {
-            width: 22px;
-            height: 22px;
-            border-radius: 999px;
-            background: #e7e2db;
-            color: #7f1627;
-            font-size: 10.5px;
-        }
-        .requests-themed-sidebar .sid-link.active .sid-num { color: #8a2f28; }
-        .requests-themed-sidebar .sid-rec { background: #e7e2db; color: #7f1627; }
-        .requests-themed-sidebar .sid-link-rec:hover,
-        .requests-themed-sidebar .sid-link-rec.active {
-            background: linear-gradient(90deg, #9a1f33 0 8px, #f9f2f2 8px);
-            background-clip: padding-box;
-            color: #8a2f28;
-            box-shadow: none;
-        }
-        .requests-themed-sidebar .sid-link-rec i { color: #94a3b8; }
-        .requests-themed-sidebar .main { margin-left: 312px; padding-bottom: 36px; }
-        .requests-themed-sidebar .bottom-bar { display: none; }
+        .rm-sidebar { background: #f9fafb; border: 1px solid #cbd5e1; border-radius: 28px; box-shadow: 0 6px 24px rgba(15,23,42,.07); padding: 16px 12px 14px; min-height: 100%; overflow: visible; }
+        .rm-side-label { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; padding: 0 16px 12px; white-space: nowrap; }
+        .rm-side-label:not(:first-child) { margin-top: 10px; }
+        .rm-nav { display: flex; flex-direction: column; gap: 10px; }
+        .rm-navitem { display: flex; align-items: center; gap: 12px; margin: 0 8px; border-radius: 999px; border: 3px solid #232833; background: #f8fafc; color: #475569; font-size: 13px; font-weight: 700; text-decoration: none; padding: 11px 14px; min-height: 54px; box-shadow: none; transition: background .12s, color .12s, box-shadow .12s; }
+        .rm-navitem:hover { background: #f3f4f6; color: #334155; }
+        .rm-navitem.active { background: linear-gradient(90deg, #9a1f33 0 8px, #f9f2f2 8px); color: #8a2f28; font-weight: 700; box-shadow: none; }
+        .rm-navitem i { width: 16px; font-size: 15px; color: #94a3b8; text-align: center; line-height: 1; flex-shrink: 0; }
+        .rm-navitem.active i { color: #8a2f28; }
+        .rm-navitem .rm-step { width: 22px; height: 22px; border-radius: 50%; background: #e7e2db; color: #7f1627; font-size: 10.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .rm-navitem.active .rm-step { color: #8a2f28; }
+        .rm-navitem .rm-step i { font-size: 12px; color: inherit; width: auto; }
+        .rm-navitem.rm-navitem-rec { background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%) !important; border: 3px solid #4f46e5 !important; border-radius: 999px !important; color: #312e81 !important; box-shadow: 0 2px 8px rgba(79,70,229,.18); margin: 4px 10px !important; }
+        .rm-navitem.rm-navitem-rec:hover, .rm-navitem.rm-navitem-rec.active { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important; color: #1e1b4b !important; border-color: #3730a3 !important; }
+        .rm-navitem.rm-navitem-rec i { color: #4f46e5 !important; }
+        .rm-navitem-final-dec { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important; border: 3px solid #d97706 !important; border-radius: 999px !important; color: #92400e !important; font-weight: 800 !important; margin: 4px 10px !important; }
+        .rm-navitem-final-dec:hover { background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%) !important; color: #78350f !important; border-color: #b45309 !important; }
+        .rm-navitem-final-dec i { color: #d97706 !important; }
+        .pg-legacy-sidebar .sidebar { position: fixed; top: var(--header-h); left: 0; bottom: 0; width: 312px; min-width: 312px; padding: 20px 0 96px 20px; background: transparent; overflow-y: auto; z-index: 100; }
+        .pg-legacy-sidebar .rm-sidebar { background: #f9fafb; border: 1px solid #cbd5e1; border-radius: 30px; box-shadow: 0 6px 24px rgba(15,23,42,.06); padding: 16px 10px 14px; min-height: calc(100vh - var(--header-h) - 20px); }
+        .pg-legacy-sidebar .layout { display: block; gap: 0; }
+        .pg-legacy-sidebar .main { margin-left: 312px; padding: 28px 28px 60px; width: auto; flex: none; box-sizing: border-box; }
+        .hide-bottom-bar .bottom-bar { display: none; }
         /* ── Final Decision section ── */
         .decision-section { background: var(--white); border: 2px solid #f59e0b; border-radius: 12px; margin-bottom: 20px; overflow: hidden; scroll-margin-top: calc(var(--header-h) + 16px); }
         .decision-hd { background: linear-gradient(135deg, #78350f 0%, #d97706 100%); color: #fff; padding: 18px 22px; display: flex; align-items: center; gap: 14px; }
@@ -290,7 +236,38 @@
         .dec-save-btn:hover { background: linear-gradient(135deg, #78350f 0%, #b45309 100%); box-shadow: 0 6px 18px rgba(217,119,6,.45); transform: translateY(-1px); }
 
         /* ── Main content ── */
-        .main { margin-left: 260px; flex: 1; padding: 28px 28px 120px; max-width: none; }
+        .main { flex: 1; max-width: none; }
+        .sidebar-toggle {
+            position: fixed;
+            left: 322px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 52px;
+            height: 52px;
+            border: none;
+            border-radius: 50%;
+            background: #981b31;
+            color: #fff;
+            z-index: 999;
+            cursor: pointer;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,.18);
+            transition: left .3s ease;
+        }
+        .layout.sidebar-collapsed .sidebar { width: 108px; min-width: 108px; padding-left: 16px; }
+        .layout.sidebar-collapsed .main { margin-left: 108px; }
+        .layout.sidebar-collapsed .sidebar-toggle { left: 118px; }
+        .rm-sidebar.collapsed { display: flex; flex-direction: column; gap: 10px; }
+        .rm-sidebar.collapsed .rm-side-label,
+        .rm-sidebar.collapsed .rm-review-divider { display: none; }
+        .rm-sidebar.collapsed .rm-navitem span:last-child { display: none; }
+        .rm-sidebar.collapsed .rm-navitem { justify-content: center; padding: 10px; min-height: 54px; }
+        .rm-sidebar.collapsed .rm-navitem i { width: auto; margin: 0; font-size: 20px; }
+        .rm-sidebar.collapsed .rm-step { width: 30px; height: 30px; font-size: 12px; }
+        .rm-sidebar.collapsed .rm-navitem .rm-step i { font-size: 15px; }
 
         /* ── Summary strip ── */
         .summary-strip {
@@ -470,15 +447,13 @@
         .note-box.empty { color: #aaa; font-style: italic; background: #faf7f3; border-color: #ede4da; }
 
         @@media print {
-            .pg-header, .sidebar, .hd-right, .bottom-bar { display: none !important; }
-            .layout { padding-top: 0 !important; }
+            .pg-header, .sidebar, .sidebar-toggle, .hd-right, .bottom-bar { display: none !important; }
             .main { margin-left: 0 !important; max-width: 100% !important; padding: 0 !important; }
             .section-card { break-inside: avoid; }
         }
         @@media (max-width: 900px) {
-            .layout { display: block; }
-            .sidebar { display: none; }
-            .main { margin-left: 0; padding: 20px 14px 100px; }
+            .sidebar, .sidebar-toggle { display: none; }
+            .main { margin-left: 0 !important; padding: 20px 14px 100px; }
             .fg { grid-template-columns: 1fr 1fr; }
             .fg-4, .stat-grid, .score-grid { grid-template-columns: 1fr 1fr; }
         }
@@ -496,7 +471,7 @@
         }
     </style>
 </head>
-<body class="@(isRequestsQuery ? "requests-themed-sidebar" : "")">
+<body class="pg-legacy-sidebar @(isRequestsQuery ? "hide-bottom-bar" : "")">
 
 <div class="pg-header">
     <div class="hd-left">
@@ -552,50 +527,58 @@
 
     <!-- ── Sidebar Navigation ── -->
     <nav class="sidebar">
-        <div class="sidebar-inner">
+        <aside class="rm-sidebar" id="rmSidebar">
 
-            <div class="sid-group">Application</div>
-            <a class="sid-link active" href="#sec-overview">
-                <span class="sid-num"><i class="bi bi-info-circle" style="font-size:9px"></i></span>
-                Overview
-            </a>
+            <div class="rm-side-label">Application</div>
+            <div class="rm-nav">
+                <a class="rm-navitem active" href="#sec-overview">
+                    <span class="rm-step"><i class="bi bi-info-circle"></i></span><span>Overview</span>
+                </a>
+            </div>
 
-            <div class="sid-group">Sections</div>
-            <a class="sid-link" href="#sec-public"><span class="sid-num">1</span> Institution Information</a>
-            <a class="sid-link" href="#sec-academic"><span class="sid-num">2</span> Academic Info</a>
-            <a class="sid-link" href="#sec-admission"><span class="sid-num">3</span> Admission &amp; Duration</a>
-            <a class="sid-link" href="#sec-faculties"><span class="sid-num">4</span> Colleges</a>
-            <a class="sid-link" href="#sec-programs"><span class="sid-num">5</span> Programs</a>
-            <a class="sid-link" href="#sec-medicine"><span class="sid-num">6</span> Medicine &amp; Dentistry</a>
-            <a class="sid-link" href="#sec-hospitals"><span class="sid-num">7</span> Hospitals</a>
-            <a class="sid-link" href="#sec-infra"><span class="sid-num">8</span> Infrastructure</a>
-            <a class="sid-link" href="#sec-labs"><span class="sid-num">9</span> Laboratories</a>
-            <a class="sid-link" href="#sec-library"><span class="sid-num">10</span> Library</a>
-            <a class="sid-link" href="#sec-photos"><span class="sid-num">11</span> Photos / Media</a>
-            <a class="sid-link" href="#sec-documents"><span class="sid-num">12</span> Recognition &amp; Accreditation</a>
-            <a class="sid-link" href="#sec-additional-notes"><span class="sid-num">13</span> Additional Notes</a>
-            <a class="sid-link" href="#sec-applicant"><span class="sid-num">14</span> Applicant Info</a>
+            <div class="rm-side-label">Sections</div>
+            <div class="rm-nav">
+                <a class="rm-navitem" href="#sec-public"><span class="rm-step"><i class="bi bi-building"></i></span><span>Institution Information</span></a>
+                <a class="rm-navitem" href="#sec-academic"><span class="rm-step"><i class="bi bi-mortarboard"></i></span><span>Academic Info</span></a>
+                <a class="rm-navitem" href="#sec-admission"><span class="rm-step"><i class="bi bi-calendar3"></i></span><span>Admission &amp; Duration</span></a>
+                <a class="rm-navitem" href="#sec-faculties"><span class="rm-step"><i class="bi bi-columns-gap"></i></span><span>Colleges</span></a>
+                <a class="rm-navitem" href="#sec-programs"><span class="rm-step"><i class="bi bi-book"></i></span><span>Programs</span></a>
+                <a class="rm-navitem" href="#sec-medicine"><span class="rm-step"><i class="bi bi-heart-pulse"></i></span><span>Medicine &amp; Dentistry</span></a>
+                <a class="rm-navitem" href="#sec-hospitals"><span class="rm-step"><i class="bi bi-hospital"></i></span><span>Hospitals</span></a>
+                <a class="rm-navitem" href="#sec-infra"><span class="rm-step"><i class="bi bi-buildings"></i></span><span>Infrastructure</span></a>
+                <a class="rm-navitem" href="#sec-labs"><span class="rm-step"><i class="bi bi-eyedropper"></i></span><span>Laboratories</span></a>
+                <a class="rm-navitem" href="#sec-library"><span class="rm-step"><i class="bi bi-journals"></i></span><span>Library</span></a>
+                <a class="rm-navitem" href="#sec-photos"><span class="rm-step"><i class="bi bi-images"></i></span><span>Photos / Media</span></a>
+                <a class="rm-navitem" href="#sec-documents"><span class="rm-step"><i class="bi bi-patch-check"></i></span><span>Recognition &amp; Accreditation</span></a>
+                <a class="rm-navitem" href="#sec-additional-notes"><span class="rm-step"><i class="bi bi-chat-text"></i></span><span>Additional Notes</span></a>
+                <a class="rm-navitem" href="#sec-applicant"><span class="rm-step"><i class="bi bi-person-vcard"></i></span><span>Applicant Info</span></a>
+            </div>
 
             @if (showRec)
             {
-                <div class="sid-group">Reviewer</div>
-                <a class="sid-link sid-link-rec" href="#sec-recommendation">
-                    <span class="sid-num sid-rec">R</span>
-                    Doctor's Recommendation
-                </a>
+                <div class="rm-review-divider"><div class="rm-review-divider-line"></div></div>
+                <div class="rm-nav">
+                    <a class="rm-navitem rm-navitem-rec" href="#sec-recommendation">
+                        <span class="rm-step"><i class="bi bi-clipboard2-check"></i></span><span>Recommendation</span>
+                    </a>
+                </div>
             }
 
             @if (backId > 0)
             {
-                <div class="sid-group">Final Action</div>
-                <a class="sid-link" href="#sec-finaldecision">
-                    <span class="sid-num sid-final">F</span>
-                    Final Decision
-                </a>
+                <div class="rm-nav" style="margin-top:8px;">
+                    <a class="rm-navitem rm-navitem-final-dec" href="#sec-finaldecision">
+                        <i class="bi bi-award"></i><span>Final Decision</span>
+                    </a>
+                </div>
             }
 
-        </div>
+        </aside>
     </nav>
+
+    <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
 
     <!-- ── Main Content ── -->
     <main class="main">
@@ -1883,7 +1866,7 @@
 </div>
 
 <script>
-    const links = document.querySelectorAll('.sid-link[href^="#"]');
+    const links = document.querySelectorAll('.rm-navitem[href^="#"]');
     const sections = Array.from(links)
         .map(l => document.querySelector(l.getAttribute('href')))
         .filter(Boolean);
@@ -1916,6 +1899,25 @@
 
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
+
+    const sidebar   = document.getElementById('rmSidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const layoutEl  = document.querySelector('.layout');
+    if (sidebar && toggleBtn && layoutEl) {
+        toggleBtn.addEventListener('click', function () {
+            sidebar.classList.toggle('collapsed');
+            layoutEl.classList.toggle('sidebar-collapsed');
+            const icon = toggleBtn.querySelector('i');
+            if (!icon) return;
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('bi-chevron-left');
+                icon.classList.add('bi-chevron-right');
+            } else {
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-left');
+            }
+        });
+    }
 </script>
 </body>
 </html>
