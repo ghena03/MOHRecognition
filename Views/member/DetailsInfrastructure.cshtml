@@ -398,6 +398,10 @@
                         </div>
                     </div>
 
+                    <div id="infraErrorBanner" style="display:none;align-items:center;gap:10px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;color:#dc2626;font-size:13.5px;font-weight:600;margin-top:12px;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>@(isRtl ? "يرجى تحديد حالة لكل قسم بيئي قبل الحفظ." : "Please select a status for each environment area before saving.")</span>
+                    </div>
                     @if (!readOnlyMode)
                     {
                         <div style="display:flex; justify-content:flex-end; margin-top:14px;">
@@ -478,6 +482,7 @@
         #_infra-toast.toast-success { background: #2d6a4f; }
         #_infra-toast.toast-error   { background: #dc2626; }
         #_infra-toast i { font-size: 18px; flex-shrink: 0; }
+        .rm-infra-error { border-color: #ef4444 !important; background: #fff0f0 !important; box-shadow: 0 0 0 2px rgba(239,68,68,.18) !important; }
     </style>
     <script>
         (function () {
@@ -506,6 +511,24 @@
                 form.addEventListener('submit', async function (e) {
                     if (isReadOnlyMode) return;
                     e.preventDefault();
+
+                    // Validate: all 4 status dropdowns must have a selection
+                    form.querySelectorAll('.rm-infra-error').forEach(function(el) { el.classList.remove('rm-infra-error'); });
+                    const infraErr = document.getElementById('infraErrorBanner');
+                    if (infraErr) infraErr.style.display = 'none';
+                    const dropIds = ['facultiesAssessment', 'hospitalsAssessment', 'laboratoriesFacilitiesAssessment', 'libraryAssessment'];
+                    let infraInvalid = false;
+                    dropIds.forEach(function(id) {
+                        const s = document.getElementById(id);
+                        if (s && !s.value) { s.classList.add('rm-infra-error'); infraInvalid = true; }
+                    });
+                    if (infraInvalid) {
+                        if (infraErr) infraErr.style.display = 'flex';
+                        const firstErr = form.querySelector('.rm-infra-error');
+                        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        return;
+                    }
+
                     const btn = this.querySelector('button[type="submit"]');
                     const origHtml = btn ? btn.innerHTML : '';
                     if (btn) { btn.disabled = true; btn.innerHTML = `<i class="bi bi-hourglass-split"></i> ${isRtl ? 'جارٍ الحفظ...' : 'Saving…'}`; }
@@ -538,6 +561,7 @@
             }
 
             function updateAssessment(selectEl) {
+                selectEl.classList.remove('rm-infra-error'); // clear error on selection
                 const selectedValue = selectEl.value || "";
                 const badgeId    = selectEl.getAttribute("data-assessment-select");
                 const noteWrapId = selectEl.getAttribute("data-note-wrap");

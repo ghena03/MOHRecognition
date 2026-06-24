@@ -630,6 +630,10 @@
                               placeholder="@(isRtl ? "قدّم مبرراتك المهنية للتوصية النهائية..." : "Provide your professional justification for the final recommendation…")"
                               @(readOnlyMode ? "readonly disabled" : "required")>@savedFinalJustification</textarea>
 
+                    <div id="recErrorBanner" style="display:none;align-items:center;gap:10px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;color:#dc2626;font-size:13.5px;font-weight:600;margin-top:14px;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>@(isRtl ? "يرجى إكمال جميع الحقول المطلوبة قبل الحفظ." : "Please complete all required fields before saving.")</span>
+                    </div>
                     @if (!readOnlyMode)
                     {
                         <div class="fa-save-row">
@@ -741,15 +745,25 @@
                     decBtns.forEach(function (b) { b.classList.remove("selected"); });
                     this.classList.add("selected");
                     hiddenDecision.value = this.getAttribute("data-value");
+                    // Clear decision-grid error once a choice is made
+                    var decGrid = document.querySelector('.fa-decision-grid');
+                    if (decGrid) decGrid.classList.remove('rm-rec-error');
                 });
             });
 
             if (sel) {
                 sel.addEventListener("change", function () {
+                    this.classList.remove('rm-rec-error');
                     updateSuggestion(updateP1(this.value));
                 });
                 updateKPIs(updateP1(sel.value));
             }
+
+            // Clear textarea errors on input
+            var accNoteEl2 = document.getElementById('accreditationNote');
+            var reasonEl2  = document.getElementById('reason');
+            if (accNoteEl2) accNoteEl2.addEventListener('input', function() { this.classList.remove('rm-rec-error'); });
+            if (reasonEl2)  reasonEl2.addEventListener('input',  function() { this.classList.remove('rm-rec-error'); });
         })();
 
         (function () {
@@ -777,6 +791,31 @@
             if (!form) return;
             form.addEventListener('submit', async function (e) {
                 e.preventDefault();
+
+                // Validate all required fields before submitting
+                form.querySelectorAll('.rm-rec-error').forEach(function(el) { el.classList.remove('rm-rec-error'); });
+                var recErr = document.getElementById('recErrorBanner');
+                if (recErr) recErr.style.display = 'none';
+                var recInvalid = false;
+                var accSelEl  = document.getElementById('accreditationStatus');
+                var accNoteEl = document.getElementById('accreditationNote');
+                var hidDecEl  = document.getElementById('hiddenDecision');
+                var reasonEl  = document.getElementById('reason');
+                if (accSelEl  && !accSelEl.value)          { accSelEl.classList.add('rm-rec-error');  recInvalid = true; }
+                if (accNoteEl && !accNoteEl.value.trim())  { accNoteEl.classList.add('rm-rec-error'); recInvalid = true; }
+                if (hidDecEl  && !hidDecEl.value) {
+                    var decGrid = document.querySelector('.fa-decision-grid');
+                    if (decGrid) decGrid.classList.add('rm-rec-error');
+                    recInvalid = true;
+                }
+                if (reasonEl  && !reasonEl.value.trim())   { reasonEl.classList.add('rm-rec-error');  recInvalid = true; }
+                if (recInvalid) {
+                    if (recErr) recErr.style.display = 'flex';
+                    var firstErr = form.querySelector('.rm-rec-error');
+                    if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+
                 var btn = form.querySelector('[type="submit"]');
                 var orig = btn ? btn.innerHTML : '';
                 if (btn) { btn.disabled = true; btn.innerHTML = `<i class="bi bi-hourglass-split"></i> ${isRtl ? 'جارٍ الحفظ...' : 'Saving…'}`; }
@@ -802,6 +841,8 @@
             from { opacity: 0; transform: translateY(16px) scale(.96); }
             to   { opacity: 1; transform: translateY(0)    scale(1); }
         }
+        .rm-rec-error { border-color: #ef4444 !important; background: #fff0f0 !important; box-shadow: 0 0 0 2px rgba(239,68,68,.18) !important; }
+        .fa-decision-grid.rm-rec-error { outline: 2px solid #ef4444; border-radius: 8px; background: #fff0f0 !important; }
     </style>
 </body>
 </html>

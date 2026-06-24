@@ -375,6 +375,10 @@
                         </div>
                     </div>
 
+                    <div id="rankErrorBanner" style="display:none;align-items:center;gap:10px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;color:#dc2626;font-size:13.5px;font-weight:600;margin-top:12px;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>@(isRtl ? "يرجى إدخال قيمة أو تحديد \"غير متاح\" لكل تصنيف قبل الحفظ." : "Please enter a value or check \"N/A\" for each ranking before saving.")</span>
+                    </div>
                     @if (!readOnlyMode)
                     {
                         <div style="display:flex; justify-content:flex-end; margin-top:14px;">
@@ -396,6 +400,10 @@
             </section>
         </main>
     </div>
+
+    <style>
+        .rm-rank-error { border-color: #ef4444 !important; background: #fff0f0 !important; box-shadow: 0 0 0 2px rgba(239,68,68,.18) !important; }
+    </style>
 
     <div id="rank-toast" style="
         position:fixed; bottom:28px; @(isRtl ? "left" : "right"):28px; z-index:9999;
@@ -444,12 +452,39 @@
                 rankForm.addEventListener('submit', async function (e) {
                     if (isReadOnlyMode) return;
                     e.preventDefault();
+
+                    // Validate: each ranking must have a value entered OR N/A checked
+                    rankForm.querySelectorAll('.rm-rank-error').forEach(function(el) { el.classList.remove('rm-rank-error'); });
+                    var errBanner = document.getElementById('rankErrorBanner');
+                    if (errBanner) errBanner.style.display = 'none';
+                    var rankInvalid = false;
+                    pairs.forEach(function(key) {
+                        var inp = document.querySelector('[data-rank-input="' + key + '"]');
+                        var chk = document.querySelector('[data-rank-na="' + key + '"]');
+                        if (!inp || !chk) return;
+                        if (!chk.checked && !inp.value.trim()) { inp.classList.add('rm-rank-error'); rankInvalid = true; }
+                    });
+                    if (rankInvalid) {
+                        if (errBanner) errBanner.style.display = 'flex';
+                        var firstErr = rankForm.querySelector('.rm-rank-error');
+                        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        return;
+                    }
+
                     try {
                         await fetch(rankForm.action, { method: 'POST', body: new FormData(rankForm) });
                         showToast(isRtl ? 'تم حفظ التصنيفات العالمية بنجاح.' : 'Research & Global Rankings saved successfully.');
                     } catch (_) {
                         showToast(isRtl ? 'تعذّر الحفظ. يرجى المحاولة مرة أخرى.' : 'Unable to save. Please try again.');
                     }
+                });
+
+                // Clear error highlight when the user types or checks N/A
+                pairs.forEach(function(key) {
+                    var inp = document.querySelector('[data-rank-input="' + key + '"]');
+                    var chk = document.querySelector('[data-rank-na="' + key + '"]');
+                    if (inp) inp.addEventListener('input', function() { inp.classList.remove('rm-rank-error'); });
+                    if (chk) chk.addEventListener('change', function() { if (inp) inp.classList.remove('rm-rank-error'); });
                 });
             }
         })();
