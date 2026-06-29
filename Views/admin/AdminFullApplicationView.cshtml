@@ -1020,25 +1020,21 @@
         @{
             var medFtAll = new[]
             {
-                ("Professor",               medDen.Med_FullTimeProfessor,               medDen.Den_FullTimeProfessor),
-                ("Associate Professor",     medDen.Med_FullTimeAssociateProfessor,       medDen.Den_FullTimeAssociateProfessor),
-                ("Assistant Professor",     medDen.Med_FullTimeAssistantProfessor,       medDen.Den_FullTimeAssistantProfessor),
-                ("Lecturer (PhD)",          medDen.Med_FullTimeLecturerPhd,              medDen.Den_FullTimeLecturerPhd),
-                ("Asst. Lecturer (PhD)",    medDen.Med_FullTimeAssistantLecturerPhd,     medDen.Den_FullTimeAssistantLecturerPhd),
-                ("Lecturer (MSc)",                  medDen.Med_FullTimeLecturerMsc,              medDen.Den_FullTimeLecturerMsc),
-                ("Asst. Lecturer (MSc)",            medDen.Med_FullTimeAssistantLecturerMsc,     medDen.Den_FullTimeAssistantLecturerMsc),
-                ("Practitioner (MSc) [Clinical]",   medDen.Med_FullTimePractitionerMsc,          medDen.Den_FullTimePractitionerMsc),
+                ("Professor",                          medDen.Med_FullTimeProfessor,            medDen.Den_FullTimeProfessor),
+                ("Associate Professor",                medDen.Med_FullTimeAssociateProfessor,   medDen.Den_FullTimeAssociateProfessor),
+                ("Assistant Professor",                medDen.Med_FullTimeAssistantProfessor,   medDen.Den_FullTimeAssistantProfessor),
+                ("Lecturer and Asst. Lecturer (PhD)", medDen.Med_FullTimeLecturerAssistantPhd, medDen.Den_FullTimeLecturerAssistantPhd),
+                ("Lecturer and Asst. Lecturer (MSc)", medDen.Med_FullTimeLecturerAssistantMsc, medDen.Den_FullTimeLecturerAssistantMsc),
+                ("Practitioner (MSc) [Clinical]",      medDen.Med_FullTimePractitionerMsc,     medDen.Den_FullTimePractitionerMsc),
             };
             var medPtAll = new[]
             {
-                ("Professor",               medDen.Med_PartTimeClinicalProfessor,               medDen.Den_PartTimeClinicalProfessor),
-                ("Associate Professor",     medDen.Med_PartTimeClinicalAssociateProfessor,       medDen.Den_PartTimeClinicalAssociateProfessor),
-                ("Assistant Professor",     medDen.Med_PartTimeClinicalAssistantProfessor,       medDen.Den_PartTimeClinicalAssistantProfessor),
-                ("Lecturer (PhD)",          medDen.Med_PartTimeClinicalLecturerPhd,              medDen.Den_PartTimeClinicalLecturerPhd),
-                ("Asst. Lecturer (PhD)",    medDen.Med_PartTimeClinicalAssistantLecturerPhd,     medDen.Den_PartTimeClinicalAssistantLecturerPhd),
-                ("Lecturer (MSc)",                  medDen.Med_PartTimeClinicalLecturerMsc,              medDen.Den_PartTimeClinicalLecturerMsc),
-                ("Asst. Lecturer (MSc)",            medDen.Med_PartTimeClinicalAssistantLecturerMsc,     medDen.Den_PartTimeClinicalAssistantLecturerMsc),
-                ("Practitioner (MSc) [Clinical]",   medDen.Med_PartTimeClinicalPractitionerMsc,          medDen.Den_PartTimeClinicalPractitionerMsc),
+                ("Professor",                          medDen.Med_PartTimeClinicalProfessor,            medDen.Den_PartTimeClinicalProfessor),
+                ("Associate Professor",                medDen.Med_PartTimeClinicalAssociateProfessor,   medDen.Den_PartTimeClinicalAssociateProfessor),
+                ("Assistant Professor",                medDen.Med_PartTimeClinicalAssistantProfessor,   medDen.Den_PartTimeClinicalAssistantProfessor),
+                ("Lecturer and Asst. Lecturer (PhD)", medDen.Med_PartTimeClinicalLecturerAssistantPhd, medDen.Den_PartTimeClinicalLecturerAssistantPhd),
+                ("Lecturer and Asst. Lecturer (MSc)", medDen.Med_PartTimeClinicalLecturerAssistantMsc, medDen.Den_PartTimeClinicalLecturerAssistantMsc),
+                ("Practitioner (MSc) [Clinical]",      medDen.Med_PartTimeClinicalPractitionerMsc,     medDen.Den_PartTimeClinicalPractitionerMsc),
             };
             int medFtTotal = medFtAll.Sum(r => r.Item2 ?? 0);
             int denFtTotal = medFtAll.Sum(r => r.Item3 ?? 0);

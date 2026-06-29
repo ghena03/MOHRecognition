@@ -715,8 +715,8 @@
             <input class="ns-input" type="number" min="0" id="bn-students" name="BachelorOnlineStudents" placeholder="0" oninput="updateOverallTotals()" />
         </div>
         <div class="ns">
-            <div class="ns-lbl">Teaching Staff</div>
-            <input class="ns-input" type="number" min="0" id="bn-staff" name="BachelorTeachingStaff" placeholder="0" oninput="updateOverallTotals()" />
+            <div class="ns-lbl">Teaching Staff, Holds MSc</div>
+            <input class="ns-input" type="number" min="0" id="bn-staff" name="BachelorTeachingStaffMSc" placeholder="0" oninput="updateOverallTotals()" />
         </div>
         <div class="ns">
             <div class="ns-lbl">Professors</div>
@@ -746,8 +746,8 @@
             <input class="ns-input" type="number" min="0" id="pg-students" name="PostgraduateOnlineStudents" placeholder="0" oninput="updateOverallTotals()" />
         </div>
         <div class="ns">
-            <div class="ns-lbl">Teaching Staff</div>
-            <input class="ns-input" type="number" min="0" id="pg-staff" name="PostgraduateTeachingStaff" placeholder="0" oninput="updateOverallTotals()" />
+            <div class="ns-lbl">Teaching Staff, Holds MSc</div>
+            <input class="ns-input" type="number" min="0" id="pg-staff" name="PostgraduateTeachingStaffMSc" placeholder="0" oninput="updateOverallTotals()" />
         </div>
         <div class="ns">
             <div class="ns-lbl">Professors</div>
@@ -1185,7 +1185,7 @@
                         var errDiv = document.createElement('div');
                         errDiv.className = 'group-required-error';
                         errDiv.style.marginBottom = '10px';
-                        errDiv.textContent = 'All fields must be greater than 0 before saving.';
+                        errDiv.textContent = 'All fields must be filled with a value before saving.';
                         numGrid.insertAdjacentElement('beforebegin', errDiv);
                     }
                 }
@@ -1366,13 +1366,19 @@ function updateOverallTotals() {
     var bnCount    = parseInt(document.getElementById('bn-count')?.value)    || 0;
     var bnStudents = parseInt(document.getElementById('bn-students')?.value) || 0;
     var bnStaff    = parseInt(document.getElementById('bn-staff')?.value)    || 0;
+    var bnProf     = parseInt(document.getElementById('bn-prof')?.value)     || 0;
+    var bnAssoc    = parseInt(document.getElementById('bn-assoc')?.value)    || 0;
+    var bnAsst     = parseInt(document.getElementById('bn-asst')?.value)     || 0;
     var pgCount    = parseInt(document.getElementById('pg-count')?.value)    || 0;
     var pgStudents = parseInt(document.getElementById('pg-students')?.value) || 0;
     var pgStaff    = parseInt(document.getElementById('pg-staff')?.value)    || 0;
+    var pgProf     = parseInt(document.getElementById('pg-prof')?.value)     || 0;
+    var pgAssoc    = parseInt(document.getElementById('pg-assoc')?.value)    || 0;
+    var pgAsst     = parseInt(document.getElementById('pg-asst')?.value)     || 0;
 
-    document.getElementById('ov-count').textContent    = bnCount    + pgCount;
+    document.getElementById('ov-count').textContent    = bnCount + pgCount;
     document.getElementById('ov-students').textContent = bnStudents + pgStudents;
-    document.getElementById('ov-staff').textContent    = bnStaff    + pgStaff;
+    document.getElementById('ov-staff').textContent    = bnProf + bnAssoc + bnAsst + bnStaff + pgProf + pgAssoc + pgAsst + pgStaff;
 }
 
 

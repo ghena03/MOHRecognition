@@ -28,11 +28,13 @@
     int bProf  = ol.BachelorOnlineStaffProf;
     int bAssoc = ol.BachelorOnlineStaffAssoc;
     int bAsst  = ol.BachelorOnlineStaffAsst;
-    int bTotal = ol.BachelorTeachingStaff > 0     ? ol.BachelorTeachingStaff     : bProf + bAssoc + bAsst;
+    int bMsc   = ol.BachelorTeachingStaffMSc;
+    int bTotal = bMsc;
     int pProf  = ol.PostgraduateOnlineStaffProf;
     int pAssoc = ol.PostgraduateOnlineStaffAssoc;
     int pAsst  = ol.PostgraduateOnlineStaffAsst;
-    int pTotal = ol.PostgraduateTeachingStaff > 0 ? ol.PostgraduateTeachingStaff : pProf + pAssoc + pAsst;
+    int pMsc   = ol.PostgraduateTeachingStaffMSc;
+    int pTotal = pMsc;
 
     string FieldVal(string? v) => string.IsNullOrWhiteSpace(v) ? "—" : v;
     string BoolText(bool v) => v ? "Yes" : "No";
@@ -598,8 +600,8 @@
                             <input type="text" value="@bachStudents" readonly />
                         </div>
                         <div class="rd-field">
-                            <label>Teaching Staff</label>
-                            <input type="text" value="@bTotal" readonly />
+                            <label>Teaching Staff, Holds MSc</label>
+                            <input type="text" value="@bMsc" readonly />
                         </div>
                         <div class="rd-field">
                             <label>Professors</label>
@@ -627,8 +629,8 @@
                             <input type="text" value="@pgStudents" readonly />
                         </div>
                         <div class="rd-field">
-                            <label>Teaching Staff</label>
-                            <input type="text" value="@pTotal" readonly />
+                            <label>Teaching Staff, Holds MSc</label>
+                            <input type="text" value="@pMsc" readonly />
                         </div>
                         <div class="rd-field">
                             <label>Professors</label>
@@ -657,13 +659,34 @@
                         </div>
                         <div class="rd-field">
                             <label>Total Teaching Staff</label>
-                            <input type="text" value="@(bTotal + pTotal)" readonly />
+                            <input type="text" value="@(bProf + bAssoc + bAsst + bMsc + pProf + pAssoc + pAsst + pMsc)" readonly />
                         </div>
                     </div>
                 </div>
                 <div class="info-block" style="margin-top:4px;">
                     <i class="bi bi-info-circle" style="color:#7a2d2a;margin-right:6px;"></i>
                     Staff numbers are academic-level totals from Bachelor/Postgraduate submissions. The system does not collect separate online-only staff numbers.
+                </div>
+                <div class="info-section ol-info-pad" style="margin-top:16px;">
+                    <div class="section-title">Online Recognition Numbers Evidence</div>
+                    @if (!string.IsNullOrWhiteSpace(ol.OnlineNumbersEvidenceFileName))
+                    {
+                        var _evFn   = ol.OnlineNumbersEvidenceFileName;
+                        var _evIdx  = _evFn.IndexOf('_');
+                        var _evName = _evIdx == 32 ? _evFn[(_evIdx + 1)..] : _evFn;
+                        var _evExt  = System.IO.Path.GetExtension(_evFn).ToLowerInvariant();
+                        var _evIcon = _evExt is ".jpg" or ".jpeg" or ".png" ? "bi-file-image-fill"
+                                    : _evExt == ".pdf" ? "bi-file-earmark-pdf-fill"
+                                    : "bi-file-earmark-word-fill";
+                        <div class="rd-file-row" style="display:flex;align-items:center;margin-top:8px;">
+                            <i class="bi @_evIcon" style="font-size:18px;color:var(--brand);margin-right:8px;"></i>
+                            <a href="/uploads/online/@_evFn" target="_blank" style="font-weight:600;">@_evName</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <span style="color:#999;font-size:13px;display:block;margin-top:6px;">Not uploaded</span>
+                    }
                 </div>
             </section>
 

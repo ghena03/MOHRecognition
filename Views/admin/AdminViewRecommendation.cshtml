@@ -660,14 +660,13 @@
                             @{
                                 var medFt = new[]
                                 {
-                                    ("Professor",            medDen.Med_FullTimeProfessor,            medDen.Den_FullTimeProfessor),
-                                    ("Associate Professor",  medDen.Med_FullTimeAssociateProfessor,   medDen.Den_FullTimeAssociateProfessor),
-                                    ("Assistant Professor",  medDen.Med_FullTimeAssistantProfessor,   medDen.Den_FullTimeAssistantProfessor),
-                                    ("Lecturer (PhD)",       medDen.Med_FullTimeLecturerPhd,          medDen.Den_FullTimeLecturerPhd),
-                                    ("Lecturer (MSc)",       medDen.Med_FullTimeLecturerMsc,          medDen.Den_FullTimeLecturerMsc),
-                                    ("Asst. Lecturer (MSc)", medDen.Med_FullTimeAssistantLecturerMsc, medDen.Den_FullTimeAssistantLecturerMsc),
-                                    ("Practitioner (PSc)",   medDen.Med_FullTimePractitionerPsc,      medDen.Den_FullTimePractitionerPsc),
-                                    ("Practitioner (MSc)",   medDen.Med_FullTimePractitionerMsc,      medDen.Den_FullTimePractitionerMsc),
+                                    ("Professor",                             medDen.Med_FullTimeProfessor,               medDen.Den_FullTimeProfessor),
+                                    ("Associate Professor",                   medDen.Med_FullTimeAssociateProfessor,      medDen.Den_FullTimeAssociateProfessor),
+                                    ("Assistant Professor",                   medDen.Med_FullTimeAssistantProfessor,      medDen.Den_FullTimeAssistantProfessor),
+                                    ("Lecturer and Asst. Lecturer (PhD)",    medDen.Med_FullTimeLecturerAssistantPhd,    medDen.Den_FullTimeLecturerAssistantPhd),
+                                    ("Lecturer and Asst. Lecturer (MSc)",    medDen.Med_FullTimeLecturerAssistantMsc,    medDen.Den_FullTimeLecturerAssistantMsc),
+                                    ("Practitioner (PSc)",                    medDen.Med_FullTimePractitionerPsc,         medDen.Den_FullTimePractitionerPsc),
+                                    ("Practitioner (MSc)",                    medDen.Med_FullTimePractitionerMsc,         medDen.Den_FullTimePractitionerMsc),
                                 };
                             }
                             @foreach (var (rn, mv, dv) in medFt)
@@ -689,14 +688,13 @@
                             @{
                                 var medPt = new[]
                                 {
-                                    ("Professor",            medDen.Med_PartTimeClinicalProfessor,            medDen.Den_PartTimeClinicalProfessor),
-                                    ("Associate Professor",  medDen.Med_PartTimeClinicalAssociateProfessor,   medDen.Den_PartTimeClinicalAssociateProfessor),
-                                    ("Assistant Professor",  medDen.Med_PartTimeClinicalAssistantProfessor,   medDen.Den_PartTimeClinicalAssistantProfessor),
-                                    ("Lecturer (PhD)",       medDen.Med_PartTimeClinicalLecturerPhd,          medDen.Den_PartTimeClinicalLecturerPhd),
-                                    ("Lecturer (MSc)",       medDen.Med_PartTimeClinicalLecturerMsc,          medDen.Den_PartTimeClinicalLecturerMsc),
-                                    ("Asst. Lecturer (MSc)", medDen.Med_PartTimeClinicalAssistantLecturerMsc, medDen.Den_PartTimeClinicalAssistantLecturerMsc),
-                                    ("Practitioner (PSc)",   medDen.Med_PartTimeClinicalPractitionerPsc,      medDen.Den_PartTimeClinicalPractitionerPsc),
-                                    ("Practitioner (MSc)",   medDen.Med_PartTimeClinicalPractitionerMsc,      medDen.Den_PartTimeClinicalPractitionerMsc),
+                                    ("Professor",                             medDen.Med_PartTimeClinicalProfessor,            medDen.Den_PartTimeClinicalProfessor),
+                                    ("Associate Professor",                   medDen.Med_PartTimeClinicalAssociateProfessor,   medDen.Den_PartTimeClinicalAssociateProfessor),
+                                    ("Assistant Professor",                   medDen.Med_PartTimeClinicalAssistantProfessor,   medDen.Den_PartTimeClinicalAssistantProfessor),
+                                    ("Lecturer and Asst. Lecturer (PhD)",    medDen.Med_PartTimeClinicalLecturerAssistantPhd, medDen.Den_PartTimeClinicalLecturerAssistantPhd),
+                                    ("Lecturer and Asst. Lecturer (MSc)",    medDen.Med_PartTimeClinicalLecturerAssistantMsc, medDen.Den_PartTimeClinicalLecturerAssistantMsc),
+                                    ("Practitioner (PSc)",                    medDen.Med_PartTimeClinicalPractitionerPsc,      medDen.Den_PartTimeClinicalPractitionerPsc),
+                                    ("Practitioner (MSc)",                    medDen.Med_PartTimeClinicalPractitionerMsc,      medDen.Den_PartTimeClinicalPractitionerMsc),
                                 };
                             }
                             @foreach (var (rn, mv, dv) in medPt)

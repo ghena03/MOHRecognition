@@ -6,10 +6,8 @@ public class MedicineDentistryDto
     public int? Med_FullTimeProfessor { get; set; }
     public int? Med_FullTimeAssociateProfessor { get; set; }
     public int? Med_FullTimeAssistantProfessor { get; set; }
-    public int? Med_FullTimeLecturerPhd { get; set; }
-    public int? Med_FullTimeLecturerMsc { get; set; }
-    public int? Med_FullTimeAssistantLecturerMsc { get; set; }
-    public int? Med_FullTimeAssistantLecturerPhd { get; set; }
+    public int? Med_FullTimeLecturerAssistantPhd { get; set; }   // merged: Lecturer (PhD) + Asst. Lecturer (PhD)
+    public int? Med_FullTimeLecturerAssistantMsc { get; set; }   // merged: Lecturer (MSc) + Asst. Lecturer (MSc)
     public int? Med_FullTimePractitionerPsc { get; set; }
     public int? Med_FullTimePractitionerMsc { get; set; }
 
@@ -17,10 +15,8 @@ public class MedicineDentistryDto
     public int? Den_FullTimeProfessor { get; set; }
     public int? Den_FullTimeAssociateProfessor { get; set; }
     public int? Den_FullTimeAssistantProfessor { get; set; }
-    public int? Den_FullTimeLecturerPhd { get; set; }
-    public int? Den_FullTimeLecturerMsc { get; set; }
-    public int? Den_FullTimeAssistantLecturerMsc { get; set; }
-    public int? Den_FullTimeAssistantLecturerPhd { get; set; }
+    public int? Den_FullTimeLecturerAssistantPhd { get; set; }
+    public int? Den_FullTimeLecturerAssistantMsc { get; set; }
     public int? Den_FullTimePractitionerPsc { get; set; }
     public int? Den_FullTimePractitionerMsc { get; set; }
 
@@ -28,10 +24,8 @@ public class MedicineDentistryDto
     public int? Med_PartTimeClinicalProfessor { get; set; }
     public int? Med_PartTimeClinicalAssociateProfessor { get; set; }
     public int? Med_PartTimeClinicalAssistantProfessor { get; set; }
-    public int? Med_PartTimeClinicalLecturerPhd { get; set; }
-    public int? Med_PartTimeClinicalAssistantLecturerPhd { get; set; }
-    public int? Med_PartTimeClinicalLecturerMsc { get; set; }
-    public int? Med_PartTimeClinicalAssistantLecturerMsc { get; set; }
+    public int? Med_PartTimeClinicalLecturerAssistantPhd { get; set; }  // merged
+    public int? Med_PartTimeClinicalLecturerAssistantMsc { get; set; }  // merged
     public int? Med_PartTimeClinicalPractitionerPsc { get; set; }
     public int? Med_PartTimeClinicalPractitionerMsc { get; set; }
 
@@ -39,10 +33,8 @@ public class MedicineDentistryDto
     public int? Den_PartTimeClinicalProfessor { get; set; }
     public int? Den_PartTimeClinicalAssociateProfessor { get; set; }
     public int? Den_PartTimeClinicalAssistantProfessor { get; set; }
-    public int? Den_PartTimeClinicalLecturerPhd { get; set; }
-    public int? Den_PartTimeClinicalAssistantLecturerPhd { get; set; }
-    public int? Den_PartTimeClinicalLecturerMsc { get; set; }
-    public int? Den_PartTimeClinicalAssistantLecturerMsc { get; set; }
+    public int? Den_PartTimeClinicalLecturerAssistantPhd { get; set; }
+    public int? Den_PartTimeClinicalLecturerAssistantMsc { get; set; }
     public int? Den_PartTimeClinicalPractitionerPsc { get; set; }
     public int? Den_PartTimeClinicalPractitionerMsc { get; set; }
 
@@ -55,15 +47,54 @@ public class MedicineDentistryDto
     public bool HasDentistry { get; set; } = true;
     public bool HasOtherClinical { get; set; } = false;
 
+    // ── Backward-compat: legacy split fields kept only for migration ──────
+    // These allow old JSON records to deserialize; MigrateFromSplitFields() sums them.
+    public int? Med_FullTimeLecturerPhd { get; set; }
+    public int? Med_FullTimeAssistantLecturerPhd { get; set; }
+    public int? Med_FullTimeLecturerMsc { get; set; }
+    public int? Med_FullTimeAssistantLecturerMsc { get; set; }
+    public int? Med_PartTimeClinicalLecturerPhd { get; set; }
+    public int? Med_PartTimeClinicalAssistantLecturerPhd { get; set; }
+    public int? Med_PartTimeClinicalLecturerMsc { get; set; }
+    public int? Med_PartTimeClinicalAssistantLecturerMsc { get; set; }
+    public int? Den_FullTimeLecturerPhd { get; set; }
+    public int? Den_FullTimeAssistantLecturerPhd { get; set; }
+    public int? Den_FullTimeLecturerMsc { get; set; }
+    public int? Den_FullTimeAssistantLecturerMsc { get; set; }
+    public int? Den_PartTimeClinicalLecturerPhd { get; set; }
+    public int? Den_PartTimeClinicalAssistantLecturerPhd { get; set; }
+    public int? Den_PartTimeClinicalLecturerMsc { get; set; }
+    public int? Den_PartTimeClinicalAssistantLecturerMsc { get; set; }
+
+    // ── Migration: sum old split fields into new combined fields ──────────
+    public void MigrateFromSplitFields()
+    {
+        if (!Med_FullTimeLecturerAssistantPhd.HasValue && (Med_FullTimeLecturerPhd.HasValue || Med_FullTimeAssistantLecturerPhd.HasValue))
+            Med_FullTimeLecturerAssistantPhd = (Med_FullTimeLecturerPhd ?? 0) + (Med_FullTimeAssistantLecturerPhd ?? 0);
+        if (!Med_PartTimeClinicalLecturerAssistantPhd.HasValue && (Med_PartTimeClinicalLecturerPhd.HasValue || Med_PartTimeClinicalAssistantLecturerPhd.HasValue))
+            Med_PartTimeClinicalLecturerAssistantPhd = (Med_PartTimeClinicalLecturerPhd ?? 0) + (Med_PartTimeClinicalAssistantLecturerPhd ?? 0);
+        if (!Med_FullTimeLecturerAssistantMsc.HasValue && (Med_FullTimeLecturerMsc.HasValue || Med_FullTimeAssistantLecturerMsc.HasValue))
+            Med_FullTimeLecturerAssistantMsc = (Med_FullTimeLecturerMsc ?? 0) + (Med_FullTimeAssistantLecturerMsc ?? 0);
+        if (!Med_PartTimeClinicalLecturerAssistantMsc.HasValue && (Med_PartTimeClinicalLecturerMsc.HasValue || Med_PartTimeClinicalAssistantLecturerMsc.HasValue))
+            Med_PartTimeClinicalLecturerAssistantMsc = (Med_PartTimeClinicalLecturerMsc ?? 0) + (Med_PartTimeClinicalAssistantLecturerMsc ?? 0);
+
+        if (!Den_FullTimeLecturerAssistantPhd.HasValue && (Den_FullTimeLecturerPhd.HasValue || Den_FullTimeAssistantLecturerPhd.HasValue))
+            Den_FullTimeLecturerAssistantPhd = (Den_FullTimeLecturerPhd ?? 0) + (Den_FullTimeAssistantLecturerPhd ?? 0);
+        if (!Den_PartTimeClinicalLecturerAssistantPhd.HasValue && (Den_PartTimeClinicalLecturerPhd.HasValue || Den_PartTimeClinicalAssistantLecturerPhd.HasValue))
+            Den_PartTimeClinicalLecturerAssistantPhd = (Den_PartTimeClinicalLecturerPhd ?? 0) + (Den_PartTimeClinicalAssistantLecturerPhd ?? 0);
+        if (!Den_FullTimeLecturerAssistantMsc.HasValue && (Den_FullTimeLecturerMsc.HasValue || Den_FullTimeAssistantLecturerMsc.HasValue))
+            Den_FullTimeLecturerAssistantMsc = (Den_FullTimeLecturerMsc ?? 0) + (Den_FullTimeAssistantLecturerMsc ?? 0);
+        if (!Den_PartTimeClinicalLecturerAssistantMsc.HasValue && (Den_PartTimeClinicalLecturerMsc.HasValue || Den_PartTimeClinicalAssistantLecturerMsc.HasValue))
+            Den_PartTimeClinicalLecturerAssistantMsc = (Den_PartTimeClinicalLecturerMsc ?? 0) + (Den_PartTimeClinicalAssistantLecturerMsc ?? 0);
+    }
+
     // ── Computed: Part-Time Totals ────────────────────────────────────────
     public int Med_TotalPartTime =>
         (Med_PartTimeClinicalProfessor ?? 0) +
         (Med_PartTimeClinicalAssociateProfessor ?? 0) +
         (Med_PartTimeClinicalAssistantProfessor ?? 0) +
-        (Med_PartTimeClinicalLecturerPhd ?? 0) +
-        (Med_PartTimeClinicalAssistantLecturerPhd ?? 0) +
-        (Med_PartTimeClinicalLecturerMsc ?? 0) +
-        (Med_PartTimeClinicalAssistantLecturerMsc ?? 0) +
+        (Med_PartTimeClinicalLecturerAssistantPhd ?? 0) +
+        (Med_PartTimeClinicalLecturerAssistantMsc ?? 0) +
         (Med_PartTimeClinicalPractitionerPsc ?? 0) +
         (Med_PartTimeClinicalPractitionerMsc ?? 0);
 
@@ -71,10 +102,8 @@ public class MedicineDentistryDto
         (Den_PartTimeClinicalProfessor ?? 0) +
         (Den_PartTimeClinicalAssociateProfessor ?? 0) +
         (Den_PartTimeClinicalAssistantProfessor ?? 0) +
-        (Den_PartTimeClinicalLecturerPhd ?? 0) +
-        (Den_PartTimeClinicalAssistantLecturerPhd ?? 0) +
-        (Den_PartTimeClinicalLecturerMsc ?? 0) +
-        (Den_PartTimeClinicalAssistantLecturerMsc ?? 0) +
+        (Den_PartTimeClinicalLecturerAssistantPhd ?? 0) +
+        (Den_PartTimeClinicalLecturerAssistantMsc ?? 0) +
         (Den_PartTimeClinicalPractitionerPsc ?? 0) +
         (Den_PartTimeClinicalPractitionerMsc ?? 0);
 
@@ -83,24 +112,20 @@ public class MedicineDentistryDto
         (Med_PartTimeClinicalProfessor ?? 0) +
         (Med_PartTimeClinicalAssociateProfessor ?? 0) +
         (Med_PartTimeClinicalAssistantProfessor ?? 0) +
-        (Med_PartTimeClinicalLecturerPhd ?? 0) +
-        (Med_PartTimeClinicalAssistantLecturerPhd ?? 0);
+        (Med_PartTimeClinicalLecturerAssistantPhd ?? 0);
 
     public int Den_PartTimePhdHolders =>
         (Den_PartTimeClinicalProfessor ?? 0) +
         (Den_PartTimeClinicalAssociateProfessor ?? 0) +
         (Den_PartTimeClinicalAssistantProfessor ?? 0) +
-        (Den_PartTimeClinicalLecturerPhd ?? 0) +
-        (Den_PartTimeClinicalAssistantLecturerPhd ?? 0);
+        (Den_PartTimeClinicalLecturerAssistantPhd ?? 0);
 
     public int Med_PartTimeMscHolders =>
-        (Med_PartTimeClinicalLecturerMsc ?? 0) +
-        (Med_PartTimeClinicalAssistantLecturerMsc ?? 0) +
+        (Med_PartTimeClinicalLecturerAssistantMsc ?? 0) +
         (Med_PartTimeClinicalPractitionerMsc ?? 0);
 
     public int Den_PartTimeMscHolders =>
-        (Den_PartTimeClinicalLecturerMsc ?? 0) +
-        (Den_PartTimeClinicalAssistantLecturerMsc ?? 0) +
+        (Den_PartTimeClinicalLecturerAssistantMsc ?? 0) +
         (Den_PartTimeClinicalPractitionerMsc ?? 0);
 
     public int Med_PartTimePscHolders => Med_PartTimeClinicalPractitionerPsc ?? 0;
@@ -111,77 +136,59 @@ public class MedicineDentistryDto
         (Med_FullTimeProfessor ?? 0) +
         (Med_FullTimeAssociateProfessor ?? 0) +
         (Med_FullTimeAssistantProfessor ?? 0) +
-        (Med_FullTimeLecturerPhd ?? 0);
+        (Med_FullTimeLecturerAssistantPhd ?? 0);
 
     public int Den_PhdHolders =>
         (Den_FullTimeProfessor ?? 0) +
         (Den_FullTimeAssociateProfessor ?? 0) +
         (Den_FullTimeAssistantProfessor ?? 0) +
-        (Den_FullTimeLecturerPhd ?? 0);
+        (Den_FullTimeLecturerAssistantPhd ?? 0);
 
-    // MSc lecturers only (excludes practitioners so they can have their own card)
-    public int Med_MscLecturers =>
-        (Med_FullTimeLecturerMsc ?? 0) +
-        (Med_FullTimeAssistantLecturerMsc ?? 0);
+    public int Med_MscLecturers => Med_FullTimeLecturerAssistantMsc ?? 0;
+    public int Den_MscLecturers => Den_FullTimeLecturerAssistantMsc ?? 0;
 
-    public int Den_MscLecturers =>
-        (Den_FullTimeLecturerMsc ?? 0) +
-        (Den_FullTimeAssistantLecturerMsc ?? 0);
-
-    // All full-time practitioners (clinical/practical training staff)
-    public int Med_PractitionerTotal =>
-        (Med_FullTimePractitionerMsc ?? 0); // BSc not applicable for Medicine
+    public int Med_PractitionerTotal => Med_FullTimePractitionerMsc ?? 0;
 
     public int Den_PractitionerTotal =>
         (Den_FullTimePractitionerPsc ?? 0) +
         (Den_FullTimePractitionerMsc ?? 0);
 
-    // Legacy — kept for backward compat (MSc + practitioners combined)
     public int Med_MscHolders =>
-        (Med_FullTimeLecturerMsc ?? 0) +
-        (Med_FullTimeAssistantLecturerMsc ?? 0) +
+        (Med_FullTimeLecturerAssistantMsc ?? 0) +
         (Med_FullTimePractitionerMsc ?? 0);
 
     public int Den_MscHolders =>
-        (Den_FullTimeLecturerMsc ?? 0) +
-        (Den_FullTimeAssistantLecturerMsc ?? 0) +
+        (Den_FullTimeLecturerAssistantMsc ?? 0) +
         (Den_FullTimePractitionerMsc ?? 0);
 
-    public int Med_PscHolders =>
-        (Med_FullTimePractitionerPsc ?? 0);
+    public int Med_PscHolders => Med_FullTimePractitionerPsc ?? 0;
+    public int Den_PscHolders => Den_FullTimePractitionerPsc ?? 0;
 
-    public int Den_PscHolders =>
-        (Den_FullTimePractitionerPsc ?? 0);
-
-    // ── Computed: Full-Time Clinical PhD (Prof + AssocProf + AssistProf + LecPhD + AssistLecPhD) ──
+    // ── Computed: Full-Time Clinical PhD (Prof + AssocProf + AssistProf + Lect&AssistLect PhD) ──
     public int Med_FullTimeClinicalPhD =>
         (Med_FullTimeProfessor ?? 0) +
         (Med_FullTimeAssociateProfessor ?? 0) +
         (Med_FullTimeAssistantProfessor ?? 0) +
-        (Med_FullTimeLecturerPhd ?? 0) +
-        (Med_FullTimeAssistantLecturerPhd ?? 0);
+        (Med_FullTimeLecturerAssistantPhd ?? 0);
 
     public int Den_FullTimeClinicalPhD =>
         (Den_FullTimeProfessor ?? 0) +
         (Den_FullTimeAssociateProfessor ?? 0) +
         (Den_FullTimeAssistantProfessor ?? 0) +
-        (Den_FullTimeLecturerPhd ?? 0) +
-        (Den_FullTimeAssistantLecturerPhd ?? 0);
+        (Den_FullTimeLecturerAssistantPhd ?? 0);
 
     // ── Computed: Actual Part-Time Clinical (PhD only) ────────────────────
     public int Med_ActualPartTimeClinical =>
         (Med_PartTimeClinicalProfessor ?? 0) +
         (Med_PartTimeClinicalAssociateProfessor ?? 0) +
         (Med_PartTimeClinicalAssistantProfessor ?? 0) +
-        (Med_PartTimeClinicalLecturerPhd ?? 0) +
-        (Med_PartTimeClinicalAssistantLecturerPhd ?? 0);
+        (Med_PartTimeClinicalLecturerAssistantPhd ?? 0);
 
     public int Den_ActualPartTimeClinical =>
         (Den_PartTimeClinicalProfessor ?? 0) +
         (Den_PartTimeClinicalAssociateProfessor ?? 0) +
         (Den_PartTimeClinicalAssistantProfessor ?? 0) +
-        (Den_PartTimeClinicalLecturerPhd ?? 0) +
-        (Den_PartTimeClinicalAssistantLecturerPhd ?? 0);
+        (Den_PartTimeClinicalLecturerAssistantPhd ?? 0);
 
     // ── Computed: Allowed / Counted Part-Time and Ratio ───────────────────
     private static double ComputeAllowedPartTime(int ftPhD)

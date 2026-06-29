@@ -565,22 +565,16 @@
             ['med_partTimeClinicalAssistantProfessor',    '85', 'Medicine: Assistant Professor (PT)'],
             ['den_fullTimeAssistantProfessor',            '96', 'Dentistry: Assistant Professor (FT)'],
             ['den_partTimeClinicalAssistantProfessor',    '15', 'Dentistry: Assistant Professor (PT)'],
-            // ── Lecturer (PhD) ───────────────────────────────────────────
-            ['med_fullTimeLecturerPhd',                  '180', 'Medicine: Lecturer PhD (FT)'],
-            ['med_partTimeClinicalLecturerPhd',            '30', 'Medicine: Lecturer PhD (PT)'],
-            ['den_fullTimeLecturerPhd',                   '42', 'Dentistry: Lecturer PhD (FT)'],
-            ['den_partTimeClinicalLecturerPhd',             '7', 'Dentistry: Lecturer PhD (PT)'],
-            // ── Assistant Lecturer (PhD) ─────────────────────────────────
-            ['med_fullTimeAssistantLecturerPhd',          '95', 'Medicine: Asst Lecturer PhD (FT)'],
-            ['med_partTimeClinicalAssistantLecturerPhd',  '20', 'Medicine: Asst Lecturer PhD (PT)'],
-            ['den_fullTimeAssistantLecturerPhd',          '28', 'Dentistry: Asst Lecturer PhD (FT)'],
-            ['den_partTimeClinicalAssistantLecturerPhd',   '5', 'Dentistry: Asst Lecturer PhD (PT)'],
-            // ── Lecturer (MSc) ───────────────────────────────────────────
-            ['med_fullTimeLecturerMsc',                  '210', 'Medicine: Lecturer MSc (FT)'],
-            ['den_fullTimeLecturerMsc',                   '55', 'Dentistry: Lecturer MSc (FT)'],
-            // ── Assistant Lecturer (MSc) ─────────────────────────────────
-            ['med_fullTimeAssistantLecturerMsc',         '145', 'Medicine: Asst Lecturer MSc (FT)'],
-            ['den_fullTimeAssistantLecturerMsc',          '38', 'Dentistry: Asst Lecturer MSc (FT)'],
+            // ── Lecturer and Asst. Lecturer (PhD) ───────────────────────
+            ['med_fullTimeLecturerAssistantPhd',         '275', 'Medicine: Lect & Asst Lect PhD (FT)'],
+            ['med_partTimeClinicalLecturerAssistantPhd',  '50', 'Medicine: Lect & Asst Lect PhD (PT)'],
+            ['den_fullTimeLecturerAssistantPhd',          '70', 'Dentistry: Lect & Asst Lect PhD (FT)'],
+            ['den_partTimeClinicalLecturerAssistantPhd',  '12', 'Dentistry: Lect & Asst Lect PhD (PT)'],
+            // ── Lecturer and Asst. Lecturer (MSc) ───────────────────────
+            ['med_fullTimeLecturerAssistantMsc',         '355', 'Medicine: Lect & Asst Lect MSc (FT)'],
+            ['med_partTimeClinicalLecturerAssistantMsc',   '0', 'Medicine: Lect & Asst Lect MSc (PT)'],
+            ['den_fullTimeLecturerAssistantMsc',          '93', 'Dentistry: Lect & Asst Lect MSc (FT)'],
+            ['den_partTimeClinicalLecturerAssistantMsc',   '0', 'Dentistry: Lect & Asst Lect MSc (PT)'],
             // ── Practitioner (BSc) ───────────────────────────────────────
             ['med_fullTimePractitionerPsc',              '380', 'Medicine: Practitioner BSc (FT)'],
             ['den_fullTimePractitionerPsc',               '85', 'Dentistry: Practitioner BSc (FT)'],

@@ -52,7 +52,6 @@
             tableSection.classList.toggle("hide-dentistry", !hasDen);
         }
 
-        // Update summary empty visibility
         const summaryEmpty = document.getElementById("medden-summary-empty");
         if (summaryEmpty) summaryEmpty.style.display = (!hasMed && !hasDen) ? "block" : "none";
 
@@ -66,7 +65,6 @@
         if (!chkMed && !chkDen) return;
 
         if (chkMed) chkMed.addEventListener("change", function () {
-            // Prevent unchecking the last selected option
             if (!chkMed.checked && chkDen && !chkDen.checked) {
                 chkMed.checked = true;
                 return;
@@ -156,90 +154,77 @@
     }
 
     function recalcSummary() {
-        // ── Summary grid (PhD / MSc / PSc holders) ──
-        const medPhd =
+        // ── Full-Time Clinical PhD (Prof + AssocProf + AssistProf + merged Lect+AssistLect PhD) ──
+        const medFtPhd =
             asInt("med_fullTimeProfessor") +
             asInt("med_fullTimeAssociateProfessor") +
             asInt("med_fullTimeAssistantProfessor") +
-            asInt("med_fullTimeLecturerPhd");
-        const denPhd =
+            asInt("med_fullTimeLecturerAssistantPhd");
+        const denFtPhd =
             asInt("den_fullTimeProfessor") +
             asInt("den_fullTimeAssociateProfessor") +
             asInt("den_fullTimeAssistantProfessor") +
-            asInt("den_fullTimeLecturerPhd");
+            asInt("den_fullTimeLecturerAssistantPhd");
+
+        const medMscLecturers = asInt("med_fullTimeLecturerAssistantMsc");
+        const denMscLecturers = asInt("den_fullTimeLecturerAssistantMsc");
 
         const medMsc =
-            asInt("med_fullTimeLecturerMsc") +
-            asInt("med_fullTimeAssistantLecturerMsc") +
+            asInt("med_fullTimeLecturerAssistantMsc") +
             asInt("med_fullTimePractitionerMsc");
         const denMsc =
-            asInt("den_fullTimeLecturerMsc") +
-            asInt("den_fullTimeAssistantLecturerMsc") +
+            asInt("den_fullTimeLecturerAssistantMsc") +
             asInt("den_fullTimePractitionerMsc");
 
-        const medPsc =
-            asInt("med_fullTimePractitionerPsc");
-        const denPsc =
-            asInt("den_fullTimePractitionerPsc");
+        const medPsc = asInt("med_fullTimePractitionerPsc");
+        const denPsc = asInt("den_fullTimePractitionerPsc");
 
         const medTotalPt =
             asInt("med_partTimeClinicalProfessor") +
             asInt("med_partTimeClinicalAssociateProfessor") +
             asInt("med_partTimeClinicalAssistantProfessor") +
-            asInt("med_partTimeClinicalLecturerPhd") +
-            asInt("med_partTimeClinicalAssistantLecturerPhd") +
-            asInt("med_partTimeClinicalLecturerMsc") +
-            asInt("med_partTimeClinicalAssistantLecturerMsc") +
+            asInt("med_partTimeClinicalLecturerAssistantPhd") +
+            asInt("med_partTimeClinicalLecturerAssistantMsc") +
             asInt("med_partTimeClinicalPractitionerPsc") +
             asInt("med_partTimeClinicalPractitionerMsc");
         const denTotalPt =
             asInt("den_partTimeClinicalProfessor") +
             asInt("den_partTimeClinicalAssociateProfessor") +
             asInt("den_partTimeClinicalAssistantProfessor") +
-            asInt("den_partTimeClinicalLecturerPhd") +
-            asInt("den_partTimeClinicalAssistantLecturerPhd") +
-            asInt("den_partTimeClinicalLecturerMsc") +
-            asInt("den_partTimeClinicalAssistantLecturerMsc") +
+            asInt("den_partTimeClinicalLecturerAssistantPhd") +
+            asInt("den_partTimeClinicalLecturerAssistantMsc") +
             asInt("den_partTimeClinicalPractitionerPsc") +
             asInt("den_partTimeClinicalPractitionerMsc");
 
-        const medMscLecturers =
-            asInt("med_fullTimeLecturerMsc") +
-            asInt("med_fullTimeAssistantLecturerMsc");
-        const denMscLecturers =
-            asInt("den_fullTimeLecturerMsc") +
-            asInt("den_fullTimeAssistantLecturerMsc");
-        const medPractitioners = asInt("med_fullTimePractitionerMsc"); // BSc = 0 for Medicine
+        const medPractitioners = asInt("med_fullTimePractitionerMsc");
         const denPractitioners =
             asInt("den_fullTimePractitionerPsc") +
             asInt("den_fullTimePractitionerMsc");
 
-        setVal("med_phdHolders",       medPhd);
-        setVal("den_phdHolders",       denPhd);
-        setVal("med_mscHolders",       medMsc);  // legacy hidden
-        setVal("den_mscHolders",       denMsc);  // legacy hidden
-        setVal("med_mscLecturers",     medMscLecturers);
-        setVal("den_mscLecturers",     denMscLecturers);
+        setVal("med_phdHolders",        medFtPhd);
+        setVal("den_phdHolders",        denFtPhd);
+        setVal("med_mscHolders",        medMsc);   // legacy hidden
+        setVal("den_mscHolders",        denMsc);   // legacy hidden
+        setVal("med_mscLecturers",      medMscLecturers);
+        setVal("den_mscLecturers",      denMscLecturers);
         setVal("med_practitionerTotal", medPractitioners);
         setVal("den_practitionerTotal", denPractitioners);
-        setVal("med_pscHolders",       medPsc);  // legacy hidden
-        setVal("den_pscHolders",       denPsc);  // legacy hidden
-        setVal("med_totalPartTime",    medTotalPt);
-        setVal("den_totalPartTime",    denTotalPt);
+        setVal("med_pscHolders",        medPsc);   // legacy hidden
+        setVal("den_pscHolders",        denPsc);   // legacy hidden
+        setVal("med_totalPartTime",     medTotalPt);
+        setVal("den_totalPartTime",     denTotalPt);
 
-        // Update summary empty visibility
         const hasMedNow = document.getElementById("chk_medicine")?.checked ?? true;
         const hasDenNow = document.getElementById("chk_dentistry")?.checked ?? true;
         const summaryEmpty = document.getElementById("medden-summary-empty");
         if (summaryEmpty) summaryEmpty.style.display = (!hasMedNow && !hasDenNow) ? "flex" : "none";
 
         // ── Ratio (only updates elements if on the doctors page) ──
-        const medFtPhd    = medPhd + asInt("med_fullTimeAssistantLecturerPhd");
-        const medActualPt = asInt("med_partTimeClinicalProfessor") +
-                            asInt("med_partTimeClinicalAssociateProfessor") +
-                            asInt("med_partTimeClinicalAssistantProfessor") +
-                            asInt("med_partTimeClinicalLecturerPhd") +
-                            asInt("med_partTimeClinicalAssistantLecturerPhd");
+        const medActualPt =
+            asInt("med_partTimeClinicalProfessor") +
+            asInt("med_partTimeClinicalAssociateProfessor") +
+            asInt("med_partTimeClinicalAssistantProfessor") +
+            asInt("med_partTimeClinicalLecturerAssistantPhd");
         const medAllowedPt = computeAllowedPartTime(medFtPhd);
         const medCountedPt = Math.min(medActualPt, medAllowedPt);
         const medStaff     = medFtPhd + medCountedPt;
@@ -254,12 +239,11 @@
         setText("med_ratio",         medRatio !== null ? "1 : " + fmt2(medRatio) : "—");
         applyRatioStatus("med_ratioStatus", medRatio);
 
-        const denFtPhd    = denPhd + asInt("den_fullTimeAssistantLecturerPhd");
-        const denActualPt = asInt("den_partTimeClinicalProfessor") +
-                            asInt("den_partTimeClinicalAssociateProfessor") +
-                            asInt("den_partTimeClinicalAssistantProfessor") +
-                            asInt("den_partTimeClinicalLecturerPhd") +
-                            asInt("den_partTimeClinicalAssistantLecturerPhd");
+        const denActualPt =
+            asInt("den_partTimeClinicalProfessor") +
+            asInt("den_partTimeClinicalAssociateProfessor") +
+            asInt("den_partTimeClinicalAssistantProfessor") +
+            asInt("den_partTimeClinicalLecturerAssistantPhd");
         const denAllowedPt = computeAllowedPartTime(denFtPhd);
         const denCountedPt = Math.min(denActualPt, denAllowedPt);
         const denStaff     = denFtPhd + denCountedPt;
@@ -325,19 +309,16 @@
             return el ? el.value.trim() : "";
         }
 
-        // Build required IDs dynamically based on selected colleges
         const requiredIds = [
             ...(hasMed ? [
                 "med_fullTimeProfessor", "med_fullTimeAssociateProfessor", "med_fullTimeAssistantProfessor",
-                "med_fullTimeLecturerPhd", "med_fullTimeLecturerMsc", "med_fullTimeAssistantLecturerMsc",
-                "med_fullTimeAssistantLecturerPhd", "med_fullTimePractitionerMsc"
-                // med_fullTimePractitionerPsc excluded: BSc Practitioners not applicable for Medicine (locked at 0)
+                "med_fullTimeLecturerAssistantPhd", "med_fullTimeLecturerAssistantMsc",
+                "med_fullTimePractitionerMsc"
             ] : []),
             ...(hasDen ? [
                 "den_fullTimeProfessor", "den_fullTimeAssociateProfessor", "den_fullTimeAssistantProfessor",
-                "den_fullTimeLecturerPhd", "den_fullTimeLecturerMsc", "den_fullTimeAssistantLecturerMsc",
-                "den_fullTimeAssistantLecturerPhd", "den_fullTimePractitionerMsc"
-                // den_fullTimePractitionerPsc excluded: BSc Practitioner row removed from form
+                "den_fullTimeLecturerAssistantPhd", "den_fullTimeLecturerAssistantMsc",
+                "den_fullTimePractitionerMsc"
             ] : [])
         ];
 
@@ -352,53 +333,41 @@
 
         const payload = new URLSearchParams();
 
-        // College selection flags
         payload.append("has_medicine",  hasMed ? "true" : "false");
         payload.append("has_dentistry", hasDen ? "true" : "false");
 
-        // Full-Time fields — zero out fields for unselected colleges
-        payload.append("med_fullTimeProfessor",           hasMed ? v("med_fullTimeProfessor")           : "0");
-        payload.append("med_fullTimeAssociateProfessor",  hasMed ? v("med_fullTimeAssociateProfessor")  : "0");
-        payload.append("med_fullTimeAssistantProfessor",  hasMed ? v("med_fullTimeAssistantProfessor")  : "0");
-        payload.append("med_fullTimeLecturerPhd",         hasMed ? v("med_fullTimeLecturerPhd")         : "0");
-        payload.append("med_fullTimeLecturerMsc",         hasMed ? v("med_fullTimeLecturerMsc")         : "0");
-        payload.append("med_fullTimeAssistantLecturerMsc", hasMed ? v("med_fullTimeAssistantLecturerMsc") : "0");
-        payload.append("med_fullTimeAssistantLecturerPhd", hasMed ? v("med_fullTimeAssistantLecturerPhd") : "0");
-        payload.append("med_fullTimePractitionerPsc",     "0"); // always 0 — not applicable for Medicine
-        payload.append("med_fullTimePractitionerMsc",     hasMed ? v("med_fullTimePractitionerMsc")     : "0");
+        payload.append("med_fullTimeProfessor",             hasMed ? v("med_fullTimeProfessor")             : "0");
+        payload.append("med_fullTimeAssociateProfessor",    hasMed ? v("med_fullTimeAssociateProfessor")    : "0");
+        payload.append("med_fullTimeAssistantProfessor",    hasMed ? v("med_fullTimeAssistantProfessor")    : "0");
+        payload.append("med_fullTimeLecturerAssistantPhd",  hasMed ? v("med_fullTimeLecturerAssistantPhd")  : "0");
+        payload.append("med_fullTimeLecturerAssistantMsc",  hasMed ? v("med_fullTimeLecturerAssistantMsc")  : "0");
+        payload.append("med_fullTimePractitionerPsc",       "0"); // always 0 — not applicable for Medicine
+        payload.append("med_fullTimePractitionerMsc",       hasMed ? v("med_fullTimePractitionerMsc")       : "0");
 
-        payload.append("den_fullTimeProfessor",           hasDen ? v("den_fullTimeProfessor")           : "0");
-        payload.append("den_fullTimeAssociateProfessor",  hasDen ? v("den_fullTimeAssociateProfessor")  : "0");
-        payload.append("den_fullTimeAssistantProfessor",  hasDen ? v("den_fullTimeAssistantProfessor")  : "0");
-        payload.append("den_fullTimeLecturerPhd",         hasDen ? v("den_fullTimeLecturerPhd")         : "0");
-        payload.append("den_fullTimeLecturerMsc",         hasDen ? v("den_fullTimeLecturerMsc")         : "0");
-        payload.append("den_fullTimeAssistantLecturerMsc", hasDen ? v("den_fullTimeAssistantLecturerMsc") : "0");
-        payload.append("den_fullTimeAssistantLecturerPhd", hasDen ? v("den_fullTimeAssistantLecturerPhd") : "0");
-        payload.append("den_fullTimePractitionerPsc",     "0"); // BSc Practitioner row removed from form
-        payload.append("den_fullTimePractitionerMsc",     hasDen ? v("den_fullTimePractitionerMsc")     : "0");
+        payload.append("den_fullTimeProfessor",             hasDen ? v("den_fullTimeProfessor")             : "0");
+        payload.append("den_fullTimeAssociateProfessor",    hasDen ? v("den_fullTimeAssociateProfessor")    : "0");
+        payload.append("den_fullTimeAssistantProfessor",    hasDen ? v("den_fullTimeAssistantProfessor")    : "0");
+        payload.append("den_fullTimeLecturerAssistantPhd",  hasDen ? v("den_fullTimeLecturerAssistantPhd")  : "0");
+        payload.append("den_fullTimeLecturerAssistantMsc",  hasDen ? v("den_fullTimeLecturerAssistantMsc")  : "0");
+        payload.append("den_fullTimePractitionerPsc",       "0"); // BSc Practitioner row removed from form
+        payload.append("den_fullTimePractitionerMsc",       hasDen ? v("den_fullTimePractitionerMsc")       : "0");
 
-        // Part-Time Clinical fields
-        payload.append("med_partTimeClinicalProfessor",           hasMed ? v("med_partTimeClinicalProfessor")           : "0");
-        payload.append("med_partTimeClinicalAssociateProfessor",  hasMed ? v("med_partTimeClinicalAssociateProfessor")  : "0");
-        payload.append("med_partTimeClinicalAssistantProfessor",  hasMed ? v("med_partTimeClinicalAssistantProfessor")  : "0");
-        payload.append("med_partTimeClinicalLecturerPhd",         hasMed ? v("med_partTimeClinicalLecturerPhd")         : "0");
-        payload.append("med_partTimeClinicalAssistantLecturerPhd", hasMed ? v("med_partTimeClinicalAssistantLecturerPhd") : "0");
-        payload.append("med_partTimeClinicalLecturerMsc",         hasMed ? v("med_partTimeClinicalLecturerMsc")         : "0");
-        payload.append("med_partTimeClinicalAssistantLecturerMsc", hasMed ? v("med_partTimeClinicalAssistantLecturerMsc") : "0");
-        payload.append("med_partTimeClinicalPractitionerPsc",     hasMed ? v("med_partTimeClinicalPractitionerPsc")     : "0");
-        payload.append("med_partTimeClinicalPractitionerMsc",     hasMed ? v("med_partTimeClinicalPractitionerMsc")     : "0");
+        payload.append("med_partTimeClinicalProfessor",             hasMed ? v("med_partTimeClinicalProfessor")             : "0");
+        payload.append("med_partTimeClinicalAssociateProfessor",    hasMed ? v("med_partTimeClinicalAssociateProfessor")    : "0");
+        payload.append("med_partTimeClinicalAssistantProfessor",    hasMed ? v("med_partTimeClinicalAssistantProfessor")    : "0");
+        payload.append("med_partTimeClinicalLecturerAssistantPhd",  hasMed ? v("med_partTimeClinicalLecturerAssistantPhd")  : "0");
+        payload.append("med_partTimeClinicalLecturerAssistantMsc",  hasMed ? v("med_partTimeClinicalLecturerAssistantMsc")  : "0");
+        payload.append("med_partTimeClinicalPractitionerPsc",       hasMed ? v("med_partTimeClinicalPractitionerPsc")       : "0");
+        payload.append("med_partTimeClinicalPractitionerMsc",       hasMed ? v("med_partTimeClinicalPractitionerMsc")       : "0");
 
-        payload.append("den_partTimeClinicalProfessor",           hasDen ? v("den_partTimeClinicalProfessor")           : "0");
-        payload.append("den_partTimeClinicalAssociateProfessor",  hasDen ? v("den_partTimeClinicalAssociateProfessor")  : "0");
-        payload.append("den_partTimeClinicalAssistantProfessor",  hasDen ? v("den_partTimeClinicalAssistantProfessor")  : "0");
-        payload.append("den_partTimeClinicalLecturerPhd",         hasDen ? v("den_partTimeClinicalLecturerPhd")         : "0");
-        payload.append("den_partTimeClinicalAssistantLecturerPhd", hasDen ? v("den_partTimeClinicalAssistantLecturerPhd") : "0");
-        payload.append("den_partTimeClinicalLecturerMsc",         hasDen ? v("den_partTimeClinicalLecturerMsc")         : "0");
-        payload.append("den_partTimeClinicalAssistantLecturerMsc", hasDen ? v("den_partTimeClinicalAssistantLecturerMsc") : "0");
-        payload.append("den_partTimeClinicalPractitionerPsc",     hasDen ? v("den_partTimeClinicalPractitionerPsc")     : "0");
-        payload.append("den_partTimeClinicalPractitionerMsc",     hasDen ? v("den_partTimeClinicalPractitionerMsc")     : "0");
+        payload.append("den_partTimeClinicalProfessor",             hasDen ? v("den_partTimeClinicalProfessor")             : "0");
+        payload.append("den_partTimeClinicalAssociateProfessor",    hasDen ? v("den_partTimeClinicalAssociateProfessor")    : "0");
+        payload.append("den_partTimeClinicalAssistantProfessor",    hasDen ? v("den_partTimeClinicalAssistantProfessor")    : "0");
+        payload.append("den_partTimeClinicalLecturerAssistantPhd",  hasDen ? v("den_partTimeClinicalLecturerAssistantPhd")  : "0");
+        payload.append("den_partTimeClinicalLecturerAssistantMsc",  hasDen ? v("den_partTimeClinicalLecturerAssistantMsc")  : "0");
+        payload.append("den_partTimeClinicalPractitionerPsc",       hasDen ? v("den_partTimeClinicalPractitionerPsc")       : "0");
+        payload.append("den_partTimeClinicalPractitionerMsc",       hasDen ? v("den_partTimeClinicalPractitionerMsc")       : "0");
 
-        // Students
         payload.append("med_totalStudents", hasMed ? v("med_totalStudents") : "0");
         payload.append("den_totalStudents", hasDen ? v("den_totalStudents") : "0");
 

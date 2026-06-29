@@ -135,10 +135,13 @@ namespace MOHRecognition.DTOs
         // == ACADEMIC LEVEL NUMBERS (manually entered in sec-numbers by the university) ==
         public int BachelorPrograms           { get; set; }
         public int BachelorOnlineStudents     { get; set; }
-        public int BachelorTeachingStaff      { get; set; }
+        // Stored with the old JSON key for backward compat with existing records.
+        [JsonPropertyName("BachelorTeachingStaff")]
+        public int BachelorTeachingStaffMSc   { get; set; }
         public int PostgraduatePrograms       { get; set; }
         public int PostgraduateOnlineStudents { get; set; }
-        public int PostgraduateTeachingStaff  { get; set; }
+        [JsonPropertyName("PostgraduateTeachingStaff")]
+        public int PostgraduateTeachingStaffMSc { get; set; }
 
         // == ACADEMIC LEVEL STAFF (stored once per level at submission; not repeated per program) ==
         public int BachelorOnlineStaffProf   { get; set; }
@@ -151,9 +154,13 @@ namespace MOHRecognition.DTOs
         // == READINESS SCORE (0-100) ==
         public int ReadinessScore { get; set; }
 
+        // == ONLINE NUMBERS EVIDENCE ==
+        public string? OnlineNumbersEvidenceFileName { get; set; }
+
         // == FILE UPLOADS — only stored as file-name strings in DB ==
-        [JsonIgnore] public IFormFile? ProgramFile             { get; set; }
-        public string? ProgramFileName                         { get; set; }
+        [JsonIgnore] public IFormFile? ProgramFile               { get; set; }
+        public string? ProgramFileName                           { get; set; }
+        [JsonIgnore] public IFormFile? OnlineNumbersEvidenceFile { get; set; }
 
         [JsonIgnore] public IFormFile? TrainingEvidenceFile    { get; set; }
         [JsonIgnore] public IFormFile? PlatformGuideFile                { get; set; }

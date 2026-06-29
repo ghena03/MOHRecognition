@@ -2191,7 +2191,9 @@ namespace MOHRecognition.Controllers
             if (string.IsNullOrWhiteSpace(json))
                 return new MedicineDentistryDto();
 
-            return JsonSerializer.Deserialize<MedicineDentistryDto>(json) ?? new MedicineDentistryDto();
+            var dto = JsonSerializer.Deserialize<MedicineDentistryDto>(json) ?? new MedicineDentistryDto();
+            dto.MigrateFromSplitFields();
+            return dto;
         }
 
         private void SaveMedDen(MedicineDentistryDto dto)
@@ -2213,40 +2215,32 @@ namespace MOHRecognition.Controllers
             int? med_fullTimeProfessor,
             int? med_fullTimeAssociateProfessor,
             int? med_fullTimeAssistantProfessor,
-            int? med_fullTimeLecturerPhd,
-            int? med_fullTimeLecturerMsc,
-            int? med_fullTimeAssistantLecturerMsc,
-            int? med_fullTimeAssistantLecturerPhd,
+            int? med_fullTimeLecturerAssistantPhd,
+            int? med_fullTimeLecturerAssistantMsc,
             int? med_fullTimePractitionerPsc,
             int? med_fullTimePractitionerMsc,
 
             int? den_fullTimeProfessor,
             int? den_fullTimeAssociateProfessor,
             int? den_fullTimeAssistantProfessor,
-            int? den_fullTimeLecturerPhd,
-            int? den_fullTimeLecturerMsc,
-            int? den_fullTimeAssistantLecturerMsc,
-            int? den_fullTimeAssistantLecturerPhd,
+            int? den_fullTimeLecturerAssistantPhd,
+            int? den_fullTimeLecturerAssistantMsc,
             int? den_fullTimePractitionerPsc,
             int? den_fullTimePractitionerMsc,
 
             int? med_partTimeClinicalProfessor,
             int? med_partTimeClinicalAssociateProfessor,
             int? med_partTimeClinicalAssistantProfessor,
-            int? med_partTimeClinicalLecturerPhd,
-            int? med_partTimeClinicalAssistantLecturerPhd,
-            int? med_partTimeClinicalLecturerMsc,
-            int? med_partTimeClinicalAssistantLecturerMsc,
+            int? med_partTimeClinicalLecturerAssistantPhd,
+            int? med_partTimeClinicalLecturerAssistantMsc,
             int? med_partTimeClinicalPractitionerPsc,
             int? med_partTimeClinicalPractitionerMsc,
 
             int? den_partTimeClinicalProfessor,
             int? den_partTimeClinicalAssociateProfessor,
             int? den_partTimeClinicalAssistantProfessor,
-            int? den_partTimeClinicalLecturerPhd,
-            int? den_partTimeClinicalAssistantLecturerPhd,
-            int? den_partTimeClinicalLecturerMsc,
-            int? den_partTimeClinicalAssistantLecturerMsc,
+            int? den_partTimeClinicalLecturerAssistantPhd,
+            int? den_partTimeClinicalLecturerAssistantMsc,
             int? den_partTimeClinicalPractitionerPsc,
             int? den_partTimeClinicalPractitionerMsc,
 
@@ -2262,37 +2256,29 @@ namespace MOHRecognition.Controllers
                 (med_fullTimeProfessor ?? 0) < 0 ||
                 (med_fullTimeAssociateProfessor ?? 0) < 0 ||
                 (med_fullTimeAssistantProfessor ?? 0) < 0 ||
-                (med_fullTimeLecturerPhd ?? 0) < 0 ||
-                (med_fullTimeLecturerMsc ?? 0) < 0 ||
-                (med_fullTimeAssistantLecturerMsc ?? 0) < 0 ||
-                (med_fullTimeAssistantLecturerPhd ?? 0) < 0 ||
+                (med_fullTimeLecturerAssistantPhd ?? 0) < 0 ||
+                (med_fullTimeLecturerAssistantMsc ?? 0) < 0 ||
                 (med_fullTimePractitionerPsc ?? 0) < 0 ||
                 (med_fullTimePractitionerMsc ?? 0) < 0 ||
                 (den_fullTimeProfessor ?? 0) < 0 ||
                 (den_fullTimeAssociateProfessor ?? 0) < 0 ||
                 (den_fullTimeAssistantProfessor ?? 0) < 0 ||
-                (den_fullTimeLecturerPhd ?? 0) < 0 ||
-                (den_fullTimeLecturerMsc ?? 0) < 0 ||
-                (den_fullTimeAssistantLecturerMsc ?? 0) < 0 ||
-                (den_fullTimeAssistantLecturerPhd ?? 0) < 0 ||
+                (den_fullTimeLecturerAssistantPhd ?? 0) < 0 ||
+                (den_fullTimeLecturerAssistantMsc ?? 0) < 0 ||
                 (den_fullTimePractitionerPsc ?? 0) < 0 ||
                 (den_fullTimePractitionerMsc ?? 0) < 0 ||
                 (med_partTimeClinicalProfessor ?? 0) < 0 ||
                 (med_partTimeClinicalAssociateProfessor ?? 0) < 0 ||
                 (med_partTimeClinicalAssistantProfessor ?? 0) < 0 ||
-                (med_partTimeClinicalLecturerPhd ?? 0) < 0 ||
-                (med_partTimeClinicalAssistantLecturerPhd ?? 0) < 0 ||
-                (med_partTimeClinicalLecturerMsc ?? 0) < 0 ||
-                (med_partTimeClinicalAssistantLecturerMsc ?? 0) < 0 ||
+                (med_partTimeClinicalLecturerAssistantPhd ?? 0) < 0 ||
+                (med_partTimeClinicalLecturerAssistantMsc ?? 0) < 0 ||
                 (med_partTimeClinicalPractitionerPsc ?? 0) < 0 ||
                 (med_partTimeClinicalPractitionerMsc ?? 0) < 0 ||
                 (den_partTimeClinicalProfessor ?? 0) < 0 ||
                 (den_partTimeClinicalAssociateProfessor ?? 0) < 0 ||
                 (den_partTimeClinicalAssistantProfessor ?? 0) < 0 ||
-                (den_partTimeClinicalLecturerPhd ?? 0) < 0 ||
-                (den_partTimeClinicalAssistantLecturerPhd ?? 0) < 0 ||
-                (den_partTimeClinicalLecturerMsc ?? 0) < 0 ||
-                (den_partTimeClinicalAssistantLecturerMsc ?? 0) < 0 ||
+                (den_partTimeClinicalLecturerAssistantPhd ?? 0) < 0 ||
+                (den_partTimeClinicalLecturerAssistantMsc ?? 0) < 0 ||
                 (den_partTimeClinicalPractitionerPsc ?? 0) < 0 ||
                 (den_partTimeClinicalPractitionerMsc ?? 0) < 0 ||
                 (med_totalStudents ?? 0) < 0 ||
@@ -2306,40 +2292,32 @@ namespace MOHRecognition.Controllers
                 Med_FullTimeProfessor = med_fullTimeProfessor,
                 Med_FullTimeAssociateProfessor = med_fullTimeAssociateProfessor,
                 Med_FullTimeAssistantProfessor = med_fullTimeAssistantProfessor,
-                Med_FullTimeLecturerPhd = med_fullTimeLecturerPhd,
-                Med_FullTimeLecturerMsc = med_fullTimeLecturerMsc,
-                Med_FullTimeAssistantLecturerMsc = med_fullTimeAssistantLecturerMsc,
-                Med_FullTimeAssistantLecturerPhd = med_fullTimeAssistantLecturerPhd,
+                Med_FullTimeLecturerAssistantPhd = med_fullTimeLecturerAssistantPhd,
+                Med_FullTimeLecturerAssistantMsc = med_fullTimeLecturerAssistantMsc,
                 Med_FullTimePractitionerPsc = med_fullTimePractitionerPsc,
                 Med_FullTimePractitionerMsc = med_fullTimePractitionerMsc,
 
                 Den_FullTimeProfessor = den_fullTimeProfessor,
                 Den_FullTimeAssociateProfessor = den_fullTimeAssociateProfessor,
                 Den_FullTimeAssistantProfessor = den_fullTimeAssistantProfessor,
-                Den_FullTimeLecturerPhd = den_fullTimeLecturerPhd,
-                Den_FullTimeLecturerMsc = den_fullTimeLecturerMsc,
-                Den_FullTimeAssistantLecturerMsc = den_fullTimeAssistantLecturerMsc,
-                Den_FullTimeAssistantLecturerPhd = den_fullTimeAssistantLecturerPhd,
+                Den_FullTimeLecturerAssistantPhd = den_fullTimeLecturerAssistantPhd,
+                Den_FullTimeLecturerAssistantMsc = den_fullTimeLecturerAssistantMsc,
                 Den_FullTimePractitionerPsc = den_fullTimePractitionerPsc,
                 Den_FullTimePractitionerMsc = den_fullTimePractitionerMsc,
 
                 Med_PartTimeClinicalProfessor = med_partTimeClinicalProfessor,
                 Med_PartTimeClinicalAssociateProfessor = med_partTimeClinicalAssociateProfessor,
                 Med_PartTimeClinicalAssistantProfessor = med_partTimeClinicalAssistantProfessor,
-                Med_PartTimeClinicalLecturerPhd = med_partTimeClinicalLecturerPhd,
-                Med_PartTimeClinicalAssistantLecturerPhd = med_partTimeClinicalAssistantLecturerPhd,
-                Med_PartTimeClinicalLecturerMsc = med_partTimeClinicalLecturerMsc,
-                Med_PartTimeClinicalAssistantLecturerMsc = med_partTimeClinicalAssistantLecturerMsc,
+                Med_PartTimeClinicalLecturerAssistantPhd = med_partTimeClinicalLecturerAssistantPhd,
+                Med_PartTimeClinicalLecturerAssistantMsc = med_partTimeClinicalLecturerAssistantMsc,
                 Med_PartTimeClinicalPractitionerPsc = med_partTimeClinicalPractitionerPsc,
                 Med_PartTimeClinicalPractitionerMsc = med_partTimeClinicalPractitionerMsc,
 
                 Den_PartTimeClinicalProfessor = den_partTimeClinicalProfessor,
                 Den_PartTimeClinicalAssociateProfessor = den_partTimeClinicalAssociateProfessor,
                 Den_PartTimeClinicalAssistantProfessor = den_partTimeClinicalAssistantProfessor,
-                Den_PartTimeClinicalLecturerPhd = den_partTimeClinicalLecturerPhd,
-                Den_PartTimeClinicalAssistantLecturerPhd = den_partTimeClinicalAssistantLecturerPhd,
-                Den_PartTimeClinicalLecturerMsc = den_partTimeClinicalLecturerMsc,
-                Den_PartTimeClinicalAssistantLecturerMsc = den_partTimeClinicalAssistantLecturerMsc,
+                Den_PartTimeClinicalLecturerAssistantPhd = den_partTimeClinicalLecturerAssistantPhd,
+                Den_PartTimeClinicalLecturerAssistantMsc = den_partTimeClinicalLecturerAssistantMsc,
                 Den_PartTimeClinicalPractitionerPsc = den_partTimeClinicalPractitionerPsc,
                 Den_PartTimeClinicalPractitionerMsc = den_partTimeClinicalPractitionerMsc,
 
@@ -7786,6 +7764,7 @@ public async Task<IActionResult> AdminViewRecommendation(int? id)
                 return safeName;
             }
 
+            dto.OnlineNumbersEvidenceFileName  = await SaveFile(dto.OnlineNumbersEvidenceFile) ?? dto.OnlineNumbersEvidenceFileName;
             dto.ProgramFileName               = await SaveFile(dto.ProgramFile)             ?? dto.ProgramFileName;
             dto.TrainingEvidenceFileName       = await SaveFile(dto.TrainingEvidenceFile)    ?? dto.TrainingEvidenceFileName;
             dto.PlatformGuideFileName               = await SaveFile(dto.PlatformGuideFile)                ?? dto.PlatformGuideFileName;

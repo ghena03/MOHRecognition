@@ -509,8 +509,8 @@
             int bachStudents = bachProgs.Sum(p => p.OnlineStudents ?? 0);
             int pgStudents   = pgProgs.Sum(p   => p.OnlineStudents ?? 0);
 
-            int bStaffTotal  = ol.BachelorOnlineStaffProf + ol.BachelorOnlineStaffAssoc + ol.BachelorOnlineStaffAsst;
-            int pStaffTotal  = ol.PostgraduateOnlineStaffProf + ol.PostgraduateOnlineStaffAssoc + ol.PostgraduateOnlineStaffAsst;
+            int bStaffTotal  = ol.BachelorOnlineStaffProf + ol.BachelorOnlineStaffAssoc + ol.BachelorOnlineStaffAsst + ol.BachelorTeachingStaffMSc;
+            int pStaffTotal  = ol.PostgraduateOnlineStaffProf + ol.PostgraduateOnlineStaffAssoc + ol.PostgraduateOnlineStaffAsst + ol.PostgraduateTeachingStaffMSc;
             int totalStaff   = bStaffTotal + pStaffTotal;
         }
         <div id="sec-numbers" class="section-card">
@@ -544,6 +544,7 @@
                             <div class="field"><div class="lbl">Professors</div><div class="val">@ol.BachelorOnlineStaffProf</div></div>
                             <div class="field"><div class="lbl">Assoc. Professors</div><div class="val">@ol.BachelorOnlineStaffAssoc</div></div>
                             <div class="field"><div class="lbl">Asst. Professors</div><div class="val">@ol.BachelorOnlineStaffAsst</div></div>
+                            @if (ol.BachelorTeachingStaffMSc > 0) { <div class="field"><div class="lbl">Teaching Staff, Holds MSc</div><div class="val">@ol.BachelorTeachingStaffMSc</div></div> }
                         </div>
                     </div>
 
@@ -556,6 +557,7 @@
                             <div class="field"><div class="lbl">Professors</div><div class="val">@ol.PostgraduateOnlineStaffProf</div></div>
                             <div class="field"><div class="lbl">Assoc. Professors</div><div class="val">@ol.PostgraduateOnlineStaffAssoc</div></div>
                             <div class="field"><div class="lbl">Asst. Professors</div><div class="val">@ol.PostgraduateOnlineStaffAsst</div></div>
+                            @if (ol.PostgraduateTeachingStaffMSc > 0) { <div class="field"><div class="lbl">Teaching Staff, Holds MSc</div><div class="val">@ol.PostgraduateTeachingStaffMSc</div></div> }
                         </div>
                     </div>
                 </div>

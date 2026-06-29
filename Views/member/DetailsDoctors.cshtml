@@ -148,27 +148,15 @@
                             </tr>
 
                             <tr class="sst-ro-phd-row">
-                                <td class="sst-ro-cat">Lecturer <span class="sst-qual">(PhD)</span></td>
-                                @if (medDen.HasMedicine)  { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeLecturerPhd)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Med_PartTimeClinicalLecturerPhd)</b></div></div></td> }
-                                @if (medDen.HasDentistry) { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeLecturerPhd)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Den_PartTimeClinicalLecturerPhd)</b></div></div></td> }
-                            </tr>
-
-                            <tr class="sst-ro-phd-row">
-                                <td class="sst-ro-cat">Assistant Lecturer <span class="sst-qual">(PhD)</span></td>
-                                @if (medDen.HasMedicine)  { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeAssistantLecturerPhd)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Med_PartTimeClinicalAssistantLecturerPhd)</b></div></div></td> }
-                                @if (medDen.HasDentistry) { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeAssistantLecturerPhd)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Den_PartTimeClinicalAssistantLecturerPhd)</b></div></div></td> }
+                                <td class="sst-ro-cat">Lecturer and Assistant Lecturer <span class="sst-qual">(PhD)</span></td>
+                                @if (medDen.HasMedicine)  { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeLecturerAssistantPhd)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Med_PartTimeClinicalLecturerAssistantPhd)</b></div></div></td> }
+                                @if (medDen.HasDentistry) { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeLecturerAssistantPhd)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Den_PartTimeClinicalLecturerAssistantPhd)</b></div></div></td> }
                             </tr>
 
                             <tr>
-                                <td class="sst-ro-cat">Lecturer <span class="sst-qual">(MSc)</span></td>
-                                @if (medDen.HasMedicine)  { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeLecturerMsc)</b></div></div></td> }
-                                @if (medDen.HasDentistry) { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeLecturerMsc)</b></div></div></td> }
-                            </tr>
-
-                            <tr>
-                                <td class="sst-ro-cat">Assistant Lecturer <span class="sst-qual">(MSc)</span></td>
-                                @if (medDen.HasMedicine)  { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeAssistantLecturerMsc)</b></div></div></td> }
-                                @if (medDen.HasDentistry) { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeAssistantLecturerMsc)</b></div></div></td> }
+                                <td class="sst-ro-cat">Lecturer and Assistant Lecturer <span class="sst-qual">(MSc)</span></td>
+                                @if (medDen.HasMedicine)  { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Med_FullTimeLecturerAssistantMsc)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Med_PartTimeClinicalLecturerAssistantMsc)</b></div></div></td> }
+                                @if (medDen.HasDentistry) { <td class="sst-ro-cell"><div class="value-stack"><div class="value-row"><span>Full-Time</span><b>@N(medDen.Den_FullTimeLecturerAssistantMsc)</b></div><div class="value-row pt"><span>Part-Time</span><b>@N(medDen.Den_PartTimeClinicalLecturerAssistantMsc)</b></div></div></td> }
                             </tr>
 
                             <tr>
